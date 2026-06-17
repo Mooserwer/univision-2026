@@ -30,7 +30,7 @@ class ResumeMakeupManager5 extends ResumeMakeupManager {
   //    - response 없음, originalFile 만 받음
   //
   //  [TEXT 모드] HWP → initFromServer(response)  ← 폴백
-  //    - GPTController.GptResumeUpload 를 거쳐 텍스트 추출
+  //    - nGptController.GptResumeUpload 를 거쳐 텍스트 추출
   //    - response = { ok, file_content, result: { file_path, file_extension } }
   // ─────────────────────────────────────────────────────────
 

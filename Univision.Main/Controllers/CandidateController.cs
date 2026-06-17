@@ -2753,6 +2753,43 @@ namespace Univision.Main.Controllers
       return View();
     }
 
+    private string GetCreatorFromPdf(string path)
+    {
+      try
+      {
+        using (iTextSharp.text.pdf.PdfReader reader = new iTextSharp.text.pdf.PdfReader(path))
+        {
+          string creator = reader.Info["Creator"];
+          return creator;
+        }
+      }
+      catch
+      {
+        return "";
+      }
+    }
+
+    private string ExtractTextFromPdf(string path)
+    {
+      try
+      {
+        using (iTextSharp.text.pdf.PdfReader reader = new iTextSharp.text.pdf.PdfReader(path))
+        {
+          string text = "";
+          iTextSharp.text.pdf.parser.ITextExtractionStrategy Strategy = new iTextSharp.text.pdf.parser.SimpleTextExtractionStrategy();
+          for (int i = 1; i <= reader.NumberOfPages; i++)
+          {
+            text += (iTextSharp.text.pdf.parser.PdfTextExtractor.GetTextFromPage(reader, i, Strategy));
+          }
+          return text;
+        }
+      }
+      catch
+      {
+        return "";
+      }
+    }
+
     static bool IsHangul(char c)
     {
       return c >= '\uAC00' && c <= '\uD7A3';
@@ -2802,11 +2839,11 @@ namespace Univision.Main.Controllers
         string file_content = String.Empty;
         //FileUpload fiUpload = new FileUpload();
 
-        var creator = new GPTController().GetCreatorFromPdf(cr.file_origin_path);
+        var creator = GetCreatorFromPdf(cr.file_origin_path);
 
         if (cr.file_extension == ".pdf" && creator != "react-pdf")
         {
-          file_content = new GPTController().ExtractTextFromPdf(cr.file_origin_path);
+          file_content = ExtractTextFromPdf(cr.file_origin_path);
         }
         else
         {

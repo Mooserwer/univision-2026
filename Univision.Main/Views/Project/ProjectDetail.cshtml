@@ -865,7 +865,6 @@
           <a href="#" class="btn btn-xs btn-info" id="btn_progress_create_checked" title="Changing the status of selected candidates">선택한 후보자 일괄 상태변경</a>
           @if (Model.pjt_status == 1 || Model.pjt_status == 4)
           {
-            <!--<a href="#" class="btn btn-xs btn-success" id="btn_gpt_makeup" title="GPT에게 메이크업 요청(beta)">Makeup(by GPT)<span class="badge badge-primary">beta</span></a>-->
             <a href="#" class="btn btn-xs btn-success" id="btn_gpt_makeup2" title="GPT에게 메이크업 요청">Makeup(by GPT)</a>
             @*PMS 오픈 관련 등록기능 제한*@
             @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
@@ -1168,7 +1167,6 @@
           window.url_project_move_candidate = "@Url.Action("ProjectMoveCandidate", "Project")";
           window.url_sms_privacy_create_patial = "@Url.Action("SMSPrivacyCreate", "Partial")";
           window.url_project_file_list = "@Url.Action("ProjectFileList", "Project")"
-          window.url_makeup_gpt = "@Url.Action("MakeupGPT", "GPT")"
           window.url_makeup_gpt_new = "@Url.Action("MakeupGPT", "nGPT")"
   </script>
   <script type="text/javascript">
@@ -2493,35 +2491,6 @@
       win.focus();
       return
     });
-
-    $('#btn_gpt_makeup').click(function (e) {
-      e.preventDefault();
-      if ($('.chk_request_makeup:checked').length <= 0) {
-        ErrorAlert("메이크업할 후보자를 체크 후 진행하여 주십시오.");
-        return;
-      }
-
-      param = 'p_seq=' + $('#p_seq').val()
-
-      $('.chk_request_makeup:checked').each(function (p, a) {
-        param += '&pic_seq=' + a.value;
-      });
-      url = window.url_makeup_gpt + '?' + param;
-
-      var newWindow = window.open(url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
-      if (newWindow) {
-        // 팝업이 차단되지 않은 경우
-
-
-
-        newWindow.focus();
-      } else {
-        // 팝업이 차단된 경우
-        ErrorAlert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
-        return;
-      }
-    });
-
 
     $('#btn_gpt_makeup2').click(function (e) {
       e.preventDefault();

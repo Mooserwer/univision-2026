@@ -307,7 +307,6 @@
     <Compile Include="Controllers\UtilsController.cs" />
     <Compile Include="Controllers\LogController.cs" />
     <Compile Include="Controllers\MeetingRoomController.cs" />
-    <Compile Include="Controllers\GPTController.cs" />
     <Compile Include="Controllers\ScheduleController.cs" />
     <Compile Include="Controllers\ProjectController.cs" />
     <Compile Include="Controllers\ClientController.cs" />
@@ -5789,7 +5788,6 @@
     <Content Include="Views\Project\ProjectRetInvoiceCreate_Right.cshtml" />
     <Content Include="Views\Statistics\KeyProjectList.cshtml" />
     <Content Include="Views\Project\MyKeyProjectList.cshtml" />
-    <Content Include="Views\GPT\MakeupGPT.cshtml" />
     <Content Include="UploadedFiles\makeupSample\KR_makeup.docx" />
     <Content Include="Views\Utils\PDFtoWord.cshtml" />
     <Content Include="Views\Statistics\WeeklyProjectList.cshtml" />
@@ -5823,10 +5821,6 @@
     <Content Include="Views\Project\ProjectMoveSearch.cshtml" />
     <Content Include="Views\Project\SearchMoveProject.cshtml" />
     <Content Include="Views\Candidate\CandidateMailRemoveModal.cshtml" />
-    <Content Include="Views\GPT\MakeupOnly.cshtml" />
-    <Content Include="Views\GPT\MakeupAi.cshtml" />
-    <Content Include="Views\GPT\MakeupAi_back.cshtml" />
-    <Content Include="Views\GPT\MakeupAi - 복사본.cshtml" />
     <Content Include="Views\nGpt\MakeupGPT.cshtml" />
     <Content Include="Views\nGpt\PdfToWord.cshtml" />
     <Content Include="Views\nGpt\MakeupAI.cshtml" />

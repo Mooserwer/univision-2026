@@ -3,7 +3,7 @@
   Layout = "~/Views/Shared/_Layout.cshtml";
 
   string lastest_model = "gpt-5-mini";
-  string api_key = "YOUR_OPENAI_API_KEY"; //메이크업 사용자용
+  string api_key = System.Configuration.ConfigurationManager.AppSettings["OpenAIApiKey"]; //메이크업 사용자용
   string is_editabel = "";
   if (HttpContext.Current.Request.Cookies.AllKeys.Contains("MAKEUP_EDITABLE"))
   {

@@ -2,7 +2,7 @@
   ViewBag.Title = "이력서 Makeup (by GPT)";
   Layout = "~/Views/Shared/_Layout_invoice.cshtml";
   string lastest_model = "gpt-4.1-mini";
-  string api_key = "YOUR_OPENAI_API_KEY";
+  string api_key = System.Configuration.ConfigurationManager.AppSettings["OpenAIApiKey"];
   string is_editabel = "";
   if (HttpContext.Current.Request.Cookies.AllKeys.Contains("MAKEUP_EDITABLE"))
   {

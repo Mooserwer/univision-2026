@@ -5,6 +5,7 @@ using OpenAI_API;
 using OpenAI_API.Chat;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -2715,7 +2716,7 @@ namespace Univision.Main.Controllers
         else
         {
           // Authorization 헤더가 없거나 Bearer로 시작하지 않으면 처리할 로직
-          apiKey = "YOUR_OPENAI_API_KEY";
+          apiKey = ConfigurationManager.AppSettings["OpenAIApiKey"];
         }
         //const makeupApiKey = "";
         GPTServer gpt = new GPTServer(apiKey);

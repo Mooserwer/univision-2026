@@ -6,10 +6,10 @@
   string actionName = ViewContext.RouteData.Values["action"].ToString().ToLower();
 
   string latestModel = "gpt-5.4-mini";
-  string api_key = "YOUR_OPENAI_API_KEY"; //메이크업 사용자용
+  string api_key = System.Configuration.ConfigurationManager.AppSettings["OpenAIApiKey"]; //메이크업 사용자용
   if (actionName == "makeupgpt_mr")
   {
-    api_key = "YOUR_OPENAI_API_KEY"; //메이크업 ADMIN용
+    api_key = System.Configuration.ConfigurationManager.AppSettings["OpenAIApiKeyAdmin"]; //메이크업 ADMIN용
     if (HttpContext.Current.Request.Cookies.AllKeys.Contains("MAKEUP_GPT_MODEL"))
     {
       latestModel = Request.Cookies["MAKEUP_GPT_MODEL"].Value;

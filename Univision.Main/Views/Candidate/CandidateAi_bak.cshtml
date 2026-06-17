@@ -145,7 +145,7 @@
 
     const API_URL = "https://api.openai.com/v1/chat/completions";
     //const API_KEY = "YOUR_OPENAI_API_KEY";
-    const API_KEY = "YOUR_OPENAI_API_KEY"; //유료키
+    const API_KEY = "@(System.Configuration.ConfigurationManager.AppSettings["OpenAIApiKey"])"; //유료키
     const prompt = document.getElementById("prompt"); //명령어
     const file_content = document.getElementById("file_content"); //1차 추출된 파일내용
     const ai_summary_stream = document.getElementById("ai_summary_stream"); //분석된 내용 (JSON)

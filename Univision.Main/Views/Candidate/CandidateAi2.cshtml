@@ -165,7 +165,7 @@
 
     const API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
     //const API_KEY = "YOUR_OPENAI_API_KEY";
-    const API_KEY = "AIzaSyCkFgZHpaUMODMmF24w8yJP3TqoDFhoFTw"
+    const API_KEY = "@(System.Configuration.ConfigurationManager.AppSettings["GoogleGeminiApiKey"])"
     const prompt = document.getElementById("prompt"); //명령어
     const file_content = document.getElementById("file_content"); //1차 추출된 파일내용
     const ai_summary_stream = document.getElementById("ai_summary_stream"); //분석된 내용 (JSON)

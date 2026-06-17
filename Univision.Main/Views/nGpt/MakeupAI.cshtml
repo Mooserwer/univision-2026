@@ -1,6 +1,6 @@
 ﻿@{
   Layout = null;
-  string api_key = "YOUR_OPENAI_API_KEY";
+  string api_key = System.Configuration.ConfigurationManager.AppSettings["OpenAIApiKey"];
 }
 <!DOCTYPE html>
 <html lang="ko">

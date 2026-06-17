@@ -2716,7 +2716,7 @@ namespace Univision.Main.Controllers
         else
         {
           // Authorization 헤더가 없거나 Bearer로 시작하지 않으면 처리할 로직
-          apiKey = ConfigurationManager.AppSettings["OpenAIApiKey"];
+          apiKey = ConfigurationManager.AppSettings["OpenAIApiResumeKey"];
         }
         //const makeupApiKey = "";
         GPTServer gpt = new GPTServer(apiKey);
@@ -2749,20 +2749,6 @@ namespace Univision.Main.Controllers
 
     #region AI프론트엔드용
     public async Task<ActionResult> CandidateAi()
-    {
-      return View();
-    }
-    public async Task<ActionResult> CandidateAi2()
-    {
-      return View();
-    }
-
-    public async Task<ActionResult> CandidateAi2025()
-    {
-      return View();
-    }
-
-    public async Task<ActionResult> CandidateAi_v2()
     {
       return View();
     }

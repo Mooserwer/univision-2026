@@ -5791,8 +5791,6 @@
     <Content Include="Views\Project\MyKeyProjectList.cshtml" />
     <Content Include="Views\GPT\MakeupGPT.cshtml" />
     <Content Include="UploadedFiles\makeupSample\KR_makeup.docx" />
-    <Content Include="Views\Candidate\CandidateAi2.cshtml" />
-    <Content Include="Views\Candidate\CandidateAi_bak.cshtml" />
     <Content Include="Views\Utils\PDFtoWord.cshtml" />
     <Content Include="Views\Statistics\WeeklyProjectList.cshtml" />
     <Content Include="Views\Candidate\SearchClientManager.cshtml" />
@@ -5816,11 +5814,9 @@
     <Content Include="Views\Project\MyInvoiceList.cshtml" />
     <Content Include="Views\Invoice\PartialPreInvoiceShareList.cshtml" />
     <Content Include="Views\Invoice\InvoiceCancelCreate.cshtml" />
-    <Content Include="Views\Candidate\CandidateAi_v2.cshtml" />
     <Content Include="Views\Candidate\CandidateCreateAIUpdate.cshtml" />
     <Content Include="Views\Statistics\NegoProjectList.cshtml" />
     <Content Include="Views\Statistics\ProjectStatusList.cshtml" />
-    <Content Include="Views\Candidate\CandidateAi2025.cshtml" />
     <Content Include="Views\Candidate\CandidateMailAi.cshtml" />
     <Content Include="Views\Candidate\CandidateMailGptModal.cshtml" />
     <Content Include="Views\Project\ProjectMoveCandidate.cshtml" />

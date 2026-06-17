@@ -1,0 +1,94 @@
+﻿@using Univision.Core.Models.DTO;
+@model List<pjt_recandidate_history>
+    <style>
+        .popover {
+            z-index: 999999 !important;
+        }
+    </style>
+    <div id="can_pjt_progress">
+        @if (Model.Count > 0)
+        {
+        <ul class="list-group">
+            @foreach (var data in Model)
+            {
+                string text_progress = String.Empty;
+                string border_progress = String.Empty;
+                switch (data.state)
+                {
+                    case ProjectHistoryStateCode.interest:
+                    case ProjectHistoryStateCode.fail:
+                        text_progress = "";
+                        border_progress = "";
+                        break;
+
+                    case ProjectHistoryStateCode.recommand:
+                    case ProjectHistoryStateCode.paper:
+                        text_progress = "text-warning";
+                        border_progress = "border-warning";
+                        break;
+
+                    case ProjectHistoryStateCode.interview:
+                    case ProjectHistoryStateCode.interviewOk:
+                        text_progress = "text-info";
+                        border_progress = "border-info";
+                        break;
+
+                    case ProjectHistoryStateCode.hireReady:
+                        text_progress = "text-primary";
+                        border_progress = "border-primary";
+                        break;
+
+                    case ProjectHistoryStateCode.hireOk:
+                        text_progress = "text-success";
+                        border_progress = "border-success";
+                        break;
+                }
+
+            <li class="list-group-item py-5">
+                <div class="p-5 text-truncate border @border_progress">
+                    @if (ViewBag.this_c_seq == data.c_seq)
+                    {
+                        @data.kor_name <span class="text-secondary">[현재 후보자]</span>
+                    }
+                    else
+                    {
+                        
+                            string hover_title = String.Empty;
+                            hover_title = "후보자 상세정보(클릭 시 상세화면으로 이동)<br />";
+                            if (Univision.Security.AppIdentity.isExternal != 1)
+                            {
+                                hover_title += "<br/>-" + data.phone + " <br /> - " + data.email;
+                            }
+
+
+                            hover_title += "<br /> - " + data.final_school + " / " + data.final_major + " <br /> - " + data.company_name;
+                        
+                            <a href="javascript:openCandidate('@data.c_seq')" data-html="true" data-toggle="popover" data-placement="bottom" data-trigger="hover" data-content="@Html.Raw(hover_title)">
+                                @data.kor_name
+                                @if (data.birth_date.HasValue)
+                                {
+                                    @("(" + Utils.ConvertDateTimeToString(data.birth_date).Substring(2, 2) + "년생")
+                                }
+
+                                @(" / " + Utils.ReturnGenderTxt(data.gender) + ")")
+                            </a>
+                            }
+                            -
+                            [<span class="@text_progress">@Utils.ReturnProjectHistoryStateTxt(data.state)</span> <span class="text-secondary">(@Utils.ConvertDateTimeToString(data.schedule_date))</span>]
+                            @data.contents
+
+                            @if (!string.IsNullOrWhiteSpace(data.file_directory))
+                            {
+                                <a class="text-primary" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.prc_seq, @type = "pjtRecHistory" })">
+                                    <i class="fas fa-file"></i>
+                                </a>
+                            }
+                    </div>
+            </li>
+            }
+        </ul>
+        }
+    </div>
+<script>
+    $('[data-toggle="popover"]').popover({});
+</script>

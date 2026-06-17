@@ -1,0 +1,473 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.DormantListViewModel
+
+@{
+    ViewBag.Title = "Dormant LIst";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int start_item = Model.PagingInfo.TotalItems == 0 ? 0 : ((Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage) + 1;
+    int end_item = Model.PagingInfo.TotalItems == 0 ? 0 : start_item + Model.list.Count() - 1;
+}
+
+<style>
+    .extend-box {
+        position: absolute !important;
+        top: 1.9em;
+        right: 1em;
+    }
+
+    .panel-body .input-search .form-control {
+        border-radius: 2px;
+    }
+
+    .panel-body .form-control-label {
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+    }
+
+    .panel-body .form-group {
+        margin-bottom: 3px;
+    }
+
+    .panel {
+        margin-bottom: 1rem;
+    }
+
+    .table thead th {
+        font-weight: bold;
+    }
+
+    /*.innertable {
+        border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;
+    }*/
+
+    .innertable tr {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        /*border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;*/
+    }
+
+        .innertable tr td {
+            width: 100%;
+            border: 0px;
+            border-color: white;
+            background-color: white;
+            empty-cells: show;
+            border-collapse: inherit;
+            padding: initial;
+        }
+</style>
+
+<link href="~/Libs/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/user.min599c.css?v4.0.4">
+
+<div class="page-user">
+    <div class="page-content">
+        <!--검색 Form -->
+        @using (Html.BeginForm("DormantList", "Client", FormMethod.Get, new { @id = "SearchForm" }))
+        {
+
+            @Html.HiddenFor(x => x.search.orderTxt)
+            @Html.HiddenFor(x => x.search.orderOption)
+            <!-- 검색 패널 시작 -->
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <div class="panel-title">
+                        <i class="fas fa-search"></i>
+                        Dormant List
+                        <i class="fas fa-question-circle" title="DORMANT 6개월 이상 활동이 없는 고객사 입니다."></i>
+                    </div>
+                    <a class="panel-action icon wb-minus extend-box" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true">
+                    </a>
+                </div>
+
+
+                <div class="panel-body bg-blue-grey-200">
+                    <hr class="d-md-none d-block" />
+                    <!-- 검색조건 첫째줄 시작 -->
+                    <div class="row">
+                        <div class="col-md-4 col-lg-3 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.kor_name, "Client Name(Kr or En)", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.kor_name, new { @class = "form-control form-control-sm", @placeholder = "고객사명 검색(국문 또는 영문)" })
+                        </div>
+                        <div class="col-md-4 col-lg-3 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.ceo, "C.E.O.", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.ceo, new { @class = "form-control form-control-sm", @placeholder = "대표자명 검색" })
+                        </div>
+                        <div class="col-md-4 col-lg-3 col-xxl-2 pt-2">
+                            @Html.LabelFor(x => x.search.biz_num, "Business No.", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.biz_num, new { @class = "form-control form-control-sm", @size = "10", @placeholder = "000-00-00000" })
+                        </div>
+                        <div class="col-md-4 col-lg-3 col-xxl-4 pt-2">
+                          @Html.Label("Industry", new { @class = "form-control-label small" })
+                          <div class="input-group input-group-sm redo-site w-p100" id="BusinessDiv">
+                            <div class="bg-white pl-5 pr-5 w-p100 form-inline codeBindDiv" id="busiCodeList">
+                              @if (Model.search.business.Count() > 0)
+                              {
+                                var idx = 0;
+                                foreach (var business in Model.search.business)
+                                {
+                                  <div id='busi@(business.code2)' code2='@business.code2' class='busiRow catRow no-side-space'>
+                                    <span class='category'>
+                                      <span class='badge badge-outline badge-default bg-white cur_hand badge-lg busiCode2badge' code1='@business.code1' code2='@business.code2' code2name='@business.code_name2' onclick='DelCategoryBadge(this)'>@business.code_name2<i class='far fa-times-circle'></i></span>
+                                      <input type="hidden" name="search.business[@idx].code1" value="@business.code1" />
+                                      <input type="hidden" name="search.business[@idx].code2" value="@business.code2" />
+                                      <input type="hidden" name="search.business[@idx].code_name2" value="@business.code_name2" />
+                                    </span>
+                                  </div>
+                                  idx++;
+                                }
+
+                              }
+                            </div>
+                            <div class="input-group-btn">
+                              <button type="button" class="btn btn-outline-primary" onclick="javascript:FindBusiness()">
+                                <i class="fas fa-search"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                    <!-- 검색조건 첫째줄 끝 -->
+                    <!-- 검색조건 둘째줄 시작 -->
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.contact_name, "Contact Name", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.contact_name, new { @class = "form-control form-control-sm", @placeholder = "담당자명 검색" })
+                        </div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.contact_email, "Contact E-mail", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.contact_email, new { @class = "form-control form-control-sm", @placeholder = "담당자 이메일 검색" })
+                        </div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.am_name, "AM", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.am_name, new { @class = "form-control form-control-sm", @placeholder = "AM 검색" })
+                        </div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.Searcher, "SM", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.Searcher, new { @class = "form-control form-control-sm", @placeholder = "SM 검색" })
+                        </div>
+                    </div>
+                    <!-- 검색조건 둘째줄 끝 -->
+                    <!-- 검색조건 네째줄 시작 -->
+                    <div class="row pt-2">
+                        <div class="col">
+                            <div class="form-group text-right">
+                                <div class="btn-group">
+                                    <button type="submit" id="btnSearch" class="btn btn-sm btn-primary w-200" title="검색">
+                                        <i class="fas fa-search"></i>
+                                        Search
+                                    </button>
+                                    <button type="button" id="btnReset" class="btn btn-sm btn-danger" title="검색조건 초기화">
+                                        <i class="fas fa-redo"></i>
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 검색조건 네째줄 끝 -->
+                </div>
+            </div>
+            <!-- 검색 패널 끝 -->
+        }
+
+
+        <div class="panel">
+
+            <div class="panel-body">
+                <div class="row pb-5">
+                    <div class="h5">
+                        Search Results (@start_item.ToString("N0")  ~ @end_item.ToString("N0") of @Model.PagingInfo.TotalItems.ToString("N0"))
+                        <span class="panel-desc h6">
+                            Page : @Model.PagingInfo.CurrentPage.ToString("N0") of @(((Model.PagingInfo.TotalItems / Model.PagingInfo.ItemsPerPage) + 1).ToString("N0"))
+                        </span>
+                    </div>
+                    @*<div class="col-6 text-right">
+                            <button class="btn btn-sm btn-success" id="btnExcel" title="Download Search results to Excel">Excel</button>
+                                <a href="@Url.Action(" ClientCreate", "Client" )" class="btn btn-sm btn-primary" title="Client Registration">New Client</a>
+                        </div>*@
+                </div>
+                <div class="mt15">
+                    <table class="block_table table table-client table-striped table-bordered" style="table-layout:fixed;">
+
+                        <thead>
+                            <tr>
+                                <th data-tablesaw-priority="3" class="hidden-sm-down tablesaw-priority-4 text-center" style="width: 5%; vertical-align:middle;" rowspan="2">No.</th>
+                                <th colspan="4" style="text-align:center;" class="hidden-sm-down">Client</th>
+                                <th colspan="4" style="text-align:center;" class="hidden-sm-down">Lastest Project</th>
+                            </tr>
+                            <tr>
+                                <th class="text-center tbw60 ">
+                                    Client Name
+                                    <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "b.kor_name", Model.search.orderOption) colSort" orderTxt="b.kor_name"></i>
+                                </th>
+                                <th class="text-center hidden-sm-down" style="min-width:150px;">Contact</th>
+                                <th data-tablesaw-priority="2" class=" tbw20 text-center">Industry</th>
+                                <th data-tablesaw-priority="2" class="tablesaw-priority-2 text-center hidden-sm-down" style="min-width:150px;" title="최종 클라이언트 정보 수정일">
+                                    Lst. modified
+                                    <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "a.dt", Model.search.orderOption) colSort" orderTxt="a.dt"></i>
+                                </th>
+                                <th data-tablesaw-priority="2" class=" text-center tbw20">AM</th>
+                                <th data-tablesaw-priority="2" class="tablesaw-priority-2 text-center hidden-sm-down" style="min-width:100px;">SM</th>
+                                <th data-tablesaw-priority="2" class="tablesaw-priority-2 text-center hidden-sm-down" style="min-width:300px;">Title</th>
+                                <th data-tablesaw-priority="2" class="tablesaw-priority-2 text-center hidden-sm-down" style="min-width:100px;">Date</th>
+                            </tr>
+
+                        </thead>
+                        <tbody>
+                            @if (Model.list.Count > 0)
+                            {
+                                long num = 1 + ((Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage);
+
+                                foreach (var data in Model.list)
+                                {
+                                    <tr>
+                                        <td class="tablesaw-priority-3 text-center hidden-sm-down" style="max-width:40px !important;">@(num++)</td>
+                                        <td class="">
+                                            <a href="@Url.Action("ClientDetail", "Client" , new { c_seq=data.c_seq})" class="">
+                                                @data.kor_name
+                                                @if (!String.IsNullOrWhiteSpace(data.ceo))
+                                                {
+                                                    <span>-(@data.ceo)</span>
+                                                }
+                                                @if (!String.IsNullOrWhiteSpace(data.eng_name))
+                                                {
+                                                    <br /><small>@data.eng_name</small>
+                                                }
+                                            </a>
+                                            <br />
+                                            @*
+                            @if (data.offlimit == 1)
+                            {
+                            <label class="badge badge-dander">Off Limit</label>
+                            }
+                            <label class="badge @(data.is_foreign_invest == 1 ? " badge-primary" : "badge-info" )">@(data.is_contract == 1 ? "Foreign" : "Domestic")</label>
+                            <label class="badge @(data.is_contract == 1 ? " badge-success" : "badge-secondary" )">@(data.is_contract == 1 ? "Contract" : "Not Contract")</label>
+                                            *@
+                                        </td>
+                                        <td class="hidden-sm-down">
+
+                                            @if (!string.IsNullOrWhiteSpace(data.contact_name))
+                                            {
+
+                                                @data.contact_name
+
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(data.contact_phone))
+                                            {
+                                                <br />
+                                                if (data.is_external_lock == 1)
+                                                {
+                                                    <span class="text-secondary" title="개인정보를 확인 하시려면 해당 고객사 상세정보의 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                                                        @data.contact_phone
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    @data.contact_phone
+                                                }
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!String.IsNullOrEmpty(data.business_name2))
+                                            {
+                                                <text>[</text> @(data.business_name1 + " > " + data.business_name2) <text>]</text>
+                                            }
+                                        </td>
+                                        <td class="tablesaw-priority-1 text-center hidden-sm-down">
+                                            @Utils.ConvertDateTimeToString(data.lst_client_date)
+                                        </td>
+                                        <td class="text-center">
+                                            @if (data.am_name != null)
+                                            {
+                                                @data.am_name
+                                            }
+                                        </td>
+                                        <td class="text-center hidden-sm-down">
+                                            @if (data.searcher_name != null)
+                                            {
+                                                @data.searcher_name
+                                            }
+                                        </td>
+                                        <td class="hidden-sm-down">
+                                            @data.projectTitle
+                                        </td>
+                                        <td class="tablesaw-priority-1 text-center hidden-sm-down">
+                                            @Utils.ConvertDateTimeToString(data.last_project_dt)
+                                        </td>
+                                    </tr>
+                                }
+                            }
+
+                            else
+                            {
+                                <tr>
+                                    <td colspan="8" style="text-align:center;height:200px;vertical-align:middle;">
+                                        <b>No Data.</b>
+                                    </td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+
+                </div>
+
+                <br />
+                @Html.PageAjaxLinks(Model.PagingInfo,
+                ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                x => Url.Action("DormantList", new
+                {
+                page = x
+                }))
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts {
+
+  <script type="text/javascript">
+    window.multi_api_hidden_pretext = "search."
+
+        $("#btnReset").click(function () {
+            location.href = "@Url.Action("DormantList", "Client")";
+        });
+
+        $(document).ready(function () {
+
+
+            BindDatePicker($(".jDatePicker"));
+
+
+            $(".colSort").click(function () {
+
+                $(".colSort").not(this).each(function () {
+
+                    $(this).removeClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $(this).addClass("fa-sort");
+                })
+
+                $(this).removeClass("fa-sort");
+
+                if ($(this).hasClass("fa-sort-up")) {
+                    $(this).addClass("fa-sort-down");
+                    $(this).removeClass("fa-sort-up");
+                    $("#search_orderTxt").val($(this).attr("orderTxt"));
+                    $("#search_orderOption").val("DESC");
+                }
+                else {
+                    $(this).addClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $("#search_orderTxt").val($(this).attr("orderTxt"));
+                    $("#search_orderOption").val("ASC");
+                }
+
+                $("#SearchForm").submit();
+
+            });
+        });
+
+        function resetSearchForm() {
+            $("#search_searchTxt").val("");
+            $("#search_orderTxt").val("");
+            $("#search_orderOption").val("");
+            $("#SearchForm").submit();
+        }
+
+      //직무,산업 추가
+        function FindBusiness() {
+            busiCodeArr = [];
+
+            $(".busiRow").each(function () {
+                $(this).find(".badge").each(function () {
+
+                    //카테고리 직무에 하위 직무가 더 있다면
+                    if ($(this).closest(".busiRow").find(".badge").length > 1) {
+                        if ($(this).hasClass("busiCode2badge")) {
+                            return;
+                        }
+                    }
+
+                    var busi = {
+                        code1: $(this).attr("code1"),
+                        code2: $(this).attr("code2")
+                    };
+                    busiCodeArr.push(busi);
+                });
+            });
+
+            $.ajax({
+                url: '@Url.Action("BusinessMultiApi2", "Partial")',
+                data: {
+
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (json) {
+                hideLoading();
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '640',
+                    'height': 'auto',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': 'Find Industry',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+
+    }
+
+    function DelCategoryBadge(obj) {
+
+      $(obj).closest(".catRow").remove();
+      reindexJobBusiness();
+    }
+
+    function reindexJobBusiness() {
+      var i = 0
+      $('#busiCodeList').find('.busiRow').each(function () {
+        $(this).find('input').each(function () {
+
+          $(this).attr('name', $(this).attr('name').replace(/\[[^\]]*\]/, '[' + (i) + ']'));
+
+        });
+        i++;
+      })
+    }
+  </script>
+
+}

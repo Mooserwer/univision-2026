@@ -1,0 +1,66 @@
+﻿@model Univision.Core.Models.DTO.client_contact
+
+    <th class="tablesaw-priority-5">@(ViewBag.num)</th>
+    <td class="tablesaw-priority-3 text-truncate" title="@Model.kor_name @Model.eng_name">
+        <a href="@Url.Action("ClientDetail", "Client", new { c_seq = Model.c_seq })">@Model.kor_name</a>
+        @if (!string.IsNullOrEmpty(Model.eng_name))
+        {
+            <br />
+            <text>[</text>@Model.eng_name<text>]</text>
+        }
+    </td>
+
+    <td class="text-truncate">
+        @Model.name<br />
+        [@Model.division / @Model.position]
+    </td>
+    <td class="tablesaw-priority-1 text-truncate">
+        @if (Model.is_external_lock == 1)
+        {
+            <span class="text-secondary" title="개인정보를 확인 하시려면 해당 고객사의 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                @Model.phone
+                @if (!string.IsNullOrEmpty(Model.cell_phone))
+                {
+                    <br />
+                    <text>[</text>@(Model.cell_phone)<text>]</text>
+                }
+                @if (!string.IsNullOrEmpty(Model.email))
+                {
+                    <br />
+                    <text>[</text><a href="mailto:@Model.email">@Model.email</a><text>]</text>
+                }
+            </span>
+        }
+        else
+        {
+            @Model.phone
+            if (!string.IsNullOrEmpty(Model.cell_phone))
+            {
+                <br />
+                <text>[</text>@(Model.cell_phone)<text>]</text>
+            }
+            if (!string.IsNullOrEmpty(Model.email))
+            {
+                <br />
+                <text>[</text><a href="mailto:@Model.email">@Model.email</a><text>]</text>
+            }
+        }
+
+    </td>
+
+    <td class="tablesaw-priority-4 text-truncate text-center">
+        @Model.am_name
+    </td>
+    <td class="tablesaw-priority-5 text-center">@(((DateTime)Model.create_dt).ToString("yyyy-MM-dd"))</td>
+    <td class="tablesaw-priority-2 text-center">
+        @if (Model.is_external_lock == 1)
+        {
+            <a class="btn btn-sm badge badge-primary" href="javascript:openClientExternalLock('@Model.c_seq');" title="Unlock private information">
+                <i class="fas fa-unlock-alt"></i> 개인정보 확인
+            </a>
+        }
+        else
+        {
+            <button type="button" class="btn btn-xs btn-danger" onclick="DeleteContactConfirm(this, '@Model.cc_seq')">삭제</button>
+        }
+    </td>

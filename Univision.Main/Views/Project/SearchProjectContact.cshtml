@@ -1,0 +1,131 @@
+﻿@model Univision.Main.Models.Project.ProjectContactListModel
+@using Univision.Security
+
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+</style>
+
+<div class="panel" style="margin-bottom:0px !important;">
+    <div class="panel-body" style="padding: 5px 10px 5px 10px; max-height:287px; overflow-y:auto">
+        <table class="table table-borderless table-hover">
+            <thead class="text-center">
+                <tr>
+                    <th>부서</th>
+                    <th>이름</th>
+                    <th>직급</th>
+                    @*<th>연락처</th>
+                    <th>이메일</th>*@
+                </tr>
+            </thead>
+            <tbody class="text-center" style="vertical-align:middle;" id="contactTableBody">
+                @if (Model.list.Count > 0)
+                {
+                    foreach (var data in Model.list)
+                    {
+                        <tr style="cursor:pointer" onclick="selectContact('@data.cc_seq', '@data.name', '@data.gender', '@data.email', '@data.phone', '@data.cell_phone', '@data.division', '@data.position')">
+                            <td>
+                                @data.division
+                            </td>
+                            <td>
+                                @data.name
+                            </td>
+                            <td>
+                                @data.position
+                            </td>
+                            @*<td>
+                                @data.phone
+                            </td>
+                            <td class="text-left">
+                                @data.email
+                            </td>*@
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4">
+                            데이터가 없습니다.
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel-footer text-right">
+        <button id="btnNewContact" type="button" class="btn btn-sm btn-primary">신규 Contact 등록</button>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("#btnNewContact").click(function () {
+
+            $("#contact_name").removeAttr("readonly");
+            $("#male").removeAttr("disabled");
+            $("#female").removeAttr("disabled");
+            $("#contact_email").removeAttr("readonly");
+            $("#contact_phone").removeAttr("readonly");
+            $("#contact_cell_phone").removeAttr("readonly");
+            $("#contact_division").removeAttr("readonly");
+            $("#contact_position").removeAttr("readonly");
+
+            window.cc_seq  = $("#cc_seq").val();
+            window.contact_name  = $("#contact_name").val();
+            window.male  = $("#male").prop("checked");
+            window.female  = $("#female").prop("checked");
+            window.contact_email  = $("#contact_email").val();
+            window.contact_phone  = $("#contact_phone").val();
+            window.contact_cell_phone  = $("#contact_cell_phone").val();
+            window.contact_division  = $("#contact_division").val();
+            window.contact_position  = $("#contact_position").val();
+
+            $("#cc_seq").val("");
+            $("#contact_name").val("");
+            $("#male").prop("checked", false);
+            $("#female").prop("checked", false);
+            $("#contact_email").val("");
+            $("#contact_phone").val("");
+            $("#contact_cell_phone").val("");
+            $("#contact_division").val("");
+            $("#contact_position").val("");
+
+            $("#btnNewContactSave").css("display", "inline");
+            $("#btnNewContactReset").css("display", "inline");
+            BindProjectContactValidation();
+            $("#btnContactSave").css("display", "none");
+            $("#btnContact").css("display", "none");
+
+            $.fancybox.close();
+        });
+    });
+
+    function selectContact(cc_seq, name, gender, email, phone, cell_phone, division, position) {
+        $("#cc_seq").val(cc_seq);
+        $("#contact_cc_seq").val(cc_seq);
+        $("#contact_name").val(name);
+        $("input:radio[name='contact_gender'][value='" + gender + "']").prop("checked", true);
+        $("#contact_email").val(email);
+        $("#contact_phone").val(phone);
+        $("#contact_cell_phone").val(cell_phone);
+        $("#contact_division").val(division);
+        $("#contact_position").val(position);
+        //$("#btnContactSave").css("display", "inline");
+
+        $.fancybox.close();
+
+        $('#btnContactSave').click();
+    }
+
+</script>

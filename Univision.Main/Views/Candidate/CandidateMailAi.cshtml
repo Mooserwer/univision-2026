@@ -1,0 +1,384 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.MailResumeListModel
+@using Univision.Security
+
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
+
+<div class="page-content container-fluid">
+
+  <!-- row -->
+  <div class="row" id="key_project_body">
+    <div class="col-xl-12">
+      <div class="panel custom1">
+        <div class="panel-heading">
+          @using (Html.BeginForm("CandidateMailAi", "Candidate", FormMethod.Get, new { @id = "SearchForm" }))
+          {
+            <div class="panel-title">
+              <span class="badge badge-pill badge-primary">ai</span> AI등록(메일연동)
+              <p class="small">
+                이메일로 수신된 후보자 이력서를 바로 등록/업데이트 할 수 있습니다. <br />
+                (실제 메일 수신 시간대비 30분 정도 지연될 수 있으며, 일부 인식이 불가능한 이력서는 누락될 수 있습니다. 최대 1개월 이내 수신된 메일만 확인가능합니다.)
+              </p>
+            </div>
+            <div class="panel-actions w-md-100">
+              <div class="panel-action text-right w-full">
+                <button type="button" class="btn btn-sm btn-raised btn-primary btn-block" id="table-setdata">새로고침</button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="panel-body p-10">
+          <div id="mail_resume_table" data-role="container">
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- // row -->
+
+  <div class="modal fade" id="CandidateGptModal" aria-hidden="false" aria-labelledby="CandidateGptModalLabel" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-simple">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+          <h4 class="modal-title text-center" id="CandidateGptModalLabel">
+            <i class="fas fa-user"></i>
+            GPT 등록하기
+          </h4>
+        </div>
+        <div id="CandidateGptModalBody" class="modal-body" style="max-height:800px; overflow-y:auto">
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="CandidateMailRemoveModal" aria-hidden="false" aria-labelledby="CandidateMailRemoveModalLabel" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-simple">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+          <h4 class="modal-title text-center" id="CandidateMailRemoveModalLabel">
+            <i class="fas fa-user"></i>
+            메일 삭제/숨기기
+          </h4>
+        </div>
+        <div id="CandidateMailRemoveModalBody" class="modal-body" style="max-height:800px; overflow-y:auto">
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section scripts {
+  <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+  <script type="text/javascript">
+
+
+        $(document).ready(function () {
+            BindDatePicker($(".jDatePicker"));
+        });
+    function callRemoveModal(dv_timestamp) {
+      $.ajax({
+                url: '@Url.Action("CandidateMailRemoveModal", "Candidate")',
+              data: {
+                dv_timestamp: dv_timestamp
+                },
+                dataType: 'html',
+                type: 'GET',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (view) {
+                hideLoading();
+
+              $("#CandidateMailRemoveModal .modal-body").html(view)
+              $('#CandidateMailRemoveModal').modal('toggle');
+              $('#CandidateMailRemoveModal').on('hidden.bs.modal', function () {
+                $('#CandidateMailRemoveModalBody').empty();
+              })
+
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+     function callGptModal(dv_timestamp) {
+            $.ajax({
+                url: '@Url.Action("CandidateMailGptModal", "Candidate")',
+              data: {
+                dv_timestamp: dv_timestamp
+                },
+                dataType: 'html',
+                type: 'GET',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (view) {
+                hideLoading();
+
+              $("#CandidateGptModal .modal-body").html(view)
+              $('#CandidateGptModal').modal('toggle');
+              $('#CandidateGptModal').on('hidden.bs.modal', function () {
+                $('#CandidateGptModalBody').empty();
+              })
+
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+    function fConfirmMailRemove(timestamp, remove_yn, desc) {
+      alertify.confirm()
+        .set({
+          'labels': { ok: '확인', cancel: '취소' },
+          'onok': function () {
+            fMailRemove(timestamp, remove_yn, desc);
+          },
+          'oncancel': function () {
+
+            return;
+          },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>삭제')
+        .setting({
+          message: "해당 메일을 삭제(숨김) 하시겠습니까?",
+        })
+        .show();
+    }
+
+    function fMailRemove(timestamp, remove_yn, desc) {
+      $.ajax({
+              url: "@Url.Action("RemoveMailProc", "Candidate")",
+              data: {
+                dv_timestamp: timestamp,
+                remove_yn: remove_yn,
+                desc : desc
+              },
+              dataType: 'json',
+              type: 'POST',
+              beforeSend: function () {
+
+              }
+            })
+              .done(function (json) {
+
+                if (json.ok) {
+                  NormalAlert(json.message);
+                  table.setData("@Url.Action("CandidateMailAiAjx", "Candidate")");
+                  $('#CandidateMailRemoveModal').modal('hide');
+                } else {
+                  ErrorAlert(json.message);
+                }
+              })
+              .fail(function (e) {
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+              });
+    }
+
+    function fSetDate(type) {
+      var today = new Date();
+      var today_str = getDateStr(today)
+      $('#search_endDt').val(today_str);
+      if (type == "day") {
+        $('#search_startDt').val(today_str)
+
+      } else if (type == "week") {
+        $('#search_startDt').val(dateAdd(today_str, -7, "d"))
+      } else if (type == "month") {
+        $('#search_startDt').val(dateAdd(today_str, -1, "m"))
+      }
+    }
+
+    function getDateStr(date) {
+      // GET YYYY, MM AND DD FROM THE DATE OBJECT
+      var yyyy = date.getFullYear().toString();
+      var mm = (date.getMonth() + 1).toString();
+      var dd = date.getDate().toString();
+
+      // CONVERT mm AND dd INTO chars
+      var mmChars = mm.split('');
+      var ddChars = dd.split('');
+
+      // CONCAT THE STRINGS IN YYYY-MM-DD FORMAT
+      return yyyy + '-' + (mmChars[1] ? mm : "0" + mmChars[0]) + '-' + (ddChars[1] ? dd : "0" + ddChars[0]);
+
+    }
+
+    function dateAdd(sDate, v, t) {
+      var yy = parseInt(sDate.substr(0, 4), 10);
+      var mm = parseInt(sDate.substr(5, 2), 10);
+      var dd = parseInt(sDate.substr(8), 10);
+
+      if (t == "d") {
+        d = new Date(yy, mm - 1, dd + v);
+      } else if (t == "m") {
+        d = new Date(yy, mm - 1 + v, dd);
+      } else if (t == "y") {
+        d = new Date(yy + v, mm - 1, dd);
+      } else {
+        d = new Date(yy, mm - 1, dd + v);
+      }
+
+      yy = d.getFullYear();
+      mm = d.getMonth() + 1; mm = (mm < 10) ? '0' + mm : mm;
+      dd = d.getDate(); dd = (dd < 10) ? '0' + dd : dd;
+
+      return '' + yy + '-' + mm + '-' + dd;
+    }
+
+    var printIconRemove = function (cell, formatterParams, onRendered) { //plain text value
+      return "<button class='btn btn-xs btn-danger btn-outline'><i class='fa fa-remove'></i>삭제하기</button>";
+    };
+    var printIconReg = function (cell, formatterParams, onRendered) { //plain text value
+      return "<button class='btn btn-xs btn-primary btn-outline'>등록하기</button>";
+    };
+
+
+    var table = new Tabulator("#mail_resume_table", {
+      height: "600px",
+      layout: "fitDataFill",
+      frozenRows: 0,
+      columns: [
+        { formatter: "rownum", hozAlign: "center", width: 40 },
+        { formatter: printIconReg, field: "p_seq", width: 80, hozAlign: "center", cellClick: function (e, cell) { callGptModal(cell.getRow().getData().dv_timestamp) } },
+        { formatter: printIconRemove, field: "p_seq", width: 80, hozAlign: "center", cellClick: function (e, cell) { callRemoveModal(cell.getRow().getData().dv_timestamp) } },
+        @*{
+          title: "삭제/숨김", field: "", width: 160, hozAlign: "center",
+          function(cell, formatterParams, onRendered) { //plain text value
+            return "<b>삭제/숨김을 원할경우<br/>여기를 눌러 사유를 선택하세요</b>";
+          },
+          editor: "select", editorParams: {
+            values: [
+              {
+                label: "삭제 하지 않음",
+                value: "",
+                description: "", // custom field
+              },
+              {
+                label: "삭제(이미 등록 한 후보자)",
+                value: "이미 등록 한 후보자",
+                description: "", // custom field
+              },
+              {
+                label: "삭제(Confidential)",
+                value: "Confidential",
+                description: "", // custom field
+              },
+              {
+                label: "보류(추후 DB매니저가 등록 예정)",
+                value: "추후 DB매니저가 등록",
+                description: "", // custom field
+              }],
+
+            placeholderEmpty: "No Results Found"
+          }
+        },
+        *@
+        {
+          title: "발신자", field: "dv_snd_name", sorter: "string", hozAlign: "center", width: 150, headerFilter: "input", formatter: function (cell, formatterParams, onRendered) {
+            var dv_snd_name = cell.getRow().getData().dv_snd_name;
+            var dv_snd_addr = cell.getRow().getData().dv_snd_addr;
+            return "<a href='mailto:" + dv_snd_addr + "'>" + dv_snd_name + "</a>"
+          }
+        },
+        {
+          title: "유니비전 연관후보", field: "candidate_name", hozAlign: "center", sorter: "string", width: 120, headerFilter: "input", formatter: function (cell, formatterParams, onRendered) {
+            var c_seq = cell.getRow().getData().candidate_seq;
+            var name = cell.getRow().getData().candidate_name;
+            var gender = cell.getRow().getData().gender;
+            var birth_year = cell.getRow().getData().birth_year;
+            if (name != "" && name != undefined) {
+              return "<a href='/Candidate/CandidateDetail?c_seq=" + c_seq + "' target='_blank' title='클릭하면 후보자 상세화면으로 이동합니다'>" + name + "<br/>(" + birth_year + "/" + gender + ")</a>";
+            } else {
+              return "";
+            }
+
+          }
+        },
+        { title: "수신일시", field: "dd_rcv", sorter: "string", hozAlign: "center" },
+        { title: "메일제목", field: "dv_subject", sorter: "string", width: 400, headerFilter: "input" },
+        {
+          title: "첨부파일", field: "files", width: 250, formatter: function (cell, formatterParams, onRendered) {
+            files = cell.getRow().getData().files;
+            //console.log(files)
+            var str = "";
+            for (var i = 0; i < files.length; i++) {
+              //console.log(files[i])
+              if (str != "")
+                str += "<br/>";
+              var file_name = files[i].dv_file_name
+              var file_ext = getFileExtension(file_name).substr(0, 3);
+              var file_print = '<a href="' + files[i].file_path.replace(/\(/gi, '%28').replace(/\)/gi, '%29').replace(/\+/gi, '%2B') + '" download title="' + files[i].dv_file_name + '" data-toggle="tooltip" data-placement="bottom"><img src="/images/ico_file_ext/p_' + file_ext + '_s.gif" onerror="this.src=\'/images/ico_file_ext/p_etc_s.gif\';" align="absmiddle"> ' + file_name + '</a>';
+              str += file_print;
+            }
+
+            return str;
+          }
+        },
+      ],
+      /*
+      rowFormatter: function (row) {
+        if (row.getData().pjt_status == 5) {
+          row.getElement().classList.add("bg-success");
+        } else if (row.getData().pjt_status == 4) {
+          row.getElement().classList.add("bg-info");
+        } else if (row.getData().pjt_status == 3 ) {
+          row.getElement().classList.add("bg-danber");
+        } else if (row.getData().pjt_status == 2) {
+          row.getElement().classList.add("bg-waning");
+        }
+      },*/
+      ajaxURL: "@Url.Action("CandidateMailAiAjx", "Candidate")",
+      ajaxConfig: "POST",
+      ajaxContentType: "json",
+
+      ajaxResponse: function (url, params, response) {
+        //url - the URL of the request
+        //params - the parameters passed with the request
+        //response - the JSON object returned in the body of the response.
+
+        return response.list; //return the tableData property of a response json object
+      },
+      pagination: "local",
+      paginationSize: 100,
+      paginationSizeSelector: [10, 20, 30, 50, 100],
+      paginationCounter: "rows",
+
+    });
+    document.getElementById("table-setdata").addEventListener("click", function () {
+      table.setData("@Url.Action("CandidateMailAiAjx", "Candidate")");
+    });
+
+
+    function getFileExtension(filename) {
+      const parts = filename.split('.');
+      if (parts.length > 1) { // Ensure there's actually an extension
+        return parts.pop();
+      }
+      return ''; // Return empty string if no extension found
+    }
+
+
+
+
+  </script>
+
+}

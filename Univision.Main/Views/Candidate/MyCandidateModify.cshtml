@@ -1,0 +1,132 @@
+﻿@model Univision.Core.Models.DTO.can_interest
+
+@{
+    Layout = null;
+}
+
+@using (Html.BeginForm("MyCandidateModify", "Candidate", FormMethod.Post, new { @id = "CreateForm", @autocomplete = "off" }))
+{
+    <div class="row">
+        <div class="col-12 col-md-8 col-lg-6 form-group">
+            @Html.LabelFor(x => x.kor_name, "Candidate Name", new { @class = "form-control-label" })
+            <div class="input-group">
+                @Html.TextBoxFor(x => x.kor_name, new { @class = "form-control", @required = "required", @readonly = "readonly" })
+                @Html.HiddenFor(x => x.cf_seq)
+                @Html.HiddenFor(x => x.c_seq, new { @id = "mylist_c_seq" })
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 col-md-6 form-group">
+            @Html.LabelFor(x => x.phone, "Phone", new { @class = "form-control-label" })
+            @Html.TextBoxFor(x => x.phone, new { @class = "form-control", @placeholder = "전화번호", @readonly = "readonly" })
+        </div>
+        <div class="col-12 col-md-6 form-group">
+            @Html.LabelFor(x => x.email1, "E-mail", new { @class = "form-control-label" })
+            @Html.TextBoxFor(x => x.email1, new { @class = "form-control", @placeholder = "이메일", @readonly = "readonly" })
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 col-md-6 form-group">
+            @Html.LabelFor(x => x.company, "추천회사", new { @class = "form-control-label" })
+            @Html.TextBoxFor(x => x.company, new { @class = "form-control", @placeholder = "추천회사" })
+        </div>
+        <div class="col-12 col-md-6 form-group">
+            @Html.LabelFor(x => x.position, "Position", new { @class = "form-control-label" })
+            @Html.TextBoxFor(x => x.position, new { @class = "form-control", @placeholder = "포지션" })
+        </div>
+    </div>
+    <div class="row mb-10">
+        <div class="col-12 col-md-12 form-group">
+            @Html.LabelFor(x => x.memo, "Memo", new { @class = "form-control-label" })
+            @Html.TextAreaFor(x => x.memo, new {  @id = "mylist_memo" ,@class = "form-control", @placeholder = "메모", @rows = 5 })
+        </div>
+    </div>
+
+    <div class="text-right">
+        <button type="button" class="btn btn-primary" id="btnSave"><i class="icon wb-check"></i> Submit</button>
+        <button type="reset" class="btn btn-default btn-outline">Reset</button>
+    </div>
+}
+
+<script type="text/javascript">
+
+    $("document").ready(function () {
+        StopEnterSubmit();
+
+        $("#btnSave").click(function () {
+            
+            var request_data = {
+                c_seq : $("#mylist_c_seq").val(),
+                cf_seq: $("#cf_seq").val(),
+                company: $("#company").val(),
+                position: $("#position").val(),
+                memo: $("#mylist_memo").val()
+            }
+
+            ConfirmAlert('Favorite @(Model.cf_seq != 0 ? "정보 수정" : "등록") ', '해당 후보자의 정보를 @(Model.cf_seq != 0 ? "수정" : "등록") 하시겠습니까?', function () {
+                $.ajax({
+                    type: 'POST',
+                    url: $("#CreateForm").attr("action"),
+                    data: request_data,
+                    dataType: 'json',
+                    beforeSend: function () {
+                        showLoading('#CreateForm');
+                    }
+                })
+                .done(function (json) {
+                    hideLoading('#CreateForm');
+                    if (json.ok) {
+                        NormalAlert(json.message);
+
+                        if ($("#searchForm").length > 0) {
+                            $("#searchForm").submit();
+                        }
+                        else if ($('#cand_list_' + json.c_seq).length > 0) {
+                            $.ajax({
+                                url: '@Url.Action("CandidateSingleList", "Candidate")',
+                                data: {
+                                    c_seq: json.c_seq
+                                },
+                                dataType: 'html',
+                                type: 'POST',
+                                beforeSend: function () {
+                                    showLoading('#cand_list_' + json.c_seq);
+                                },
+                                success: function (response) {
+                                    $('#cand_list_' + json.c_seq).html(response);
+                                },
+                                complete: function () {
+                                    hideLoading('#cand_list_' + json.c_seq);
+                                    $('#MyCandidateModifyModal').modal('hide');
+                                }
+                            })
+                        }
+                        else if ($("#span_my_list_btn").length > 0) {
+                            var delHtml =  "<button type='button' class='btn btn-info btn-sm' onclick='CreateMyListConfirm(&quot;"+json.c_seq +"&quot;)'>"
+                            delHtml += "    <i class='fa fa-user-edit' aria-hidden='true'></i> Update My List"
+                            delHtml += "</button>"
+
+                            $("#span_my_list_btn").empty();
+                            $("#span_my_list_btn").html(delHtml);
+                            $('#MyCandidateModifyModal').modal('hide');
+                        }
+                        
+                        
+
+                        
+                        
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    hideLoading('#CreateForm');
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+        });
+
+    });
+
+</script>

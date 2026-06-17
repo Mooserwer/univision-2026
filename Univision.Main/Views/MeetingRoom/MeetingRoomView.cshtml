@@ -1,0 +1,288 @@
+﻿@{
+    ViewBag.Title = "MeetingRoomView";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string book_date = ViewBag.m_date_str;
+    if (String.IsNullOrWhiteSpace(book_date))
+    {
+        book_date = DateTime.Now.ToString("yyyy-MM-dd");
+    }
+    bool is_meetingroom_admin = ViewBag.is_meetingroom_admin;
+}
+
+<link rel="stylesheet" href="~/Libs/fullcalendar_cus/css/fullcalendar_cus.css?2">
+<style>
+    .alert-info {
+        background-color: white !important;
+    }
+
+    .fc-axis {
+        background-color: #7eb6ff;
+        /*opacity: 0.2;*/
+    }
+    .fc-time {
+        color:#fff;
+        font-size:12px;
+        font-weight:bold;
+    }
+
+    .fc-view-container{
+        min-width:800px;
+    }
+    /*.fc-event {
+        background-color : #589ffc !important;
+        border-color: #589ffc !important;
+    }
+
+    .fc-content .fc-time{
+        background-color: #589ffc;
+    }*/
+
+    table th, table, td {
+        padding: 0px !important;
+    }
+
+</style>
+
+<div class="page-content">
+    <div class="scroll-contents">
+        <div id="calendar"></div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/Scripts/moment.js"></script>
+    <script src="~/Libs/fullcalendar_cus/js/fullcalendar_cus.js"></script>
+    <script src='~/Libs/fullcalendar_cus/js/scheduler.js'></script>
+    <script src='~/Libs/fullcalendar_cus/js/gcal.js'></script>
+
+    <script type="text/javascript">
+        var popTemplate = '<div class="popover" style="max-width:600px;" ><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body p-3 text-center"></div></div>';
+        var popoverElement;
+        var cur_date = "@(book_date)"; //기본날짜 (없으면 오늘날짜)
+        var fc_header_button = 'agendaDay, basicWeek, month, prev,today,next'; //일반사용자
+        @{
+        if (is_meetingroom_admin)
+        {
+        <text>
+        fc_header_button = 'noticeEdit, listWeek, ' + fc_header_button;
+        </text>
+        }
+        }
+
+        //리소스(미팅룸 정보) 받아와서 그려주는 함수
+        function rcsRender(resourceObj, labelTds, bodyTds) {
+            //labelTds.css('background', 'blue');
+
+            labelTds.addClass("label_" + resourceObj.floor);
+            if (resourceObj.floor == "f17") {
+                //var icon_color_class = " text-info"
+                var icon_color_class = ""
+            } else {
+                //var icon_color_class = " text-dark"
+                var icon_color_class = ""
+            }
+            labelTds.html(labelTds.html().replace("] ", "]<br/>"));
+            labelTds.html(labelTds.html() + '<br/>');
+            if (resourceObj.wifi == 1) {
+                labelTds.html(labelTds.html() + ' <i class="fa fa-wifi' + icon_color_class + '" aria-hidden="true" title="Wi-Fi"></i> ');
+            }
+            if (resourceObj.tv == 1) {
+              labelTds.html(labelTds.html() + ' <i class="fa fa-tv' + icon_color_class + '" aria-hidden="true" title="TV/Projector"></i> ');
+              labelTds.html(labelTds.html() + ' <i class="fa fa-laptop' + icon_color_class + '" aria-hidden="true" title="Laptop"></i> ');
+            }
+            if (resourceObj.network == 1)
+                labelTds.html(labelTds.html() + ' <i class="fa fa-globe' + icon_color_class + '" aria-hidden="true" title="Network"></i> ');
+
+            if (resourceObj.phone == 1)
+                labelTds.html(labelTds.html() + ' <i class="fa fa-phone' + icon_color_class + '" aria-hidden="true" title="Phone"></i> ');
+
+            //관리자일경우 미팅룸별 공지사항 수정기능
+            @{
+                if (is_meetingroom_admin)
+                {
+                    <text>
+                        labelTds.click(function(){
+                            EditRoomNotice(resourceObj.id, resourceObj.title, resourceObj.room_notice);
+                        });
+                    </text>
+                }
+            }
+        }
+
+        function NoticeEdit() {
+            $('#NoticeModal').modal('show');
+        }
+        function EditRoomNotice(room_id, room_name, notice) {
+            $('#RoomNoticeModal').find('#modal_room_notice_id').val(room_id);
+            $('#RoomNoticeModal').find('#modal_room_notice_name').text(room_name);
+            $('#RoomNoticeModal').find('#modal_room_notice').val(notice);
+
+            $('#RoomNoticeModal').modal('show');
+        }
+
+
+        function openPopover(start, end, jsEvent, view, resource) {
+            //기간선택 시 예약 여부 팝오버 표시
+            //console.log("///s", start, "///e", end, "////evt", jsEvent, "///v", view, "///r", resource);
+            closePopovers();
+            if (view.name == "agendaDay") {
+                popoverElement = $(jsEvent.target);
+                popoverElement.popover({
+                    title: '예약하기 <small>[Reservation]</small>',
+                    content: '<button class="btn btn-primary" id="open_resv">Go</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-secondary close_resv_popover">Cancel</button>',
+                    template: popTemplate,
+                    placement: 'auto',
+                    html: true,
+                    trigger: 'manual',
+                    animation: true,
+                    container: 'body'
+                }).popover('show');
+
+                $('#open_resv').click(function () {
+
+                    closePopovers();
+
+                    var evt = {
+                        resourceId : resource.id,
+                        dd_start : start.format("YYYY-MM-DD HH:mm"),
+                        dd_end : end.format("YYYY-MM-DD HH:mm")
+                    }
+                    console.log(evt);
+                    openEventModal(evt);
+                });
+
+                $('.close_resv_popover').each(function () {
+                    $(this).unbind("click");
+                    $(this).click(function () {
+                        $('#calendar').fullCalendar('unselect');
+                        closePopovers();
+                    });
+                });
+            }
+        }
+
+        function closePopovers() {
+            //팝오버 닫기
+            $('.popover').not(this).popover('hide');
+        }
+
+
+        //FULL CALENDAR 달력표시
+        var c_time = moment().add(-1, 'h').format("HH:mm:ss"); // 현재시간 위치로 스크롤 초기화
+        var calendar = $('#calendar').fullCalendar({
+            schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+            titleFormat: "YYYY-MM-DD, ddd",
+            header: { right: fc_header_button },//'agendaDay, basicWeek, month, prev,today,next' }, // buttons for switching between views
+            //customButtons: {
+            //    noticeEdit: {
+            //        text: '공지사항수정',
+            //        click: NoticeEdit
+            //    }
+            //},
+            defaultDate: cur_date,
+            defaultView: 'agendaDay',
+            themeSystem: "bootstrap4",
+            allDaySlot: false,
+            slotDuration: "00:10:00",
+            minTime: "07:00:00",
+            maxTime: "22:00:00",
+            scrollTime: c_time, //"08:30:00",
+            nowIndicator: true,
+            selectable: true,
+            selectHelper: true,
+            selectOverlap: false,
+            unselectAuto: true,
+            unselectCancel: '.popover, #resvModal',
+            height: "parent",
+            eventLimit: true,
+            views: {
+                basicWeek: {
+                    eventLimit: 15 //week뷰 시 이벤트 최대 보여지는 갯수
+                },
+                month: {
+                    eventLimit: 3 // 월간 뷰 시 이벤트 최대 보여지는 갯수
+                }
+            },
+            eventOrder: 'title',
+            businessHours: { //업무 유효기간 (월~금, 아침 8시 반부터 저녁 7시 반까지)
+                dow: [1, 2, 3, 4, 5],
+                start: '8:30',
+                end: '19:30',
+            },
+            timeFormat: 'HH:mm',
+            events: {//이벤트 불러오기
+                url: '@Url.Action("MeetingRoomEventList", "MeetingRoom")',
+                method : 'POST'
+            },
+            resources: { //리소스(미팅룸) 불러오기
+                url: '@Url.Action("MeetingRoomList", "MeetingRoom")',
+                method : 'POST'
+            },
+            resourceRender: rcsRender, // 리소스 불러와서 그려줄때 별도 함수
+            unselect : function(){
+                closePopovers(); //
+            },
+            select : openPopover,
+            dayClick: function(date, jsEvent, view) {
+                if (view.name == "month" || view.name == "basicWeek" ){
+                    $('#calendar').fullCalendar('changeView', 'agendaDay', date.format());
+                }
+            },
+            eventClick: function (evt, jsEvt, view) {
+                openEventModal(evt); // 이벤트 클릭시 팝업
+            },
+            eventRender: function (evt, element, view) { // 이벤트 그려주기
+                //console.log(element, evt);
+                if (evt.id) {
+                    element.popover({
+                        title: evt.title + ' - ' + evt.req_user_name,
+                        content: evt.title + '<br/>' + evt.comment + (evt.laptop == 1 ? '※노트북 사용' : ''),
+                        trigger: 'hover',
+                        placement: 'auto',
+                        html: true,
+                        container: 'body'
+                    });
+                }
+
+                if (evt.id && view.name == "agendaDay") {
+                    //console.log(element);
+                    element.find('.fc-time').css('background-color', '#777');
+                    element.find('.fc-time').append('<span class="float-right pr-1">' + evt.req_user_name + '</span>');
+                    if (evt.laptop == 1) {
+                        element.find('.fc-title').append('&nbsp;<i class="fa fa-laptop" aria-hidden="true"></i>');
+                    }
+                } else if (view.name == "listWeek") {
+                    //console.log(element);
+                    element.find('.fc-list-item-title ').prepend(evt.resourceSortName + '&nbsp;&nbsp;');
+                    element.find('.fc-list-item-title ').append(' - ' + evt.req_user_name);
+                    if (evt.laptop == 1) {
+                        element.find('.fc-list-item-title ').append('&nbsp;<i class="fa fa-laptop" aria-hidden="true"></i>');
+
+                    }
+                }
+            }
+        });
+
+
+        function openEventModal(event_obj) {
+
+            //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+            if ($('#book_modal').length > 0) {
+              $('#book_modal').parent().remove();
+            }
+
+            //풀캘린더 이벤트 객체 그대로 넘길 경우 스택 오버플로우 남..그래서 기존 스케쥴 확인시(이벤트 Id값이 있을 때)는 id 만 넘김
+            if (event_obj.id) {
+                var obj = { id: event_obj.id }
+            } else {
+                var obj = event_obj
+            }
+            $('body').append($('<div>').load('@Url.Action("BookMeetingRoom", "MeetingRoom")', obj, function () {
+                $('#book_modal').modal('show');
+            }));
+
+        }
+
+    </script>
+}

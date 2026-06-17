@@ -1,0 +1,184 @@
+﻿@model Univision.Main.Models.Api.SearchClientModel
+@using Univision.Security
+
+<style>
+  h3 {
+    margin-top: 0px !important;
+  }
+
+  .fancybox-title {
+    text-align: left !important;
+  }
+
+  @@media (max-width:500px) {
+    .paginationDiv {
+      justify-content: flex-start !important;
+    }
+  }
+</style>
+
+<div class="form-inline mb-10">
+  <div class="input-group col-md-12 no-side-space">
+    @Html.TextBoxFor(x => x.searchTxt, new { @class = "form-control", @placeholder = "고객사 이름" })
+    <button type="button" id="popSearchButton" class="btn btn-primary" onclick="FancyBoxSearchAndPageMove(1);"><i class="fas fa-search" aria-hidden="true"></i></button>
+  </div>
+</div>
+<div class="panel" style="margin-bottom:0px !important;">
+  <div class="panel-body" style="padding: 5px 10px 5px 10px;">
+    <div class="table-responsive">
+      <table class="block_table table table-striped tablesaw-columntoggle mb-0" style="table-layout:fixed">
+        <colgroup>
+          <col />
+          <col />
+          <col />
+          <col />
+        </colgroup>
+        <thead class="text-center">
+          <tr>
+            <th class="tbw60">고객사명</th>
+            <th class="hidden-sm-down">사업자번호</th>
+            <th class="tbw40">AM</th>
+            <th class="hidden-sm-down">산업</th>
+          </tr>
+        </thead>
+        <tbody class="text-center" style="vertical-align:middle;" id="clientSearchBody">
+          @if (Model.list.Count > 0)
+          {
+            foreach (var data in Model.list)
+            {
+              <tr>
+                <td class="text-truncate text-left" title="@data.kor_name @data.eng_name" style="cursor:pointer" onclick="selectCompany('@data.c_seq', '@data.kor_name', '@data.eng_name', '@data.am_seq', '@data.am_name', '@data.fix_title', '@data.biz_industry_code1', '@data.biz_industry_code2', '@data.business_name2', '@data.cc_seq', '@data.fee_type', '@data.fix_fee_rate');">
+                  <span class="text-truncate s2">
+                    @data.kor_name
+                    @if (!String.IsNullOrEmpty(data.eng_name))
+                    {
+                      <text>(</text>@data.eng_name<text>)</text>
+                    }
+                  </span>
+                </td>
+                <td class="text-center hidden-sm-down">
+                  @Utils.ConvertBusinessLicenseFormat(data.biz_code)
+                </td>
+                <td title="@data.am_name">
+                  @data.am_name
+                </td>
+                <td class="hidden-sm-down" title="@data.business_name2">
+                  @data.business_name2
+                </td>
+              </tr>
+            }
+          }
+          else
+          {
+            <tr>
+              <td colspan="5">데이터가 없습니다.</td>
+            </tr>
+          }
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="sts04">
+    @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                     ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                     x => String.Format("javascript:FancyBoxSearchAndPageMove({0})", x))
+  </div>
+  <div class="panel-footer pb-5">
+
+    <a href="@Url.Action("ClientCreate", "Client")">
+      <span style="color:red">
+        * 찾는 고객사가 없을 시, 여기를 눌러 등록해주세요.
+      </span>
+    </a>
+
+  </div>
+
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("#searchTxt").keydown(function (e) {
+
+            if (e.keyCode == 13)
+                $("#popSearchButton").click();
+            else
+                return;
+        });
+    });
+
+
+
+    function selectCompany(c_seq, kor_name) {
+
+        $("#client_seq").val(c_seq);
+
+        var company_name = kor_name;
+        if (company_name == "")
+            company_name = eng_name;
+
+      //$("#client_name").prop("readonly", false);
+      $("#client_name").val(company_name);
+      //$("#client_name").prop("readonly", true);
+      var txtbox = $("#provide3rd_txt");
+      if (txtbox.length > 0) {
+        txtbox.val(`ο 제공받는 자: ` + company_name + `
+ο 제공 목적: 채용절차 진행, 학력·경력·자격 확인, 채용심사 및 선발평가
+ο 제공 항목: 이름, 생년월일, 성별, 주소, 연락처, 이메일, 학력사항, 경력사항, 현재 연봉, 교육훈련정보, 자격사항, 병역정보
+ο 보유·이용기간: 「채용공정화에 관한 법률」에 따라 채용 종료 후 180일까지
+-------------------------------------------------------------------------------------------------------------------------------------
+※ 위의 개인정보 수집·이용에 대한 동의를 거부할 권리가 있습니다.
+그러나 동의를 거부할 경우 원활한 채용심사를 할 수 없어 채용에 제한을 받을 수 있습니다.`);
+      }
+
+
+        $.fancybox.close();
+    }
+
+    //FancyBox 팝업 내의 페이지 이동.
+    function FancyBoxSearchAndPageMove(page) {
+        if (page == null || page == undefined)
+            page = 1;
+
+        $.ajax({
+            url: '@Url.Action("SearchClient", "Partial")',
+            data: {
+                searchTxt: $("#searchTxt").val()
+                , page: page
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function () {
+
+            }
+        })
+        .done(function (view) {
+
+            $.fancybox({
+                'content': view,
+                'width': $(".fancybox-outer").width(),
+                'height': $(".fancybox-outer").height(),
+                'autoDimensions': false,
+                'type': 'iframe',
+                'autoSize': false,
+                'title': $(".fancybox-title").text(),
+                helpers: {
+                    title: {
+                        type: 'inside',
+                        position: 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+
+        })
+        .always(function () {
+
+        });
+    }
+
+</script>

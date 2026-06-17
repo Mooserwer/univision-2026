@@ -1,0 +1,1392 @@
+﻿@model Univision.Main.Models.Project.ProjectCreateRepModel
+@using Univision.Security
+
+@{
+  ViewBag.Title = "프로젝트 상세 - 평판조회";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+</style>
+
+<div class="page-content">
+  <!-- 기본정보 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-newspaper"></i>
+        Project 기본정보
+        @{
+          string classNm = "";
+          string txt = "";
+
+          switch (Model.pjt_status)
+          {
+            case 1:
+              classNm = "badge-primary";
+              txt = "진행";
+              break;
+            case 2:
+              classNm = "badge-warning";
+              txt = "보류";
+              break;
+            case 3:
+              classNm = "badge-danger";
+              txt = "실패";
+              break;
+            case 4:
+              classNm = "badge-info";
+              txt = "완료";
+              break;
+            case 5:
+              classNm = "badge-success";
+              txt = "성공";
+              break;
+          }
+        }
+        <span class="badge @classNm">@txt</span>
+        <span style="font-size:12px; color:black">@Model.status_comment</span>
+
+      </h3>
+      <div class="panel-actions">
+        @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+        {
+          if (Model.pjt_status == 1)
+          {
+            <button type="button" class="btn btn-sm btn-primary" id="btnPjtState">프로젝트 마감</button>
+
+          }
+          else
+          {
+            <button type="button" class="btn btn-xs btn-warning" id="btnPjtState">프로젝트 상태변경</button>
+          }
+        }
+        <button type="button" class="btn btn-sm btn-success border-primary" onclick="CreateInvoice(@Model.p_seq)" title="인보이스 발행(채용, 선수금, 취소 등)">
+          <i class="fa fa-file-invoice"></i>
+          인보이스 발행 (Invoice)
+        </button>
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectInfo" class="panel-body">
+      <div class="row">
+        <div class="form-group col-md-12">
+          <label class="form-control-label">Project Type</label>
+          <div>
+            @{
+              string pjt_type = "";
+
+              switch (Model.pjt_type)
+              {
+                case 2:
+                  pjt_type = "평판조회";
+                  break;
+                case 3:
+                  pjt_type = "재취업(Outplacement)";
+                  break;
+                case 4:
+                  pjt_type = "채용대행";
+                  break;
+                case 5:
+                  pjt_type = "Market Mapping(Long List)";
+                  break;
+                case 6:
+                  pjt_type = "사외이사 서비스";
+                  break;
+                case 9:
+                  pjt_type = "기타";
+                  break;
+              }
+            }
+
+            [@pjt_type]
+          </div>
+        </div>
+        <div class="form-group col-md-4">
+          <label class="form-control-label" for="company_name">Client</label>
+          <a href="@Url.Action("ClientDetail", "Client", new { c_seq = Model.c_seq })" target="_blank" title="고객사 상세정보 열기">
+            <i class="fas fa-external-link-alt"></i>
+          </a>
+          <div class="input-group input-group-sm">
+            @Html.HiddenFor(x => x.c_seq)
+            @Html.TextBoxFor(x => x.company_name, new { @class = "form-control", @autocomplete = "off", @readonly = "readonly" })
+          </div>
+        </div>
+        <div class="form-group col-md-8">
+          <label class="form-control-label" for="title">Title</label>
+          @Html.TextBoxFor(x => x.title, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="form-group col-md-4">
+          <label class="form-control-label" for="AMDiv">AM</label>
+          <div class="input-group input-group-sm">
+            <div class="form-control" id="AMDiv" name="AMDiv">
+              @if (Model.amList.Count > 0)
+              {
+                foreach (var am in Model.amList)
+                {
+                  <text>[</text>@am.name<text>]</text>
+                }
+              }
+            </div>
+          </div>
+        </div>
+        <div class="form-group col-md-4">
+          <label class="form-control-label" for="Searcher">SM</label>
+          <div class="input-group input-group-sm">
+            <div class="form-control" id="Searcher" name="Searcher">
+              @if (Model.searcherList.Count > 0)
+              {
+                foreach (var searcher in Model.searcherList)
+                {
+                  <text>[</text>@searcher.name<text>]</text>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group col-md-4">
+          <label class="form-control-label" for="expected_salary">
+            Fee(용역비)
+            @if (Model.currency_cd != "KRW" && Model.exp_salary_won.HasValue)
+            {
+              <span class="text-primary font-weight-900" id="exp_won_label">(원화 환산 예상액 : 약 @Utils.ConvertMoneyToString(Model.exp_salary_won)원)</span>
+            }
+          </label>
+          <div class="input-group input-group-sm">
+            <input type="text" value="@Utils.ConvertMoneyToString(Model.exp_salary)" id="expected_salary" class="form-control text-right" autocomplete="off" readonly="readonly" />
+            <select name="currency_cd" id="currency_cd" class="form-control form-control-sm" disabled>
+              <option value="KRW" @(Model.currency_cd == "KRW" ? "selected" : "")>KRW(원)</option>
+              <option value="USD" @(Model.currency_cd == "USD" ? "selected" : "")>USD(달러)</option>
+              <option value="HKD" @(Model.currency_cd == "HKD" ? "selected" : "")>HKD(홍콩달러)</option>
+              <option value="JPY" @(Model.currency_cd == "JPY" ? "selected" : "")>JPY(엔화)</option>
+              <option value="SGD" @(Model.currency_cd == "SGD" ? "selected" : "")>SGD(싱가폴 달러)</option>
+              <option value="GBP" @(Model.currency_cd == "GBP" ? "selected" : "")>GBP(파운드)</option>
+              <option value="DEM" @(Model.currency_cd == "DEM" ? "selected" : "")>DEM(마르크)</option>
+              <option value="FRF" @(Model.currency_cd == "FRF" ? "selected" : "")>FRF(프랑스 프랑)</option>
+              <option value="CHF" @(Model.currency_cd == "CHF" ? "selected" : "")>CHF(스위스 프랑)</option>
+              <option value="EUR" @(Model.currency_cd == "EUR" ? "selected" : "")>EUR(유로)</option>
+              <option value="CNY" @(Model.currency_cd == "CNY" ? "selected" : "")>CNY(위안)</option>
+              <option value="AUD" @(Model.currency_cd == "AUD" ? "selected" : "")>AUD(호주달러)</option>
+              <option value="NZD" @(Model.currency_cd == "NZD" ? "selected" : "")>NZD(뉴질랜드달러)</option>
+              <option value="CAD" @(Model.currency_cd == "CAD" ? "selected" : "")>CAD(캐나다달러)</option>
+              <option value="THB" @(Model.currency_cd == "THB" ? "selected" : "")>THB(태국 밧)</option>
+              <option value="TWD" @(Model.currency_cd == "TWD" ? "selected" : "")>TWD(신타이완달러)</option>
+              <option value="VND" @(Model.currency_cd == "VND" ? "selected" : "")>VND(베트남 동)</option>
+            </select>
+          </div>
+        </div>
+
+
+      </div>
+
+      <div class="row">
+        <div class="form-group col-md-6">
+          <label class="form-control-label" for="businessCodeDiv">
+            Industry
+          </label>
+          <div class="input-group input-group-sm" id="businessCodeDiv">
+            @{
+              string business_str = String.Empty;
+              if (!string.IsNullOrEmpty(Model.business_name2))
+              {
+                business_str = Model.business_name1 + " > " + Model.business_name2;
+              }
+            }
+
+            @Html.TextBox("business_name2", business_str, new { @class = "form-control longLen", @readonly = "readonly", @placeholder = "산업" })
+          </div>
+        </div>
+        <div class="form-group col-md-6">
+          <label class="form-control-label" for="jobCodeDiv">
+            Job function
+          </label>
+          <div class="input-group input-group-sm" id="jobCodeDiv">
+            @{
+              string job_str = String.Empty;
+              if (!string.IsNullOrEmpty(Model.job_name2))
+              {
+                job_str = Model.job_name2 + " > " + Model.job_name2;
+              }
+            }
+            @Html.TextBox("job_name2", job_str, new { @class = "form-control longLen", @readonly = "readonly", @placeholder = "직무" })
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="form-group col-md-6">
+          <label class="form-control-label" for="assign_task">고객사 요청사항</label>
+          @Html.TextAreaFor(x => x.client_require, new { @class = "form-control", @rows = "3", @readonly = "readonly" })
+        </div>
+        <div class="form-group col-md-6">
+          <label class="form-control-label" for="requirement">내부참고사항</label>
+          @Html.TextAreaFor(x => x.internal_note, new { @class = "form-control", @rows = "3", @readonly = "readonly" })
+        </div>
+      </div>
+      @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+      {
+        if (AppIdentity.ua_seq <= 3 || Model.pjt_status == 1 || Model.pjt_status == 4)
+        {
+          <div class="row">
+            <div class="col-md-12 vertical-align text-right pt-10">
+              <div class="vertical-align-bottom">
+                <a href="@Url.Action("ProjectRepCreate", "Project", new { @p_seq = Model.p_seq })" id="btnModify" class="btn btn-success" title="프로젝트 정보 수정">Modify Project</a>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+  <!-- 기본정보 끝 -->
+  <!-- 관련파일 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-file"></i>
+        관련파일
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectFile" class="panel-body">
+
+    </div>
+  </div>
+  <!-- 관련파일 끝 -->
+  <!-- 프로젝트 메모 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-sticky-note"></i>
+        Memo
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectMemo" class="panel-body">
+
+    </div>
+  </div>
+  <!-- 프로젝트 메모 끝 -->
+  <!-- 프로젝트 담당자 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-user-tie"></i>
+        Contact
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectContact" class="panel-body">
+      @using (Html.BeginForm("ProjectNewContactSave", "Project", FormMethod.Post, new { @id = "ProjectContactForm" }))
+      {
+        <div class="row">
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_name">이름</label>
+            @Html.HiddenFor(x => x.cc_seq)
+            @Html.TextBoxFor(x => x.contact_name, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_position">직함</label>
+            @Html.TextBoxFor(x => x.contact_position, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="male">Gender</label>
+            <div class="form-inline">
+              <div class="form-group">
+                <div class="radio-custom radio-default radio-inline">
+                  <input type="radio" id="male" name="contact_gender" value="1" disabled @(Model.contact_gender == 1 ? "checked" : "")>
+                  <label for="hire">남</label>
+                </div>
+                <div class="radio-custom radio-default radio-inline">
+                  <input type="radio" id="female" name="contact_gender" value="2" disabled @(Model.contact_gender == 2 ? "checked" : "")>
+                  <label for="genderWoman">여</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_division">부서명</label>
+            @Html.TextBoxFor(x => x.contact_division, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_email">이메일</label>
+            @Html.TextBoxFor(x => x.contact_email, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_phone">전화번호</label>
+            @Html.TextBoxFor(x => x.contact_phone, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_cell_phone">휴대폰</label>
+            @Html.TextBoxFor(x => x.contact_cell_phone, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3 vertical-align ">
+            <div class="vertical-align-bottom">
+              <button type="submit" id="btnNewContactSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
+              <button type="button" id="btnNewContactReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
+              <button type="button" id="btnContactSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
+              <button type="button" id="btnContact" class="btn btn-sm btn-success">담당자 불러오기</button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+  <!-- 프로젝트 담당자 끝-->
+  <!-- 세금계산서 담당자 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-wallet"></i>
+        전자세금계산서 담당자
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectTax" class="panel-body">
+      @using (Html.BeginForm("ProjectNewTaxContactSave", "Project", FormMethod.Post, new { @id = "ProjectTaxForm" }))
+      {
+        <div class="row">
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_name">담당자</label>
+            @Html.HiddenFor(x => x.ctc_seq)
+            @Html.TextBoxFor(x => x.tax_name, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_division">담당부서</label>
+            @Html.TextBoxFor(x => x.tax_division, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_email">이메일</label>
+            @Html.TextBoxFor(x => x.tax_email, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_phone">전화번호</label>
+            @Html.TextBoxFor(x => x.tax_phone, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_cell_phone">휴대폰</label>
+            @Html.TextBoxFor(x => x.tax_cell_phone, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_deposit_manager">발행용 담당자명</label>
+            @Html.TextBoxFor(x => x.tax_deposit_manager, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_deposit_email">발행용 이메일</label>
+            @Html.TextBoxFor(x => x.tax_deposit_email, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3 vertical-align">
+            <div class="vertical-align-bottom">
+              <button type="submit" id="btnNewTaxSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
+              <button type="button" id="btnNewTaxReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
+              <button type="button" id="btnTaxSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
+              <button type="button" id="btnTax" class="btn btn-sm btn-success">계산서 담당 불러오기</button>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+  <!-- 세금계산서 담당자 끝 -->
+  <!-- 프로젝트 인보이스 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-file-invoice-dollar"></i>
+        Invoice
+        <button type="button" class="btn btn-sm btn-primary" id="btnCreateInvoice">
+          인보이스 생성
+        </button>
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectInvoice" class="panel-body">
+
+    </div>
+  </div>
+  <!-- 프로젝트 인보이스 끝 -->
+
+  <div class="modal fade" id="InvoiceCreateModal" aria-hidden="false" aria-labelledby="InvoiceCreateModalLabel" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-simple">
+      <div class="modal-content" style="width:750px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+          <h4 class="modal-title text-center" id="InvoiceCreateModalLabel">
+            <i class="fas fa-file-invoice-dollar"></i>
+            Invoice Information
+          </h4>
+        </div>
+        <div class="modal-body" style="max-height:800px; overflow-y:auto">
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section scripts {
+
+  <script type="text/javascript">
+    window.url_invoice_new_select = "@Url.Action("InvoiceNewSelect", "Invoice")";
+    function CreateInvoice(p_seq) {
+      var win_tag = 'INVOICE_' + p_seq;
+      var param = '?p_seq=' + p_seq
+      var win = window.open(window.url_invoice_new_select + param, win_tag, 'width=993, height=800');
+      win.focus();
+
+    }
+
+        $('#btnNewContactReset').click(function () {
+                $("#cc_seq").val(window.cc_seq);
+                $("#contact_name").val(window.contact_name);
+                $("#male").prop("checked", window.male);
+                $("#female").prop("checked", window.female);
+                $("#contact_email").val(window.contact_email);
+                $("#contact_phone").val(window.contact_phone);
+                $("#contact_cell_phone").val(window.contact_cell_phone);
+                $("#contact_division").val(window.contact_division);
+                $("#contact_position").val(window.contact_position);
+
+                $("#btnNewContactSave").css("display", "none");
+                $("#btnNewContactReset").css("display", "none");
+                $("#btnContact").css("display", "inline");
+
+                $("#contact_name").attr("readonly", "readonly");
+                $("#male").attr("disabled", "disabled");
+                $("#female").attr("disabled", "disabled");
+                $("#contact_email").attr("readonly", "readonly");
+                $("#contact_phone").attr("readonly", "readonly");
+                $("#contact_cell_phone").attr("readonly", "readonly");
+                $("#contact_division").attr("readonly", "readonly");
+                $("#contact_position").attr("readonly", "readonly");
+
+            });
+
+            $('#btnNewTaxReset').click(function () {
+
+                $("#ctc_seq").val(window.ctc_seq);
+                $("#tax_name").val(window.tax_name);
+                $("#tax_division").val(window.tax_division);
+                $("#tax_email").val(window.tax_email);
+                $("#tax_phone").val(window.tax_phone);
+                $("#tax_cell_phone").val(window.tax_cell_phone);
+                $("#tax_deposit_manager").val(window.tax_deposit_manager);
+                $("#tax_deposit_email").val(window.tax_deposit_email);
+
+                $("#btnNewTaxSave").css("display", "none");
+                $("#btnNewTaxReset").css("display", "none");
+                $("#btnTax").css("display", "inline");
+
+                $("#tax_name").attr("readonly", "readonly");
+                $("#tax_division").attr("readonly", "readonly");
+                $("#tax_email").attr("readonly", "readonly");
+                $("#tax_phone").attr("readonly", "readonly");
+                $("#tax_cell_phone").attr("readonly", "readonly");
+                $("#tax_deposit_manager").attr("readonly", "readonly");
+                $("#tax_deposit_email").attr("readonly", "readonly");
+
+            });
+
+
+        $(document).ready(function () {
+
+            callProjectFileList(@Model.p_seq, 1)
+            callProjectInvoiceList(@Model.p_seq, 1)
+            callMemoList(@Model.p_seq, 1)
+
+            //프로젝트 마감 버튼 클릭시
+            $("#btnPjtState").click(function () {
+                $.ajax({
+                    url: '@Url.Action("ProjectStateChange", "Project")',
+                    data: {
+                        p_seq: '@Model.p_seq'
+                    },
+                    dataType: 'html',
+                    type: 'GET',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':json,
+                        'width': '300',
+                        'height': '200',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': '프로젝트 마감사유',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        },
+                        afterClose: function () {
+                            // fancybox is closed, run myOtherFunct()
+                            window.setTimeout(function () { location.reload() }, 2000);
+                        }
+                    });
+
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+            //전자세금계산서 담당자 불러오기
+            $("#btnTax").click(function () {
+
+                if ($("#company_name").val() == "" || $("#c_seq").val() == 0) {
+                    NormalAlert("고객사 명을 검색 하세요.")
+                    return false;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("SearchProjectTaxContact", "Project")',
+                    data: {
+                        p_seq: $("#p_seq").val(),
+                        c_seq: $("#c_seq").val()
+                    },
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':json,
+                        'width': '500',
+                        'height': '385',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': '전자세금계산서 담당자 목록',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+            //담당자 불러오기
+            $("#btnContact").click(function () {
+
+                if ($("#company_name").val() == "" || $("#c_seq").val() == 0) {
+                    NormalAlert("고객사 명을 검색 하세요.")
+                    return false;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("SearchProjectContact", "Project")',
+                    data: {
+                        p_seq: $("#p_seq").val(),
+                        c_seq: $("#c_seq").val()
+                    },
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':json,
+                        'width': '500',
+                        'height': '385',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': 'Contact 목록',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+            //세금계산서 담당자 저장.
+            $("#btnTaxSave").click(function () {
+
+                $.ajax({
+                   url: '@Url.Action("ProjectTaxContactSave", "Project")',
+                   data: {
+                       p_seq: $("#p_seq").val()
+                       ,
+                       ctc_seq : $("#ctc_seq").val()
+                   },
+                   dataType: 'json',
+                   type: 'POST',
+                   beforeSend: function ()
+                   {
+                       showLoading();
+                   }
+                })
+                .done(function (json) {
+                    hideLoading();
+                    if (json.ok) {
+                        NormalAlert(json.message);
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+            //프로젝트 담당자 저장
+            $("#btnContactSave").click(function () {
+
+                $.ajax({
+                   url: '@Url.Action("ProjectContactSave", "Project")',
+                   data: {
+                       p_seq: $("#p_seq").val()
+                       ,
+                       cc_seq : $("#cc_seq").val()
+                   },
+                   dataType: 'json',
+                   type: 'POST',
+                   beforeSend: function ()
+                   {
+                       showLoading();
+                   }
+                })
+                .done(function (json) {
+                    hideLoading();
+
+                    if (json.ok) {
+                        NormalAlert(json.message);
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+            //인보이스 생성
+            $("#btnCreateInvoice").click(function () {
+              alert("화면 상단의 [인보이스 발행] 버튼을 통해 발행 부탁드립니다.");
+              
+              return;
+
+                var valid_msg = ""
+                if ($('#cc_seq').val() == 0 || $('#cc_seq').val() == "") {
+                    valid_msg += (valid_msg != "" ? "<br/>":"") + "Contact 정보가 없습니다. Contact정보를 입력 후 진행하여 주시기 바랍니다."
+                }
+                if ($('#ctc_seq').val() == 0 || $('#ctc_seq').val() == "") {
+                    valid_msg += (valid_msg != "" ? "<br/>":"") + "세금계산서 담당자 정보가 없습니다. 세금계산서 담당자 정보를 입력 후 진행하여 주시기 바랍니다."
+                }
+
+                if (valid_msg != "") {
+                    ErrorAlert(valid_msg);
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("ProjectRepInvoiceCreate", "Project")',
+                    data: {
+                        p_seq: '@Model.p_seq'
+                    },
+                    dataType: 'html',
+                    type: 'GET',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (view) {
+                    hideLoading();
+
+                    //모달은 Invoice View 때문에 ProjectDetail.cshtml 페이지에 넣어둠.
+                    $("#InvoiceCreateModal .modal-body").html(view)
+                    $("#InvoiceCreateModal .modal-body").find('#client_contact_name').val($('#contact_name').val());
+                    $("#InvoiceCreateModal .modal-body").find('#client_contact_tel').val($('#contact_phone').val());
+                    $("#InvoiceCreateModal .modal-body").find('#client_contact_email').val($('#contact_email').val());
+                    $("#InvoiceCreateModal .modal-body").find('#client_etax_name').val($('#tax_deposit_manager').val());
+                    $("#InvoiceCreateModal .modal-body").find('#client_etax_tel').val($('#tax_phone').val());
+                    $("#InvoiceCreateModal .modal-body").find('#client_etax_email').val($('#tax_deposit_email').val());
+                    $('#InvoiceCreateModal').modal('toggle');
+
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+        });
+
+        function BindProjectContactValidation() {
+
+            var phoneValidator = {
+                validators: {
+                    selector: "contact_phone",
+                    callback: {
+                        message: "전화번호 혹은 휴대폰 번호 중 한 개의 번호는 입력 하셔야 합니다.",
+                        callback: function (input) {
+
+                            var fv = $("#ProjectContactForm").data("formValidation");
+
+                            let isEmpty = true;
+
+                            if ($("#contact_phone").val() != "" || $("#contact_cell_phone").val() != "") {
+                                isEmpty = false;
+                            }
+
+                            if (!isEmpty) {
+                                // Update the status of callback validator for all fields
+                                fv.updateStatus('contact_phone', 'Valid', 'callback');
+                                fv.updateStatus('contact_cell_phone', 'Valid', 'callback');
+                                return true;
+                            }
+
+                            return false;
+                        }
+                    }
+                }
+            };
+
+
+
+            $("#ProjectContactForm").formValidation({
+                framework: "bootstrap4",
+                button: {
+                    selector: "#btnNewContactSave",
+                    disabled: "disabled"
+                },
+                submitHandler: function () {
+                },
+                icon: null,
+                fields: {
+                    contact_name: {
+                        validators: {
+                            notEmpty: {
+                                message: "이름은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    contact_gender: {
+                        validators: {
+                            notEmpty: {
+                                message: "성별을 선택하세요."
+                            }
+                        }
+                    },
+                    contact_division: {
+                        validators: {
+                            notEmpty: {
+                                message: "부서명은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    contact_position: {
+                        validators: {
+                            notEmpty: {
+                                message: "직함은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    contact_email: {
+                        validators: {
+                            notEmpty: {
+                                message: "이메일은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    contact_phone: phoneValidator,
+                    contact_cell_phone: phoneValidator,
+                },
+                err: {
+                    clazz: "invalid-feedback"
+                },
+                control: {
+                    valid: "is-valid",
+                    invalid: "is-invalid"
+                },
+                row: {
+                    invalid: "has-danger"
+                }
+            })
+            .on('success.form.fv', function (e) {
+                e.preventDefault();
+
+                var formURL = $("#ProjectContactForm").attr("action");
+                debugger;
+                $.ajax({
+                    url: formURL,
+                    type: "POST",
+                    dataType: 'json',
+                    data: {
+                        c_seq: $("#c_seq").val()
+                        ,p_seq: $("#p_seq").val()
+                        ,name: $("#contact_name").val()
+                        ,gender: $("input[name='contact_gender']:checked").val()
+                        ,email: $("#contact_email").val()
+                        ,phone: $("#contact_phone").val()
+                        ,cell_phone: $("#contact_cell_phone").val()
+                        ,division: $("#contact_division").val()
+                        ,position: $("#contact_position").val()
+                    },
+                    beforeSend: function () {
+                        showLoading("#projectContact");
+                    },
+                    success: function (json) {
+                        hideLoading("#projectContact");
+
+                        if (json.ok) {
+                            location.reload();
+                        }
+                        else {
+                            ErrorAlert(json.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        hideLoading("#projectContact");
+
+                        ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요1.");
+                    }
+                });
+            });
+        }
+
+        function BindProjectTaxValidation() {
+
+            var phoneValidator = {
+                validators: {
+                    selector: "tax_phone",
+                    callback: {
+                        message: "전화번호 혹은 휴대폰 번호 중 한 개의 번호는 입력 하셔야 합니다.",
+                        callback: function (input) {
+
+                            var fv = $("#ProjectTaxForm").data("formValidation");
+
+                            let isEmpty = true;
+
+                            if ($("#tax_phone").val() != "" || $("#tax_cell_phone").val() != "") {
+                                isEmpty = false;
+                            }
+
+                            if (!isEmpty) {
+                                // Update the status of callback validator for all fields
+                                fv.updateStatus('tax_phone', 'Valid', 'callback');
+                                fv.updateStatus('tax_cell_phone', 'Valid', 'callback');
+                                return true;
+                            }
+
+                            return false;
+                        }
+                    }
+                }
+            };
+
+            $("#ProjectTaxForm").formValidation({
+                framework: "bootstrap4",
+                button: {
+                    selector: "#btnNewTaxSave",
+                    disabled: "disabled"
+                },
+                submitHandler: function () {
+                },
+                icon: null,
+                fields: {
+                    tax_name: {
+                        validators: {
+                            notEmpty: {
+                                message: "담당자명은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    tax_division: {
+                        validators: {
+                            notEmpty: {
+                                message: "담당 부서명은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    tax_deposit_manager: {
+                        validators: {
+                            notEmpty: {
+                                message: "발행용 담당자명 담당자명은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    tax_deposit_email: {
+                        validators: {
+                            notEmpty: {
+                                message: "발행용 이메일은 필수 입력 항목 입니다."
+                            },
+                            emailAddress: true
+                        }
+                    },
+                    tax_email: {
+                        validators: {
+                            notEmpty: {
+                                message: "이메일은 필수 입력 항목 입니다."
+                            },
+                            emailAddress: true
+                        }
+                    },
+                    tax_phone: phoneValidator,
+                    tax_cell_phone: phoneValidator,
+                },
+                err: {
+                    clazz: "invalid-feedback"
+                },
+                control: {
+                    valid: "is-valid",
+                    invalid: "is-invalid"
+                },
+                row: {
+                    invalid: "has-danger"
+                }
+            })
+            .on('success.form.fv', function (e) {
+                e.preventDefault();
+
+                var formURL = $("#ProjectTaxForm").attr("action");
+
+                $.ajax({
+                    url: formURL,
+                    type: "POST",
+                    dataType: 'json',
+                    data: {
+                        c_seq: $("#c_seq").val()
+                        ,p_seq: $("#p_seq").val()
+                        ,division: $("#tax_division").val()
+                        ,name: $("#tax_name").val()
+                        ,email: $("#tax_email").val()
+                        ,phone: $("#tax_phone").val()
+                        ,cell_phone: $("#tax_cell_phone").val()
+                        ,deposit_manager: $("#tax_deposit_manager").val()
+                        ,deposit_email: $("#tax_deposit_email").val()
+                    },
+                    beforeSend: function () {
+                        showLoading("#projectTax");
+                    },
+                    success: function (json) {
+                        hideLoading("#projectTax");
+
+                        if (json.ok) {
+                            location.reload();
+                        }
+                        else {
+                            ErrorAlert(json.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        hideLoading("#projectTax");
+
+                        ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요1.");
+                    }
+                });
+            });
+        }
+
+        //관련파일 리스트
+        function callProjectFileList(p_seq, page) {
+
+            if(page == null || page == undefined)
+                page = 1;
+
+            $.ajax({
+                url: '@Url.Action("ProjectRepFileList", "Project")',
+                data: {
+                    p_seq: p_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'GET',
+                beforeSend: function () {
+                    showLoading('#projectFile');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#projectFile');
+                $('#projectFile').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#projectFile');
+            });
+        }
+
+        //메모 리스트
+        function callMemoList(p_seq, page) {
+            $.ajax({
+                url: '@Url.Action("ProjectMemoList", "Project")',
+                data: {
+                    p_seq: p_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#projectMemo');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#projectMemo');
+                $('#projectMemo').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#projectMemo');
+            });
+        }
+
+        //인보이스 리스트
+        function callProjectInvoiceList(p_seq, page) {
+            $.ajax({
+                url: '@Url.Action("ProjectRepInvoiceList", "Project")',
+                data: {
+                    p_seq: p_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#projectInvoice');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#projectInvoice');
+                $('#projectInvoice').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#projectInvoice');
+            });
+        }
+
+        function BindProjectContactValidation() {
+
+            var phoneValidator = {
+                validators: {
+                    selector: "contact_phone",
+                    callback: {
+                        message: "전화번호 혹은 휴대폰 번호 중 한 개의 번호는 입력 하셔야 합니다.",
+                        callback: function (input) {
+
+                            var fv = $("#ProjectContactForm").data("formValidation");
+
+                            let isEmpty = true;
+
+                            if ($("#contact_phone").val() != "" || $("#contact_cell_phone").val() != "") {
+                                isEmpty = false;
+                            }
+
+                            if (!isEmpty) {
+                                // Update the status of callback validator for all fields
+                                fv.updateStatus('contact_phone', 'Valid', 'callback');
+                                fv.updateStatus('contact_cell_phone', 'Valid', 'callback');
+                                return true;
+                            }
+
+                            return false;
+                        }
+                    }
+                }
+            };
+
+
+
+            $("#ProjectContactForm").formValidation({
+                framework: "bootstrap4",
+                button: {
+                    selector: "#btnNewContactSave",
+                    disabled: "disabled"
+                },
+                submitHandler: function () {
+                },
+                icon: null,
+                fields: {
+                    contact_name: {
+                        validators: {
+                            notEmpty: {
+                                message: "이름은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    contact_gender: {
+                        validators: {
+                            notEmpty: {
+                                message: "성별을 선택하세요."
+                            }
+                        }
+                    },
+                    contact_division: {
+                        validators: {
+                            notEmpty: {
+                                message: "부서명은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    contact_position: {
+                        validators: {
+                            notEmpty: {
+                                message: "직함은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    contact_email: {
+                        validators: {
+                            notEmpty: {
+                                message: "이메일은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    contact_phone: phoneValidator,
+                    contact_cell_phone: phoneValidator,
+                },
+                err: {
+                    clazz: "invalid-feedback"
+                },
+                control: {
+                    valid: "is-valid",
+                    invalid: "is-invalid"
+                },
+                row: {
+                    invalid: "has-danger"
+                }
+            })
+            .on('success.form.fv', function (e) {
+                e.preventDefault();
+
+                var formURL = $("#ProjectContactForm").attr("action");
+
+                $.ajax({
+                    url: formURL,
+                    type: "POST",
+                    dataType: 'json',
+                    data: {
+                        c_seq: $("#c_seq").val()
+                        ,p_seq: $("#p_seq").val()
+                        ,name: $("#contact_name").val()
+                        ,gender: $("input[name='contact_gender']:checked").val()
+                        ,email: $("#contact_email").val()
+                        ,phone: $("#contact_phone").val()
+                        ,cell_phone: $("#contact_cell_phone").val()
+                        ,division: $("#contact_division").val()
+                        ,position: $("#contact_position").val()
+                    },
+                    beforeSend: function () {
+                        showLoading("#projectContact");
+                    },
+                    success: function (json) {
+                        hideLoading("#projectContact");
+
+                        if (json.ok) {
+                            location.reload();
+                        }
+                        else {
+                            ErrorAlert(json.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        hideLoading("#projectContact");
+
+                        ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요1.");
+                    }
+                });
+            });
+        }
+
+        function BindProjectTaxValidation() {
+
+            var phoneValidator = {
+                validators: {
+                    selector: "tax_phone",
+                    callback: {
+                        message: "전화번호 혹은 휴대폰 번호 중 한 개의 번호는 입력 하셔야 합니다.",
+                        callback: function (input) {
+
+                            var fv = $("#ProjectTaxForm").data("formValidation");
+
+                            let isEmpty = true;
+
+                            if ($("#tax_phone").val() != "" || $("#tax_cell_phone").val() != "") {
+                                isEmpty = false;
+                            }
+
+                            if (!isEmpty) {
+                                // Update the status of callback validator for all fields
+                                fv.updateStatus('tax_phone', 'Valid', 'callback');
+                                fv.updateStatus('tax_cell_phone', 'Valid', 'callback');
+                                return true;
+                            }
+
+                            return false;
+                        }
+                    }
+                }
+            };
+
+            $("#ProjectTaxForm").formValidation({
+                framework: "bootstrap4",
+                button: {
+                    selector: "#btnNewTaxSave",
+                    disabled: "disabled"
+                },
+                submitHandler: function () {
+                },
+                icon: null,
+                fields: {
+                    tax_name: {
+                        validators: {
+                            notEmpty: {
+                                message: "담당자명은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    tax_division: {
+                        validators: {
+                            notEmpty: {
+                                message: "담당 부서명은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    tax_deposit_manager: {
+                        validators: {
+                            notEmpty: {
+                                message: "발행용 담당자명 담당자명은 필수 입력 항목 입니다."
+                            }
+                        }
+                    },
+                    tax_deposit_email: {
+                        validators: {
+                            notEmpty: {
+                                message: "발행용 이메일은 필수 입력 항목 입니다."
+                            },
+                            emailAddress: true
+                        }
+                    },
+                    tax_email: {
+                        validators: {
+                            notEmpty: {
+                                message: "이메일은 필수 입력 항목 입니다."
+                            },
+                            emailAddress: true
+                        }
+                    },
+                    tax_phone: phoneValidator,
+                    tax_cell_phone: phoneValidator,
+                },
+                err: {
+                    clazz: "invalid-feedback"
+                },
+                control: {
+                    valid: "is-valid",
+                    invalid: "is-invalid"
+                },
+                row: {
+                    invalid: "has-danger"
+                }
+            })
+            .on('success.form.fv', function (e) {
+                e.preventDefault();
+
+                var formURL = $("#ProjectTaxForm").attr("action");
+
+                $.ajax({
+                    url: formURL,
+                    type: "POST",
+                    dataType: 'json',
+                    data: {
+                        c_seq: $("#c_seq").val()
+                        ,p_seq: $("#p_seq").val()
+                        ,division: $("#tax_division").val()
+                        ,name: $("#tax_name").val()
+                        ,email: $("#tax_email").val()
+                        ,phone: $("#tax_phone").val()
+                        ,cell_phone: $("#tax_cell_phone").val()
+                        ,deposit_manager: $("#tax_deposit_manager").val()
+                        ,deposit_email: $("#tax_deposit_email").val()
+                    },
+                    beforeSend: function () {
+                        showLoading("#projectTax");
+                    },
+                    success: function (json) {
+                        hideLoading("#projectTax");
+
+                        if (json.ok) {
+                            location.reload();
+                        }
+                        else {
+                            ErrorAlert(json.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        hideLoading("#projectTax");
+
+                        ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요1.");
+                    }
+                });
+            });
+        }
+
+  </script>
+
+}

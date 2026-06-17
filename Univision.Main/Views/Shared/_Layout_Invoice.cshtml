@@ -1,0 +1,642 @@
+﻿@using Univision.Security;
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Univision | @ViewBag.Title</title>
+
+
+  <!-- Vendor css -->
+  <link rel="stylesheet" href="~/Libs/slim/lib/font-awesome/css/font-awesome.css" />
+  <link href="~/Libs/slim/lib/Ionicons/css/ionicons.css" rel="stylesheet">
+
+
+  <!-- Slim CSS -->
+  <link rel="stylesheet" href="~/Libs/slim/css/slim.css">
+  <link href="~/Libs/slim/lib/jquery.steps/css/jquery.steps.login.css" rel="stylesheet">
+  <link href="~/Libs/alertifyjs/css/alertify.min.css" rel="stylesheet">
+
+
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/bootstrap-datepicker/bootstrap-datepicker.min599c.css?v4.1.0" />
+  <link href="~/Libs/summernote/summernote-bs4.min.css" rel="stylesheet">
+  <!--
+    <script src="@("https://cdn.jsdelivr.net/npm/@easepick/bundle@1.2.1/dist/index.umd.min.js")"></script>
+  -->
+  <style>
+
+    span.custom-is-invalid {
+      display: none;
+      margin-top: .25rem;
+      font-size: .875rem;
+      color: #ff4c52;
+    }
+
+    .form-inline.custom-is-invalid span{ 
+      color: #ff4c52;
+    }
+    .form-inline.custom-valid span, .rdiobox.custom-valid span, form-control-label.custom-valid, form-inline.custom-valid > .radio-cutom > label, form-inline.custom-valid > .checkbox-cutom > label {
+      color: #11c26d;
+    }
+
+    .form-control.custom-is-invalid, .was-validated .custom-select:invalid, .was-validated .form-control:invalid {
+      border-color: #ff4c52;
+    }
+
+    .custom-select.custom-valid, .form-control.custom-valid, .was-validated .custom-select:valid, .was-validated .form-control:valid {
+      border-color: #11c26d;
+    }
+    #dialog-print {
+      max-width:800px;
+      width:800px;
+      
+    }
+    .printarea {
+      display: none;
+    }
+
+    @@page{ 
+      size:auto;
+      margin-top : 30mm;
+      margin-bottom:30mm;
+         }
+
+    @@media print {
+      body{
+        background-color:#fff;
+        font-size:12pt;
+      }
+      .billed-to h6 {
+        font-size: 14pt;
+      }
+
+      h6 {
+        font-size: 14pt;
+      }
+      .printarea {
+        width: 100%;
+        display: block;
+      }
+
+      .no_print_screen {
+        display: none !important;
+      }
+
+      .modal-backdrop {
+        display: none !important;
+      }
+      .section-label-sm{
+        font-size:10pt;
+      }
+
+      .slim-footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Page -->
+  <div class="container no_print_screen">
+    @RenderBody()
+  </div>
+  <div class="printarea">
+    <div class="row">  <div class="col">    <h1 class="invoice-title"><img src="/Content/images/unicosearch_logo.png" style="width:150px;"></h1>  </div>  <div class="col">    <label class="section-label-sm tx-gray-500">발신</label>    <h6>유니코써치</h6>    <p>서울 강남구 테헤란로 87길 36, 도심공항타워 17F, 15F, 25F</p>    <p></p><p></p>  </div></div><div class="row mg-t-20">  <div class="col">    <label class="section-label-sm tx-gray-500">인보이스 정보</label>    <p class="invoice-info-row">      <span>Invoice No:</span>      <span class="text-danger">[인보이스 발행 시 생성 됩니다.]</span>    </p>    <p class="invoice-info-row">      <span>Project ID:</span>      <span>53136</span>    </p>    <p class="invoice-info-row">      <span>발행일자:</span>      <span>2025-03-19</span>    </p>    <p class="invoice-info-row">      <span>Due Date:</span>      <span id="inv_text_due_dt">2025-02-11</span>    </p>  </div><!-- col -->  <div class="col">    <label class="section-label-sm tx-gray-500">수신</label>    <div class="billed-to">      <h6>(주)유니코써치</h6>      <p>        <span>김혜양</span><br>        <span>서울 강남구 테헤란로87길 36 (삼성동) 1705호</span>      </p>    </div>  </div><!-- col --></div><!-- row --><div class="row bd-t mg-t-50 pd-t-30">  <div class="col-md">    <h5 class="font-weight-bold">제목 : 채용컨설팅 용역비 청구</h5>    <p class="pd-t-20">귀사의 발전을 진심으로 기원합니다.<br>인재선발%CANDIDATE%에 관한 용역비를 청구하오니 하기 예금계좌로 지급하여 주시면 감사하겠습니다.</p>  </div></div><div class="table-responsive mg-t-20">  <table class="table table-invoice">    <thead>      <tr>        <th class="wd-20p" id="inv_text_table_title1">구분</th>        <th class="wd-40p" id="inv_text_table_title2">내용</th>        <th class="tx-right" id="inv_text_table_title3"></th>        <th class="tx-right" id="inv_text_table_title4">금액</th>      </tr>    </thead>    <tbody>      <tr>        <td>수수료</td>        <td class="tx-12">인재추천 서비스 수수료</td>        <td class="tx-12"></td>        <td class="tx-right">14,000,000 KRW</td>      </tr>      <tr>        <td colspan="2" rowspan="3" class="valign-middle">          <div class="invoice-notes">            <label class="section-label-sm tx-gray-500">입금은행</label>            <p>- 은행 : 국민은행<br>- 계좌번호 : 389801-01-140852<br>- 예금주 : (주)유니코써치</p>          </div>        </td>        <td class="tx-right">소계</td>        <td colspan="2" class="tx-right">14,000,000 KRW</td>      </tr>      <tr>        <td class="tx-right">부가세</td>        <td colspan="2" class="tx-right">1,400,000 KRW</td>      </tr>      <tr>        <td class="tx-right tx-uppercase tx-bold tx-inverse">합계</td>        <td colspan="2" class="tx-right">          <span class="tx-primary tx-bold tx-indigo" id="inv_text_billing_money">15,400,000 KRW          </span>        </td>      </tr>    </tbody>  </table></div><!-- table-responsive --><hr class="mg-b-60">
+
+  </div>
+  <div class="slim-footer">
+    <div class="container">
+      <p>Unico Search Inc. 17th Floor, 36, Teheran-ro 87-gil, Gangnam-gu, Seoul, Korea 06164</p>
+      <p>T:(82 2)551 2300 </p>
+    </div><!-- container -->
+  </div>
+  @RenderSection("subPage", required: false)
+  <!-- End Page -->
+
+  <div id="modal-base" class="modal fade no_print_screen" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-lg modal-dialog-vertical-center" role="document">
+      <div class="modal-content bd-0 tx-14">
+        <div class="modal-header">
+          <h6 class="tx-14 mg-b-0 tx-uppercase tx-inverse tx-bold modal-header-title"></h6>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary">Save changes</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div><!-- modal-dialog -->
+  </div>
+
+  <div id="modal-print" class="modal fade no_print_screen" aria-hidden="true" style="display:none;">
+    <div id="dialog-print" class="modal-dialog modal-dialog-vertical-center" role="document">
+      <div class="modal-content bd-0 tx-14">
+        <div class="modal-header no_print_screen">
+          <h6 class="tx-14 mg-b-0 tx-uppercase tx-inverse tx-bold modal-header-title"></h6>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div id="modal_print_content" class="modal-body no_print_screen">
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btn_modal_print" class="btn btn-secondary">미리보기 인쇄</button>
+          <button type="button" id="btn_invoice_submit" class="btn btn-primary">발행요청하기!</button>
+        </div>
+      </div>
+    </div><!-- modal-dialog -->
+  </div>
+
+  <script src="~/Libs/slim/lib/jquery/js/jquery.js"></script>
+  <script src="~/Libs/slim/lib/jquery.steps/js/jquery.steps.js"></script>
+  <script src="~/Libs/slim/lib/popper.js/js/popper.js"></script>
+  <script src="~/Libs/slim/lib/bootstrap/js/bootstrap.js"></script>
+  <script src="~/Libs/jquery-loading-overlay-master/dist/loadingoverlay.min.js"></script>
+  <script src="~/Libs/alertifyjs/alertify.min.js"></script>
+  <script src="~/Libs/slim/js/slim.js"></script>
+  <script src="~/Scripts/Common.js?slimv0.0.3"></script>
+  <script src="~/Scripts/CommonAlert.js?slimv0.0.2"></script>
+  <!--
+
+  -->
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/bootstrap-datepicker/bootstrap-datepicker.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Scripts/datepicker_kr.js?v4.1.0"></script>
+
+  <script type="text/javascript" src="~/Scripts/jquery.form.min.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Scripts/validation/jquery.validate.min.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Scripts/validation/additional-methods.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Scripts/validation/valid_option_slim.js?v4.1.0"></script>
+
+  <script type="text/javascript" src="~/Scripts/CommonFormat.js?v4.1.0"></script>
+
+
+  <!-- 외부환경 항목 오픈 로그 -->
+  <script type="text/javascript" src="~/Scripts/elementblock.js?v4.1.0"></script>
+
+
+  <script type="text/javascript">
+    /*
+    new easepick.create({
+      element: ".js-easypicker",
+      firstDay: 0,
+      lang: "ko-KR",
+      format: "YYYY-MM-DD"
+        readonly: false,
+      css: [
+        "https://cdn.jsdelivr.net/npm/@@easepick/bundle@@1.2.1/dist/index.css"
+      ],
+      zIndex: 10
+    })
+    */
+
+    function BindDatePicker(obj) {
+      var option = {
+        format: "yyyy-mm-dd",
+        language: "kr",
+        autoclose: true
+      };
+
+      $(obj).datepicker(option);
+    };
+
+    BindDatePicker($(".jq-datepicker"));
+
+  </script>
+
+  <script type="text/javascript">
+
+
+        chkBrowser();
+
+
+        $(".site-menu-title").click(function(e) {
+           // Do something
+            sender = $(e.target);
+            var link = sender.attr("data-link")
+            if(link) location.href = link, e.stopPropagation()
+
+            //e.stopPropagation();
+        });
+
+        function chkBrowser() {
+
+            var browse = navigator.userAgent.toLowerCase();
+            var msg = "";
+            //debugger;
+            if((navigator.appName == 'Netscape' && browse.indexOf('trident') != -1) || (browse.indexOf("msie") != -1) || (browse.indexOf("firefox") != -1)) {
+                 msg = "본 사이트는 크롬버전에 최적화되어있습니다.";
+            }
+
+            if (msg != "") {
+
+                toastr.options = {
+                  "closeButton": true,
+                  "debug": false,
+                  "newestOnTop": false,
+                  "progressBar": false,
+                  "positionClass": "toast-top-full-width",
+                  "preventDuplicates": false,
+                  "onclick": null,
+                  "showDuration": "300",
+                  "hideDuration": "1000",
+                  "timeOut": "0",
+                  "extendedTimeOut": "0",
+                  "showEasing": "swing",
+                  "hideEasing": "linear",
+                  "showMethod": "fadeIn",
+                  "hideMethod": "fadeOut"
+                }
+                toastr.error(msg);
+            }
+        }
+
+        function showLoading(obj) {
+
+            if (obj == undefined) {
+                $.LoadingOverlay("show", {
+                    image: "",
+                    fontawesome: "fa fa-spinner fa-spin",
+                    size: 5
+                });
+            }
+            else {
+                $(obj).LoadingOverlay("show");
+            }
+        }
+
+        function hideLoading(obj) {
+            if (obj == undefined) {
+                $.LoadingOverlay("hide");
+            }
+            else {
+                $(obj).LoadingOverlay("hide");
+
+            }
+        }
+
+
+
+
+
+        function BindDateTimePicker(obj) {
+          $(obj).datetimepicker({
+            format: "Y-m-d H:i"
+            , step: 15 //스텝 타임
+            , width: 100
+          });
+
+          $.datetimepicker.setLocale('ko');
+        }
+
+        function Truncate(value, len) {
+            if (value.length > len)
+                return value.substr(0, len) + "...";
+            else
+                return value
+        }
+
+        function StringBuilder() {
+            var strings = [];
+
+            this.append = function (string) {
+                string = verify(string);
+                if (string.length > 0) strings[strings.length] = string;
+            };
+
+            this.appendLine = function (string) {
+                string = verify(string);
+                if (this.isEmpty()) {
+                    if (string.length > 0) strings[strings.length] = string;
+                    else return;
+                }
+                else strings[strings.length] = string.length > 0 ? "\r\n" + string : "\r\n";
+            };
+
+            this.clear = function () { strings = []; };
+
+            this.isEmpty = function () { return strings.length == 0; };
+
+            this.toString = function () { return strings.join(""); };
+
+            var verify = function (string) {
+                if (!defined(string)) return "";
+                if (getType(string) != getType(new String())) return String(string);
+                return string;
+            };
+
+            var defined = function (el) {
+                // Changed per Ryan O'Hara's comment:
+                return el != null && typeof (el) != "undefined";
+            };
+
+            var getType = function (instance) {
+                if (!defined(instance.constructor)) throw Error("Unexpected object type");
+                var type = String(instance.constructor).match(/function\s+(\w+)/);
+
+                return defined(type) ? type[1] : "undefined";
+            };
+        };
+
+        //입력한 문자열 전달
+        function inputNumberFormat(obj) {
+            obj.value = comma(uncomma(obj.value));
+    }
+
+
+        //콤마찍기
+        function comma(str) {
+            str = String(str);
+            var regx    = new RegExp(/(-?\d+)(\d{3})/);
+            var bExists = str.indexOf(".", 0);
+            var strArr  = str.split('.');
+
+            while (regx.test(strArr[0])) {
+                strArr[0] = strArr[0].replace(regx,"$1,$2");
+            }
+
+            if (bExists > -1)
+                str = strArr[0] + "." + strArr[1];
+            else
+                str = strArr[0];
+
+            return String(str);
+    }
+
+
+
+        //콤마풀기
+        function uncomma(str) {
+            str = String(str);
+            return new Number(str.replace(/,/gi,''));
+    }
+
+
+    function removeChar2(event) {
+
+      event = event || window.event;
+      var keyID = (event.which) ? event.which : event.keyCode;
+
+      if (keyID == 8 || keyID == 46 || keyID == 37 || keyID == 39) {
+
+        return;
+
+      } else {
+
+        //숫자만 입력
+        event.target.value = event.target.value.replace(/[^-\.0-9]/g, "");
+
+      }
+
+    }
+
+    function inputNumberFormat2(obj) {
+      obj.value = comma2(obj.value);
+    }
+    function comma2(obj) {
+
+      var regx = new RegExp(/(-?\d+)(\d{3})/);
+      var bExists = obj.indexOf(".", 0);
+      var strArr = obj.split('.');
+
+      while (regx.test(strArr[0])) {
+
+        strArr[0] = strArr[0].replace(regx, "$1,$2");
+      }
+
+      if (bExists > -1) {
+
+        obj = strArr[0] + "." + strArr[1];
+
+      } else {
+
+        obj = strArr[0];
+
+      }
+
+      return obj;
+
+    }
+
+    function uncomma2(str) {
+
+      str = "" + str.replace(/,/gi, '');
+      str = str.replace(/(^\s*)|(\s*$)/g, "");
+
+      return (new Number(str));//문자열을 숫자로 반환
+
+    }
+
+
+        //숫자만 리턴(저장할때)
+        //alert(cf_getNumberOnly('1,2./3g')); -> 123 return
+        function cf_getNumberOnly(str) {
+
+            str = "" + str.replace(/,/gi,''); // 콤마 제거
+            str = str.replace(/(^\s*)|(\s*$)/g, ""); // trim
+            return (new Number(str));
+
+        }
+        @*
+        //입력한 문자열 전달
+        function inputNumberFormat(obj) {
+            obj.value = comma(uncomma(obj.value));
+        }
+
+        //콤마찍기
+        function comma(str) {
+            str = String(str);
+            return str.replace(/(\d)(?=(?:\d{3})+(?!\d))/g, '$1,');
+        }
+
+        //콤마풀기
+        function uncomma(str) {
+            str = String(str);
+            return new Number(str.replace(/,/gi,''));
+        }
+
+        //숫자만 리턴(저장할때)
+        //alert(cf_getNumberOnly('1,2./3g')); -> 123 return
+        function cf_getNumberOnly(str) {
+
+            str = "" + str.replace(/,/gi,''); // 콤마 제거
+            str = str.replace(/(^\s*)|(\s*$)/g, ""); // trim
+            return (new Number(str));
+
+        }
+        *@
+        //문자열 길이계산.(한글:2byte, 영문 숫자 : 1byte)
+        function getByteLength(s, b, i, c) {
+            for (b = i = 0; c = s.charCodeAt(i++); b += c >> 7 ? 2 : 1);
+            return b;
+        }
+
+        //SMS 발송 모달 오픈
+        function openSmsSendModal(receive_number) {
+            var win = window.open('@Url.Action("SMSCreate", "Partial")' + '?receive_number=' + receive_number, 'SMSPOP', 'width=500, height=530');
+            win.focus();
+            return
+        }
+
+    function openPrivacySmsSendModal(receive_type, c_seq, cl_seq) {
+      var win_tag = (c_seq ? 'SMSPRIVACY_' + c_seq : 'SMSPRIVACY');
+      var param = '?receive_type=' + (receive_type ? receive_type : '') + (c_seq ? '&c_list=' + c_seq : '') + (cl_seq ? '&cl_seq=' + cl_seq : '')
+      var win = window.open('@Url.Action("SMSPrivacyCreate", "Partial")' + param , win_tag, 'width=800, height=600');
+      win.focus();
+      return
+    }
+
+        function PopMakeupRequestList(from, to) {
+            $.fancybox.open({
+                href : "@Url.Action("MakeupRequestList", "Project")",
+                ajax : {
+                    type: "post",
+                    data: {
+                        search_status : 1,
+                        start_date: from,
+                        end_date : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: true,
+                'title': '메모장 내역 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+        function openMakeupRequestModal(from, to) {
+
+            $.ajax({
+                url: '@Url.Action("MakeupRequestList", "Project")',
+                data: {
+                        search_status : 1,
+                        start_date: from,
+                        end_date : to
+                },
+                dataType: 'html',
+                type: 'GET',
+                beforeSend: function ()
+                {
+                    $(".page").isLoading({
+                        text: "Loading",
+                        position: "overlay"
+                    });
+                }
+            })
+            .done(function (view) {
+                $(".page").isLoading("hide");
+
+                $('#MakeupModal .modal-body').html(view)
+                $('#MakeupModal').modal('toggle');
+            })
+            .fail(function (e) {
+                $(".page").isLoading( "hide" );
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+
+        function callErrorToastr(msg, obj)
+        {
+            toastr.options = {
+              "closeButton": true,
+              "debug": false,
+              "newestOnTop": true,
+              "progressBar": true,
+              "positionClass": "toast-top-center",
+              "preventDuplicates": false,
+              "onclick": null,
+              "showDuration": "300",
+              "hideDuration": "1000",
+              "timeOut": "5000",
+              "extendedTimeOut": "1000",
+              "showEasing": "swing",
+              "hideEasing": "linear",
+              "showMethod": "fadeIn",
+              "hideMethod": "fadeOut",
+            }
+
+            toastr.error(msg);
+
+            //toastr 위치 조정..
+            var $notifyContainer = $('#toast-container').closest('.toast-top-center');
+            if ($notifyContainer) {
+                $notifyContainer.css("top", $(obj).position().top + 100);
+            }
+        }
+
+        //자바스크립트 오류 elmah 전송
+        function JSErrorHandler(xhr) {
+            //$.post("/Base/LogJavaScriptError", { message: encodeURIComponent(xhr.responseText) });
+        }
+
+        //팬시박스 호출 공통.
+        function callFancyBox(url, data, fTitle, fWidth, fHeight) {
+
+            $.fancybox.open({
+                href: url,
+                ajax : {
+                    type: "post",
+                    data: data
+                },
+                title: fTitle,
+                width: parseInt(fWidth),
+                height: parseInt(fHeight),
+                autoDimensions:false,
+                type: 'ajax',
+                scrolling : 'auto',
+                autoSize: false,
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+
+
+        function StopEnterSubmit() {
+
+            $('input[type="text"]').keypress(function() {
+              if (event.keyCode === 13) {
+                event.preventDefault();
+              };
+            });
+    };
+    /*
+     * kpi 팝업 일단 보류함
+    function closeKpiModal() {
+      setCookieOrg('univision_kpi_daily', "Y", 1)
+      $('#kpiModal').modal('toggle');
+    }
+    $(document).ready(function () {
+      if (isNullOrEmpty(getCookieOrg('univision_kpi_daily'))) {
+        callKpiModal();
+      }
+    });
+    */
+
+
+
+  </script>
+
+  @RenderSection("scripts", required: false)
+
+</body>
+</html>

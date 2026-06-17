@@ -1,0 +1,164 @@
+﻿@model List<Univision.Core.Models.DTO.Response.Dashboard.KPIModel>
+
+@{
+    Layout = null;
+}
+<style>
+    
+    @@media (max-width:1617px) {
+        
+        #kpi-table .kpi-group-4 {
+            display: none
+        }
+       
+    }
+    @@media (max-width:1364px) {
+        #kpi-table .kpi-group-3{
+            display: none
+        }
+    }
+
+    @@media (max-width:989px) {
+        #kpi-table .kpi-group-2{
+            display: none
+        }
+    }
+    @@media (max-width:500px) {
+        #kpi-table .kpi-group-1{
+            display: none
+        }
+    }
+</style>
+<div class="table-responsive">
+    <table id="kpi-table" class="table ">
+        <colgroup>
+            <col style="min-width:150px;max-width:7.5%;">
+            <col>
+            <col>
+            <col>
+            <col>
+
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+
+            <col>
+        </colgroup>
+        <thead>
+            <tr>
+                <th rowspan="2" class="">구분</th>
+                <th colspan="5" class="kpi-group-a">4주 누적</th>
+                <th colspan="5" class="kpi-group-1">1주전</th>
+                <th colspan="5" class="kpi-group-2">2주전</th>
+                <th colspan="5" class="kpi-group-3">3주전</th>
+                <th colspan="5" class="kpi-group-4">4주전</th>
+            </tr>
+            <tr>
+                <th class="kpi-group-a">등록</th>
+                <th class="kpi-group-a">관심</th>
+                <th class="kpi-group-a">추천</th>
+                <th class="kpi-group-a">면접</th>
+                <th class="kpi-group-a">채용</th>
+                <th class="kpi-group-1">등록</th>
+                <th class="kpi-group-1">관심</th>
+                <th class="kpi-group-1">추천</th>
+                <th class="kpi-group-1">면접</th>
+                <th class="kpi-group-1">채용</th>
+                <th class="kpi-group-2">등록</th>
+                <th class="kpi-group-2">관심</th>
+                <th class="kpi-group-2">추천</th>
+                <th class="kpi-group-2">면접</th>
+                <th class="kpi-group-2">채용</th>
+                <th class="kpi-group-3">등록</th>
+                <th class="kpi-group-3">관심</th>
+                <th class="kpi-group-3">추천</th>
+                <th class="kpi-group-3">면접</th>
+                <th class="kpi-group-3">채용</th>
+                <th class="kpi-group-4">등록</th>
+                <th class="kpi-group-4">관심</th>
+                <th class="kpi-group-4">추천</th>
+                <th class="kpi-group-4">면접</th>
+                <th class="kpi-group-4">채용</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Count > 0)
+            {
+                string className = "";
+
+                foreach (var data in Model)
+                {
+                    if (data.user_name == "평균")
+                    {
+                        className = "font-weight-bold";
+
+                    } 
+
+            <tr>
+                <td class="@className">@data.user_name</td>
+                <td class="@className kpi-group-a">@Math.Round(Convert.ToDouble(data.mem_cnt0 / data.div_user), 0)</td>
+                <td class="@className kpi-group-a">@Math.Round(Convert.ToDouble(data.inter0 / data.div_user), 0)</td>
+                <td class="@className kpi-group-a">@Math.Round(Convert.ToDouble(data.push0 / data.div_user), 0)</td>
+                <td class="@className kpi-group-a">@Math.Round(Convert.ToDouble(data.interview0 / data.div_user), 0)</td>
+                <td class="@className kpi-group-a">@Math.Round(Convert.ToDouble(data.hire0 / data.div_user), 0)</td>
+                <td class="@className kpi-group-1">@Math.Round(Convert.ToDouble(data.mem_cnt1 / data.div_user), 0)</td>
+                <td class="@className kpi-group-1">@Math.Round(Convert.ToDouble(data.inter1 / data.div_user), 0)</td>
+                <td class="@className kpi-group-1">@Math.Round(Convert.ToDouble(data.push1 / data.div_user), 0)</td>
+                <td class="@className kpi-group-1">@Math.Round(Convert.ToDouble(data.interview1 / data.div_user), 0)</td>
+                <td class="@className kpi-group-1">@Math.Round(Convert.ToDouble(data.hire1 / data.div_user), 0)</td>
+                <td class="@className kpi-group-2">@Math.Round(Convert.ToDouble(data.mem_cnt2 / data.div_user), 0)</td>
+                <td class="@className kpi-group-2">@Math.Round(Convert.ToDouble(data.inter2 / data.div_user), 0)</td>
+                <td class="@className kpi-group-2">@Math.Round(Convert.ToDouble(data.push2 / data.div_user), 0)</td>
+                <td class="@className kpi-group-2">@Math.Round(Convert.ToDouble(data.interview2 / data.div_user), 0)</td>
+                <td class="@className kpi-group-2">@Math.Round(Convert.ToDouble(data.hire2 / data.div_user), 0)</td>
+                <td class="@className kpi-group-3">@Math.Round(Convert.ToDouble(data.mem_cnt3 / data.div_user), 0)</td>
+                <td class="@className kpi-group-3">@Math.Round(Convert.ToDouble(data.inter3 / data.div_user), 0)</td>
+                <td class="@className kpi-group-3">@Math.Round(Convert.ToDouble(data.push3 / data.div_user), 0)</td>
+                <td class="@className kpi-group-3">@Math.Round(Convert.ToDouble(data.interview3 / data.div_user), 0)</td>
+                <td class="@className kpi-group-3">@Math.Round(Convert.ToDouble(data.hire3 / data.div_user), 0)</td>
+                <td class="@className kpi-group-4">@Math.Round(Convert.ToDouble(data.mem_cnt4 / data.div_user), 0)</td>
+                <td class="@className kpi-group-4">@Math.Round(Convert.ToDouble(data.inter4 / data.div_user), 0)</td>
+                <td class="@className kpi-group-4">@Math.Round(Convert.ToDouble(data.push4 / data.div_user), 0)</td>
+                <td class="@className kpi-group-4">@Math.Round(Convert.ToDouble(data.interview4 / data.div_user), 0)</td>
+                <td class="@className kpi-group-4">@Math.Round(Convert.ToDouble(data.hire4 / data.div_user), 0)</td>
+
+            </tr>
+                    
+
+                    
+                }
+
+
+            }
+            else
+            {
+                <tr>
+                    <td colspan="27">
+                        KPI 데이터가 없습니다.
+                    </td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+</div>

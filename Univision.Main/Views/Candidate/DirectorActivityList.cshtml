@@ -1,0 +1,226 @@
+﻿@model List<Univision.Core.Models.DTO.director_activity>
+@using Univision.Security
+@{
+  int expend_history_key = 0;
+}
+<style>
+  .highlight_memo_search {
+    background: #00FF00;
+    padding: 1px;
+    border: #00CC00 dotted 1px;
+  }
+</style>
+<ul id="memo_list" class="list-group active_list">
+  @if (Model.Count > 0)
+  {
+    foreach (var data in Model)
+    {
+      <div class="card card-shadow dir_activities">
+        <div class="card-block media clearfix p-25">
+          <div class="media-body text-middle">
+            <h5 class="mt-0 mb-5">
+              @data.create_name
+              @if (data.create_seq == AppIdentity.user_seq || AppIdentity.ua_seq <= 3)
+              {
+                <span class="float-right dir_memo_btn">
+                  <a class="mr-5" href="javascript:void(0);" id="btn_memo_modi_@data.da_seq" onclick="memoModify('@data.d_seq', '@data.da_seq', this)" title="메모 수정">
+                    <i class="fas fa-pen"></i>
+                  </a>
+                  <a class="mr-5" href="javascript:void(0);" onclick="memoDeleteConfirm('@data.d_seq', '@data.da_seq')" title="메모 삭제">
+                    <i class="fas fa-trash red-600"></i>
+                  </a>
+                </span>
+              }
+            </h5>
+            <small class="dir_memo_type_info">[@data.type_str] - Updated on @data.modify_dt.Value.ToLongDateString() @data.modify_dt.Value.ToLongTimeString()</small>
+            <div class="profile-brief px-25 pt-5">
+              <div class="memo" id="dir_memo_@(data.da_seq)" data-memo-type="@data.memo_type">
+                @Html.Raw(data.memo)
+              </div>
+              <div class="dir_memo_btn_place"></div>
+            </div>
+          </div>
+        </div>        
+      </div>
+    }
+  }
+  else
+  {
+
+    <div class="card card-shadow">
+      <div class="card-block media clearfix p-25">
+        <div class="media-body text-middle">
+          결과가 없습니다.
+        </div>
+      </div>
+    </div>
+  }
+
+
+
+</ul>
+<script type="text/javascript">
+
+    function memoModify(d_seq, da_seq, obj) {
+        var memoPlace = $(obj).closest(".media-body").find(".profile-brief")
+      var memoDiv = memoPlace.find('.memo');
+        var appendHtml = "<span class='origintxt d-none'>" + memoDiv.html().trim() + "</span>";
+      appendHtml += "<div class='mt-5'>";
+      appendHtml += "  <div class='form-inline float-right'>"
+      appendHtml += "<select id='memo_type_" + da_seq +"' name='memo_type' class='form-control'>"      
+      appendHtml += "  <option value='2'>메모</option>"
+      appendHtml += "  <option value='1'>뉴스</option>"
+      appendHtml += "  <option value='3'>자료</option>"
+      appendHtml += "  <option value='4'>기타</option>"
+      appendHtml += "</select>"
+      appendHtml += "<button type='button' class='btn btn-sm btn-primary ml-5' onclick='memoModifyConfirm(this, \"" + d_seq + "\", \"" + da_seq + "\")'>수정</button>";
+      appendHtml += "<button type='button' class='btn btn-sm btn-danger ml-5' onclick='memoModifyCancel(this, \"" + d_seq + "\", \"" + da_seq + "\")'>취소</button>";
+      appendHtml += "</div>";
+        
+        appendHtml += "</div>";
+        
+      memoPlace.find('.dir_memo_btn_place').html(appendHtml.toString());
+      $('#memo_type_' + da_seq).val(memoDiv.attr("data-memo-type"));      
+      $('#dir_memo_' + da_seq).summernote({
+        focus: true,
+        toolbar: [
+          // [groupName, [list of button]]
+          ['style', ['bold', 'italic', 'underline', 'clear']],
+          ['fontsize', ['fontsize']],
+          ['color', ['color']],
+          ['insert', ['link', 'picture', 'video', 'file']],
+          ['view', ['codeview', 'help']],
+        ],
+        placeholder: '메모/뉴스/자료 등을 여기에 등록',
+        tabsize: 1,
+        height: 150,
+
+        callbacks: {	//여기 부분이 이미지를 첨부하는 부분
+          onImageUpload: function (files) {
+            uploadSummernoteImageFile(files[0], this);
+          },
+          onFileUpload: function (files) {
+            uploadSummernoteImageFile(files[0], this);
+          },
+          onPaste: function (e) {
+            var clipboardData = e.originalEvent.clipboardData;
+            if (clipboardData && clipboardData.items && clipboardData.items.length) {
+              var item = clipboardData.items[0];
+              if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
+                e.preventDefault();
+              }
+            }
+          }
+        }
+
+      });
+      $(obj).closest('.dir_memo_btn').css("display", "none");
+        //$("#btn_memo_modi_"+da_seq).css("display", "none");
+    }
+
+  function memoModifyCancel(obj, d_seq, da_seq) {
+    var org_memo = $(obj).closest(".profile-brief").find(".origintxt").html()
+    $('#dir_memo_' + da_seq).summernote("code", org_memo);
+    $('#dir_memo_' + da_seq).summernote('destroy');
+    $(obj).closest(".media-body").find('.dir_memo_btn').css("display", "");
+    $(obj).closest(".media-body").find(".profile-brief").find('.dir_memo_btn_place').html('');
+  }
+
+  function memoModifyConfirm(obj, d_seq, da_seq) {
+    if ($('#dir_memo_' + da_seq).summernote('isEmpty')) {
+      alert('내용을 입력해 주십시오.');
+      return;
+    }
+        var memo = $('#dir_memo_' + da_seq).summernote("code");
+        var memo_type = $('#memo_type_' + da_seq).val();
+
+
+        alertify.confirm()
+                .set({
+                    'labels': { ok: '확인', cancel: '취소' },
+                    'onok': function () {
+                        $.ajax({
+                            url: '@Url.Action("ModifyDirectorActivity", "Candidate")',
+                            type: "POST",
+                            dataType: 'json',
+                            data: {
+                                da_seq: da_seq,
+                                memo: memo,
+                                memo_type : memo_type
+                            },
+                            beforeSend: function () {
+                                showLoading('#activityBody');
+                            },
+                            success: function (json) {
+                                hideLoading('#activityBody');
+                                if (json.ok) {
+                                    NormalAlert(json.message);
+                                  
+                                  callActivityList(d_seq, window.currentactivityTab)
+                                }
+                                else {
+                                    ErrorAlert(json.message);
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                hideLoading('#activityBody');
+                                ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                            }
+                        });
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>메모내용 수정')
+                .setting({
+                    message: "메모내용을 수정하시겠습니까?"
+                }).show();
+
+    }
+
+    function memoDeleteConfirm(d_seq, da_seq) {
+        alertify.confirm()
+                .set({
+                    'labels': { ok: '확인', cancel: '취소' },
+                    'onok': function () {
+
+                        $.ajax({
+                            url: '@Url.Action("DeleteDirectorMemo", "Candidate")',
+                            type: "POST",
+                            dataType: 'json',
+                            data: {
+                                da_seq: da_seq
+                            },
+                            beforeSend: function () {
+                                showLoading('#activityBody');
+                            },
+                            success: function (json) {
+                                hideLoading('#activityBody');
+                                if (json.ok) {
+                                  NormalAlert(json.message);
+                                  callActivityList(d_seq, window.currentactivityTab)
+                                    
+                                }
+                                else {
+                                    ErrorAlert(json.message);
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                hideLoading('#activityBody');
+                                ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                            }
+                        });
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>메모내용 삭제')
+                .setting({
+                    message: "메모내용을 삭제하시겠습니까?"
+                }).show();
+    }
+
+    
+</script>

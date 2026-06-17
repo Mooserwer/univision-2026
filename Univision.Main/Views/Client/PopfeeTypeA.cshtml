@@ -1,0 +1,317 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientListViewModel
+@{
+    /**/
+
+    Layout = null;
+}
+
+
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+</style>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        $("#CreateFees #incomEamt").bind('keyup keydown', function () {
+            inputNumberFormat(this);
+        });
+
+        //부모창에 feeTypeRate가 있다면.
+        if (feeTypeA.length > 0) {
+
+            //수수료 테이블 초기화.
+            $("#incomTable").find(".incomRowi").remove();
+
+            var appendHtml = "";
+            var cnt = 0;
+
+            $("#currency_name").val(feeTypeA[0].currency_name).prop("selected", true);
+
+            feeTypeA.forEach(function (row) {
+
+                appendHtml += "<tr class='d-flex incomRowi'>";
+                appendHtml += "<td class='col-md-7 tbw50'>";
+                appendHtml += "<div class='form-group sts05'>";
+                appendHtml += "<input class='form-control text-right col-md-5' id='incomSamt' name='incomSamt' onchange='IncomEamtChange(this)' readonly='readonly' type='text' value='" + comma(row.incomSamt) + "' onkeydown='inputNumberFormat(this)'>";
+                appendHtml += "&nbsp;~&nbsp;";
+                appendHtml += "<input class='form-control text-right col-md-5' id='incomEamt' name='incomEamt' onchange='IncomEamtChange(this)' type='text' value='" + comma(row.incomEamt) + "' onkeydown='inputNumberFormat(this)'>";
+                appendHtml += "</div>";
+                appendHtml += "</td>";
+                appendHtml += "<td class='col-md-2 tbw25'>";
+                appendHtml += "<input class='form-control text-right col-md-12' id='incomPer' name='incomPer' type='number' value='" + comma(row.incomPer) + "'>";
+                appendHtml += "</td>";
+                appendHtml += "<td class='col-md-3 tbw25 sts06'>";
+                appendHtml += "<button type='button' class='btn btn-sm btn-success mr-5' onclick='incomAdd(this);'>+</button>";
+
+                if (cnt != 0) {
+                    appendHtml += "<button type='button' class='btn btn-sm btn-warning' onclick='incomDel(this);'>-</button>";
+                }
+
+                appendHtml += "</td>";
+                appendHtml += "</tr>";
+
+                cnt++;
+            });
+
+            $("#incomTable").append(appendHtml.toString());
+
+        }
+
+        $("#SaveFee").click(function () {
+
+            var isOk = true;
+
+            //부모창의 feeTypeRate변수 초기화.
+            feeTypeA = [];
+
+            //detail 창에 보여줄 txt
+            var feeValueTxt = "연봉별 수수료 : ";
+
+            //현재 설정한 수수료율 row each
+            $(".incomRowi").each(function () {
+
+                var incomSamt = cf_getNumberOnly($(this).find("input[name='incomSamt']").val());
+                var incomEamt = cf_getNumberOnly($(this).find("input[name='incomEamt']").val());
+                var incomPer = cf_getNumberOnly($(this).find("input[name='incomPer']").val());
+
+                if (incomEamt == 0 || isNaN(incomEamt)) {
+                    ErrorAlert("올바른 연봉 범위를 입력하세요.");
+                    isOk = false;
+                    return false;
+                }
+
+                if (incomPer == 0 || isNaN(incomPer)) {
+                    ErrorAlert("올바른 수수료율을 입력하세요.");
+                    isOk = false;
+                    return false;
+                }
+
+                if (incomPer > 100) {
+                    ErrorAlert("올바른 수수료율은 100%를 초과할 수 없습니다.");
+                    isOk = false;
+                    return false;
+                }
+
+                var currentRow = {
+                    currency_name: $("#currency_name").val(),
+                    incomSamt: incomSamt,
+                    incomEamt: incomEamt,
+                    incomPer: incomPer
+                };
+
+                feeValueTxt += comma(incomSamt) + " ~ " + comma(incomEamt) + " - " + incomPer + "% / ";
+
+                feeTypeA.push(currentRow);
+            });
+
+            if (isOk) {
+                $("#feeValue").val(feeValueTxt);
+                $.fancybox.close();
+            }
+
+        });
+    });
+
+    function IncomEamtChange(obj) {
+
+        if (isNaN(cf_getNumberOnly($(obj).closest("tr").find("input[name='incomEamt']").val())) == true) {
+            $(obj).closest("tr").find("input[name='incomEamt']").focus();
+            $(obj).closest("tr").find("input[name='incomEamt']").select();
+            ErrorAlert("올바른 연봉범위를 입력해주세요.");
+            return false;
+        }
+
+        if (cf_getNumberOnly($(obj).closest("tr").find("input[name='incomSamt']").val()) > cf_getNumberOnly($(obj).closest("tr").find("input[name='incomEamt']").val())) {
+            $(obj).closest("tr").find("input[name='incomEamt']").focus();
+            $(obj).closest("tr").find("input[name='incomEamt']").select();
+            ErrorAlert("연봉범위를 올바르게 입력해주세요.");
+            return false;
+        }
+
+
+        if ($(obj).closest("tr").next().find("input[name='incomSamt']").val() != null) {
+            var temp = cf_getNumberOnly($(obj).val()) + 1;
+            $(obj).closest("tr").next().find("input[name='incomSamt']").val(comma(uncomma(temp)));
+        }
+
+        $(obj).closest("tr").next().find("input[name='incomSamt']").val(comma(uncomma(cf_getNumberOnly($(obj).val()) + 1)));
+    }
+
+    function incomAdd(obj) {
+
+        var Eamt = $(obj).closest("tr").find("input[name='incomEamt']").val();
+        var Samt = $(obj).closest("tr").find("input[name='incomSamt']").val();
+        var Per = $(obj).closest("tr").find("input[name='incomPer']").val();
+
+        if (Eamt != "")
+            Eamt = cf_getNumberOnly(Eamt);
+
+        if (Samt != "")
+            Samt = cf_getNumberOnly(Samt);
+
+        if (parseInt(Eamt) == 0 || Eamt == null || Eamt == "") {
+            $(obj).closest("tr").find("input[name='incomEamt']").focus();
+            $(obj).closest("tr").find("input[name='incomEamt']").select();
+            ErrorAlert("연봉범위를 입력해주세요.");
+            return false;
+        }
+
+        if (parseInt(Samt) > parseInt(Eamt)) {
+            $(obj).closest("tr").find("input[name='incomEamt']").focus();
+            $(obj).closest("tr").find("input[name='incomEamt']").select();
+            ErrorAlert("연봉범위를 올바르게 입력해주세요. ");
+            return false;
+        }
+
+        if (parseInt(Per) == null || Per == "") {
+            $(obj).closest("tr").find("input[name='incomPer']").focus();
+            $(obj).closest("tr").find("input[name='incomPer']").select();
+            ErrorAlert("수수료율을 입력해주세요.")
+            return false;
+        }
+
+        if (Per < "0") {
+            $(obj).closest("tr").find("input[name='incomPer']").focus();
+            $(obj).closest("tr").find("input[name='incomPer']").select();
+            ErrorAlert("수수료율은 0~100 사이로 입력해주세요.");
+            return false;
+        }
+
+        var inccomAmt = 0;
+        incomAmt = parseInt(Eamt) + 1;
+
+        var appendHtml = "";
+        appendHtml += "<tr class='d-flex incomRowi'>";
+        appendHtml += "<td class='col-md-7 tbw50'>";
+        appendHtml += "<div class='form-group sts05'>";
+        appendHtml += "<input class='form-control text-right col-md-5' id='incomSamt' name='incomSamt' onchange='IncomEamtChange(this)' readonly='readonly' type='text' value='" + comma(uncomma(incomAmt)) + "' onkeydown='inputNumberFormat(this)'>";
+        appendHtml += "&nbsp;~&nbsp;";
+        appendHtml += "<input class='form-control text-right col-md-5' id='incomEamt' name='incomEamt' onchange='IncomEamtChange(this)' type='text' value='0' onkeydown='inputNumberFormat(this)'>";
+        appendHtml += "</div>";
+        appendHtml += "</td>";
+        appendHtml += "<td class='col-md-2 tbw25'>";
+        appendHtml += "<input class='form-control text-right col-md-12' id='incomPer' name='incomPer' type='number' value='0'>";
+        appendHtml += "</td>";
+        appendHtml += "<td class='col-md-3 tbw25 sts06'>";
+        appendHtml += "<button type='button' class='btn btn-sm btn-success mr-5' onclick='incomAdd(this);'>+</button>";
+        appendHtml += "<button type='button' class='btn btn-sm btn-warning' onclick='incomDel(this);'>-</button>";
+        appendHtml += "</td>";
+        appendHtml += "</tr>";
+
+        $(obj).closest('tr').after(appendHtml.toString());
+
+        $("#CreateFees #incomEamt").bind('keyup keydown', function () {
+            inputNumberFormat(this);
+        });
+    }
+
+    function incomDel(obj) {
+        $(obj).closest("tr").remove();
+        //var temp = parseInt(cf_getNumberOnly($(obj).closest("tr").prev().find("input[name='IncomEamt']").val())) + 1;
+        //$(obj).closest("tr").next().find("input[name='IncomSamt']").val(comma(temp));
+        //$(obj).parent().parent().remove();
+    }
+</script>
+
+
+<div id="CreateFees" class="form-inline" style="overflow-x:hidden">
+    <div class="sts14" style="width:100%">
+        <div class="col-md-12 no-right-space mb-10">
+            <div class="form-group">
+                <label class="form-control-label" for="biz_type">
+                    <b>통화설정</b>
+                </label>
+                @Html.DropDownListFor(x => x.incomeList.FirstOrDefault().Currency_Name, new SelectList(CurrencyType.CurrencyTypes, "Key", "Value"), new { @class="form-control", @id="currency_name", @name="currency_name" })
+                @*<select name="currency_name" id="currency_name" class="form-control">
+                    <option value="WON">WON(원)</option>
+                    <option value="USD">USD(미국달러)</option>
+                    <option value="HKD">HKD(홍콩달러)</option>
+                    <option value="YEN">YEN(엔화)</option>
+                    <option value="GBP">GBP(파운드)</option>
+                    <option value="DEM">DEM(마르크)</option>
+                    <option value="FRF">FRF(프랑스 프랑)</option>
+                    <option value="CHF">CHF(스위스 프랑)</option>
+                    <option value="EUR">EUR(유로)</option>
+                    <option value="CNY">CNY(위안)</option>
+                    <option value="AUD">AUD(호주달러)</option>
+                    <option value="NZD">NZD(뉴질랜드달러)</option>
+                    <option value="CAD">CAD(캐나다달러)</option>
+                </select>*@
+            </div>
+        </div>
+
+        <div class="col-md-12 no-right-space mb-10">
+            <div style="max-height:300px; overflow-y:auto; overflow-x:hidden">
+                <input type="hidden" name="c_seq" id="c_seq" value="@ViewBag.cSeq" />
+                <input type="hidden" name="cc_seq" id="cc_seq" value="@ViewBag.ccSeq" />
+
+                <table class="table table-borderless" id="incomTable">
+                    <thead>
+                        <tr class="d-flex">
+                            <th class="col-md-7 tbw50">Amount of Money</th>
+                            <th class="col-md-2 tbw25">Percent</th>
+                            <th class="col-md-3 tbw25">+ / -</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.incomeList.Count > 0)
+                        {
+                            var num = 1;
+                            foreach (var data in Model.incomeList)
+                            {
+                                <tr class="d-flex incomRowi">
+                                    <td class="col-md-7 tbw50 ">
+                                        @Html.TextBox("incomSamt", Utils.ConvertMoneyToString(data.start_income), new { @class = "form-control text-right col-md-5", @readonly = "readonly", @onchange = "IncomEamtChange(this)" })
+                                        ~
+                                        @Html.TextBox("incomEamt", Utils.ConvertMoneyToString(data.end_income), new { @class = "form-control text-right col-md-5", @onchange = "IncomEamtChange(this)", @onkeydown = "inputNumberFormat(this)" })
+                                    </td>
+                                    <td class="col-md-2 tbw25">
+                                        @Html.TextBox("incomPer", data.percentage, new { @class = "form-control text-right col-md-12", @type = "number" })
+                                    </td>
+                                    <td class="col-md-3 tbw25">
+                                        <button type="button" class="btn btn-sm btn-success" onclick="incomAdd(this);">+</button>
+                                        @if (num != 1)
+                                        {
+                                            <button type="button" class="btn btn-warning btn-sm" onclick="incomDel(this);">-</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            num = num + 1;
+                        }
+                        else
+                        {
+                            <tr class="d-flex incomRowi">
+                                <td class="col-md-7 tbw50">
+                                    <div class="form-group sts05">
+                                        @Html.TextBox("incomSamt", "0", new { @class = "form-control text-right col-md-5", @readonly = "readonly", @onchange = "IncomEamtChange(this)" })
+                                        &nbsp;~&nbsp;
+                                        @Html.TextBox("incomEamt", "0", new { @class = "form-control text-right col-md-5", @onchange = "IncomEamtChange(this)", @onkeydown = "inputNumberFormat(this)" })
+                                    </div>
+                                </td>
+                                <td class="col-md-2 tbw25">
+                                    @Html.TextBox("incomPer", "0", new { @class = "form-control text-right col-md-12", @type = "number" })
+                                </td>
+                                <td class="col-md-3 tbw25">
+                                    <button type="button" class="btn btn-sm btn-success" onclick="incomAdd(this);">+</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-md-12 no-right-space" style="text-align:right;">
+            @*<button type="button" id="SaveFee" class="btn btn-primary btn-sm CreateFee">등록</button>*@
+            <button type="button" id="SaveFee" class="btn btn-primary btn-sm">등록</button>
+        </div>
+    </div>
+</div>

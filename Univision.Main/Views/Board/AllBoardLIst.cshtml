@@ -1,0 +1,146 @@
+﻿@using Univision.Core.Models;
+@using Univision.Core.Models.DTO;
+@using Univision.Core.Models.DTO.Response.Board;
+@model Univision.Core.Models.DTO.Response.Board.BoardListModel
+@{
+  //ViewBag.Title = "NoticeList";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/tablesaw/tablesaw.min599c.css?v4.0.4">
+<div class="page-content">
+  <!--검색 Form -->
+
+
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <!-- 검색 패널 시작 -->
+    @using (Html.BeginForm("AllBoardList", "Board", FormMethod.Get, new { @id = "searchForm" }))
+    {
+      <div class="panel-heading">
+        <div class="panel-title">
+          <i class="fas fa-info-circle"></i>
+          @ViewBag.Title
+        </div>
+        <div class="panel-actions" style="display:flex">
+          <div class="panel-action input-search">
+            <select name="search.search_option" id="search_search_option" class="form-control" style="max-width:150px;">
+              <option value="tcontents" @(Model.search.search_option == "tcontents" ? "selected" : "")>제목+본문</option>
+              <option value="title" @(Model.search.search_option == "title" ? "selected" : "")>제목</option>
+              <option value="contents" @(Model.search.search_option == "contents" ? "selected" : "")>본문</option>
+              <option value="writer" @(Model.search.search_option == "writer" ? "selected" : "")>작성자</option>
+            </select>
+          </div>
+          <div class="panel-action input-search">
+            <button type="submit" class="input-search-btn">
+              <i class="icon wb-search" aria-hidden="true"></i>
+              &nbsp;&nbsp;
+            </button>
+            @Html.TextBoxFor(x => x.search.search_txt, new { @class = "form-control", @placeholder = "검색어 입력" })
+          </div>
+        </div>
+      </div>
+      <!-- 검색 패널 끝 -->
+    }
+
+
+
+    <div class="panel panel-line">
+
+      <div class="panel-body">
+        <div class="mt-10">
+          <table class="block_table table table-striped table-hover mt-10" data-tablesaw-mode="columntoggle">
+            <thead>
+              <tr>
+                <th data-tablesaw-priority="5" class="tablesaw-priority-4 text-center tbw60 hidden-sm-down" style="width: 10%">No.</th>
+                <th data-tablesaw-priority="6" class="tablesaw-priority-5 text-center">카테고리</th>
+                <th data-tablesaw-priority="persist" class="text-center" style="min-width: 40%">제목</th>
+                <th data-tablesaw-priority="4" class="tablesaw-priority-3 text-center hidden-sm-down">조회수</th>
+                <th data-tablesaw-priority="3" class="tablesaw-priority-2 text-center tbw20">작성자</th>
+                <th data-tablesaw-priority="2" class="tablesaw-priority-2 text-center tbw20">파일</th>
+                <th data-tablesaw-priority="1" class="tablesaw-priority-1 text-center hidden-sm-down">최종작성</th>
+              </tr>
+            </thead>
+            <tbody>
+
+              @if (Model != null && Model.BoardList.Count > 0)
+              {
+                int i = (int)Model.PagingInfo.TotalItems - (Model.PagingInfo.ItemsPerPage * (Model.PagingInfo.CurrentPage - 1));
+                foreach (board bd in Model.BoardList)
+                {
+                  string detailPage = "InternalDetail";
+                  if (bd.b_type == 1)
+                  {
+                    detailPage = "ExternalDetail";
+                  }
+                  else if (bd.b_type == 2)
+                  {
+                    detailPage = "LibraryDetail";
+                  }
+                  <tr>
+                    <th class="tablesaw-priority-4 text-center hidden-sm-down">@i</th>
+                    <td class="tablesaw-priority-6 text-left">@bd.b_type_sub_name</td>
+                    <td><a href="@Url.Action(detailPage, "Board", new { b_seq = bd.b_seq})" data-rel="external">@bd.title</a></td>
+                    <td class="tablesaw-priority-3 text-center hidden-sm-down">@bd.read_cnt</td>
+                    <td class="tablesaw-priority-2 text-center">@bd.user_name</td>
+                    <td class="text-center">
+                      @if (bd.file_list.Count() > 0)
+                      {
+                        var file_idx = 0;
+                        foreach (var bf in bd.file_list)
+                        {
+                          if (file_idx >= 5)
+                          {
+                            break;
+                          }
+
+                          <a href="javascript:void(0)" onclick="DownloadFile(@bf.bf_seq, 'board')" title="@bf.file_path">
+                            <i class="fas @Utils.ReturnFileExtensionClass(bf.file_extension)"></i>
+                          </a>
+
+                          file_idx++;
+                        }
+                        if (bd.file_list.Count() > 5)
+                        {
+                          <span>...</span>
+                        }
+                      }
+
+                    </td>
+                    <td class="tablesaw-priority-1 text-center hidden-sm-down">@(((DateTime)bd.modify_dt).ToString("yyyy-MM-dd"))</td>
+
+                  </tr>
+                  i--;
+                }
+              }
+              else
+              {
+                <tr>
+                  <td colspan="7" style="text-align:center;height:200px;vertical-align:middle;"><b>No Data.</b></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (Model != null && Model.BoardList.Count > 0)
+          {
+
+            @Html.PageAjaxLinks(Model.PagingInfo,
+                ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                x => Url.Action("AllBoardList", new
+                {
+                    page = x
+                }))
+
+          }
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+@section scripts{
+  <script src="~/Libs/remark/global/vendor/tablesaw/tablesaw.jquery599c.js?v4.0.4"></script>
+  <script src="~/Libs/remark/global/vendor/tablesaw/tablesaw-init599c.js?v4.0.4"></script>
+
+  <script src="~/Libs/remark/global/js/Plugin/tablesaw.min599c.js?v4.0.4"></script>
+  <script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+}

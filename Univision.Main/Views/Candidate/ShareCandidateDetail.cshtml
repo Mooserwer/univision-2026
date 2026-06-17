@@ -1,0 +1,132 @@
+﻿@model Univision.Core.Models.DTO.Response.Board.BoardDetailViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="page-content">
+    <!--검색 Form -->
+    @using (Html.BeginForm("ShareCandidateDetail", "Candidate", FormMethod.Post, new { @id = "DetailForm", @autocomplete = "off" }))
+    {
+        @Html.HiddenFor(x => x.data.b_seq)
+        @Html.HiddenFor(x => x.data.b_type)
+        @Html.HiddenFor(x => x.data.b_type_sub1)
+        @Html.HiddenFor(x => x.data.b_type_sub2)
+        <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fas fa-address-card"></i>
+                    후보 추천 드려요
+                </h3>
+                <div class="panel-actions">
+                    <div class="panel-action">
+                        @if (Univision.Security.AppIdentity.ua_seq <= 3 || Univision.Security.AppIdentity.user_seq == Model.data.create_user)
+                        {
+                            <button type="button" class="btn btn-primary" id="btnModify">Modify </button>
+                            <button type="button" class="btn btn-warning" id="btnRemove">Remove </button>
+                        }
+                        <button type="button" class="btn btn-default btn-outline" id="btnList">List</button>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="panel-body">
+
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">Title : </label>
+                    <label class="col-md-10 col-form-label">@(Model.data.title)</label>
+                </div>
+                <hr />
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-legend">Writer: </label>
+                    <label class="col-md-10 col-form-legend">@(Model.data.user_name + " (" + Model.data.modify_dt + ")")</label>
+
+                </div>
+                <hr />
+                @if (Model.data.b_type_sub_name != "")
+                {
+                    <div class="form-group row">
+                        <label class="col-md-2 col-form-legend">Category: </label>
+                        <label class="col-md-10 col-form-legend">@(Model.data.b_type_sub_name)</label>
+                    </div>
+                    <hr />
+                }
+                @if (Model.boardFileList.Count > 0)
+                {
+                    <div class="form-group row">
+                        <label class="col-md-2 col-form-label">Files: </label>
+                        <div class="col-md-10">
+                            <ul class="list-group list-group-full mb-0">
+
+                                @foreach (var data in Model.boardFileList)
+                                {
+                                    <li class="list-group-item p-1">
+                                        <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.bf_seq, @type = "board" })">
+                                            <i class="fas @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                                            @data.file_path
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                    <hr />
+                }
+
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">Description: </label>
+                    <div class="col-md-10 col-form-label" id="board_content">
+                        @Html.Raw(Model.data.contents.Replace("&lt;", "<").Replace("&gt;", ">").Replace(System.Environment.NewLine, " <br />"))
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
+</div>
+@section scripts{
+    <script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+    <script type="text/javascript">
+      //$("#board_content").html($("#board_content").html().replace(/(https:\/\/[^\s]+)/g, "<a href='$1'>$1</a>"))
+
+        $("#btnModify").click(function () {
+            location.href = "@Url.Action("ShareCandidateCreate", "Candidate", new { b_seq = Model.data.b_seq })";
+        })
+
+        $("#btnRemove").click(function () {
+            ConfirmAlert("Remove", "Are you sure want to remove the Post?", function () {
+                $.ajax({
+                    url: '@Url.Action("ShareCandidateRemove", "Candidate")',
+                    data: {
+                        b_seq: "@Model.data.b_seq"
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                    beforeSend: function () {
+                        showLoading();
+                    }
+                })
+                .done(function (data) {
+                    hideLoading();
+                    if (data.ok) {
+                        NormalAlert(data.message
+                            , function () {
+                                location.href = "@Url.Action("ShareCandidateList", "Candidate")";
+                            }
+                        );
+
+                    } else {
+                        ErrorAlert("[ERROR]" + data.message);
+                    }
+
+                })
+            });
+        })
+
+        $("#btnList").click(function () {
+            location.href = "@Url.Action("ShareCandidateList", "Candidate")";//, new { b_seq = Model.b_seq })";
+        })
+
+
+
+    </script>
+}

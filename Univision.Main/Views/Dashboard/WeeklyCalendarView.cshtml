@@ -1,0 +1,209 @@
+﻿
+@{
+    Layout = null;
+}
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/fullcalendar/fullcalendar.min599c.css?v4.0.4">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/apps/calendar.min599c.css?v4.0.4">
+<style>
+    .fc-view-container {
+        min-height: 230px;
+    }
+</style>
+
+<div id="calendar" class="p-10 sts18" style="min-height:200px;"></div>
+
+<!--AddEvent Dialog -->
+<div class="modal fade" id="calendarViewModal" aria-hidden="true" aria-labelledby="calendarViewModal" role="dialog" tabindex="-1">
+
+</div><!-- End AddEvent Dialog -->
+
+
+
+<script src="~/Libs/remark/global/vendor/fullcalendar/fullcalendar.min599c.js?v4.0.4"></script>
+
+<script type="text/javascript">
+
+
+            var date = moment($("#calendar").fullCalendar("getDate")).format("YYYY-MM-DD");
+
+            var myOptions = {
+                customButtons: {
+                    myCustomButton: {
+                        text: '더보기 [View more]',
+                        click: function() {
+                            location.href = "@Url.Action("ScheduleList", "Schedule")";
+                        }
+                    }
+                },
+                header: {
+                    left: null,
+                    center: "title",
+                    right: "myCustomButton"
+                },
+                height: 280,
+                defaultDate: date,
+                defaultView: 'week',
+                views: {
+                    week: {
+                        type: 'basic',
+                        duration: { weeks: 2}
+                    }
+                },
+                selectable: true,
+                selectHelper: true,
+                selectOverlap: false,
+                unselectAuto: true,
+                unselectCancel: '.popover, #resvModal',
+                unselect : function(){
+                    closePopovers();
+                },
+                editable: !0,
+                eventLimit: true,
+                eventOrder: 'title',
+                events: {
+                    url: '@Url.Action("ScheduleEventList", "Schedule")',
+                    method: 'GET',
+                    async: false
+                },
+                dayClick: function (date, jsEvent, view) {
+
+                    popScheduleView(null, moment(date).format("YYYY-MM-DD"));
+                    //if (view.name == "month" || view.name == "basicWeek" ){
+                    //    $('#calendar').fullCalendar('changeView', 'agendaDay', date.format());
+                    //}
+                },
+                eventClick: function (evt) {
+                    popScheduleView(evt, ""); // 이벤트 클릭시 팝업
+                },
+                eventRender: function (evt, element, view) { // 이벤트 그려주기
+
+                    if (evt.id) {
+                        var shareTxt = evt.type == '@ScheduleType.share' ? '<br/>' + evt.attend_cnt + '명과 공유 중' : '';
+
+                        element.popover({
+                            title: evt.title,
+                            content: evt.title + '<br/>' + evt.contents + shareTxt + '<br/>' + moment(evt.start_date).format("YYYY-MM-DD HH:mm") + ' ~ ' + moment(evt.end_date).format("YYYY-MM-DD HH:mm"),
+                            trigger: 'hover',
+                            placement: 'auto',
+                            html: true,
+                            container: 'body'
+                        });
+                    }
+
+                    if (evt.id && view.name == "agendaDay") {
+                        element.find('.fc-time').css('background-color', '#777');
+                        element.find('.fc-time').append('<span class="float-right pr-1">' + evt.title + '</span>');
+                    } else if (view.name == "listWeek") {
+                        element.find('.fc-list-item-title ').prepend(evt.title + '&nbsp;&nbsp;');
+                        element.find('.fc-list-item-title ').append(' - ' + evt.title);
+                    }
+                },
+                windowResize: function(view) {
+                    var width = $(window).outerWidth(),
+                        options = Object.assign({}, myOptions);
+                    options.events = view.calendar.clientEvents(), options.aspectRatio = width < 667 ? .5 : 1.35, $("#calendar").fullCalendar("destroy"), $("#calendar").fullCalendar(options)
+                },
+                droppable: !0,
+
+            }
+
+            $("#calendar").fullCalendar(myOptions);
+
+            //필터 이벤트 처리
+            $(".calendar-event").click(function () {
+
+                var filter;
+                var startDt = $('#calendar').fullCalendar('getView').start;
+                var endDt = $('#calendar').fullCalendar('getView').end;
+
+                //개인 스케줄
+                if ($(this).attr("filter") == "@ScheduleType.personal") {
+
+                    filter = {
+                        type: 'GET',
+                        data: { type: $(this).attr("filter"), start: startDt, end: endDt },
+                        url: '@Url.Action("ScheduleEventList", "Schedule")',
+                    };
+
+                }
+                //회사 스케줄
+                else if ($(this).attr("filter") == "@ScheduleType.company") {
+
+                    filter = {
+                        type: 'GET',
+                        data: { type: $(this).attr("filter"), start: startDt, end: endDt },
+                        url: '@Url.Action("ScheduleEventList", "Schedule")',
+                    };
+
+                }
+                //팀 스케줄
+                else if ($(this).attr("filter") == "@ScheduleType.team") {
+
+                    filter = {
+                        type: 'GET',
+                        data: { type: $(this).attr("filter"), start: startDt, end: endDt },
+                        url: '@Url.Action("ScheduleEventList", "Schedule")',
+                    };
+                }
+                //공유 스케줄
+                else if ($(this).attr("filter") == "@ScheduleType.share") {
+
+                    filter = {
+                        type: 'GET',
+                        data: { type: $(this).attr("filter"), start: startDt, end: endDt },
+                        url: '@Url.Action("ScheduleEventList", "Schedule")',
+                    };
+
+                }
+                else {
+                    filter = {
+                        type: 'GET',
+                        data: { type: '', start: startDt, end: endDt },
+                        url: '@Url.Action("ScheduleEventList", "Schedule")',
+                    };
+                }
+
+                $('#calendar').fullCalendar('removeEvents');
+                $('#calendar').fullCalendar('addEventSource', filter);
+            });
+
+
+        function popScheduleView(event_obj, date) {
+
+            var id = 0;
+            if (event_obj != null) {
+                id = event_obj.id;
+            }
+
+            $.ajax({
+                url: '@Url.Action("ScheduleView", "Schedule")',
+                data: {
+                    s_seq: id,
+                    date: date
+                },
+                dataType: 'html',
+                type: 'GET',
+                beforeSend: function ()
+                {
+                    showLoading('#calendarBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#calendarBody');
+
+                $("#calendarViewModal").html(view)
+                $('#calendarViewModal').modal('toggle');
+
+            })
+            .fail(function (e) {
+                hideLoading('#calendarBody');
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+
+        function closePopovers() {
+            //팝오버 닫기
+            $('.popover').not(this).popover('hide');
+        }
+
+</script>

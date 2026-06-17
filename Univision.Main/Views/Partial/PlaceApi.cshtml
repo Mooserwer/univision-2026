@@ -1,0 +1,205 @@
+﻿@model Univision.Main.Models.Api.PlaceModel
+
+<style>
+
+    #rpPanel {
+        margin-bottom: 0px;
+    }
+
+        #rpPanel .panel-title {
+            padding: 5px 5px 5px 5px !important;
+        }
+
+        #rpPanel .panel-body {
+            padding: 5px 5px 5px 5px !important;
+
+            
+        }
+        #rpPanel .list-group {
+            margin-bottom:0px;
+        }
+
+            #rpPanel .panel-body span {
+                cursor: pointer;
+            }
+
+        #rpPanel .panel-footer {
+            padding: 5px 5px 5px 5px !important;
+        }
+
+        .panel-body{
+            margin-bottom:10px !important;
+        }
+
+
+    .addrDiv {
+        min-height: 180px;
+        max-height: 180px;
+        overflow-y: auto;
+    }
+
+        .addrDiv .list-group-item {
+            padding: 3px;
+        }
+</style>
+
+<div id="rpPanel" class="panel panel-bordered">
+    <div class="panel-body form-inline">
+        <div class="col-md-6 no-side-space list-group list-group-bordered addrDiv sts07" id="addr1">
+            @if (Model.addr1List.Count() > 0)
+            {
+                foreach (var data in Model.addr1List)
+                {
+                    <a href="javascript:void(0);" class="list-group-item flex-column align-items-start code1" id="@data.code1" name="@data.area1" onclick="Code1Select(this, '@data.code1')">
+                        <p class="mb-0">@data.area1</p>
+                    </a>
+                }
+            }
+        </div>
+        <div class="col-md-6 no-side-space list-group list-group-bordered addrDiv sts07" id="addr2" style="border-left:1px solid #e4eaec;">
+            
+            <div id="addr2None" style="background-color:#e4eaec; width:100%">
+                ← 지역 분류를 선택해주세요.
+            </div>
+            <div id="addr2List" style="display:none">
+
+            </div>
+        </div>
+    </div>
+    <div class="panel-footer" style="border-top:1px solid #e4eaec;">
+        <div class="row col-md-12 no-side-space">
+            <div class="col-md-4">
+
+            </div>
+            <div class="col-md-8 text-right">
+                <button id="btnCancel" type="button" class="btn btn-sm btn-default" onclick="javascript:$.fancybox.close();">닫기</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        
+
+    });
+
+
+    function Code1Select(obj, code1) {
+
+        //현재 선택한 직무 단계에 a 태그 active 클래스 부여.
+        $(obj).addClass("active");
+
+        //현재 선택한 직무 단계 이외의 a 태그 active 클래스 제거
+        $(".code1").not(obj).removeClass("active");
+
+        $.ajax({
+               url: '@Url.Action("SelectPlaceAddr2", "Partial")',
+               data: {
+                   code1: code1
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+
+               }
+        })
+        .done(function (json) {
+
+            if (json.ok) {
+
+                if (json.list.length > 0) {
+                    
+                    var sb = new StringBuilder();
+
+                    for (var i = 0; i < json.list.length; i++) {
+
+                        var data = json.list[i];
+
+                        var aClass = "";
+
+                        if (code2Arr.indexOf(data.code2) > -1) {
+                            aClass = "active";
+                        }
+
+                        sb.append("<a href='javascript:void(0)' class='list-group-item flex-column align-items-start code2 " + aClass + "' id='" + data.code2 + "' name= '" + data.area2 + "' onclick='Code2Select(this)'>");
+                        sb.append("<p class='mb-0'>" + data.area2 + "</p>");
+                        sb.append("</a>");
+                    }
+                    
+                    $("#addr2None").css("display", "none");
+                    $("#addr2List").css("display", "block");
+                    $("#addr2List").empty();
+                    $("#addr2List").append(sb.toString());
+
+                }
+            } else {
+                $("#addr2List").css("display", "none");
+                $("#addr2None").css("display", "block");
+            }
+        })
+        .fail(function (e) {
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+        }
+
+    function Code2Select(obj) {
+
+        var isOk = true;
+
+        //호출한 페이지 placeDiv 안에 place_code2 히든 요소를 반복문
+        $(".placeDiv").find("input[name='place_code2']").each(function () {
+            
+            //place_code2 의 value가 현재 선택한 요소와 같다면 삭제.
+            if ($(this).val() == $(obj).attr("id")) {
+                
+                $(this).closest("span").remove();
+                $(obj).removeClass("active");
+                isOk = false;
+            }
+        });
+        
+        if (!isOk) {
+            return;
+        }
+
+        //현재 선택한 직무 단계에 a 태그 active 클래스 부여.
+        $(obj).addClass("active");
+
+        //현재 선택한 직무 단계 이외의 a 태그 active 클래스 제거
+        $(".code2").not(obj).removeClass("active");
+
+        var code1 = $(".code1.active").attr("id");
+        var area1 = $(".code1.active").attr("name");
+        var code2 = $(".code2.active").attr("id");
+        var area2 = $(".code2.active").attr("name");
+
+        var appendHtml = "";
+
+        appendHtml += "<span class='badge badge-outline badge-primary placeRow' style='margin-right:3px;'>";
+        appendHtml += "<input type='hidden' id='cp_seq' name='cp_seq' value='0' />";
+        appendHtml += "<input type='hidden' id='place_code1' name='place_code1' value='" + code1 + "' />";
+        appendHtml += "<input type='hidden' id='place_area1' name='place_area1' value='" + area1 + "' />";
+        appendHtml += "<input type='hidden' id='place_code2' name='place_code2' value='" + code2 + "' />";
+        appendHtml += "<input type='hidden' id='place_area2' name='place_area2' value='" + area2 + "' />";
+
+        if (area2.indexOf("전체") > 1) {
+            appendHtml += area2;
+        }
+        else {
+            appendHtml += area1 + "&nbsp;" + area2;
+        }
+        
+        appendHtml += "<i class='fas fa-times cur_hand' onclick='DeletePlace(this)'></i>";
+        appendHtml += "</span>";
+
+        $(".placeDiv").append(appendHtml.toString());
+
+        //호출 페이지 Validator 호출. - CreateProject 페이지 사용.
+        $('#CreateForm').formValidation('revalidateField', 'placeDiv');
+    }
+
+</script>

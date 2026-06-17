@@ -1,0 +1,202 @@
+﻿@model Univision.Main.Models.Project.ProjectFileListModel
+
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_cus.css?v=1533562669">
+<style>
+  .dropify-wrapper {
+    padding: 0px 15px 0px 15px;
+    box-sizing: border-box;
+  }
+</style>
+
+<div class="row">
+  <div class="col user-background card mb-1">
+    
+    <div class="card-block p-5">
+      <div id="pjt_file" class="dropzone h-full text-left">
+        <div class="row py-2">
+          <div class="col">
+            <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+          </div>
+        </div>
+        <div class="file_rst row px-15 py-2" id="pjt_file_rst">
+
+
+          @if (Model.list.Count > 0)
+          {
+            foreach (var data in Model.list)
+            {
+              <div class="py-0 file_div col-12" file_name="@data.file_path">
+                <input type="hidden" name="pf_seq" value="@data.pf_seq">
+                <input type="hidden" name="file_origin_path" value="'@data.file_origin_path">
+                <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.pf_seq, @type = "project" })" class="file_info text-left text-truncate cur_hand badge badge-secondary link-pjt-file" title="@data.file_path // @Utils.ConvertDateTimeToString(data.create_dt)">
+                  <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                  @data.file_path
+                  <small>[@Utils.ConvertDateTimeToString(data.create_dt)]</small>
+                </a>
+                <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-pjt-file-remove" style="width:10%;" onclick="RemoveProjectFile(this);">
+                  <i class="fa fa-trash" aria-hidden="true"></i>
+                </a>
+              </div>
+            }
+          }
+          <div class="py-0 btn-more col-12 text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(Model.list.Count - 4))</span></div>
+          <div class="py-0 btn-collapse col-12 text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+<script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
+<script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+<script type="text/javascript">
+  window.url_create_project_file = "@Url.Action("CreateProjectFile", "Project")";
+  window.url_delete_project_file = "@Url.Action("DeletePjtFile", "Project")";
+</script>
+<script type="text/javascript">
+  
+
+
+  $('.btn-more').click(function () {
+    $(this).closest('.file_rst').addClass('more');
+  })
+
+  $('.btn-collapse').click(function () {
+    $(this).closest('.file_rst').removeClass('more');
+  });
+
+  //파일업로드================================
+  if ($('.dropzone').length > 0) {
+
+    var myProjectDropzone = new Dropzone("div#pjt_file", {
+      paramName: "files",
+      url: window.url_create_project_file,
+      method: "post",
+      params: {
+        "p_seq": window.model_p_seq,
+        "file_type_name" : "ALL"
+      }
+    });
+
+
+
+    myProjectDropzone.on("success", function (file, response) {
+      if (response.ok) {
+        file_html = MakeHtmlFileList(response.result);
+        $('#pjt_file_rst').prepend($(file_html).hide().fadeIn(1000));
+        $('#pjt_file_rst').find('.more_cnt').text("(" + ($('#pjt_file_rst div.file_div').length - 4) + ")")
+        this.removeFile(file);
+      } else {
+        ErrorAlert("[ERROR]" + response.message);
+      }
+
+    });
+
+
+  }
+  function MakeHtmlFileList(obj_file) {
+    var cols = ""
+    if (obj_file.file_path && obj_file.file_path != '') {
+      var icon_str = "";
+
+      if (obj_file.file_extension == ".pdf") {
+        icon_str = "far fa-fw fa-file-pdf text-primary"
+      } else if (obj_file.file_extension == ".jpg" || obj_file.file_extension == ".png" || obj_file.file_extension == ".gif" || obj_file.file_extension == ".bmp") {
+        icon_str = "far fa-fw fa-file-image text-primary";
+      } else if (obj_file.file_extension == ".doc" || obj_file.file_extension == ".docx") {
+        icon_str = "far fa-fw fa-file-word text-primary";
+      } else if (obj_file.file_extension == ".xls" || obj_file.file_extension == ".xlsx") {
+        icon_str = "far fa-fw fa-file-excel text-primary";
+      } else if (obj_file.file_extension == ".ppt" || obj_file.file_extension == ".pptx") {
+        icon_str = "far fa-fw fa-file-powerpoint text-primary";
+      } else {
+        icon_str = "fa fa-fw fa-file-alt text-light";
+      }
+
+      cols += '<div class="py-0 file_div col-12">' //'+obj_file.col+'
+      cols += '  <input type="hidden" name="pf_seq" value="' + obj_file.pf_seq + '">'
+      cols += '  <input type="hidden" name="file_origin_path" value="' + obj_file.file_origin_path + '">'
+      cols += '  <a href="/DownloadFile/Download?element_seq=' + obj_file.pf_seq + '&type=project" class="file_info text-left text-truncate cur_hand badge badge-secondary link-pjt-file" title="' + obj_file.file_path + '" >';
+      cols += '    <i class="' + icon_str + '" aria-hidden="true"></i> ' + obj_file.file_path;
+      cols += '    <small>[' + ToJavaScriptDate(obj_file.create_dt) + ']</small>';
+      cols += '  </a>'
+      cols += '  <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-pjt-file-remove" style="width:10%;" onclick="RemoveProjectFile(this);">';
+      cols += '   <i class="fa fa-trash" aria-hidden="true"></i>';
+      cols += '  </a>';
+      cols += '</div>';
+
+    }
+    return cols;
+  }
+
+  function ToJavaScriptDate(value) {
+    //console.log(value)
+    var pattern = /Date\(([^)]+)\)/;
+    var results = pattern.exec(value);
+    var dt = new Date(parseFloat(results[1]));
+    //console.log(results[1])
+    //console.log(dt.toISOString().substring(0, 10))
+    //console.log(dt.getMonth())
+    //console.log(dt.getDate())
+    //    return dt.getFullYear() + "-" + (parseInt(dt.getMonth()) + 1) + "-" + dt.getDate();
+    return dt.toISOString().substring(0, 10);
+  }
+
+  function RemoveProjectFile(obj) {
+
+    alertify.confirm()
+      .set({
+        'labels': { ok: 'OK', cancel: 'Cancel' },
+        'onok': function () {
+          DeletePjtFile(obj)
+        },
+        'oncancel': function () {
+          return;
+        },
+      })
+      .setHeader('Remove file')
+      .setting({
+        message: "Are you sure want to delete this file?",
+      })
+      .show();
+  }
+
+  //임시 이력서 파일 삭제
+  function DeletePjtFile(obj) {
+    pf_seq = $(obj).closest('.file_div').find("input[name=pf_seq]").val();
+    $.ajax({
+      url: window.url_delete_project_file,
+      data: {
+        pf_seq: pf_seq
+      },
+      dataType: 'json',
+      type: 'POST',
+      beforeSend: function () {
+        showLoading();
+      }
+    })
+      .done(function (json) {
+        hideLoading();
+        if (json.ok) {
+          parent = $(obj).closest(".file_rst");
+          parent.find('.more_cnt').text("(" + (parseInt(parent.find('div.file_div').length) - 4) + ")")
+          $(obj).closest('.file_div').remove();
+
+
+        } else {
+          ErrorAlert(json.message);
+        }
+      })
+      .fail(function (e) {
+        hideLoading();
+        ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+      });
+  }
+
+
+
+
+</script>

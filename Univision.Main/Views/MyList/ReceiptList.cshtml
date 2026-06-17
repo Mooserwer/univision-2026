@@ -1,0 +1,332 @@
+﻿@model Univision.Main.Models.Receipt.ReceiptModel
+
+@{
+  ViewBag.Title = "제경비";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+
+  string vc_text = String.Empty;
+  double total_vacation = 0;
+  string tr_bg = String.Empty;
+}
+<style>
+  .custom1 a:active, .custom1 a:link, .custom1 a:any-link {
+    text-decoration: none;
+    color: white;
+  }
+
+  @@media (max-width:500px) {
+    .table.table-vacation-status-list thead th:nth-of-type(2), .table.table-vacation-status-list thead th:nth-of-type(7), .table.table-vacation-status-list thead th:nth-of-type(6) {
+      display: none
+    }
+
+    .table.table-vacation-status-list tbody td:nth-of-type(2), .table.table-vacation-status-list tbody td:nth-of-type(7), .table.table-vacation-status-list tbody td:nth-of-type(6) {
+      display: none
+    }
+  }
+</style>
+<link rel="stylesheet" href="~/Libs/lightpick/css/lightpick.css" type="text/css" />
+<div class="page-content container-fluid">
+  <div class="row">
+    <div class="col-6">
+      @using (Html.BeginForm("ReceiptList", "MyList", FormMethod.Get, new { @id = "searchForm" }))
+      {
+        <div class="form-group custom5">
+          <div class="input-group w-500 mr-20 st">
+            <div class="form-group custom4">
+              @Html.DropDownListFor(x => x.search.searchYear, new SelectList(Model.yearList, "key", "value"), new { @class = "form-control w-100 dd" })
+              @Html.HiddenFor(x => x.search.type)
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+    <div class="col-6 text-right">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title">
+            @Model.search.searchYear 년도 제경비 제출 내역
+          </h3>
+        </header>
+        <div class="panel-body">
+          <div class="table-responsive">
+            <table id="default-table" class="table table-hover table-vacation-list" style="table-layout:fixed;min-width:800px;">
+              <thead>
+                <tr>
+                  <th class="text-truncate text-center" title="Type">구분</th>
+                  <th class="text-truncate text-center" style="width:100px;" title="사용월">사용월</th>
+                  <th class="text-truncate text-center" title="제출기간">제출기간</th>
+                  <th class="text-truncate text-center" style="width:100px;" title="제출여부">제출여부</th>
+                  <th class="text-truncate text-center" style="width:130px;" title="금액">사용금액(자동계산)</th>
+                  <th class="text-truncate text-center" title="파일">첨부파일(통신비)</th>
+                  <th class="text-truncate text-center" style="width:100px;" title="상태">상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (Model.list.Count > 0)
+                {
+                  foreach (var data in Model.list)
+                  {
+
+
+                    if (data.is_open == 1)
+                    {
+                      if (data.r_type == 1)
+                      {
+                        tr_bg = "table-light";
+                      }
+                      else if (data.r_type == 2)
+                      {
+                        tr_bg = "table-primary";
+                      }
+                      else if (data.r_type == 2)
+                      {
+                        tr_bg = "table-info";
+                      }
+                      else
+                      {
+                        tr_bg = "";
+                      }
+
+                    }
+                    else if (data.is_open == 2)
+                    {
+                      tr_bg = "table-secondary";
+                    }
+                    <tr class="@tr_bg">
+                      <td class="text-truncate" title="@data.r_type_name">
+                        @data.r_type_name
+                        @if (data.r_type == 1)
+                        {
+                          if (data.is_open == 1)
+                          {<br />
+                            if (data.submit_date.HasValue)
+                            {
+                              <a href="javascript:modalMobileReceipt(@data.r_seq);" class="btn btn-sm btn-success" id="btn-add-mobile-receipt">수정하기</a>
+                            }
+                            else
+                            {
+                              <a href="javascript:modalMobileReceipt(@data.r_seq);" class="btn btn-sm btn-success" id="btn-add-mobile-receipt">제출하기</a>
+                            }
+
+                          }
+                        }
+                        else if (data.r_type == 2)
+                        {
+                          <text>[@data.user_comment.Replace("()", "")]</text>
+                          if (data.is_open == 1)
+                          {<br />
+                            if (data.submit_date.HasValue)
+                            {
+                              <a href="javascript:modalCocardReceipt(@data.r_seq, @data.ra_seq);" class="btn btn-sm btn-primary" id="btn-add-cocard-receipt">수정하기</a>
+                            }
+                            else
+                            {
+                              <a href="javascript:modalCocardReceipt(@data.r_seq, @data.ra_seq);" class="btn btn-sm text-primary btn-outline-primary" id="btn-add-cocard-receipt">제출하기</a>
+                            }
+
+                          }
+                        }
+                        else if (data.r_type == 1 || data.r_type == 3)
+                        {
+                          if (data.is_open == 1)
+                          {<br />
+                            if (data.submit_date.HasValue)
+                            {
+                              <a href="javascript:modalLinkedinReceipt(@data.r_seq);" class="btn btn-sm btn-info" id="btn-add-linkedin-receipt">수정하기</a>
+                            }
+                            else
+                            {
+                              <a href="javascript:modalLinkedinReceipt(@data.r_seq);" class="btn btn-sm btn-info" id="btn-add-linkedin-receipt">제출하기</a>
+                            }
+
+                          }
+                        }
+                      </td>
+                      <td>
+                        @data.r_month<br />
+                        @if (!String.IsNullOrEmpty(data.comment))
+                        {
+                          <text>(</text> @data.comment <text>)</text>
+                        }
+
+                      </td>
+                      @{
+                        vc_text = Utils.ConvertDateTimeToString(data.r_start);
+
+                        if (data.r_start != data.r_end)
+                        {
+                          vc_text += " ~ " + Utils.ConvertDateTimeToString(data.r_end);
+                        }
+                      }
+                      <td class="text-center text-truncate" title="@vc_text">
+                        @vc_text
+                      </td>
+                      <td class="text-center" title="@data.money1">
+                        @data.submit_name
+                        @if (data.submit_date.HasValue)
+                        {
+                          <text><br />(@Utils.ConvertDateTimeToString(data.submit_date))</text>
+                        }
+                      </td>
+                      <td class="text-truncate" title="@data.money1">
+                        @Utils.ConvertMoneyToString(data.money1)<br />
+                        @if (data.money2 != null)
+                        {
+                          <text>(@Utils.ConvertMoneyToString(data.money2))</text>
+                        }
+
+                      </td>
+                      <td>
+                        @if (!String.IsNullOrEmpty(data.file_name))
+                        {
+                          <a class="text-primary" href="/DownloadFile/Download?type=receipt&element_seq=@data.rad_seq" target="_blank">[@data.file_name]</a>
+                        }
+                      </td>
+                      <td>
+                        @data.is_open_name
+                      </td>
+                    </tr>
+                  }
+                }
+                else
+                {
+                  <tr>
+                    <td colspan="7">
+                      제경비 내역이 없습니다.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+@section scripts {
+  <script src="~/Scripts/validation/jquery.validate.min.js"></script>
+  <script src="~/Scripts/validation/valid_option.js"></script>
+  <script src="~/Libs/fullcalendar_cus/js/moment.min.js"></script>
+  <script src="~/Libs/Lightpick/moment.holiday.js?a"></script>
+  <script src="~/Libs/Lightpick/lightpick.js"></script>
+  <script type="text/javascript">
+
+    $('.dd').on('change', function () {
+      $('#searchForm').submit();
+    });
+    
+
+    function modalLinkedinReceipt(r_seq) {
+      ajxCall({
+        url: '@Url.Action("ModalLinkedInReceipt", "MyList")?b',
+        data: "r_seq=" + r_seq,
+        dataType: 'html',
+        type: 'POST',
+        is_loading: true,
+        loading_target: 'body',
+        suc: function (json) {
+          $.fancybox.open({
+            'content': json,
+            'width': '750',
+            'height': '400',
+
+            'type': 'iframe',
+            'autoSize': false,
+            'title': '제경비(LinkedIn) 제출',
+            padding: 20,
+            helpers: {
+              title: {
+                type: 'inside',
+                position: 'top'
+              },
+              overlay:
+              {
+                closeClick: false
+              }
+            }
+          });
+        },
+        err: function () {
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        }
+      })
+    }
+
+    function modalMobileReceipt(r_seq) {
+      ajxCall({
+        url: '@Url.Action("ModalMobileReceipt", "MyList")',
+        data: "r_seq=" + r_seq,
+        dataType: 'html',
+        type: 'POST',
+        is_loading: true,
+        loading_target: 'body',
+        suc: function (json) {
+          $.fancybox.open({
+            'content': json,
+            'width': '750',
+            'height': '400',
+
+            'type': 'iframe',
+            'autoSize': false,
+            'title': '제경비(통신비) 제출',
+            padding: 20,
+            helpers: {
+              title: {
+                type: 'inside',
+                position: 'top'
+              },
+              overlay:
+              {
+                closeClick: false
+              }
+            }
+          });
+        },
+        err: function () {
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        }
+      })
+    }
+
+    function modalCocardReceipt(r_seq, ra_seq) {
+            //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+      if ($('#ReceiptCocardModal').length > 0) {
+        $('#ReceiptCocardModal').parent().remove();
+            }
+            $('body').append($('<div>').load('/Modal/ReceiptCocardModal.html?v0.0.1', function () {
+                ajxCall({
+                  url: '@Url.Action("ModalCoCardReceipt", "MyList")',
+                  data: {
+                    r_seq: r_seq,
+                    ra_seq: ra_seq,
+                  },
+                  dataType: 'html',
+                  type: 'GET',
+                  loading: true,
+                  suc: function (view) {
+                    $('#ReceiptCocardModal').modal({ backdrop: 'static' });
+                    $("#ReceiptCocardModal .modal-body").html(view)
+                    $('#ReceiptCocardModal').modal('show');
+                  },
+                  err: function (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    $('#ReceiptCocardModal').modal('hide');
+                  }
+                })
+            }));
+  }
+
+
+
+  </script>
+
+}

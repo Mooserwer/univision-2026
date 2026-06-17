@@ -1,0 +1,97 @@
+﻿@model Univision.Main.Models.Invoice.InvoiceStatusModel
+@{
+  ViewBag.Title = "발행 할 인보이스 선택";
+  Layout = "~/Views/Shared/_Layout_Invoice.cshtml";
+}
+@using (Html.BeginForm("", "Project", FormMethod.Post, new { @class = "form-signin", @id = "frmProjectInvoiceSelect" }))
+{
+  @Html.HiddenFor(x => x.p_seq, new { @id = "p_seq" })
+  <div class="signin-wrapper">
+
+    <div class="signin-box signup">
+      <div class="mb-5">
+        @if (Model.p_seq > 0 && Model.pjt_type > 0)
+        {
+          <h2 class="slim-logo"><span class="text-success">인보이스</span> 선택</h2>
+          <h5 class="signin-title">인보이스 종류를 선택해주세요.</h5>
+          <h6 class="signin-title">(만일 희망하는 인보이스를 발행 할 수 없는 경우 새로고침 또는 팝업을 닫은 후 다시 열어주세요.)</h6>
+          if (Model.pjt_type == 1)
+          {
+            if (Model.hire_inv_cnt > 0 && Model.p_seq > 0)
+            {
+              <button type="button" class="btn btn-primary btn-block btnGoInvoice" data-action="InvoiceContengencyCreate" title="후보자 채용확정 후 발행하는 인보이스 입니다.">성공 인보이스(채용)<br />[Contangency Invoice]<br />(후보자 채용 또는 잔금 발행 시)</button>
+            }
+            else
+            {
+              <button class="btn btn-secondary btn-block" disabled title="입사 확정 된 후보자가 없습니다.">
+                성공 인보이스 (채용)<br />
+                [Contangency Invoice]<br />
+                * 인보이스 발행 대상(입사 확정된 후보자)이 없습니다.
+              </button>
+            }
+          }
+          else
+          {
+            <button type="button" class="btn btn-primary btn-block btnGoInvoice" data-action="InvoiceConsultingCreate" title="컨설팅(평판조회, 마켓매핑, 사외이사 등) 관련 인보이스 입니다.">컨설팅 인보이스<br />[Consulting Invoice]<br />(컨설팅 관련 인보이스 발행 시)</button>
+          }
+          <div class="signup-separator"><span>or</span></div>
+          if (Model.retainer_inv_cnt == 0 && Model.p_seq > 0)
+          {
+            <button type="button" class="btn btn-indigo btn-block btnGoInvoice" data-action="InvoiceRetainerCreate">선수금 인보이스<br />[Retainer Invoice]<br />(선수금 발행 시)</button>
+          }
+          else
+          {
+            <button class="btn btn-secondary btn-block" disabled>
+              선수금 인보이스<br />[Retainer Invoice]<br />
+              * 이미 발행된 선수금 인보이스가 있습니다.
+            </button>
+          }
+          
+          if (Model.cancel_inv_cnt > 0 && Model.p_seq > 0)
+          {
+            <button type="button" class="btn btn-teal btn-block btnGoInvoice" data-action="InvoiceCancelCreate">취소 인보이스<br />[Cancel Invoice]<br />(거래 취소 또는 전액 취소 후 재발행 시)</button>
+            <button type="button" class="btn btn-teal btn-block btnGoInvoice" data-action="InvoiceRefundCreate">환불 인보이스<br />[Refund Invoice]<br />(일부 금액 환불 시)</button>
+          }
+          else
+          {
+            <button class="btn btn-secondary btn-block" disabled>
+              취소 인보이스<br />[Cancel Invoice]<br />
+              * 취소 할 인보이스가 없습니다.
+            </button>
+            <button class="btn btn-secondary btn-block" disabled>
+              환불 인보이스<br />[Refund Invoice]<br />
+              * 환불 할 인보이스가 없습니다.
+            </button>
+          }
+          
+
+        }
+        else
+        {
+          <h2 class="slim-logo"><span class="text-danger">프로젝트 정보 없음</span></h2>
+          <h5 class="signin-title">잘못된 접근입니다. 창을 닫은 후 다시 진행하여 주십시오.</h5>
+        }
+      </div>
+      <div class="actions clearfix float-right">
+        <button type="button" class="btn btn-secondary btn-close" onclick="window.close();">
+          닫기 / 취소 (Close)
+        </button>
+      </div>
+
+    </div><!-- signin-box -->
+
+  </div><!-- signin-wrapper -->
+}
+@section scripts {
+  <script type="text/javascript">
+    $(document).ready(function () {
+      $('.btnGoInvoice').click(function (e) {
+        var action = "/Invoice/" + $(this).data("action")
+        var p_seq = $('#p_seq').val()
+        location.href = action + "?p_seq=" + p_seq
+        //$('#frmProjectInvoiceSelect').attr('action', action);
+        //$('#frmProjectInvoiceSelect').submit();
+      });
+    })
+  </script>
+}

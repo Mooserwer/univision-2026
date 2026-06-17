@@ -1,0 +1,238 @@
+﻿
+<link rel="stylesheet" href="~/Libs/jsgrid-1.5.3/jsgrid.css">
+<link rel="stylesheet" href="~/Libs/jsgrid-1.5.3/jsgrid-theme.css">
+
+<style>
+    .hide {
+        display: none;
+    }
+    /*.jsgrid-insert-row > .jsgrid-cell {
+        background: #79b2fc;
+    }*/
+    .jsgrid-grid{
+      overflow: auto;
+    }
+</style>
+
+
+<div class="page-content">
+    <div class="row pl-15">
+        총 등록한 건수 : &nbsp;<span class="totalCnt red-600">0</span>건
+    </div>
+    <!-- 반응형으로 변경할 방법 찾아야함.-->
+    <div id="jsGrid">
+
+    </div>
+
+</div>
+
+
+@section scripts {
+    <script src="~/Libs/jsgrid-1.5.3/jsgrid.min.js"></script>
+    <script type="text/javascript">
+
+    var gender = [
+        { Name: "선택", Id: 0 },
+        { Name: "남", Id: 1 },
+        { Name: "여", Id: 2 }
+    ]
+
+     var MyDateField = function(config) {
+        jsGrid.Field.call(this, config);
+    };
+
+    MyDateField.prototype = new jsGrid.Field({
+        sorter: function(date1, date2) {
+            return moment(date1) - moment(date2);
+        },
+
+        itemTemplate: function(value) {
+            return moment(value).format("YYYY-MM-DD");
+        },
+
+        insertTemplate: function(value) {
+            return this._insertPicker = $("<input>").datepicker({ format: "yyyy-mm-dd", defaultDate: moment().format("YYYY-MM-DD") });
+        },
+
+        editTemplate: function (value) {
+
+            return this._editPicker = $("<input>").datepicker({ format: "yyyy-mm-dd" }).datepicker("setDate", moment(value).format("YYYY-MM-DD"));
+        },
+
+        insertValue: function () {
+            return moment(this._insertPicker.datepicker("getDate")).format("YYYY-MM-DD");
+        },
+
+        editValue: function () {
+            return moment(this._editPicker.datepicker("getDate")).format("YYYY-MM-DD");
+        }
+    });
+
+    jsGrid.fields.myDateField = MyDateField;
+
+    $("#jsGrid").jsGrid({
+        width: "100%",
+        height: "763",
+        filtering: true,
+        inserting: true,
+        editing: true,
+        sorting: true,
+        autoload:true,
+        paging: true,
+        pageSize: 18,
+        pageButtonCount: 10,
+        confirmDeleting: false,
+        onItemDeleting: function (args) {
+            //삭제는 confirm창 때문에 여기에 작성.
+            if (!args.item.deleteConfirmed) { // custom property for confirmation
+                args.cancel = true; // cancel deleting
+
+                alertify.confirm()
+                        .set({
+                            'labels': { ok: '확인', cancel: '취소' },
+                            'onok': function () {
+
+                                $.ajax({
+                                    method: "POST",
+                                    url: '@Url.Action("DeleteSimpleCandidate", "Candidate")',
+                                    data: {
+                                        sc_seq: args.item.sc_seq
+                                    },
+                                    dataType: "json",
+                                    async: false,
+                                }).done(function(json) {
+                                    if (json.ok) {
+
+                                        args.item.deleteConfirmed = true;
+                                        $("#jsGrid").jsGrid('deleteItem', args.item);
+
+                                        NormalAlert(json.message);
+
+
+                                    } else {
+                                        ErrorAlert(json.message);
+                                        return false;
+                                    }
+                                }).fail(function(e) {
+                                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                                });
+
+                            },
+                            'oncancel': function () {
+                                return false;
+                            },
+                        })
+                        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>간편후보 삭제')
+                        .setting({
+                            message: "간편후보를 삭제 하시겠습니까?"
+                        }).show();
+
+            }
+        },
+        fields: [
+            { title: "sc_seq", name: "sc_seq", type:"text", css: "hide"},
+            { title: "이름", name: "kor_name", type: "text", width:130, align: "center", validate: { message: "이름은 필수 입력 항목 입니다.", validator: function(value) { return value != ""; } } },
+            { title: "성별", name: "gender", type: "select", width:82,items: gender, valueField: "Id", textField: "Name", align: "center", validate: { message: "성별은 필수 입력 항목 입니다.", validator: function(value) { return value != ""; } } },
+            { title: "생년월일(추정)", name: "birthDateStr", width:160, type: "myDateField", align: "center", filtering: true },
+            { title: "전화번호", name: "cell_phone", type: "text", width:160, align: "center" },
+            { title: "이메일", name: "email", type: "text", width:160, align: "center" },
+            { title: "SNS 주소", name: "sns_url", type: "text", width:230,align: "center" },
+            { title: "회사", name: "company", type: "text", width:160, align: "center" },
+            { title: "기타", name: "comments", type: "text", width:350, align: "center" },
+            { type: "control", width: 100,
+            	itemTemplate: function(value, item) {
+                    var $result = jsGrid.fields.control.prototype.itemTemplate.apply(this, arguments);
+
+                    var $customButton = $("<i>")
+                        .addClass("fas fa-database blue-600 ml-5")
+                        .attr("title", "DB등록")
+                        .click(function (e) {
+                            RegisterCandidate(item.sc_seq);
+                            e.stopPropagation();
+                        });
+
+                    return $result.add($customButton);
+                }
+            }
+        ],
+        controller: {
+            loadData: function (filter) {
+                var data = $.Deferred();
+                $.ajax({
+                    type: "GET",
+                    contentType: "application/json; charset=utf-8",
+                    url: '@Url.Action("LoadSimpleCandidateList", "Candidate")',
+                    dataType: "json",
+                    data: filter
+                }).done(function (response) {
+                    
+                    data.resolve(response.data);
+                    $(".totalCnt").text(response.totalCnt);
+                });
+                return data.promise();
+
+            },
+            insertItem: function (item) {
+                $.ajax({
+                    method: "POST",
+                    url: '@Url.Action("CreateSimpleCandidate", "Candidate")',
+                    data: item,
+                    dataType: "json",
+                }).done(function (json) {
+                    
+                    if (json.ok) {
+                        NormalAlert(json.message);
+                        $("#jsGrid").jsGrid('updateItem', item, { sc_seq: json.sc_seq });
+
+                        $(".totalCnt").text(parseInt($(".totalCnt").text()) + 1);
+
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                }).fail(function (e) {
+                    
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+
+            },
+            updateItem: function (item) {
+
+                $.ajax({
+                    method: "POST",
+                    url: '@Url.Action("CreateSimpleCandidate", "Candidate")',
+                    data: item,
+                    dataType: "json",
+                }).done(function(json) {
+                    if (json.ok) {
+                        NormalAlert(json.message);
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                }).fail(function(e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+
+            }
+        }
+    });
+
+
+    function RegisterCandidate(sc_seq) {
+        alertify.confirm()
+                .set({
+                    'labels': { ok: '확인', cancel: '취소' },
+                    'onok': function () {
+                        location.href = "/Candidate/CandidateCreate?sc_seq=" + sc_seq;
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>후보자 등록')
+                .setting({
+                    message: "후보자 등록 페이지로 이동 하시겠습니까?"
+                }).show();
+    }
+
+    </script>
+}

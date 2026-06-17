@@ -1,0 +1,43 @@
+﻿@using Univision.Core.Models;
+@using Univision.Core.Models.DTO;
+
+@model Univision.Core.Models.DTO.Response.Board.BoardListModel
+@{
+    Layout = null;
+}
+
+
+    <div class="table-responsive">
+        <table id="default-table" class="table table-hover"  style="table-layout:fixed;">
+            <colgroup>
+                <col style="width:70%;">
+                <col style="width:30%;">
+            </colgroup>
+
+            <thead>
+                <tr>
+                    <th class="text-center" title="제목">TITLE</th>
+                    <th class="text-center" style="word-break:keep-all" title="최종업데이트일">UPDATE</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.BoardList.Count > 0)
+                {
+                    foreach (board bd in Model.BoardList)
+                    {
+                        <tr>
+                            <td class="ali_l text-truncate"><a href="@Url.Action("InternalDetail", "Board", new { b_seq = bd.b_seq })" title="@bd.title">@bd.title</a></td>
+                            <td  style="word-break:keep-all">@Utils.ConvertDateTimeToString(bd.modify_dt)</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="2" style="text-align:center;height:195px;vertical-align:middle"><b>No Data.</b></td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>

@@ -1,0 +1,138 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.MailResumeData
+
+@{
+  Layout = null;
+}
+
+@using (Html.BeginForm("CandidateCreateAiUpdate", "Candidate", FormMethod.Post, new { @id = "CreateForm", @name = "form_gpt_proc", @autocomplete = "off" }))
+{
+  @Html.HiddenFor(x => x.dv_snd_addr)
+  @Html.Hidden("new_mail_key", Model.dv_timestamp)
+  @Html.Hidden("dv_cd_no", Model.candidate_seq)
+  @Html.Hidden("c_seq", Model.candidate_seq)
+
+  <div class="pb-20">
+    <input type="hidden" name="resume_cnt" value="@Model.files.Count">
+
+
+
+    @if (!String.IsNullOrEmpty(Model.candidate_seq) && Model.candidate_seq != "0")
+    {
+      <div class="card border">
+        <div class="card-header card-header-transparent card-header-bordered">
+          이미 등록된 후보자 정보
+        </div>
+        <div class="card-block">
+          <p class="card-text">
+            이미 등록된 후보자 정보가 있습니다.<br />
+            아래 링크를 통해 후보자 상세정보를 확인할 수 있습니다.<br /><br />
+
+            <a href="@Url.Action("CandidateDetail", "Candidate", new { @c_seq = Model.candidate_seq })" target="_blank">@Model.candidate_name (@Model.birth_year / @Model.gender)</a>
+
+          </p>
+
+        </div>
+      </div>
+    }
+    @if (Model.files.Count > 0)
+    {
+      int idx = 0;
+      <div class="card border">
+        <div class="card-header card-header-transparent card-header-bordered">
+          첨부파일 설정 : 이력서 구분(등록여부)을 선택해주세요
+        </div>
+        <div class="card-block">
+          <div class="row">
+            <div class="col-8 text-center">파일명</div>
+            <div class="col-4 text-center">이력서구분</div>
+          </div>
+          @{
+            foreach (var resume in Model.files)
+            {
+              string file_ext = Path.GetExtension(resume.dv_file_name).Replace(".", "");
+
+              <div class="row py-1">
+                <div class="col-8">
+                  <a class="btn btn-sm btn-primary  ellipsis-cont" href="@resume.file_path.Replace("(", "%28").Replace(")", "%29").Replace("+", "%2B")" download title="@resume.dv_file_name">
+                    <img src="/images/ico_file_ext/p_@(file_ext.Substring(0, 3))_s.gif" onerror="this.src='/images/ico_file_ext/p_etc_s.gif';" align="absmiddle">
+                    @resume.dv_file_name
+                  </a>
+
+                </div>
+                <div class="col-4 text-center resume_group">
+                  <input type="hidden" name="resumes[@idx].dn_seq" id="dn_seq_@resume.dn_seq" value="@resume.dn_seq">
+                  <select class="form-control form-control-sm" name="resumes[@idx].resume_type" id="resume_@resume.dn_seq">
+                    <option value="">선택</option>
+                    <option value="K" @(resume.resume_type == "K" ? "selected" : "")>국문이력서</option>
+                    <option value="E" @(resume.resume_type == "E" ? "selected" : "")>영문이력서</option>
+                    <option value="O" @(resume.resume_type == "O" ? "selected" : "")>기타이력서</option>
+                    <option value="NONE" @(resume.resume_type == "NONE" ? "selected" : "")>등록안함</option>
+                  </select>
+                </div>
+              </div>
+
+              idx++;
+            }
+          }
+        </div>
+      </div>
+
+
+    }
+  </div>
+
+
+  <div class="text-right">
+    @if (String.IsNullOrEmpty(Model.candidate_seq) || Model.candidate_seq == "0")
+    {
+      <button type="button" id="gpt_force_new" class="btn btn-primary" onclick="javascript:fCandidateGpt(0)">신규등록</button>
+    }
+    else
+    {
+      <button type="button" id="gpt_update_process" class="btn btn-primary" onclick="javascript:fCandidateGpt()">@Model.candidate_name 업데이트</button>
+      <button type="button" id="gpt_force_new" class="btn btn-outline-info" onclick="javascript:fCandidateGpt(0)">무시하고 신규등록</button>
+    }
+    <button type="button" class="btn btn-default" data-dismiss="modal">취소</button>
+  </div>
+}
+
+<script type="text/javascript">
+  function fCandidateGpt(type) {
+    var form_gpt_proc = document.form_gpt_proc;
+
+    var resume_cnt = (form_gpt_proc.resume_cnt ? form_gpt_proc.resume_cnt.value : 0);
+    if (resume_cnt > 0) {
+      var resume_check = true
+
+      for (var i = 1; i <= resume_cnt; i++) {
+        if (document.getElementById("resume_" + i).value == "") {
+          resume_check = false;
+          break;
+        }
+      }
+
+      if (!resume_check) {
+        ErrorAlert("모든 이력서의 이력서 구분을 선택 후 진행하여 주십시오.");
+        return;
+      }
+    }
+
+    var timestamp = form_gpt_proc.new_mail_key.value;
+
+    window.open("", "candidate" + timestamp);
+
+    if (type == 0)
+      form_gpt_proc.c_seq.value = 0;
+    else
+      form_gpt_proc.c_seq.value = form_gpt_proc.dv_cd_no.value
+
+    form_gpt_proc.action = "/candidate/CandidateCreateFromMailAi";
+    form_gpt_proc.target = "candidate" + timestamp
+
+    //console.log(form_gpt_proc);
+    form_gpt_proc.submit();
+
+    $('#CandidateGptModal').modal('hide');
+
+  }
+</script>

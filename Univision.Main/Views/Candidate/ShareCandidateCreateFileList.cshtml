@@ -1,0 +1,46 @@
+﻿@model Univision.Core.Models.DTO.Response.Board.BoardDetailViewModel
+@{
+    int i = 0;
+}
+    <ul class="list-group list-group-dividered list-group-full">
+
+        @if (Model != null && Model.boardFileList.Count > 0)
+        {
+            
+            foreach (var data in Model.boardFileList)
+            {
+
+                @Html.HiddenFor(x => x.boardFileList[i].b_seq)
+                @Html.HiddenFor(x => x.boardFileList[i].bf_seq)
+
+                @Html.HiddenFor(x => x.boardFileList[i].file_extension)
+                @Html.HiddenFor(x => x.boardFileList[i].file_path)
+                @Html.HiddenFor(x => x.boardFileList[i].file_origin_path)
+                @Html.HiddenFor(x => x.boardFileList[i].create_dt)
+                @Html.HiddenFor(x => x.boardFileList[i].create_user)
+                @Html.HiddenFor(x => x.boardFileList[i].file_dir)
+
+                <li class="list-group-item">
+
+                    <a href="@(data.file_dir)">
+                        <i class="fas @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                        @data.file_path
+                    </a>
+                    <i class="fas fa-times cur_hand delete-file" onclick="javascript:RemoveFile('@i');">
+                    </i>
+                </li>
+                
+                
+                i++;
+            }
+        }
+
+        @if (i <= 0)
+        {
+            <li class="list-group-item" id="board_no_file">
+                <i class="fas fa-file"></i>
+                No files
+            </li>
+        }
+    </ul>
+

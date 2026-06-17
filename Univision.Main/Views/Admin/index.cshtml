@@ -1,0 +1,236 @@
+﻿
+@{
+    ViewBag.Title = "index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-content container-fluid">
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="panel">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        공지사항
+                        @*<span class="counter-number-related red-600" style="text-align:right">+</span>*@
+                    </h3>
+                    <div class="panel-actions">
+                        <span class="counter-number-related red-900" style="text-align:right">+ more</span>
+                    </div>
+                </header>
+                <div class="panel-body">
+                    <table id="default-table" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width:80%">Title</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                        </tr>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-xl-6">
+            <div class="panel">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        최근 등록된 업체
+                        @*<span class="counter-number-related red-600" style="text-align:right">+</span>*@
+                    </h3>
+                    <div class="panel-actions">
+                        <span class="counter-number-related red-900" style="text-align:right">+ more</span>
+                    </div>
+                </header>
+                <div class="panel-body">
+                    <table id="default-table" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width:30%">Name</th>
+                                <th style="width:25%">BizNo</th>
+                                <th style="width:25%">Writer</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="panel">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        인보이스 발행건
+                        @*<span class="counter-number-related red-600" style="text-align:right">+</span>*@
+                    </h3>
+                    <div class="panel-actions">
+                        <span class="counter-number-related red-900" style="text-align:right">+ more</span>
+                    </div>
+                </header>
+                <div class="panel-body">
+                    <table id="default-table" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width:25%">업체명</th>
+                                <th style="width:45%">프로젝트명</th>
+                                <th style="width:6%">S</th>
+                                <th style="width:6%">R</th>
+                                <th style="width:6%">I</th>
+                                <th>발행일</th>
+                            </tr>
+                        </thead>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-xl-6">
+            <div class="panel">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        인보이스 미발행건(Unbilled)
+                        @*<span class="counter-number-related red-600" style="text-align:right">+</span>*@
+                    </h3>
+                    <div class="panel-actions">
+                        <span class="counter-number-related red-900" style="text-align:right">+ more</span>
+                    </div>
+                </header>
+                <div class="panel-body">
+                    <table id="default-table" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width:25%">업체명</th>
+                                <th style="width:45%">프로젝트명</th>
+                                <th style="width:6%">S</th>
+                                <th style="width:6%">R</th>
+                                <th style="width:6%">I</th>
+                                <th>채용일</th>
+                            </tr>
+                        </thead>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="panel">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        신규 오픈프로젝트
+                        @*<span class="counter-number-related red-600" style="text-align:right">+</span>*@
+                    </h3>
+                    <div class="panel-actions">
+                        <span class="counter-number-related red-900" style="text-align:right">+ more</span>
+                    </div>
+                </header>
+                <div class="panel-body">
+                    <table id="default-table" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width:15%">업체명</th>
+                                <th>프로젝트명</th>
+                                <th style="width:8%">Contact</th>
+                                <th style="width:8%">상태</th>
+                                <th style="width:8%">AM</th>
+                                <th style="width:8%">Searcher</th>
+                                <th style="width:15%">산업/직무</th>
+                                <th style="width:7%">등록일</th>
+                                <th style="width:7%">마감일</th>
+                            </tr>
+                        </thead>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>2019-02-02</td>
+                            <td>2019-02-02</td>
+                        </tr>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="panel">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        간편후보자 등록현황
+                        @*<span class="counter-number-related red-600" style="text-align:right">+</span>*@
+                    </h3>
+                    <div class="panel-actions">
+                        <span class="counter-number-related red-900" style="text-align:right">+ more</span>
+                    </div>
+                </header>
+                <div class="panel-body">
+                    <table id="default-table" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width:12%">후보자명</th>
+                                <th style="width:12%">연락처</th>
+                                <th style="width:18%">이메일</th>
+                                <th>관련주소</th>
+                                <th style="width:8%">등록일</th>
+                            </tr>
+                        </thead>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>2019-02-02</td>                            
+                        </tr>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+

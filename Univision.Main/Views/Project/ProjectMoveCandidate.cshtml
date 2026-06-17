@@ -1,0 +1,303 @@
+﻿@model Univision.Main.Models.Project.ProjectRecandidateMultiMoveModel
+
+
+<div class="no-side-space">
+  <div class="row">
+    <div class="col-12 text-danger">※ 입사확정된 후보자는 불가피할 경우에만 이관 부탁드립니다.</div>
+  </div>
+
+  @Html.HiddenFor(x => x.p_seq, new { @id = "pm_p_seq" })
+  @Html.HiddenFor(x => x.p_seq_target)
+  @Html.HiddenFor(x => x.is_new)
+  <div class="row">
+    <div class="form-group col-12">
+      <label class="form-control-label">이관 할 후보자</label>
+      @{
+        string kor_names = String.Empty;
+        if (Model.list.Count > 0)
+        {
+          foreach (var prh in Model.list)
+          {
+
+            kor_names += (!String.IsNullOrEmpty(kor_names) ? ", " : "") + prh.kor_name;
+            <input type="hidden" class="pic_seqs" name="pic_seqs" value="@prh.pic_seq" data-c-seq="@prh.c_seq" />
+          }
+
+        }
+      }
+      @Html.TextBox("kor_name", kor_names, new { @class = "form-control", @readonly = "readonly" })
+
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12">
+      <button class="btn btn-primary btn-block" onclick="ConfirmMoveProject(0);">프로젝트를 복사 후 이관</button>
+    </div>
+  </div>
+  <div class="row py-5">
+    <div class="col-4"><hr /></div>
+    <div class="col-4 text-center">또는 이관할 프로젝트 선택</div>
+    <div class="col-4"><hr /></div>
+  </div>
+
+</div>
+
+
+
+<div class="no-side-space">
+  <div class="row">
+    <div class="col-3 text-center">
+      <input type="text" id="pm_kor_name" class="form-control form-control-sm" placeholder="고객사 검색" />
+    </div>
+    <div class="col-4 text-center">
+      <input type="text" id="pm_title" class="form-control form-control-sm" placeholder="구인제목 검색" />
+    </div>
+    <div class="col-3 text-center">
+      <input type="text" id="pm_amsm" class="form-control form-control-sm" placeholder="AM/SM 검색" />
+    </div>
+
+    <div class="col-2 text-center">
+      <button class="btn btn-sm btn-block btn-primary" onclick="callProjectMoveList(1);">검색</button>
+    </div>
+  </div>
+  <div id="project_move_list">
+
+  </div>
+</div>
+
+
+<script src="~/Libs/remark/global/vendor/dropify/dropify.min599c.js?v4.0.4"></script>
+<script type="text/javascript">
+  $(document).ready(callProjectMoveList);
+  function ConfirmMoveProject(target_p_seq) {
+    if (!target_p_seq) {
+      target_p_seq = 0;
+    }
+
+    alertify.confirm()
+      .set({
+        'labels': { ok: '확인', cancel: '취소' },
+        'onok': function () {
+          MoveProject(target_p_seq)
+        },
+        'oncancel': function () {
+          return;
+        },
+      })
+      .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i> 후보자 이관')
+      .setting({
+        message: "선택된 후보자를 " + (target_p_seq == 0 ? "신규" : "선택하신")+" 프로젝트로 이관 하시겠습니까?",
+      })
+      .show();
+  }
+
+  function MoveProject(target_p_seq) {
+    if (!target_p_seq) {
+      target_p_seq = 0;
+    }
+
+    var data = {
+      is_new: target_p_seq == 0 ? 1 : 0,
+      p_seq: $("#pm_p_seq").val(),
+      pic_seqs: [],
+      target_p_seq: target_p_seq
+    };
+
+    $(".pic_seqs").each(function () {
+      data.pic_seqs.push($(this).val())
+    });
+
+    $.ajax({
+      url: "@Url.Action("ProjectMoveCandidateProc", "Project")",
+      data: data,
+      dataType: 'json',
+      type: 'POST',
+      beforeSend: function () {
+        showLoading('#ProjectMoveCandidateModal');
+      }
+    })
+      .done(function (json) {
+        hideLoading('#ProjectMoveCandidateModal');
+        if (json.ok) {
+          $('#ProjectMoveCandidateModal').modal("toggle");
+          NormalAlert(json.message, function () { location.reload();});
+          window.open("@Url.Action("ProjectDetail", "Project")" + "?p_seq=" + json.new_p_seq);
+
+        } else {
+          ErrorAlert(json.message);
+        }
+
+      })
+      .always(function () {
+        hideLoading('#ProjectMoveCandidateModal');
+      });
+  }
+
+  function callProjectMoveList(page) {
+    if (!page) {
+      page = 1;
+    }
+    var data = {
+      p_seq: $("#pm_p_seq").val(),
+      kor_name: $("#pm_kor_name").val(),
+      searchTxt: $("#pm_title").val(),
+      searchTxt2: $("#pm_amsm").val(),
+
+      page: page
+    }
+    $.ajax({
+      url: "@Url.Action("SearchMoveProject", "Project")",
+      data: data,
+      dataType: 'html',
+      type: 'POST',
+      beforeSend: function () {
+        showLoading('#project_move_list');
+      }
+    })
+      .done(function (view) {
+        hideLoading('#project_move_list');
+        $('#project_move_list').html(view);
+
+      })
+      .always(function () {
+        hideLoading('#project_move_list');
+      });
+  }
+
+    function setDateName() {
+        if ($('#state :selected').val() != "") {
+            var text = $('#state :selected').text()
+            if (text == "입사확정") {
+                text = "출근"
+            }
+            $('#pjt_rec_date_info').text(text);
+        } else {
+            $('#pjt_rec_date_info').text("");
+        }
+
+    }
+
+
+    $(document).ready(function () {
+        StopEnterSubmit();
+        BindDatePicker($("#schedule_date"));
+        BindDatePicker($("#guarantee_dt"));
+
+        $(".fa-question-circle").tooltip({
+            tooltipClass: "custom_tooltip"
+        });
+
+
+        $("#state").change(function () {
+            setDateName();
+            if ($(this).val() == "@ProjectHistoryStateCode.interview") {
+                $('.chk_schedule').removeClass('d-none').addClass('d-none');
+            } else {
+                $('.chk_schedule').removeClass('d-none');
+            }
+        });
+
+        //유효성 검사 및 폼 전송
+        $("#ProgressCreateForm").formValidation({
+            framework: "bootstrap4",
+            button: {
+                selector: "#btnPopSave",
+                disabled: "disabled"
+            },
+            submitHandler: function () {
+
+            },
+            icon: null,
+            fields: {
+
+                state: {
+                    validators: {
+                        notEmpty: {
+                            message: "상태 필수 입력 항목입니다."
+                        }
+                    }
+                },
+                schedule_date: {
+                    validators: {
+                        notEmpty: {
+                            message: "일자는 필수 입력 항목입니다."
+                        }
+                    }
+                },
+                contents: {
+                    validators: {
+                        notEmpty: {
+                            message: "내용은 필수 입력 항목입니다."
+                        }
+                    }
+                }
+            },
+            err: {
+                clazz: "invalid-feedback"
+            },
+            control: {
+                valid: "is-valid",
+                invalid: "is-invalid"
+            },
+            row: {
+                invalid: "has-danger"
+            }
+        }).on('success.form.fv', function (e) {
+                //기본 submit 이벤트 취소.
+                e.preventDefault();
+                var currentData = {
+                    data: []
+                };
+
+                $form = $('#ProgressCreateForm');
+                var is_schedule = $form.find('#is_schedule').prop("checked");
+                //AM List
+                $(".pic_seqs").each(function () {
+                    var pic = {
+                        pic_seq: $(this).val(),
+                        c_seq: $(this).attr('data-c-seq'),
+                        p_seq: $form.find('#p_seq').val(),
+                        state: $form.find('#state').val(),
+                        schedule_date: $form.find('#schedule_date').val(),
+                        is_schedule: (is_schedule ? 1 : 0),
+                        contents:$form.find('#contents').val()
+                    };
+
+                    currentData.data.push(pic);
+                });
+
+                var formURL = $("#ProgressCreateForm").attr("action");
+                $.ajax({
+                    url: formURL,
+                    type: "POST",
+                    dataType: 'json',
+                    data: currentData,
+                    beforeSend: function () {
+                        showLoading();
+                    },
+                    success: function (json) {
+                        hideLoading();
+                        if (json.ok) {
+                            if (json.is_complete_ok) {
+                                location.href = "@Url.Action("ProjectDetail", "Project", new { p_seq = Model.p_seq })";
+                            } else {
+                                callProjectProgress(@Model.p_seq, 0, 1);
+                                $.fancybox.close();
+                            }
+
+                        }
+                        else {
+                            alert(json.message)
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        hideLoading();
+                        ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                    }
+                });
+            });
+    });
+
+    setDateName();
+
+</script>

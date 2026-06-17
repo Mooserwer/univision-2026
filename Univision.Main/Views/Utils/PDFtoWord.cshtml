@@ -1,0 +1,90 @@
+﻿@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_convert.css?v=1533562669">
+<style>
+  .loader {
+    width: 32px;
+    height: 32px;
+    border: 5px solid #FFF;
+    border-bottom-color: #FF3D00;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+  }
+
+  @@keyframes rotation {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+<div class="page-content" style="position:relative;">
+
+  <div class="panel panel-danger panel-line shadow">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-upload"></i>
+        PDF -> Word 변환 <span class="badge badge-danger">Beta</span>
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action" aria-hidden="true" title="새로고침" href="javascript:ResetUploadPage();"><i class="fa fa-redo"></i></a>
+      </div>
+    </div>
+
+    <div id="resume_upload_panel" class="panel-body pt-20">
+      <div class="row">
+        <div class="col-8 offset-2">
+          <form id="pdf-to-word" class="dropzone h-full text-left">
+            <div class="row py-2">
+              <div class="col">
+                <div class="dz-message" id="upload_message">
+                  <h4>PDF -> Word <span class="badge badge-danger">Beta</span></h4>
+
+                  <small>[변환할 PDF 파일을 여기에 끌어놓거나 클릭하여 파일을 선택해주세요.]</small><br />
+
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+ 
+
+
+
+</div>
+
+@section scripts{
+  <script type="text/javascript">
+    window.url_pdf_to_word = "@Url.Action("PDFtoWord", "Utils")";
+  </script>
+  <script type="text/javascript">
+    Dropzone.autoDiscover = false;
+
+    //업로드 컴포넌트
+    var myDropzone = new Dropzone("#pdf-to-word", {
+      uploadMultiple: false,
+      maxFiles: 1,
+      url: window.url_pdf_to_word,
+      method: "post",
+    });
+    //
+    myDropzone.on("success", function (file, response) {
+      this.removeFile(file);
+
+    });
+
+
+  </script>
+
+}

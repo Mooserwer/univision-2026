@@ -1,0 +1,114 @@
+﻿@model Univision.Main.Models.Client.ClientPopupModel
+@{
+    Layout = null;
+}
+@*<script type="text/javascript">
+    $(document).ready(function () {
+
+
+
+        $(".CreateFee").click(function () {
+            
+
+            $("input[name='incomSamt']").each(function () {
+                _arrIcomSamt.push(parseInt($(this).val()));
+            });
+
+            for (var e = 0; e < _arrIcomSamt.length; e++) {
+                if (isNaN(_arrIcomSamt[e]) == true) {
+                    alert("연봉범위를 입력해주세요.");
+                    $("#incomTable").find("input[name='incomSamt']").focus();
+                }
+            }
+
+            $("input[name='incomEamt']").each(function () {
+                _arrIcomEamt.push(parseInt($(this).val()));
+            });
+
+            for (var q = 0; q < _arrIcomEamt.length; q++) {
+                if (isNaN(_arrIcomEamt[q]) == true) {
+                    alert("연봉범위를 입력해주세요.");
+                    $("#incomTable").find("input[name='incomSamt']").focus();
+                    return false;
+                }
+
+                if (_arrIcomEamt[q] < _arrIcomSamt[q]) {
+                    alert("연봉범위를 확인하세요.");
+                    return false;
+                }
+            }
+
+            $("input[name='incomPer']").each(function () {
+                _arrIncomPer.push($(this).val());
+            });
+
+            for (var w = 0; w < _arrIncomPer.length; w++) {
+                if (isNaN(_arrIncomPer[w]) == true || _arrIncomPer[w] == null || _arrIncomPer[w] == "") {
+                    alert("연봉범위를 입력해주세요.");
+                    $("#incomTable").find("input[name='incomSamt']").focus();
+                    return false;
+                }
+
+                if (parseInt(_arrIncomPer[w]) > 100) {
+                    alert("수수료율은 0~100 사이로 입력해주세요.");
+                    $("#incomTable").find("input[name='incomSamt']").focus();
+                    return false;
+                }
+
+                if (parseInt(_arrIncomPer[w]) < 0) {
+                    alert("수수료율은 0~100 사이로 입력해주세요.");
+                    $("#incomTable").find("input[name='incomSamt']").focus();
+                    return false;
+                }
+            }
+
+            $.ajax({
+                url: '@Url.Action("CreateTypeAfee", "Client")',
+                data: {
+                    c_seq: c_seq,
+                    cc_seq: cc_seq,
+                    currency_name: currency_name,
+                    incomNum: incomNum,
+                    incomSamt: _arrIcomSamt,
+                    incomEamt: _arrIcomEamt,
+                    incomPer: _arrIncomPer
+                },
+                dataType: 'json',
+                type: 'POST',
+                beforeSend: function () {
+                    $(".page").isLoading({
+                        text: "Loading",
+                        position: "overlay"
+                    });
+                }
+            })
+            .done(function (json) {
+                if (json.ok) {
+                    location.reload();
+                }
+                else {
+                    alert('오류입니다.');
+                }
+            })
+
+        });
+    });
+</script>*@
+<div class="row col-md-12 no-right-margin no-right-padding">
+    <div class="col-md-3 form-group">
+    </div>
+    <div class="col-md-6 form-group">
+
+        <div class="row no-space">
+            <div class="form-inline">
+                <input type="text" name="fix_fee_rate" id="fix_fee_rate" value="@Model.contract_data.fix_fee_rate" class="form-contrl-label" style="text-align:right" />
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 form-group">
+    </div>
+</div>
+
+<div class="col-md-12" style="text-align:right;">
+    <button type="button" class="btn btn-warning btn-md CreateFee" style="width:60px">등록</button>
+</div>

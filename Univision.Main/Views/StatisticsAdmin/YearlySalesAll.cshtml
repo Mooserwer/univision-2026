@@ -1,0 +1,352 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.YearlySalesModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-content container-fluid">
+
+    <!-- row -->
+    <div class="row">
+
+        <!-- block -->
+        <div class="col-xl-5">
+            <div class="panel custom1">
+                <div data-role="container">
+                    <div data-role="content">
+                        <header class="panel-heading">
+                            <h3 class="panel-title">
+                                년도별 매출내역 합산
+                            </h3>
+                        </header>
+
+                        <div class="h-350" data-plugin="scrollable">
+                            <div data-role="container" style="padding:0 !important; margin:0 !important;">
+                                <div data-role="content" style="padding:0 !important; margin:0 !important;">
+                                    <div class="table-responsive">
+                                        <table id="default-table" class="table table-hover">
+                                            <colgroup>
+                                                <col style="width:30%;">
+                                                <col style="width:30%;">
+                                                <col style="">
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th>년도</th>
+                                                    <th>건수</th>
+                                                    <th>금액</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (Model.salesYearlySumList.Count > 0)
+                                                {
+                                                    foreach (var data in Model.salesYearlySumList)
+                                                    {
+                                                        <tr>
+                                                            <td>
+                                                                @data.billing_dt
+                                                            </td>
+                                                            <td>
+                                                                @Utils.ConvertMoneyToString(data.total_cnt)
+                                                            </td>
+                                                            <td>
+                                                                @Utils.ConvertMoneyToString(data.sales_money)
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <tr>
+                                                        <td colspan="3">
+                                                            년도별 데이터가 없습니다.
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+        <!-- block -->
+        <div class="col-xl-7">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        년도별 매출현황 그래프
+                    </h3>
+                </header>
+                <div class="panel-body pd_ex">
+                    <div class="text-center" id="yearlyWrapper">
+                        <canvas id="yearlySalesChart" height="320" width="450"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+
+    </div>
+    <!-- // row -->
+    <!-- row -->
+    <div class="row">
+        <!-- block -->
+        <div class="col-xl-12">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        팀별 매출현황 그래프
+                    </h3>
+                    <div class="panel-actions panel-actions-keep form-inline">
+                        @Html.DropDownListFor(x => x.year, new SelectList(Model.yearList, "key", "value"), new { @class = "form-control qq", @style = "" })
+                        @*@Html.DropDownListFor(x => x.ud_seq, new SelectList(Model.divisionList, "ud_seq", "ud_name"), new { @class = "form-control ee" })*@
+                    </div>
+                </header>
+
+                <div class="panel-body pd_ex">
+                    <div class="text-center" id="divisonWarpper">
+                        <canvas id="divisionChart" height="300" width="450"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+    </div>
+    <!-- // row -->
+    <!-- row -->
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="panel custom1" id="periodSalesList">
+            </div>
+        </div>
+    </div>
+    <!-- // row -->
+
+</div>
+
+
+<!-- 현재 페이지 사용 시작 -->
+<!-- charts -->
+<script src="../Libs/remark/global/vendor/chart-js/Chart.min599c.js?v4.0.4"></script>
+<link rel="stylesheet" href="../Libs/remark/base/assets/examples/css/charts/chartjs.min599c.css?v4.0.4">
+
+@section scripts {
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            RenderYearlyLineChart();
+            RenderDivisionLineChart(@Html.Raw(Json.Encode(Model.salesDivisionList)));
+            callYearlySalesAllList(1);
+
+            $("#year").change(function () {
+                ChangerDivisionLineChart();
+            });
+        });
+
+
+
+        function ChangerDivisionLineChart() {
+            
+            $.ajax({
+                url: '@Url.Action("ChangeYearlyDivisionSalesChart", "StatisticsAdmin")',
+                data: {
+                    year: $("#year").val(),
+                    ud_seq: 0,
+                },
+                dataType: 'json',
+                type: 'POST',
+                beforeSend: function () {
+
+                },
+                success: function (json) {
+                    if (json.ok) {
+                        RenderDivisionLineChart(json.list)
+                    }
+                    else {
+                        ErrorAlert("팀별 매출현황 그래프를 불러오는 중, 오류가 발생 했습니다.");
+                    }
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+
+                    ErrorAlert("팀별 매출현황 그래프를 불러오는 중, 오류가 발생 했습니다.");
+                }
+            })
+        };
+
+        function RenderYearlyLineChart() {
+
+            var yearlyList = @Html.Raw(Json.Encode(Model.salesYearlySumList));
+
+            if (yearlyList.length == 0) {
+                $("#yearlyWrapper").html("").html('<div id="yearlySalesChart" height="300px" width="450px">년도별 데이터가 없습니다.</div>');
+            }
+            else {
+                $("#yearlyWrapper").html("").html('<canvas id="yearlySalesChart" height="300px" width="450px"></canvas>');
+
+
+                // 년도별 매출현황 그래프
+                var ctx = document.getElementById('yearlySalesChart').getContext('2d');
+                var options = {
+                    legend: {
+                        display: false
+                    },
+                    maintainAspectRatio: false,
+                    spanGaps: false,
+                    elements: {
+                        line: {
+                            tension: 0.4
+                        }
+                    },
+                    plugins: {
+                        filler: {
+                            propagate: false
+                        }
+                    },
+                    scales: {
+                        xAxes: [{
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 0
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function (tooltipItem, data) {
+                                var value = data.datasets[0].data[tooltipItem.index];
+                                if (parseInt(value) >= 1000) {
+                                    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                } else {
+                                    return value + '원';
+                                }
+                            }
+                        } // end callbacks:
+                    }, //end tooltips
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true,
+                                callback: function (value, index, values) {
+                                    if (parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                    } else {
+                                        return value + '원';
+                                    }
+                                }
+                            }
+                        }]
+                    }
+                };
+                var myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            data: yearlyList.map(function (e) { return e.sales_money }),
+                            backgroundColor: 'rgba(62,142,247,0.2)',
+                            borderColor: 'rgba(62,142,247, 0.6)',
+                        }],
+                        labels: yearlyList.map(function (e) { return e.billing_dt }),
+                    },
+                    options: Chart.helpers.merge(options, {
+                        title: {
+                            //text: 'fill: ',// + boundary,
+                            display: false
+                        }
+                    })
+                });
+            }
+        };
+
+        function RenderDivisionLineChart(divisionSalesList) {
+
+            var divsionList = divisionSalesList;
+
+            if (divsionList.length == 0) {
+                $("#divisonWarpper").html("").html('<div id="divisionChart" height="300px" width="450px">해당 년도에 데이터가 없습니다.</div>');
+            }
+            else {
+                $("#divisonWarpper").html("").html('<canvas id="divisionChart" height="300px" width="450px"></canvas>');
+
+
+                // 월별 매출현황 그래프
+                var ctx2 = document.getElementById('divisionChart').getContext('2d');
+                var myChart2 = new Chart(ctx2, {
+                    type: 'horizontalBar',
+                    data: {
+                        datasets: [{
+                            data: divsionList.map(function (e) { return e.sales_money }),
+                            backgroundColor: 'rgba(17,194,109,0.2)', // '#ff9599','#60cd99','#60a5ff'
+                            borderColor: 'rgba(17,194,109, 0.7)',
+                            borderWidth: 2
+                        }],
+                        labels: divsionList.map(function (e) { return e.ud_name })
+                    },
+                    options: {
+                        legend: {
+                            display: false
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        tooltips: {
+                            callbacks: {
+                                label: function (tooltipItem, data) {
+                                    var value = data.datasets[0].data[tooltipItem.index];
+                                    if (parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                    } else {
+                                        return value + '원';
+                                    }
+                                }
+                            } // end callbacks:
+                        }, //end tooltips
+                        scales: {
+                            xAxes: [{
+                                ticks: {
+                                    beginAtZero: true,
+                                    callback: function (value, index, values) {
+                                        if (parseInt(value) >= 1000) {
+                                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                        } else {
+                                            return value + '원';
+                                        }
+                                    }
+                                }
+                            }]
+                        }
+                    }
+                });
+            }
+        };
+
+        function callYearlySalesAllList(page) {
+
+            $.ajax({
+                url: '@Url.Action("YearlySalesAllList", "StatisticsAdmin")',
+                data: {
+                    page: page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#periodSalesList');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#periodSalesList');
+                $('#periodSalesList').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#periodSalesList');
+            });
+        };
+
+    </script>
+}

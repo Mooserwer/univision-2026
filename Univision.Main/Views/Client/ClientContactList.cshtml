@@ -1,0 +1,354 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientContactList
+@using Univision.Security
+
+<div style="text-align:right;">
+  @*PMS 오픈 관련 등록기능 제한*@
+  @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+  {
+    <button type="button" id="contactBtn" value="0" class="btn btn-xs btn-primary  w-150" value="0" title="Contact 추가">
+      <i class="icon wb-user-add"></i>
+      Add Contact
+    </button>
+  }
+  @*
+    <a href="javascript:void(0)" id="btnHisotry" class="btn btn-xs btn-default" onclick="openListClientContactLog(@Model.c_seq)">  <i class="fas fa-list"></i>&nbsp; Update History</a>
+  *@
+</div>
+
+<div class="">
+  <table class="block_table table table-striped table-hover mt-15" style="table-layout:fixed;">
+    <thead class="text-center">
+      <tr>
+        <th class="text-truncate tbw25" title="Contact 이름">Name</th>
+        <th class="text-truncate tbw25" title="부서/직위">Dept./Pos.</th>
+        <th class="text-truncate tbw25" title="전화">Phone</th>
+        <th class="text-truncate tbw25" title="휴대폰">Mobile</th>
+        <th class="text-truncate hidden-sm-down">E-mail</th>
+        <th class="text-truncate hidden-sm-down" title="등록자">Register</th>
+        <th class="text-truncate hidden-sm-down" title="등록일">Reg.Date</th>
+        <th class="text-truncate hidden-sm-down"><i class="fa fa-cog"></i></th>
+      </tr>
+    </thead>
+    <tbody class="text-center">
+      @if (Model.contactList.Count > 0)
+      {
+        foreach (var data in Model.contactList)
+        {
+          <tr>
+            <td class="text-truncate" title="@data.name (@data.sex)">
+              <span class="text-truncate s2">
+                @if (Model.is_external_lock == 1)
+                {
+                  <a href="javascript:openClientContactExternalLockToHref('@Model.c_seq', '@data.cc_seq');">@data.name  (@data.sex)</a>
+                }
+                else
+                {
+                  <a href="javascript:ContactDetail('@data.cc_seq');">@data.name  (@data.sex)</a>
+                }
+              </span>
+            </td>
+            <td class="text-truncate s2" title="@data.division / @data.position">
+              <span class="text-truncate s2" title="@data.division / @data.position">
+                @data.division / @data.position
+              </span>
+            </td>
+            <td class="text-truncate">
+              <span class="text-truncate s2" title="@data.phone">
+                @if (Model.is_external_lock == 1)
+                {
+                  <span class="text-secondary" title="개인정보를 확인 하시려면 상단의 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                    @data.phone
+                  </span>
+                }
+                else
+                {
+                  @data.phone
+                }
+              </span>
+            </td>
+            <td class="text-truncate">
+              <span class="text-truncate s2" title="@data.cell_phone">
+                @if (Model.is_external_lock == 1)
+                {
+                  <span class="text-secondary" title="개인정보를 확인 하시려면 상단의 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                    @data.cell_phone
+                  </span>
+                }
+                else
+                {
+                  @data.cell_phone
+                }
+              </span>
+            </td>
+            <td class="text-truncate hidden-sm-down">
+              @if (Model.is_external_lock == 1)
+              {
+                <span class="text-secondary" title="개인정보를 확인 하시려면 상단의 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                  <a href="mailto:@data.email">@data.email</a>
+                </span>
+              }
+              else
+              {
+                <a href="mailto:@data.email">@data.email</a>
+              }
+
+            </td>
+            <td class="text-truncate hidden-sm-down" title="@data.uv_name">
+              @data.uv_name
+            </td>
+            <td class="text-truncate hidden-sm-down" title="@Utils.ConvertDateTimeToString(data.create_dt)">
+              @Utils.ConvertDateTimeToString(data.create_dt)
+            </td>
+            <td class="hidden-sm-down">
+              @*PMS 오픈 관련 등록기능 제한*@
+              @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              {
+                if (Model.is_external_lock == 1)
+                {
+                  <a href="">@data.name  (@data.sex)</a>
+                  <button class="btn btn-xs btn-outline-info" onclick="javascript:openClientContactExternalLockToHref('@Model.c_seq', '@data.cc_seq');" value="@data.cc_seq">
+                    <i class="icon wb-edit"></i>
+                    modify
+                  </button>
+                  <button class="btn btn-xs btn-outline-warning  deleteContactBtn" value="@data.cc_seq" disabled>
+                    <i class="icon wb-trash"></i>
+                    Remove
+                  </button>
+                }
+                else
+                {
+                  <button class="btn btn-xs btn-outline-info" onclick="javascript:ContactDetail('@data.cc_seq');" value="@data.cc_seq">
+                    <i class="icon wb-edit"></i>
+                    modify
+                  </button>
+                  <button class="btn btn-xs btn-outline-warning deleteContactBtn" value="@data.cc_seq"><i class="icon wb-trash"></i> Remove </button>
+                }
+              }
+              @if (data.log_cnt > 0)
+              {
+                <a href="javascript:void(0)" id="btnHisotry" class="btn btn-xs btn-default" onclick="openListClientContactLog(@Model.c_seq, @data.cc_seq)">Log</a>
+              }
+            </td>
+          </tr>
+        }
+      }
+      else
+      {
+        <tr>
+          <td colspan="8">
+            No Contact Information
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+@Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                     ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                     x => String.Format("javascript:callContactList({0}, {1})", Model.c_seq, x))
+
+<script>
+    $(document).ready(function () {
+
+
+        $("#contactBtn").click(function (e) {
+
+            var cc_seq = e.target.value;
+
+            $.ajax({
+                url: '@Url.Action("PopContact", "Client")',
+                data: { cc_seq: cc_seq },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    showLoading('#contactBody');
+                }
+            })
+            .done(function (json) {
+                hideLoading('#contactBody');
+
+                var height = "370";
+                if ($(window).width() <= 750) {
+                    height = "80%";
+                }
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '600',
+                    'height': height,
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': 'Add Contact <small>(Contact 추가)</small>',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading('#contactBody');
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의하세요.');
+                });
+        });
+
+
+        $('.deleteContactBtn').click(function (e) {
+            var cc_seq = e.target.value;
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            $.ajax({
+                                url: '@Url.Action("ClientContactDelete", "Client")',
+                                data: { cc_seq: cc_seq },
+                                dataType: 'json',
+                                type: 'POST',
+                                beforeSend: function () {
+                                    showLoading('#contactBody');
+                                }
+                            })
+                            .done(function (json) {
+                                hideLoading('#contactBody');
+                                if (json.ok) {
+                                    location.href = "/Client/ClientDetail?c_seq=" + $("#c_seq").val();
+                                }
+                                else {
+                                    ErrorAlert('오류입니다.');
+                                }
+                            });
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>Contact 삭제')
+                    .setting({
+                        message: "Contact를 삭제 하시겠습니까?",
+                    })
+                .show();
+
+        });
+    });
+
+    function openClientContactExternalLockToHref(c_seq, cc_seq) {
+        alertify.confirm()
+        .set({
+            'labels': { ok: 'OK', cancel: 'Cancel' },
+            'onok': function (e) {
+
+                if (saveElementOpenLogToServer('@Univision.Security.AppIdentity.user_seq', c_seq, 'client', 'client', '', '')) {
+                    ContactDetail(cc_seq);
+                    callContactList(c_seq, 1);
+                }
+                else {
+                    return;
+                }
+
+            },
+            'oncancel': function () {
+                return;
+            }
+        })
+        .setHeader('담당자 수정화면 열람 안내')
+        .setting({
+          message: "해당 고객사의 담당자 수정 화면을 열람하시겠습니까?<br />확인 시 개인정보 확인 기록이 서버에 저장되며, 24시간 이내 동일정보는 별도 확인 없이 조회가 가능합니다."
+        })
+        .show();
+    }
+
+    function ContactDetail(cc_seq) {
+        $.ajax({
+            url: '@Url.Action("PopContact", "Client")',
+            data: { cc_seq: cc_seq },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+
+            var height = "370";
+            if ($(window).width() <= 750) {
+                height = "80%";
+            }
+            $.fancybox.open({
+                'content':json,
+                'width': '640',
+                'height': height,
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': 'Contact Information <small>(Contact 정보)</small>',
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+    function openListClientContactLog(c_seq, cc_seq) {
+        try {
+                $.ajax({
+                    url: '@Url.Action("ListClientContactLog", "Log")',
+                    data: {c_seq: c_seq, cc_seq : cc_seq},
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (html) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':html,
+                        'width': '850',
+                        'height': '600',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': 'Contact History',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.A');
+                });
+
+            } catch (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.A');
+        }
+    }
+
+</script>

@@ -1,0 +1,567 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.CandidateResumeList
+
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_cus.css?v=1533562669">
+<style>
+  .dropify-wrapper {
+    padding: 0px 15px 0px 15px;
+    box-sizing: border-box;
+  }
+</style>
+<div class="row py-0">
+  <div class="col-xxl-6 py-0 user-background card mb-1">
+    <div class="card-block p-5">
+
+      <div id="mkor_file" class="dropzone h-full text-left border-primary">
+        <div class="card-title">
+          <i class="fa fa-folder-open fa-fw"></i>
+          <span>Makeup Resume(Kor) - <small>국문메이크업 이력서만 올려주세요.</small></span>
+        </div>
+        <div class="row py-2">
+          <div class="col">
+            <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+          </div>
+        </div>
+        <div class="file_rst row px-15 py-2" id="mkor_file_rst">
+          @{
+            var mkorList = Model.resumeList.Where(x => x.file_type == "M").ToList();
+          }
+
+          @if (mkorList.Count > 0)
+          {
+            foreach (var data in mkorList)
+            {
+              string is_pdf = "";
+              if (data.file_extension.ToLower() == ".pdf")
+              {
+                is_pdf = "type-pdf";
+              }
+              <div class="py-0 file_div col-12" file_name="@data.file_path">
+                <input type="hidden" name="cr_seq" value="@data.cr_seq">
+                <input type="hidden" name="file_origin_path" value="@data.file_origin_path">
+                <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.cr_seq, @type = "canResume" })" class="file_info text-left text-truncate cur_hand badge @(data.remove_dt == null ? "badge-secondary" : "badge-danger") link-resume @is_pdf" title="@data.file_path // @Utils.ConvertDateTimeToString(data.create_dt)">
+                  @if (data.remove_dt.HasValue)
+                  {
+                    <small>[삭제됨][@Utils.ConvertDateTimeToString(data.remove_dt)] [@data.remove_name)] : </small>
+                  }
+                  else
+                  {
+                    <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                  }
+                  @data.file_path
+                  <small>[@Utils.ConvertDateTimeToString(data.create_dt)] [@data.create_name)]</small>
+
+                </a>
+                @if (!String.IsNullOrEmpty(is_pdf))
+                {
+                  <a href="@Url.Action("DownloadFileToWord", "DownloadFile", new { @element_seq = data.cr_seq, @type = "canResume" })" class="ml-3 text-truncate badge badge-info cur_hand btn-file-pdf" style="width:13%;" title="Word로 변환 후 다운로드">
+                    <i class="fa fa-file-pdf" aria-hidden="true"></i>
+                  </a>
+                }
+                @if (data.remove_dt == null)
+                {
+                  <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:13%;" onclick="RemoveCandidate(this);">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                  </a>
+                }
+              </div>
+            }
+          }
+          <div class="py-0 btn-more col-12 text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(mkorList.Count - 2))</span></div>
+          <div class="py-0 btn-collapse col-12 text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xxl-6 py-0 user-background card mb-1">
+    <div class="card-block p-5">
+
+      <div id="meng_file" class="dropzone h-full text-left border-primary">
+        <div class="card-title">
+          <i class="fa fa-folder-open fa-fw"></i>
+          <span>Makeup Resume(Eng) - <small>영문메이크업 이력서만 올려주세요.</small></span>
+        </div>
+        <div class="row py-2">
+          <div class="col">
+            <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+          </div>
+        </div>
+        <div class="file_rst row px-15 py-2" id="meng_file_rst">
+          @{
+            var mengList = Model.resumeList.Where(x => x.file_type == "N").ToList();
+          }
+
+          @if (mengList.Count > 0)
+          {
+            foreach (var data in mengList)
+            {
+              string is_pdf = "";
+              if (data.file_extension.ToLower() == ".pdf")
+              {
+                is_pdf = "type-pdf";
+              }
+              <div class="py-0 file_div col-12" file_name="@data.file_path">
+                <input type="hidden" name="cr_seq" value="@data.cr_seq">
+                <input type="hidden" name="file_origin_path" value="@data.file_origin_path">
+                <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.cr_seq, @type = "canResume" })" class="file_info text-left text-truncate cur_hand badge @(data.remove_dt == null ? "badge-secondary" : "badge-danger") link-resume @is_pdf" title="@data.file_path // @Utils.ConvertDateTimeToString(data.create_dt)">
+                  @if (data.remove_dt.HasValue)
+                  {
+                    <small>[삭제됨][@Utils.ConvertDateTimeToString(data.remove_dt)] [@data.remove_name)] : </small>
+                  }
+                  else
+                  {
+                    <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                  }
+                  @data.file_path
+                  <small>[@Utils.ConvertDateTimeToString(data.create_dt)] [@data.create_name)]</small>
+
+                </a>
+                @if (!String.IsNullOrEmpty(is_pdf))
+                {
+                  <a href="@Url.Action("DownloadFileToWord", "DownloadFile", new { @element_seq = data.cr_seq, @type = "canResume" })" class="ml-3 text-truncate badge badge-info cur_hand btn-file-pdf" style="width:13%;" title="Word로 변환 후 다운로드">
+                    <i class="fa fa-file-pdf" aria-hidden="true"></i>
+                  </a>
+                }
+                @if (data.remove_dt == null)
+                {
+                  <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:10%;" onclick="RemoveCandidate(this);">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                  </a>
+                }
+              </div>
+            }
+          }
+          <div class="py-0 btn-more col-12 text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(mengList.Count - 2))</span></div>
+          <div class="py-0 btn-collapse col-12 text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<hr />
+<div class="row py-0">
+  <div class="col-xxl-6 py-0 user-background card mb-1">
+    <div class="card-block p-5">
+
+      <div id="kor_file" class="dropzone h-full text-left">
+        <div class="card-title">
+          <i class="fa fa-folder-open fa-fw"></i>
+          <span>Original Resume(Kor) - <small>국문 원본 이력서만 올려주세요.</small></span>
+        </div>
+        <div class="row py-2">
+          <div class="col">
+            <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+          </div>
+        </div>
+        <div class="file_rst row px-15 py-2" id="kor_file_rst">
+          @{
+            var korList = Model.resumeList.Where(x => x.file_type == "K").ToList();
+          }
+
+          @if (korList.Count > 0)
+          {
+            foreach (var data in korList)
+            {
+              string is_pdf = "";
+              if (data.file_extension.ToLower() == ".pdf")
+              {
+                is_pdf = "type-pdf";
+              }
+              <div class="py-0 file_div col-12" file_name="@data.file_path">
+                <input type="hidden" name="cr_seq" value="@data.cr_seq">
+                <input type="hidden" name="file_origin_path" value="@data.file_origin_path">
+                <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.cr_seq, @type = "canResume" })" class="file_info text-left text-truncate cur_hand badge @(data.remove_dt == null ? "badge-secondary" : "badge-danger") link-resume @is_pdf" title="@data.file_path // @Utils.ConvertDateTimeToString(data.create_dt)">
+                  @if (data.remove_dt.HasValue)
+                  {
+                    <small>[삭제됨][@Utils.ConvertDateTimeToString(data.remove_dt)] [@data.remove_name)] : </small>
+                  }
+                  else
+                  {
+                    <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                  }
+                  @data.file_path
+                  <small>[@Utils.ConvertDateTimeToString(data.create_dt)] [@data.create_name)]</small>
+                </a>
+                @if (!String.IsNullOrEmpty(is_pdf))
+                {
+                  <a href="@Url.Action("DownloadFileToWord", "DownloadFile", new { @element_seq = data.cr_seq, @type = "canResume" })" class="ml-3 text-truncate badge badge-info cur_hand btn-file-pdf" style="width:13%;" title="Word로 변환 후 다운로드">
+                    <i class="fa fa-file-pdf" aria-hidden="true"></i>
+                  </a>
+                }
+                @if (data.remove_dt == null)
+                {
+                  <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:10%;" onclick="RemoveCandidate(this);">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                  </a>
+                }
+              </div>
+            }
+          }
+          <div class="py-0 btn-more col-12 text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(korList.Count - 2))</span></div>
+          <div class="py-0 btn-collapse col-12 text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xxl-6 py-0 user-background card mb-1">
+    <div class="card-block p-5">
+
+      <div id="eng_file" class="dropzone h-full text-left">
+        <div class="card-title">
+          <i class="fa fa-folder-open fa-fw"></i>
+          <span>Original Resume(Eng) - <small>영문 원본 이력서만 올려주세요.</small></span>
+        </div>
+        <div class="row py-2">
+          <div class="col">
+            <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+          </div>
+        </div>
+        <div class="file_rst row px-15 py-2" id="eng_file_rst">
+          @{
+            var engList = Model.resumeList.Where(x => x.file_type == "E").ToList();
+          }
+
+          @if (engList.Count > 0)
+          {
+            foreach (var data in engList)
+            {
+              string is_pdf = "";
+              if (data.file_extension.ToLower() == ".pdf")
+              {
+                is_pdf = "type-pdf";
+              }
+              <div class="py-0 file_div col-12" file_name="@data.file_path">
+                <input type="hidden" name="cr_seq" value="@data.cr_seq">
+                <input type="hidden" name="file_origin_path" value="@data.file_origin_path">
+                <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.cr_seq, @type = "canResume" })" class="file_info text-left text-truncate cur_hand badge @(data.remove_dt == null ? "badge-secondary" : "badge-danger") link-resume @is_pdf" title="@data.file_path // @Utils.ConvertDateTimeToString(data.create_dt)">
+                  @if (data.remove_dt.HasValue)
+                  {
+                    <small>[삭제됨][@Utils.ConvertDateTimeToString(data.remove_dt)] [@data.remove_name)] : </small>
+                  }
+                  else
+                  {
+                    <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                  }
+                  @data.file_path
+                  <small>[@Utils.ConvertDateTimeToString(data.create_dt)] [@data.create_name)]</small>
+                </a>
+                @if (!String.IsNullOrEmpty(is_pdf))
+                {
+                  <a href="@Url.Action("DownloadFileToWord", "DownloadFile", new { @element_seq = data.cr_seq, @type = "canResume" })" class="ml-3 text-truncate badge badge-info cur_hand btn-file-pdf" style="width:13%;" title="Word로 변환 후 다운로드">
+                    <i class="fa fa-file-pdf" aria-hidden="true"></i>
+                  </a>
+                }
+                @if (data.remove_dt == null)
+                {
+                  <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:10%;" onclick="RemoveCandidate(this);">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                  </a>
+                }
+              </div>
+            }
+          }
+          <div class="py-0 btn-more col-12 text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(engList.Count - 2))</span></div>
+          <div class="py-0 btn-collapse col-12 text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 py-0 user-background card mb-1">
+    <div class="card-block p-5">
+
+      <div id="etc_file" class="dropzone h-full text-left">
+        <div class="card-title">
+          <i class="fa fa-folder-open fa-fw"></i>
+          <span>Etc files - <small>경력증명서, 포트폴리오 등</small></span>
+        </div>
+        <div class="row py-2">
+          <div class="col">
+            <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+          </div>
+        </div>
+        <div class="file_rst row px-15 py-2" id="etc_file_rst">
+          @{
+            var etcList = Model.resumeList.Where(x => x.file_type == "O").ToList();
+          }
+
+          @if (etcList.Count > 0)
+          {
+            foreach (var data in etcList)
+            {
+              string is_pdf = "";
+              if (data.file_extension.ToLower() == ".pdf")
+              {
+                is_pdf = "type-pdf";
+              }
+              <div class="py-0 file_div col-12" file_name="@data.file_path">
+                <input type="hidden" name="cr_seq" value="@data.cr_seq">
+                <input type="hidden" name="file_origin_path" value="@data.file_origin_path">
+                <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.cr_seq, @type = "canResume" })" class="file_info text-left text-truncate cur_hand badge @(data.remove_dt == null ? "badge-secondary" : "badge-danger") link-resume @is_pdf" title="@data.file_path // @Utils.ConvertDateTimeToString(data.create_dt)">
+                  @if (data.remove_dt.HasValue)
+                  {
+                    <small>[삭제됨][@Utils.ConvertDateTimeToString(data.remove_dt)] [@data.remove_name)] : </small>
+                  }
+                  else
+                  {
+                    <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                  }
+                  @data.file_path
+                  <small>[@Utils.ConvertDateTimeToString(data.create_dt)] [@data.create_name)]</small>
+                </a>
+                @if (!String.IsNullOrEmpty(is_pdf))
+                {
+                  <a href="@Url.Action("DownloadFileToWord", "DownloadFile", new { @element_seq = data.cr_seq, @type = "canResume" })" class="ml-3 text-truncate badge badge-info cur_hand btn-file-pdf" style="width:13%;" title="Word로 변환 후 다운로드">
+                    <i class="fa fa-file-pdf" aria-hidden="true"></i>
+                  </a>
+                }
+                @if (data.remove_dt == null)
+                {
+                  <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:10%;" onclick="RemoveCandidate(this);">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                  </a>
+                }
+              </div>
+            }
+          }
+          <div class="py-0 btn-more col-12 text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(etcList.Count - 2))</span></div>
+          <div class="py-0 btn-collapse col-12 text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@*PMS 오픈 관련 등록기능 제한*@
+@if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+{
+  <script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
+  <script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+  <script type="text/javascript">
+
+    $('.btn-more').click(function () {
+        $(this).closest('.file_rst').addClass('more');
+    })
+
+    $('.btn-collapse').click(function () {
+        $(this).closest('.file_rst').removeClass('more');
+    })
+
+    //파일업로드================================
+        if ($('.dropzone').length > 0) {
+            var myMKorDropzone = new Dropzone("div#mkor_file", {
+                url: "@Url.Action("CreateCandidateResume", "Candidate")",
+                method: "post",
+                params: {
+                    "c_seq": @Model.c_seq,
+                    "file_type": "M"
+                }
+            });
+            var myMEngDropzone = new Dropzone("div#meng_file", {
+                url: "@Url.Action("CreateCandidateResume", "Candidate")",
+                method: "post",
+                params: {
+                    "c_seq": @Model.c_seq,
+                    "file_type": "N"
+                }
+            });
+            var myKorDropzone = new Dropzone("div#kor_file", {
+                url: "@Url.Action("CreateCandidateResume", "Candidate")",
+                method: "post",
+                params: {
+                    "c_seq": @Model.c_seq,
+                    "file_type": "K"
+                }
+            });
+
+            var myEngDropzone = new Dropzone("div#eng_file", {
+                url: "@Url.Action("CreateCandidateResume", "Candidate")",
+                method: "post",
+                params: {
+                    "c_seq": @Model.c_seq,
+                    "file_type": "E"
+                }
+            });
+
+            var myEtcDropzone = new Dropzone("div#etc_file", {
+                url: "@Url.Action("CreateCandidateResume", "Candidate")",
+                method: "post",
+                params: {
+                    "c_seq": @Model.c_seq,
+                    "file_type": "O"
+                }
+            });
+            myMKorDropzone.on("success", function (file, response) {
+                if (response.ok) {
+                    file_html = MakeHtmlFileList(response.result);
+                    $('#mkor_file_rst').prepend($(file_html).hide().fadeIn(1000));
+                    $('#mkor_file_rst').find('.more_cnt').text("("+($('#mkor_file_rst div.file_div').length - 2) +")")
+                    this.removeFile(file);
+                } else {
+                    ErrorAlert("[ERROR]" + response.message);
+                }
+
+            });
+
+            myMEngDropzone.on("success", function (file, response) {
+                if (response.ok) {
+                    file_html = MakeHtmlFileList(response.result);
+                    $('#meng_file_rst').prepend($(file_html).hide().fadeIn(1000));
+                    $('#meng_file_rst').find('.more_cnt').text("("+($('#meng_file_rst div.file_div').length - 2 ) + ")")
+                    this.removeFile(file);
+                } else {
+                    ErrorAlert("[ERROR]" + response.message);
+                }
+
+            });
+
+
+            myKorDropzone.on("success", function (file, response) {
+                if (response.ok) {
+                    file_html = MakeHtmlFileList(response.result);
+                    $('#kor_file_rst').prepend($(file_html).hide().fadeIn(1000));
+                    $('#kor_file_rst').find('.more_cnt').text("("+($('#kor_file_rst div.file_div').length - 2) +")")
+                    this.removeFile(file);
+                } else {
+                    ErrorAlert("[ERROR]" + response.message);
+                }
+
+            });
+
+
+            myEngDropzone.on("success", function (file, response) {
+                if (response.ok) {
+                    file_html = MakeHtmlFileList(response.result);
+                    $('#eng_file_rst').prepend($(file_html).hide().fadeIn(1000));
+                    $('#eng_file_rst').find('.more_cnt').text("("+($('#eng_file_rst div.file_div').length - 2 ) + ")")
+                    this.removeFile(file);
+                } else {
+                    ErrorAlert("[ERROR]" + response.message);
+                }
+
+            });
+
+
+            myEtcDropzone.on("success", function (file, response) {
+                if (response.ok) {
+                    //dropzone_files.push(response.result);
+                    file_html = MakeHtmlFileList(response.result);
+                    $('#etc_file_rst').prepend($(file_html).hide().fadeIn(1000));
+                    $('#etc_file_rst').find('.more_cnt').text("("+($('#etc_file_rst div.file_div').length - 2 ) + ")")
+                    this.removeFile(file);
+                } else {
+                    ErrorAlert("[ERROR]" + response.message);
+                }
+
+            });
+
+        }
+        function MakeHtmlFileList(obj_file) {
+            var cols = ""
+            if(obj_file.file_path && obj_file.file_path != ''){
+                var icon_str = "";
+                var type_class = "";
+                if (obj_file.file_extension == ".pdf") {
+                  icon_str = "far fa-fw fa-file-pdf text-danger";
+                  type_class = "type-pdf";
+                } else if ( obj_file.file_extension == ".jpg" || obj_file.file_extension == ".png" || obj_file.file_extension == ".gif" || obj_file.file_extension == ".bmp" ){
+                  icon_str = "far fa-fw fa-file-image text-secondary";
+                } else if ( obj_file.file_extension == ".doc" || obj_file.file_extension == ".docx" ){
+                  icon_str = "far fa-fw fa-file-word text-primary";
+                } else if ( obj_file.file_extension == ".xls" || obj_file.file_extension == ".xlsx"  ){
+                  icon_str = "far fa-fw fa-file-excel text-success";
+                } else if ( obj_file.file_extension == ".ppt" || obj_file.file_extension == ".pptx"){
+                  icon_str = "far fa-fw fa-file-powerpoint text-warning";
+                } else {
+                  icon_str = "fa fa-fw fa-file-alt text-light";
+                }
+
+                cols += '<div class="py-0 file_div col-12">' //'+obj_file.col+'
+                cols += '  <input type="hidden" name="cr_seq" value="'+obj_file.cr_seq+'">'
+                cols += '  <input type="hidden" name="file_origin_path" value="'+obj_file.file_origin_path+'">'
+              cols += '  <a href="/DownloadFile/Download?element_seq=' + obj_file.cr_seq + '&type=canResume" class="file_info text-left text-truncate cur_hand badge badge-secondary link-resume ' + type_class+'" title="'+obj_file.file_path+'" >';
+                cols += '    <i class="' + icon_str + '" aria-hidden="true"></i> ' + obj_file.file_path;
+                cols += '    <small>[' + ToJavaScriptDate(obj_file.create_dt) + ']</small>';
+                cols += '  </a>'
+                if (obj_file.file_extension == ".pdf")
+                {
+                  cols += '  <a href="/DownloadFile/Download?element_seq=' + obj_file.cr_seq + '&type=canResume" class="ml-3 text-truncate badge badge-info cur_hand btn-file-pdf" style="width:13%;" title="Word로 변환 후 다운로드">';
+                  cols += '    <i class="fa fa-file-pdf" aria-hidden="true"></i>';
+                  cols += '  </a>';
+                }
+                cols += '  <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:10%;" onclick="RemoveCandidate(this);">';
+                cols += '   <i class="fa fa-trash" aria-hidden="true"></i>';
+                cols += '  </a>';
+                cols += '</div>';
+
+            }
+            return cols;
+        }
+
+    function ToJavaScriptDate(value) {
+            //console.log(value)
+            var pattern = /Date\(([^)]+)\)/;
+            var results = pattern.exec(value);
+        var dt = new Date(parseFloat(results[1]));
+        //console.log(results[1])
+        //console.log(dt.toISOString().substring(0, 10))
+        //console.log(dt.getMonth())
+        //console.log(dt.getDate())
+        //    return dt.getFullYear() + "-" + (parseInt(dt.getMonth()) + 1) + "-" + dt.getDate();
+        return dt.toISOString().substring(0, 10);
+        }
+
+        function RemoveCandidate(obj) {
+
+            alertify.confirm()
+                .set({
+                    'labels': { ok: 'OK', cancel: 'Cancel' },
+                    'onok': function () {
+                        DeleteResume(obj)
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('Remove file')
+                .setting({
+                    message: "Are you sure want to delete this file?",
+                })
+                .show();
+        }
+
+        //임시 이력서 파일 삭제
+        function DeleteResume(obj) {
+            cr_seq = $(obj).closest('.file_div').find("input[name=cr_seq]").val();
+            $.ajax({
+                    url: '@Url.Action("DeleteCandidateResume", "Candidate")',
+                    data: {
+                       cr_seq: cr_seq
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                    beforeSend: function () {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+                    if (json.ok) {
+                        parent = $(obj).closest(".file_rst");
+                        parent.find('.more_cnt').text("(" + (parseInt(parent.find('div.file_div').length) - 2) + ")")
+                        $(obj).closest('.file_div').remove();
+
+
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+        }
+
+
+
+
+  </script>
+}

@@ -1,0 +1,143 @@
+﻿@using Univision.Core.Models.DTO;
+@model List<uv_vacation_history>
+@{
+    Layout = null;
+    string vc_text = String.Empty;
+}
+@if (Model.Count > 0)
+{
+<div class="table-responsive">
+    <table id="default-table" class="table table-striped table-hover"  style="table-layout:fixed;">
+        <thead>
+            <tr>
+                <th title="신청자">Requester</th>
+                <th title="신청일자">Req.Date</th>
+                <th class="hidden-sm-down" title="휴가구분">Type</th>
+                <th class="hidden-sm-down" title="휴가일자">Date</th>
+                <th title="휴가일수">Period</th>
+                <th class="hidden-sm-down" title="사유(비고)">Comment</th>
+                <th style="width:20%;"><i class="fas fa-cog"></i></th>
+            </tr>
+        </thead>
+        <tbody>
+            
+                @foreach (var data in Model)
+                {
+                    <tr>
+                        <td class="text-center text-truncate" title="@data.request_name">@data.request_name</td>
+                        <td>@Utils.ConvertDateTimeToString(data.request_date)</td>
+                        <td class="text-truncate hidden-sm-down" title="@data.type_name">
+                            @data.type_name
+                        </td>
+                        @{
+                            vc_text = Utils.ConvertDateTimeToString(data.start_date);
+
+                            if (data.start_date != data.end_date)
+                            {
+                                vc_text += " ~ " + Utils.ConvertDateTimeToString(data.end_date);
+                            }
+                        }
+                        <td class="text-center text-truncate hidden-sm-down" title="@vc_text">
+                            @vc_text
+                        </td>
+                        <td class="text-right" title="@data.vacation_detail">
+                            @data.vacation_number
+                            @if(data.v_type == 1)
+          {
+            <text><br/>[잔여 : @data.cur_remain 일]</text>
+          }
+                        </td>
+                        <td class="text-truncate hidden-sm-down" title="@data.comment">
+                            @data.comment
+                        </td>
+                        <td class="">
+                            <button class="btn btn-xs btn-outline-success btn-appr-vacation mb-5 mb-lg-0 mb-sm-5 mb-md-5" data="@data.v_seq"> Approve </button>
+                            <button class="btn btn-xs btn-outline-warning btn-return-vacation" data="@data.v_seq"> Return </button>
+                        </td>
+                    </tr>
+                 }
+            
+        </tbody>
+    </table>
+</div>
+<script type="text/javascript">
+    $('.btn-appr-vacation').click(function () {    
+            var v_seq = $(this).attr('data');
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            $.ajax({
+                                url: '@Url.Action("CreateVacationAppr", "MyList")',
+                                data: {
+                                    v_seq: v_seq,
+                                    appr : 1
+                                },
+                                dataType: 'json',
+                                type: 'POST',
+                                beforeSend: function () {
+                                    showLoading('#vacationApprBody');
+                                }
+                            })
+                            .done(function (json) {
+                                hideLoading('#vacationApprBody');
+                                if (json.ok) {
+                                    NormalAlert(json.message)
+                                    callVacationApprList();
+                                }
+                                else {
+                                    ErrorAlert('Error.');
+                                }
+                            })
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>휴가 승인')
+                    .setting({
+                        message: "선택하신 휴가를 승인 하시겠습니까?",
+                    })
+                    .show();
+        });
+    $('.btn-return-vacation').click(function () {    
+            var v_seq = $(this).attr('data');
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            $.ajax({
+                                url: '@Url.Action("CreateVacationAppr", "MyList")',
+                                data: {
+                                    v_seq: v_seq,
+                                    appr : -1
+                                },
+                                dataType: 'json',
+                                type: 'POST',
+                                beforeSend: function () {
+                                    showLoading('#vacationApprBody');
+                                }
+                            })
+                            .done(function (json) {
+                                hideLoading('#vacationApprBody');
+                                if (json.ok) {
+                                    NormalAlert(json.message)
+                                    callVacationApprList();
+                                }
+                                else {
+                                    ErrorAlert('Error.');
+                                }
+                            })
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle text-danger"></i>휴가 반려')
+                    .setting({
+                        message: "선택하신 휴가를 반려 하시겠습니까?",
+                    })
+                    .show();
+        });
+</script>
+}

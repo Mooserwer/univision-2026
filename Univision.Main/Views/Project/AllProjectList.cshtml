@@ -1,0 +1,777 @@
+﻿@model Univision.Main.Models.Project.MyProjectListModel
+
+@{
+    ViewBag.Title = "All Project List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/apps/work.min599c.css?v4.0.4">
+
+<style>
+
+    .panel-info li {
+        cursor: pointer;
+    }
+
+    table th {
+        text-align: center;
+    }
+</style>
+
+<div class="page-content app-work">
+
+    <div class="panel" id="allProjectList">
+        <div class="panel-heading">
+            <h2 class="panel-title font-size-18 py-10">All Project</h2>
+            <ul class="panel-info font-size-10">
+                <li onclick="changeSearchState(0)" title="전체 프로젝트 (Total)">
+                    <div class="num darker">@Model.cntData.allCnt</div>
+                    <p class="@Utils.ReturnPjtHighlight(Model.search.state, 0)">Total</p>
+                </li>
+                <li onclick="changeSearchState('@ProjectStatusCode.progress')" title="진행 (Ongoing)">
+                    <div class="num blue-600">@Model.cntData.progressCnt</div>
+                    <p class="@Utils.ReturnPjtHighlight(Model.search.state, ProjectStatusCode.progress)">Ongoing</p>
+                </li>
+                <li onclick="changeSearchState('@ProjectStatusCode.complete')" title="완료(Complete)">
+                    <div class="num cyan-600">@Model.cntData.completeCnt</div>
+                    <p class="@Utils.ReturnPjtHighlight(Model.search.state, ProjectStatusCode.complete)">Complete</p>
+                </li>
+                <li onclick="changeSearchState('@ProjectStatusCode.success')" title="성공(Succeed)">
+                    <div class="num green-600">@Model.cntData.successCnt</div>
+                    <p class="@Utils.ReturnPjtHighlight(Model.search.state, ProjectStatusCode.success)">Succeed</p>
+                </li>
+                <li onclick="changeSearchState('@ProjectStatusCode.hold')" title="보류(Holding)">
+                    <div class="num orange-600">@Model.cntData.waitCnt</div>
+                    <p class="@Utils.ReturnPjtHighlight(Model.search.state, ProjectStatusCode.hold)">Hold</p>
+                </li>
+                <li onclick="changeSearchState('@ProjectStatusCode.fail')" title="종료 - 실패/취소 등 (Closed - Failed/Cancel) ">
+                    <div class="num red-600">@Model.cntData.failCnt</div>
+                    <p class="@Utils.ReturnPjtHighlight(Model.search.state, ProjectStatusCode.fail)">Closed</p>
+                </li>
+            </ul>
+        </div>
+        @using (Html.BeginForm("AllProjectList", "Project", FormMethod.Get, new { @id = "SearchForm", @class = "p-0" }))
+        {
+            @Html.HiddenFor(x => x.search.state)
+            @Html.HiddenFor(x => x.search.orderTxt)
+            @Html.HiddenFor(x => x.search.orderOption)
+            @Html.HiddenFor(x => x.search.excelDown)
+            <input type="hidden" name="page" id="page" value="@Model.PagingInfo.CurrentPage" />
+            <div class="row pb-5">
+                <div class="col-sm-12 col-md-3 col-xxl-2">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-addon" title="프로젝트 종류">Type</span>
+                        <select name="search.pjt_type" id="search_pjt_type" class="form-control form-control-sm">
+                            <option value="0">ALL</option>
+                            <option value="1" @(Model.search.pjt_type == 1 ? "selected" : "")>Recruitment [채용]</option>
+                            <option value="2" @(Model.search.pjt_type == 2 ? "selected" : "")>Referrence Check [평판조회]</option>
+                            <option value="3" @(Model.search.pjt_type == 3 ? "selected" : "")>재취업</option>
+                            <option value="4" @(Model.search.pjt_type == 4 ? "selected" : "")>Market Mapping</option>
+                            <option value="9" @(Model.search.pjt_type == 9 ? "selected" : "")>Other consulting</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-5 col-xxl-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-addon" title="직급">Position</span>
+                        @{
+                            var positionList = new SelectList(Model.search.positionList, "p_code", "p_name").ToList();
+                            positionList.Insert(0, new SelectListItem { Value = "", Text = "All [전체]" });
+                        }
+                        @Html.DropDownListFor(x => x.search.position_end, positionList, new { @class = "form-control form-control-sm" })
+                        <span class="input-group-addon"> ~ </span>
+                        @Html.DropDownListFor(x => x.search.position_start, positionList, new { @class = "form-control form-control-sm" })
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-addon" title="등록일">Reg.</span>
+                        @Html.TextBoxFor(x => x.search.startDt, new { @class = "form-control form-control-sm jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                        <span class="input-group-addon"> ~ </span>
+                        @Html.TextBoxFor(x => x.search.endDt, new { @class = "form-control form-control-sm jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xxl-6 pb-5">
+
+                    <div class="input-group input-group-sm redo-site" id="businessDiv">
+                        <span class="input-group-addon w-p15" title="산업">Industry</span>
+                        <div class="bg-white pl-5 pr-5 w-p100 border border-secondary form-inline codeBindDiv" id="busiCodeList">
+                            @if (Model.search.business.Count() > 0)
+                            {
+                                var idx = 0;
+                                foreach (var business in Model.search.business)
+                                {
+                                    <div id='busi@(business.code2)' code2='@business.code2' class='busiRow catRow no-side-space'>
+                                        <span class='category'>
+                                            <span class='badge badge-outline badge-default bg-white cur_hand badge-lg busiCode2badge' code1='@business.code1' code2='@business.code2' code2name='@business.code_name2' onclick='DelCategoryBadge(this)'>@business.code_name2<i class='far fa-times-circle'></i></span>
+                                            <input type="hidden" name="search.business[@idx].code1" value="@business.code1" />
+                                            <input type="hidden" name="search.business[@idx].code2" value="@business.code2" />
+                                            <input type="hidden" name="search.business[@idx].code_name2" value="@business.code_name2" />
+                                        </span>
+                                    </div>
+                                    idx++;
+                                }
+
+                            }
+                        </div>
+                        <div class="input-group-btn">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="FindBusiness()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div class="input-group-btn">
+                            <button type="button" class="btn btn-outline-primary btn-redo-code">
+                                <i class="fas fa-redo" placeholder="초기화"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-xxl-6 pb-5">
+                    <div class="input-group input-group-sm redo-site" id="JobDiv">
+                        <span class="input-group-addon w-p15" title="직무">Job Func.</span>
+                        <div class="bg-white pl-5 pr-5 w-p100 border border-secondary form-inline codeBindDiv" id="jobCodeList">
+                            @if (Model.search.job.Count() > 0)
+                            {
+                                var idx = 0;
+                                foreach (var job in Model.search.job)
+                                {
+                                    <div id='job@(job.code2)' code2='@job.code2' class='jobRow catRow no-side-space'>
+                                        <span class='category'>
+                                            <span class='badge badge-outline badge-default bg-white cur_hand badge-lg jobCode2badge' code1='@job.code1' code2='@job.code2' code2name='@job.code_name2' onclick='DelCategoryBadge(this)'>@job.code_name2<i class='far fa-times-circle'></i></span>
+                                            <input type="hidden" name="search.job[@idx].code1" value="@job.code1" />
+                                            <input type="hidden" name="search.job[@idx].code2" value="@job.code2" />
+                                            <input type="hidden" name="search.job[@idx].code_name2" value="@job.code_name2" />
+                                        </span>
+                                    </div>
+                                    idx++;
+                                }
+                            }
+                        </div>
+                        <div class="input-group-btn">
+                            <button type="button" class="btn btn-outline-primary" onclick="javascript:FindJob()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div class="input-group-btn">
+                            <button type="button" class="btn btn-outline-primary btn-redo-code">
+                                <i class="fas fa-redo" placeholder="초기화"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12 col-md-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-addon">Search</span>
+                        @Html.TextBoxFor(x => x.search.searchTxt, new { @class = "form-control form-control-sm", @placeholder = "구인제목 또는 고객사 검색어 입력 (Search Title or Client)" })
+                    </div>
+
+                </div>
+                <div class="col-sm-12 col-md-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-addon">AM/SM</span>
+                        @Html.TextBoxFor(x => x.search.searchTxt2, new { @class = "form-control form-control-sm", @placeholder = "AM 또는 SM 검색 (AM or SM)" })
+                    </div>
+
+                </div>
+
+                <div class="col-sm-12 col-md-2 text-right">
+                    <button type="button" class="btn btn-sm btn-primary btn-search" id="btn-search" title="Search">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+        }
+        <hr />
+        <div class="panel-body">
+            <div class="col-sm-12 col-md-9 text-left">
+                <span class="panel-desc">
+                    Sort by : [
+                    <small>
+                        <a href="#" class="sort_link">
+                            Reg.Date
+                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.create_dt", Model.search.orderOption) colSort" orderTxt="P.create_dt"></i>
+                        </a>
+                        |
+                        <a href="#" class="sort_link">
+                            Update
+                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.modify_dt", Model.search.orderOption) colSort" orderTxt="P.modify_dt"></i>
+                        </a>
+                        |
+                        <a href="#" class="sort_link">
+                            Client
+                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "C.kor_name", Model.search.orderOption) colSort" orderTxt="C.kor_name"></i>
+                        </a>
+                        |
+                        <a href="#" class="sort_link">
+                            Title
+                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.title", Model.search.orderOption) colSort" orderTxt="P.title"></i>
+                        </a>
+                        |
+                        <a href="#" class="sort_link">
+                            AM
+                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "PD.am_names", Model.search.orderOption) colSort" orderTxt="PD.am_names"></i>
+                        </a>
+                        |
+                        <a href="#" class="sort_link">
+                            SM
+                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "PM.searcher_names", Model.search.orderOption) colSort" orderTxt="PM.searcher_names"></i>
+                        </a>
+                        |
+                        <a href="#" class="sort_link">
+                            Type
+                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.pjt_type", Model.search.orderOption) colSort" orderTxt="P.pjt_type"></i>
+                        </a>
+                        |
+                        <a href="#" class="sort_link">
+                            Status
+                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.pjt_status", Model.search.orderOption) colSort" orderTxt="P.pjt_status"></i>
+                        </a>
+                    </small>]
+                </span>
+
+            </div>
+
+            <table class="block_table table table-project"  style="table-layout:fixed;">
+                <thead>
+                    <tr>
+                        <th class="hidden-sm-down" style="min-width:10%" title="프로젝트 종류 / 상태">
+                            Type / Status
+                        </th>
+                        <th class="hidden-sm-down" style="min-width:15%" title="고객사">
+                            Client
+                        </th>
+                        <th class="tbw70" style="width:300px;" title="구인제목/등록일">
+                            Title
+                        </th>
+                        <th class="tbw30">AM / SM</th>
+                        <th class="hidden-sm-down" title="산업">Industry</th>
+                        <th class="hidden-sm-down" title="직무">Job func.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.list.Count > 0)
+                    {
+                        foreach (var data in Model.list)
+                        {
+                            <tr>
+                                @{
+                                    string badgeClass_type = "";
+                                    switch (data.pjt_type)
+                                    {
+                                        case 1:
+                                            badgeClass_type = "badge-primary";
+                                            break;
+                                        default:
+                                            badgeClass_type = "badge-info";
+                                            break;
+
+                                    }
+                                }
+                                <td class="work-status hidden-sm-down py-10">
+                                    <span class="badge @badgeClass_type">
+                                        @(data.pjt_type == 1 ? "Recruitment" : "Consulting")
+                                    </span>
+
+                                    @{
+                                        string badgeClass = "";
+                                        switch (data.pjt_status)
+                                        {
+                                            case 1:
+                                                badgeClass = "badge-primary";
+                                                break;
+                                            case 2:
+                                                badgeClass = "badge-warning";
+                                                break;
+                                            case 3:
+                                                badgeClass = "badge-danger";
+                                                break;
+                                            case 4:
+                                                badgeClass = "badge-info";
+                                                break;
+                                            case 5:
+                                                badgeClass = "badge-success";
+                                                break;
+                                        }
+                                    }
+
+                                    <br /><span class="badge @badgeClass">@(Utils.ReturnProjectStatusTxt(data.pjt_status))</span>
+                                </td>
+                                <td class="subject hidden-sm-down text-left text-truncate py-10">
+                                    @data.company_name
+                                </td>
+                                <td class="subject text-left text-truncate py-10 tbw70">
+                                  @if (data.pjt_type == 1)
+                                  {
+                                    <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })" title="@data.title">
+                                      @data.title
+                                    </a>
+                                  }
+                                  else
+                                  {
+                                    <a href="@Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq })" title="@data.title">
+                                      @data.title
+                                    </a>
+                                  }
+                                  <br />
+                                  <span class="small blue-grey-400" title="Reg. : @Utils.ConvertDateTimeToString(data.create_dt)">Reg. : @Utils.ConvertDateTimeToString(data.create_dt)</span>
+                                  / <span class="small blue-grey-400" title="Updated : @Utils.ConvertDateTimeToString(data.modify_dt)">Updated : @Utils.ConvertDateTimeToString(data.modify_dt)</span>
+
+                                </td>
+                                <td class="actions text-center text-truncate py-10 tbw30" title="@data.am_names / @data.searcher_names">
+                                    @data.am_names
+                                    <br />@data.searcher_names
+                                </td>
+                                <td class="text-truncate hidden-sm-down members py-10" title="@data.business_names2">
+                                    @data.business_names2
+                                </td>
+                                <td class="text-truncate hidden-sm-down members py-10" title="@data.job_names2">
+                                    @data.job_names2
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+            @*
+        <div class="text-right">
+            <button class="btn btn-sm btn-success" id="btnExcel">엑셀 다운로드</button>
+            <a href="@Url.Action("ProjectCreate", "Project")" class="btn btn-sm btn-primary">프로젝트 등록 - 채용</a>
+        </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                타입
+                            </th>
+                            <th>
+                                상태
+                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.pjt_status", Model.search.orderOption) colSort" orderTxt="P.pjt_status"></i>
+                            </th>
+                            <th>
+                                업체명
+                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "C.kor_name", Model.search.orderOption) colSort" orderTxt="C.kor_name"></i>
+                            </th>
+                            <th>
+                                제목
+                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.title", Model.search.orderOption) colSort" orderTxt="P.title"></i>
+                                /
+                                등록일
+                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.create_dt", Model.search.orderOption) colSort" orderTxt="P.create_dt"></i>
+                            </th>
+                            <th class="progressTh">진행상태</th>
+                            <th>AM</th>
+                            <th>SM</th>
+                            <th>산업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.list.Count > 0)
+                        {
+                            foreach (var data in Model.list)
+                            {
+                                <tr>
+                                    <td class="work-status text-center" style="width:5% !important">
+                                        @(Utils.ReturnProjectTypeTxt(data.pjt_type))
+                                    </td>
+                                    @{
+                                        string badgeClass = "";
+                                        switch (data.pjt_status)
+                                        {
+                                            case 1:
+                                                badgeClass = "badge-primary";
+                                                break;
+                                            case 2:
+                                                badgeClass = "badge-warning";
+                                                break;
+                                            case 3:
+                                                badgeClass = "badge-danger";
+                                                break;
+                                            case 4:
+                                                badgeClass = "badge-info";
+                                                break;
+                                            case 5:
+                                                badgeClass = "badge-success";
+                                                break;
+                                        }
+                                    }
+                                    <td class="work-status text-center" style="width:5% !important">
+                                        <span class="badge @badgeClass">@(Utils.ReturnProjectStatusTxt(data.pjt_status))</span>
+                                    </td>
+                                    <td class="subject text-center" style="width:15% !important">
+                                        <div class="table-content">
+                                            @data.company_name
+                                        </div>
+                                    </td>
+                                    <td class="subject" style="width:25% !important">
+                                        <div class="table-content">
+                                            <p class="blue-grey-500" style="word-break:break-all">
+
+                                                @{
+                                                    string url = "";
+                                                    switch (data.pjt_type)
+                                                    {
+                                                        case 1:
+                                                            url = Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq });
+                                                            break;
+                                                        case 2:
+                                                        case 3:
+                                                        case 4:
+                                                            url = Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq });
+                                                            break;
+
+                                                    }
+                                                }
+
+                                                <a href="@url">
+                                                    @Utils.Truncate(data.title, 30)
+                                                </a>
+                                            </p>
+                                            <span class="blue-grey-400">등록일 : @Utils.ConvertDateTimeToString(data.create_dt)</span>
+                                        </div>
+                                    </td>
+                                    <td class="work-progress text-center" style="width:15% !important">
+                                        <div class="progress progress-xs table-content">
+                                            @{
+                                                int progress = 0;
+                                                string progressClass = "";
+
+                                                switch (data.recState)
+                                                {
+                                                    case ProjectHistoryStateCode.interest:
+                                                    case ProjectHistoryStateCode.fail:
+                                                        progress = 0;
+                                                        progressClass = "";
+                                                        break;
+
+                                                    case ProjectHistoryStateCode.recommand:
+                                                    case ProjectHistoryStateCode.paper:
+                                                        progress = 25;
+                                                        progressClass = "progress-bar-warning";
+                                                        break;
+
+                                                    case ProjectHistoryStateCode.interview:
+                                                    case ProjectHistoryStateCode.interviewOk:
+                                                        progress = 50;
+                                                        progressClass = "progress-bar-info";
+                                                        break;
+
+                                                    case ProjectHistoryStateCode.hireReady:
+                                                        progress = 75;
+                                                        progressClass = "progress-bar-primary";
+                                                        break;
+
+                                                    case ProjectHistoryStateCode.hireOk:
+                                                        progress = 100;
+                                                        progressClass = "progress-bar-success";
+                                                        break;
+                                                }
+                                            }
+                                            <div class="progress-bar @progressClass progress-bar-indicating" style="width: @(progress)%" role="progressbar">
+                                                <span class="sr-only">@(progress)%</span>
+                                            </div>
+                                        </div>
+                                        <span>@(progress)%</span>
+                                    </td>
+                                    <td class="actions" style="width:10% !important">
+                                        <div class="table-content">
+                                            @data.am_names
+                                        </div>
+                                    </td>
+                                    <td class="actions" style="width:10% !important">
+                                        <div class="table-content">
+                                            @data.searcher_names
+                                        </div>
+                                    </td>
+                                    <td class="members" style="width:10% !important">
+                                        <div class="table-content">
+                                            @data.business_names
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            *@
+        </div>
+        <div class="panel-footer">
+            @Html.PageAjaxLinks(Model.PagingInfo,
+                         ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                         x => Url.Action("AllProjectList", new
+                         {
+                             page = x
+                         }))
+        </div>
+    </div>
+
+    @using (Html.BeginForm("MyProjectListExcelDown", "Project", FormMethod.Get, new { @id = "ExcelForm" }))
+    {
+        @Html.Hidden("searchOption", Model.search.searchOption)
+        @Html.Hidden("searchTxt", Model.search.searchTxt)
+        @Html.Hidden("searchStartDt", Model.search.startDt)
+        @Html.Hidden("searchEndDt", Model.search.endDt)
+        @Html.Hidden("orderOption", Model.search.orderOption)
+        @Html.Hidden("orderTxt", Model.search.orderTxt)
+    }
+</div>
+
+@section scripts {
+
+    <script type="text/javascript">
+
+    var callShareBtn;
+    $('#btn-search').click(function () {
+        $('#page').val(1);
+        $("#SearchForm").submit();
+    });
+
+    var search_searchTxt = document.getElementById("search_searchTxt");
+    var search_searchTxt2 = document.getElementById("search_searchTxt2");
+
+    // Execute a function when the user releases a key on the keyboard
+    search_searchTxt.addEventListener("keyup", function(event) {
+      // Number 13 is the "Enter" key on the keyboard
+      if (event.keyCode === 13) {
+        // Cancel the default action, if needed
+        event.preventDefault();
+        // Trigger the button element with a click
+        document.getElementById("btn-search").click();
+      }
+    });
+
+    search_searchTxt2.addEventListener("keyup", function(event) {
+      // Number 13 is the "Enter" key on the keyboard
+      if (event.keyCode === 13) {
+        // Cancel the default action, if needed
+        event.preventDefault();
+        // Trigger the button element with a click
+        document.getElementById("btn-search").click();
+      }
+    });
+
+    $(document).ready(function () {
+
+        BindDatePicker($(".jDatePicker"));
+
+        $("#search_pjt_type").change(function () {
+            $("#SearchForm").submit();
+        });
+
+        $("#btnExcel").click(function () {
+            $("#search_excelDown").val(true);
+            $("#SearchForm").submit();
+            $("#search_excelDown").val(false);
+        });
+
+        $('.sort_link').each(function () {
+            var $arrow = $(this).find('.colSort')
+            if ($arrow.hasClass("fa-sort")) {
+                $(this).addClass("text-secondary")
+            }
+
+            $(this).click(function (e) {
+                e.preventDefault();
+                if ($arrow.hasClass("fa-sort-down")) {
+                    $("#search_orderTxt").val($arrow.attr("orderTxt"));
+                    $("#search_orderOption").val("ASC");
+                }
+                else {
+                    $("#search_orderTxt").val($arrow.attr("orderTxt"));
+                    $("#search_orderOption").val("DESC");
+                }
+
+                $("#SearchForm").submit();
+
+            });
+
+        });
+    });
+
+    function changeSearchState(state) {
+        $('#page').val(1);
+        $("#search_state").val(state);
+        $("#SearchForm").submit();
+
+    }
+
+    function resetSearchForm() {
+        $('#page').val(1);
+        $("#search_searchTxt").val("");
+        $("#search_startDt").val("");
+        $("#search_endDt").val("");
+        $("#search_orderTxt").val("P.create_dt");
+        $("#search_orderOption").val("DESC");
+
+        $(".colSort").each(function () {
+            $(this).removeClass("fa-sort-up");
+            $(this).removeClass("fa-sort-down");
+            $(this).addClass("fa-sort");
+        });
+
+        $("#SearchForm").submit();
+            }
+
+    window.multi_api_hidden_pretext = "search."
+    //직무,산업 추가
+    function FindBusiness() {
+        busiCodeArr = [];
+
+        $(".busiRow").each(function () {
+            $(this).find(".badge").each(function () {
+
+                //카테고리 직무에 하위 직무가 더 있다면
+                if ($(this).closest(".busiRow").find(".badge").length > 1) {
+                    if ($(this).hasClass("busiCode2badge")) {
+                        return;
+                    }
+                }
+
+                var busi = {
+                    code1: $(this).attr("code1"),
+                    code2: $(this).attr("code2")
+                };
+                busiCodeArr.push(busi);
+            });
+        });
+
+        $.ajax({
+            url: '@Url.Action("BusinessMultiApi2", "Partial")',
+            data: {
+
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+
+            $.fancybox.open({
+                'content':json,
+                'width': '640',
+                'height': 'auto',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': 'Find Industry',
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+
+        }
+
+        function FindJob() {
+        jobCodeArr = [];
+
+        $(".jobRow").each(function () {
+            $(this).find(".badge").each(function () {
+
+                //카테고리 직무에 하위 직무가 더 있다면
+                if ($(this).closest(".jobRow").find(".badge").length > 1) {
+                    if ($(this).hasClass("jobCode2badge")) {
+                        return;
+                    }
+                }
+
+                var busi = {
+                    code1: $(this).attr("code1"),
+                    code2: $(this).attr("code2")
+                };
+                jobCodeArr.push(busi);
+            });
+        });
+
+        $.ajax({
+            url: '@Url.Action("JobMultiApi2", "Partial")',
+            data: {
+
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+
+            $.fancybox.open({
+                'content':json,
+                'width': '640',
+                'height': 'auto',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': 'Find Industry',
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+
+    }
+
+    function DelCategoryBadge(obj) {
+        
+        $(obj).closest(".catRow").remove();
+        reindexJobBusiness();
+    }
+
+    function reindexJobBusiness() {
+        var i = 0
+        $('#busiCodeList').find('.busiRow').each(function () {
+            $(this).find('input').each(function () {
+                
+                $(this).attr('name', $(this).attr('name').replace(/\[[^\]]*\]/, '[' + (i) + ']'));
+                
+            });
+            i++;
+        })
+
+        var i = 0
+        $('#jobCodeList').find('.jobRow').each(function () {
+            $(this).find('input').each(function () {
+                
+                $(this).attr('name', $(this).attr('name').replace(/\[[^\]]*\]/, '[' + (i) + ']'));
+                
+            });
+            i++;
+        })
+    }
+
+
+    </script>
+
+}

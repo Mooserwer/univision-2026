@@ -1,0 +1,234 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientFileList
+@using Univision.Security
+
+@if (Model.fileList.Count > 0)
+{
+  <div style="text-align:right;">
+    @*PMS 오픈 관련 등록기능 제한*@
+    @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+    {
+      <button type="button" id="fileBtn" class="btn btn-xs btn-primary" title="파일 업로드">
+        <i class="icon wb-plus"></i>
+        Upload File
+      </button>
+    }
+  </div>
+
+  <div class="mt-15">
+    <table class="block_table table table-striped table-hover">
+      <thead class="text-center">
+        <tr>
+          <th class="tbw20">Type</th>
+          <th class="tbw55">File Name(Download)</th>
+          <th class="hidden-sm-down">Register</th>
+          <th class="hidden-sm-down">Reg.Date</th>
+          <th class="hidden-sm-down"><i class="fas fa-cog"></i></th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        @{
+          int num = (Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage + 1;
+          foreach (var data in Model.fileList)
+          {
+            <tr>
+              <td>
+                <span class="text-truncate s2" title="@data.cf_type_desc">
+                  @data.cf_type_desc
+                </span>
+              </td>
+              <td class="text-left text-truncate">
+                @if (!string.IsNullOrWhiteSpace(data.file_path))
+                {
+                  <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.cf_seq, @type = "client" })">
+                    <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.extension)"></i>
+                    @*<img src="@(Utils.GetRootUrl(Request) + Utils.ReturnFileExtensionImg(data.extension))" style="width:20px;" />*@
+                    <span class="text-truncate s2" title="@data.file_path">
+                      @data.file_path
+                    </span>
+                  </a>
+
+                }
+
+              </td>
+              <td class="hidden-sm-down">
+                @data.uv_name
+              </td>
+              <td class="hidden-sm-down">
+                @Utils.ConvertDateTimeToString(data.create_dt)
+              </td>
+              <td class="hidden-sm-down">
+                @*PMS 오픈 관련 등록기능 제한*@
+                @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+                {
+                  <button class="btn btn-xs btn-outline-warning" type="button" onclick="DeleteClientFile('@data.c_seq', '@data.cf_seq')"><i class="icon wb-trash"></i> Remove</button>
+                }
+              </td>
+            </tr>
+          }
+        }
+
+      </tbody>
+    </table>
+  </div>
+  @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                                  ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                                  x => String.Format("javascript:callFileList({0}, {1})", Model.c_seq, x))
+}
+else
+{
+
+  <div class="card">
+    <div class="card-block text-center">
+      <h4 class="card-title">등록된 파일이 없습니다.<small>[No File data]</small></h4>
+      @*PMS 오픈 관련 등록기능 제한*@
+      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      {
+        <p class="card-text">
+          "Upload File" 버튼을 눌러 계약서 등 고객사 관련 자료를 업로드 하실 수 있습니다.
+        </p>
+        <button type="button" id="fileBtn" class="btn btn-sm btn-primary" title="파일 업로드">
+          <i class="icon wb-plus"></i>
+          파일 업로드 <small>[Upload file]</small>
+        </button>
+      }
+    </div>
+  </div>
+
+}
+<script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+$("#fileBtn").click(function() {
+$.ajax({
+                            url: '@Url.Action("PopFile", "Client", new { @c_seq = Model.c_seq })',
+dataType: 'html',
+type: 'POST',
+beforeSend: function()
+{
+                                    showLoading('#fileBody');
+                                }
+                            })
+.done(function(json) {
+                                hideLoading('#fileBody');
+$.fancybox.open({
+                                    'content':json,
+    'width': '500',
+    'height': '300',
+    'autoDimensions':false,
+    'type':'iframe',
+    'autoSize': false,
+    'title': '파일 추가',
+    helpers:
+                                    {
+                                    title:
+                                        {
+                                        type: 'inside',
+            position: 'top'
+                                        },
+        overlay:
+                                        {
+                                        closeClick: false
+        }
+                                    }
+                                });
+                            })
+.fail(function(e) {
+                                hideLoading('#fileBody');
+                                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요1.');
+                            });
+                        });
+
+
+$('.deleteFileBtn').click(function(e) {
+                            var cf_seq = e.target.value;
+                            var c_seq = $("#c_seq").val();
+
+                            alertify.confirm()
+                                .set({
+                                'labels': { ok: '확인', cancel: '취소' },
+        'onok': function() {
+            $.ajax({
+                                    url: '@Url.Action("ClientFileDelete", "Client")',
+                data: { cc_seq: cc_seq },
+                dataType: 'json',
+                type: 'POST',
+                beforeSend: function() {
+                                            showLoading('#fileBody');
+                                        }
+                                    })
+            .done(function(json) {
+                                        hideLoading('#fileBody');
+                                        if (json.ok)
+                                        {
+                                            location.href = "/Client/ClientDetail?c_seq=" + c_seq;
+                                        }
+                                        else
+                                        {
+                                            ErrorAlert('오류입니다.');
+                                        }
+                                    });
+                                },
+        'oncancel': function() {
+                                    return;
+                                },
+    })
+    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>파일 삭제')
+    .setting({
+                            message: "파일을 삭제 하시겠습니까?",
+    })
+.show();
+
+                        });
+                    });
+
+function DeleteClientFile(c_seq, cf_seq)
+                    {
+                        alertify.confirm()
+                        .set({
+                            'labels': { ok: '확인', cancel: '취소' },
+    'onok': function() {
+        $.ajax({
+                                url: '@Url.Action("DeleteClientFile", "Client")',
+            type: "POST",
+            dataType: 'json',
+            data:
+                                    {
+                                    c_seq: c_seq,
+                cf_seq: cf_seq
+            },
+            beforeSend: function() {
+                                        showLoading('#fileBody');
+                                    },
+            success: function(json) {
+                                        hideLoading('#fileBody');
+                                        if (json.ok)
+                                        {
+                                            NormalAlert(json.message);
+                                            callFileList(c_seq, @Model.PagingInfo.CurrentPage);
+                                        }
+                                        else
+                                        {
+                                            ErrorAlert(json.message);
+                                        }
+                                    },
+            error: function(jqXHR, textStatus, errorThrown) {
+                                        hideLoading('#fileBody');
+                                        ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                                    }
+                                });
+                            },
+    'oncancel': function() {
+
+                                return;
+                            },
+})
+.setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>' + "관련 파일 삭제")
+.setting({
+                        message: "관련 파일을 삭제 하시겠습니까?",
+})
+.show();
+                    }
+
+
+
+</script>

@@ -1,0 +1,131 @@
+﻿@model Univision.Main.Models.Client.SearchNationalcodeModel
+@{
+    Layout = null;
+}
+
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+</style>
+
+<script>
+    $('#searchTxt').keypress(function (event) {
+        
+        if (event.which == 13) {
+            $('#btnSearch').click();
+            return false;
+        }
+    });
+</script>
+
+
+
+<div class="form-inline mb-10">
+    <div class="input-group col-md-12 no-side-space">
+        @Html.TextBoxFor(x => x.searchTxt, new { @class = "form-control", @placeholder = "국가명" })
+        <button type="button" class="btn btn-primary" id="btnSearch" onclick="FancyBoxSearch();"><i class="fas fa-search" aria-hidden="true"></i></button>
+    </div>
+</div>
+
+
+<div class="panel" style="margin-bottom:0px !important;">
+    <div class="panel-body" style="padding: 5px 10px 5px 10px;">
+        <table class="table table-borderless table-hover" style="table-layout:fixed">
+            <thead class="text-center">
+                <tr>
+                    <th class="tbw35">국가명(KOR)</th>
+                    <th class="tbw35">국가명(ENG)</th>
+                    <th class="tbw30 text-truncate" title="코드(CODE)">
+                        <span class="text-truncate s2">코드(CODE)</span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="text-center" style="vertical-align:middle;">
+                @if (Model.list.Count > 0)
+                {
+                    foreach (var data in Model.list)
+                    {
+                        <tr style="cursor:pointer" onclick="selectCompany('@data.Kr_Country_Name', '@data.Nationality_Code');">
+                            <td class="text-truncate" style="text-align:left;">
+                                <span class="text-truncate s2">
+                                    @data.Kr_Country_Name
+                                </span>
+                            </td>
+                            <td  class="text-truncate">
+                                <span class="text-truncate s2">
+                                    @data.En_Country_Name
+                                </span>
+                            </td>
+                            <td>
+                                @data.Nationality_Code
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" height="30px">No Data.</td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    function selectCompany(country_name, country_code) {
+        $("#country_name").val(country_name);
+        $("#country_code").val(country_code);
+
+        $.fancybox.close();
+    }
+
+
+    function FancyBoxSearch() {
+        $.ajax({
+            url: '@Url.Action("NationalcodeSearch", "Client")',
+            data: {
+                searchTxt: $("#searchTxt").val()
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function () {
+
+            }
+        })
+        .done(function (view) {
+
+            $.fancybox({
+                'content': view,
+                'width': $(".fancybox-outer").width(),
+                'height': $(".fancybox-outer").height(),
+                'autoDimensions': false,
+                'type': 'iframe',
+                'autoSize': false,
+                'title': $(".fancybox-title").text(),
+                helpers: {
+                    title: {
+                        type: 'inside',
+                        position: 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+
+        })
+        .always(function () {
+
+        });
+    }
+
+</script>

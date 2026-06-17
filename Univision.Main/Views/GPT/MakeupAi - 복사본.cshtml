@@ -1,0 +1,261 @@
+﻿@{
+  ViewBag.Title = "이력서 Makeup (by GPT)";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+
+  string lastest_model = "gpt-5-mini";
+  string api_key = "YOUR_OPENAI_API_KEY"; //메이크업 사용자용
+  string is_editabel = "";
+  if (HttpContext.Current.Request.Cookies.AllKeys.Contains("MAKEUP_EDITABLE"))
+  {
+    is_editabel = Request.Cookies["MAKEUP_EDITABLE"].Value;
+  }
+
+  if (HttpContext.Current.Request.Cookies.AllKeys.Contains("MAKEUP_GPT_MODEL"))
+  {
+    lastest_model = Request.Cookies["MAKEUP_GPT_MODEL"].Value;
+  }
+
+
+}
+<!--<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>-->
+<script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_ai.css?v=1533562669">
+<style>
+  .dz-bg-info {
+    background-color: rgb(217 238 241) !important;
+  }
+</style>
+<div class="page-content" style="position:relative;">
+  <div class="row">
+    <div class="col-12">
+      <div class="panel panel-info panel-line shadow">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="fas fa-upload"></i>
+            Makeup (by GPT)
+            <span class="small">
+              <span class="ml-20">
+                <input type="checkbox" id="chk_is_editable" name="chk_is_editable" data-plugin="switchery" value="Y" @(is_editabel == "Y" ? "checked" : "") onchange="javascript:setCookieOrg('MAKEUP_EDITABLE', (this.checked ? 'Y' : ''), 30);" />
+              </span>
+              <label for="chk_is_editable">내용 검토(수정) 후 파일 생성하기</label>
+            </span>
+          </h3>
+          <div class="panel-actions">
+            <a class="panel-action" aria-hidden="true" title="업로드 초기화" href="javascript:ResetUploadPage();"><i class="fa fa-redo"></i></a>
+          </div>
+        </div>
+        <div class="panel-body row">
+
+          <div class="col-6 col-md-4">
+            <form id="form_makeup_kr" class="dropzone h-full text-left dz-bg-info">
+              <div class="row py-2">
+                <div class="col">
+                  <div class="dz-message" id="upload_message_kr">
+                    <h4><span class="font-weight-900">국문</span> Makeup 업로드 </h4>
+                    <small>[이력서 파일을 여기에 끌어놓거나 클릭하여 파일을 선택해주세요.]</small>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="col-6 col-md-4">
+            <form id="form_makeup_en" class="dropzone h-full text-left dz-bg-info">
+              <div class="row py-2">
+                <div class="col">
+                  <div class="dz-message" id="upload_message_en">
+                    <h4><span class="font-weight-900">영문</span> Makeup 업로드 </h4>
+                    <small>[이력서 파일을 여기에 끌어놓거나 클릭하여 파일을 선택해주세요.]</small>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="border p-3 font-size-14">
+              <span class="text-danger font-weight-800">
+                * GPT가 분석한 내용은 정확하지 않을 수 있습니다. <br />
+                &nbsp;&nbsp;누락되거나 잘못된 정보가 포함될 확률이 매우 높습니다. 검수를 꼭 해주세요.<br />
+                &nbsp;&nbsp;(* 학력/경력 기간, 경력상세정보 내용 및 들여쓰기, 자격증, 기타 사항 등 꼭 검수 필요)
+              </span><br /><br />
+
+              <span class="font-weight-800">
+                - 자기소개 내용은 생성하지 않습니다. (직접 붙여넣기 해주세요.)<br />
+              </span>
+              - 글자 인식이 가능한 이력서만 작업이 가능합니다.(이미지 형식은 인식 불가)<br />
+              - 내용이 너무 길거나 용량이 큰 파일은 인식이 어려울 수 있습니다.<br />
+            </div>
+            <select id="gpt_model" name="gpt_model" onchange="javascript: setCookieOrg('MAKEUP_GPT_MODEL', this.value, 30); console.log(this.value);" class="d-none1">
+              <option value="gpt-5-nano" @(lastest_model == "gpt-5-nano" ? "selected" : "")>새롭게 변경된 메이크업 추출 방식 2 (GPT5N)</option>
+              <option value="gpt-5-mini" @(lastest_model == "gpt-5-mini" ? "selected" : "")>새롭게 변경된 메이크업 추출 방식 1 (GPT5M)</option>
+              <option value="gpt-4.1-mini" @(lastest_model == "gpt-4.1-mini" ? "selected" : "")>기존메이크업 방식 (GPT4.1)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="div_info_area">
+
+    <div class="row" id="log_dummy">
+      <div class="col-12">
+        <div class="panel shadow is-collapse-x">
+          <div class="panel-heading">
+            <h5 class="panel-title small">
+              <i class="fas fa-file"></i>
+              <span class="progress_lang"></span> <span class="progress_file_name"></span> <span class="progress_percentage small"></span>
+            </h5>
+
+            <div class="panel-actions">
+              <a class="panel-action icon extend-box wb-plus" aria-expanded="false" data-toggle="panel-collapse" aria-hidden="true">
+              </a>
+            </div>
+          </div>
+          <div class="panel-body row">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="debug_area" class="row d-none">
+    <div class="col">
+      <form id="ai_makeup_form" method="post" action="@Url.Action("CandidateAiCreate", "")" target="_blank">
+        <input type="hidden" name="uploadFolder" id="uploadFolder" value="" required />
+        <textarea class="form-control" id="makeup_model" name="makeup_model" required></textarea>
+      </form>
+    </div>
+  </div>
+
+
+
+
+
+
+</div>
+
+@section scripts{
+  <script src="~/Scripts/makeup/resume_makeup_manager.js"></script>
+  <script src="~/Scripts/makeup/makeup_prompt.js"></script>
+  <script src="~/Scripts/makeup/gpt_5_makeup_schema.js"></script>
+  <script type="text/javascript">
+    const API_KEY = "@api_key";
+    window.url_make_makeup = "@Url.Action("MakeMakeup", "GPT")";
+    window.url_make_makeup2 = "@Url.Action("MakeMakeup2026", "GPT")";
+    window.url_resume_upload_get_contents = "@Url.Action("ResumeUploadGetContents", "Candidate")";
+  </script>
+  <script type="text/javascript">
+    Dropzone.autoDiscover = false; // 업로드 컴포넌트 자동활성화 방지
+
+    let working_cnt = 0;
+    const makeup_works = {}; // 인스턴스 저장소
+
+    async function handleUploadSuccess(lang, response) {
+      //working_cnt++;
+      const currentModel = $('#gpt_model').val();
+
+      // 1. 클래스 인스턴스화
+      const worker = new ResumeMakeupManager(lang, working_cnt, currentModel);
+
+      window.debug_worker = worker;
+
+      console.log(`[DEBUG] ${lang} 분석 시작`, worker);
+
+
+      // 2. 파일 기초 정보 세팅
+      if (!worker.setFileInfo(response)) return;
+
+      // 3. AI 분석 실행 (No Career -> Only Career 순차 실행)
+      const ncPrompt = currentModel.startsWith("gpt-5") ? gpt5_kr_no_career_prompt_base : gpt4_kr_no_career_prompt_base;
+      if (!await worker.fetchAIStream(ncPrompt, "NC")) return;
+
+      worker.updateProgress(50, "경력사항 분석 중");
+
+      const ocPrompt = currentModel.startsWith("gpt-5") ? gpt5_kr_career_only_prompt_base : gpt4_kr_career_only_prompt_base;
+      if (!await worker.fetchAIStream(ocPrompt, "OC")) return;
+
+      // 4. 데이터 정제 (Makeup Model 변환)
+      const finalData = await worker.finalizeData();
+
+      // 5. 서버에 파일 생성 요청
+      if (finalData) {
+        await worker.createResumeFile(finalData);
+      }
+    }
+
+
+    //업로드 컴포넌트
+    var myDropzoneKR = new Dropzone("#form_makeup_kr", {
+      uploadMultiple: false,
+      maxFiles: 1,
+      url: window.url_resume_upload_get_contents,
+      method: "post",
+    });
+
+    myDropzoneKR.on("success", async function (file, response) {
+      // 1. 서버 응답을 받자마자 UI에서 파일 항목을 즉시 제거
+      this.removeFile(file);
+
+      // 2. 작업 카운트 및 작업 시작
+      working_cnt++;
+
+      // 만약 response가 실패(ok: false)라면 바로 로그 남기고 종료
+      if (!response.ok) {
+        // 임시 인스턴스를 생성하여 에러 로그를 남기거나, 공통 에러 처리를 수행
+        const errorWorker = new ResumeMakeupManager("KR", working_cnt, $('#gpt_model').val());
+        errorWorker.addLog("danger", "파일 업로드 실패 : " + response.message);
+        return;
+      }
+
+      // 3. 정상 응답 시 비동기 프로세스 시작 (클래스 기반)
+      // 인스턴스를 생성하고 내부 로직을 실행합니다.
+      handleUploadSuccess("KR", response, working_cnt);
+    });
+
+    var myDropzoneEn = new Dropzone("#form_makeup_en", {
+      uploadMultiple: false,
+      maxFiles: 1,
+      url: window.url_resume_upload_get_contents,
+      method: "post",
+    });
+
+    myDropzoneEn.on("success", async function (file, response) {
+      // 1. 서버 응답을 받자마자 UI에서 파일 항목을 즉시 제거
+      this.removeFile(file);
+
+      // 2. 작업 카운트 및 작업 시작
+      working_cnt++;
+
+      // 만약 response가 실패(ok: false)라면 바로 로그 남기고 종료
+      if (!response.ok) {
+        // 임시 인스턴스를 생성하여 에러 로그를 남기거나, 공통 에러 처리를 수행
+        const errorWorker = new ResumeMakeupManager("EN", working_cnt, $('#gpt_model').val());
+        errorWorker.addLog("danger", "파일 업로드 실패 : " + response.message);
+        return;
+      }
+
+      // 3. 정상 응답 시 비동기 프로세스 시작 (클래스 기반)
+      // 인스턴스를 생성하고 내부 로직을 실행합니다.
+      handleUploadSuccess("EN", response, working_cnt);
+    });
+
+    function ResetUploadPage() {
+      alertify.confirm()
+        .set({
+          'labels': { ok: 'OK', cancel: 'Cancel' },
+          'onok': function () {
+            location.reload();
+          },
+          'oncancel': function () {
+            return;
+          },
+        })
+        .setting({
+          message: "업로드 화면을 초기화 하시겠습니까?",
+        })
+        .show();
+
+    }
+
+  </script>
+
+}

@@ -1,0 +1,525 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{19F69B4A-204A-40E5-9F44-01081EAF99A2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Univision.Core</RootNamespace>
+    <AssemblyName>Univision.Core</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ATLKSearch.RCW, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>Dll\ksearch\lib64\ATLKSearch.RCW.dll</HintPath>
+    </Reference>
+    <Reference Include="Dapper, Version=1.60.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dapper.1.60.6\lib\net451\Dapper.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus, Version=4.5.3.2, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.4.5.3.2\lib\net40\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelDataReader, Version=3.6.0.0, Culture=neutral, PublicKeyToken=93517dbe6a4012fa, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExcelDataReader.3.6.0\lib\net45\ExcelDataReader.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelDataReader.DataSet, Version=3.6.0.0, Culture=neutral, PublicKeyToken=93517dbe6a4012fa, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExcelDataReader.DataSet.3.6.0\lib\net35\ExcelDataReader.DataSet.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.Core.2.2.2\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin, Version=4.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.4.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=4.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.4.0.1\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security, Version=4.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.4.0.1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Cookies, Version=4.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.Cookies.4.0.1\lib\net45\Microsoft.Owin.Security.Cookies.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.OAuth, Version=4.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.OAuth.4.0.1\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.7\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.7\lib\net45\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Lib\Excel.cs" />
+    <Compile Include="Models\DTO\gpt_request.cs" />
+    <Compile Include="Models\DTO\gpt_use_history.cs" />
+    <Compile Include="Models\DTO\test_invoice_new.cs" />
+    <Compile Include="Models\DTO\test_invoice_new_dtl.cs" />
+    <Compile Include="Models\DTO\mail_resume_gpt.cs" />
+    <Compile Include="Models\DTO\invoice_new.cs" />
+    <Compile Include="Models\DTO\invoice_new_dtl.cs" />
+    <Compile Include="Models\DTO\pjt_mykey.cs" />
+    <Compile Include="Models\DTO\Remember\r_invoice_v2.cs" />
+    <Compile Include="Models\DTO\Remember\r_invoice.cs" />
+    <Compile Include="Models\DTO\Remember\r_client_full_v2.cs" />
+    <Compile Include="Models\DTO\Remember\r_project_candidate.cs" />
+    <Compile Include="Models\DTO\Remember\r_client_full.cs" />
+    <Compile Include="Models\DTO\Remember\r_project_full_v2.cs" />
+    <Compile Include="Models\DTO\Remember\r_project_full.cs" />
+    <Compile Include="Models\DTO\Remember\r_candidate_full.cs" />
+    <Compile Include="Models\DTO\Remember\r_common_paging.cs" />
+    <Compile Include="Models\DTO\Remember\r_can_activity.cs" />
+    <Compile Include="Models\DTO\Remember\r_can_resume.cs" />
+    <Compile Include="Models\DTO\Remember\r_can_foreign_lan.cs" />
+    <Compile Include="Models\DTO\Remember\r_can_job.cs" />
+    <Compile Include="Models\DTO\Remember\r_can_business.cs" />
+    <Compile Include="Models\DTO\Remember\r_can_career.cs" />
+    <Compile Include="Models\DTO\Remember\r_can_school.cs" />
+    <Compile Include="Models\DTO\Remember\r_candidate.cs" />
+    <Compile Include="Models\DTO\Remember\r_code_school.cs" />
+    <Compile Include="Models\DTO\Remember\r_uv_user.cs" />
+    <Compile Include="Models\DTO\Remember\r_code_job.cs" />
+    <Compile Include="Models\DTO\Remember\r_code_business.cs" />
+    <Compile Include="Models\DTO\remember_task_tmp.cs" />
+    <Compile Include="Models\DTO\remember_task_his.cs" />
+    <Compile Include="Models\DTO\remember_task.cs" />
+    <Compile Include="Models\DTO\candidate_search_save.cs" />
+    <Compile Include="Models\DTO\code_school_search.cs" />
+    <Compile Include="Models\DTO\director_activity.cs" />
+    <Compile Include="Models\DTO\receipt_user_dtl.cs" />
+    <Compile Include="Models\DTO\receipt_user.cs" />
+    <Compile Include="Models\DTO\receipt.cs" />
+    <Compile Include="Models\DTO\director_business.cs" />
+    <Compile Include="Models\DTO\director_job.cs" />
+    <Compile Include="Models\DTO\director_career.cs" />
+    <Compile Include="Models\DTO\director_school.cs" />
+    <Compile Include="Models\DTO\director.cs" />
+    <Compile Include="Models\DTO\code_can_keyword.cs" />
+    <Compile Include="Models\DTO\privacy_agree_dtl.cs" />
+    <Compile Include="Models\DTO\privacy_agree.cs" />
+    <Compile Include="Models\DTO\code_keyword.cs" />
+    <Compile Include="Models\DTO\exchange.cs" />
+    <Compile Include="Models\DTO\mail_resume_file.cs" />
+    <Compile Include="Models\DTO\mail_resume.cs" />
+    <Compile Include="Models\DTO\auth_code_temp.cs" />
+    <Compile Include="Models\DTO\can_business.cs" />
+    <Compile Include="Models\DTO\can_job.cs" />
+    <Compile Include="Models\DTO\code_business_mst.cs" />
+    <Compile Include="Models\DTO\code_business_dtl.cs" />
+    <Compile Include="Models\DTO\mail_report_this_list.cs" />
+    <Compile Include="Models\DTO\mail_report_send_his.cs" />
+    <Compile Include="Models\DTO\mail_report_pjt_list.cs" />
+    <Compile Include="Models\DTO\mail_report_last_list.cs" />
+    <Compile Include="Models\DTO\mail_report_mst.cs" />
+    <Compile Include="Models\DTO\code_job_mst.cs" />
+    <Compile Include="Models\DTO\code_job_dtl.cs" />
+    <Compile Include="Models\DTO\Logs\candidate_log.cs" />
+    <Compile Include="Models\DTO\Logs\can_activity_log.cs" />
+    <Compile Include="Models\DTO\Logs\can_business_code_log.cs" />
+    <Compile Include="Models\DTO\Logs\can_career_job_log.cs" />
+    <Compile Include="Models\DTO\Logs\can_career_log.cs" />
+    <Compile Include="Models\DTO\Logs\can_foreign_lan_log.cs" />
+    <Compile Include="Models\DTO\Logs\can_job_code_log.cs" />
+    <Compile Include="Models\DTO\Logs\can_place_log.cs" />
+    <Compile Include="Models\DTO\Logs\can_school_log.cs" />
+    <Compile Include="Models\DTO\Logs\pjt_share_reply_log.cs" />
+    <Compile Include="Models\DTO\Logs\client_activity_log_log.cs" />
+    <Compile Include="Models\DTO\Logs\client_contact_log.cs" />
+    <Compile Include="Models\DTO\Logs\client_contract_log.cs" />
+    <Compile Include="Models\DTO\Logs\client_favorite_log.cs" />
+    <Compile Include="Models\DTO\Logs\client_log.cs" />
+    <Compile Include="Models\DTO\Logs\client_manager_log.cs" />
+    <Compile Include="Models\DTO\Logs\client_tax_contact_log.cs" />
+    <Compile Include="Models\DTO\Logs\inorder_log.cs" />
+    <Compile Include="Models\DTO\Logs\pjt_director_log.cs" />
+    <Compile Include="Models\DTO\Logs\pjt_invoice_info_log.cs" />
+    <Compile Include="Models\DTO\Logs\pjt_keyword_log.cs" />
+    <Compile Include="Models\DTO\Logs\pjt_manager_log.cs" />
+    <Compile Include="Models\DTO\Logs\pjt_memo_log.cs" />
+    <Compile Include="Models\DTO\Logs\pjt_place_log.cs" />
+    <Compile Include="Models\DTO\Logs\pjt_recandidate_history_log.cs" />
+    <Compile Include="Models\DTO\Logs\pjt_share_board_log.cs" />
+    <Compile Include="Models\DTO\Logs\project_log.cs" />
+    <Compile Include="Models\DTO\makeup_request.cs" />
+    <Compile Include="Models\DTO\element_open_log.cs" />
+    <Compile Include="Models\DTO\project_read_history.cs" />
+    <Compile Include="Models\DTO\Request\Candidate\DirectorCreateUpdateModel.cs" />
+    <Compile Include="Models\DTO\Request\Candidate\TempCandidateCreateUpdateModel.cs" />
+    <Compile Include="Models\DTO\Request\Client\ContractCreateModel.cs" />
+    <Compile Include="Models\DTO\Request\MyList\AlarmHistorySearchModel.cs" />
+    <Compile Include="Models\DTO\Request\MyList\ReceiptCreateModel.cs" />
+    <Compile Include="Models\DTO\Request\MyList\VacationCreateModel.cs" />
+    <Compile Include="Models\DTO\Request\ReceiptSearchModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\DirectorDetailViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\DirectorListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\MailResumeListModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\PrivacyAgreeListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\ClientContractDetailModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\OfferLetterFileModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\OfflimitCheckModel.cs" />
+    <Compile Include="Models\DTO\Response\DownloadFileModel.cs" />
+    <Compile Include="Models\DTO\Request\VacationSearchModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\ShareCandidateListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\MyCandidateListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\ClientHistoryListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\DormantListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\MyList\ReceiptCocardModel.cs" />
+    <Compile Include="Models\DTO\Response\ProcedureReturnModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\TempCandidateListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Project\ProjectListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Project\MakeupRequestListModel.cs" />
+    <Compile Include="Models\DTO\Response\Project\WeeklyReportModel.cs" />
+    <Compile Include="Models\DTO\Response\Schedult\VacationListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Schedult\ScheduleCount.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\NegoProjectListModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\MyInvoiceListModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\KeyProjectListModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\MonthlyKPIModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\CandidateRegStatusModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\ProjectActionListModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\UnivisionPjtCandidateListModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\UnivisionCandidateListModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\UnivisionMemoListModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\UnivisionActivityListModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\YearlySalesModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\PeriodSalesModel.cs" />
+    <Compile Include="Models\DTO\Response\JobBusiSuggModel.cs" />
+    <Compile Include="Models\DTO\Response\YearMonthModel.cs" />
+    <Compile Include="Models\DTO\simple_candidate_history.cs" />
+    <Compile Include="Models\DTO\tempsaved_can_business.cs" />
+    <Compile Include="Models\DTO\tempsaved_can_career_job.cs" />
+    <Compile Include="Models\DTO\tempsaved_can_foreign_lan.cs" />
+    <Compile Include="Models\DTO\tempsaved_can_job.cs" />
+    <Compile Include="Models\DTO\tempsaved_can_job_code.cs" />
+    <Compile Include="Models\DTO\tempsaved_can_place.cs" />
+    <Compile Include="Models\DTO\tempsaved_can_resume.cs" />
+    <Compile Include="Models\DTO\tempsaved_can_school.cs" />
+    <Compile Include="Models\DTO\tempsaved_can_career.cs" />
+    <Compile Include="Models\DTO\tempsaved_can_business_code.cs" />
+    <Compile Include="Models\DTO\tempsaved_candidate.cs" />
+    <Compile Include="Models\DTO\inorder_memo.cs" />
+    <Compile Include="Models\DTO\inorder_director.cs" />
+    <Compile Include="Models\DTO\inorder_file.cs" />
+    <Compile Include="Models\DTO\inorder.cs" />
+    <Compile Include="Models\DTO\client_contract_file.cs" />
+    <Compile Include="Models\DTO\client_manager.cs" />
+    <Compile Include="Models\DTO\code_board_sub1.cs" />
+    <Compile Include="Models\DTO\code_board_sub2.cs" />
+    <Compile Include="Models\DTO\board_reply.cs" />
+    <Compile Include="Models\DTO\board_read_history.cs" />
+    <Compile Include="Models\DTO\board_file.cs" />
+    <Compile Include="Models\DTO\board.cs" />
+    <Compile Include="Models\DTO\code_graduate_status.cs" />
+    <Compile Include="Models\DTO\code_can_education.cs" />
+    <Compile Include="Models\DTO\CSV_MODEL.cs" />
+    <Compile Include="Models\DTO\code_nationality.cs" />
+    <Compile Include="Models\DTO\Excel\ActivityListExcelModel.cs" />
+    <Compile Include="Models\DTO\Excel\ContactListExcelModel.cs" />
+    <Compile Include="Models\DTO\Excel\ProjectListExcelModel.cs" />
+    <Compile Include="Models\DTO\Excel\ClientListExcelModel.cs" />
+    <Compile Include="Models\DTO\pjt_keyword.cs" />
+    <Compile Include="Models\DTO\pjt_place.cs" />
+    <Compile Include="Models\DTO\pjt_recandidate_history.cs" />
+    <Compile Include="Models\DTO\pjt_share_board.cs" />
+    <Compile Include="Models\DTO\pjt_share_reply.cs" />
+    <Compile Include="Models\DTO\Request\Board\BoardCreateUpdateModel.cs" />
+    <Compile Include="Models\DTO\Request\Project\InorderCreateUpdateModel.cs" />
+    <Compile Include="Models\DTO\Request\MyList\SmsHistorySearchModel.cs" />
+    <Compile Include="Models\DTO\Request\Project\ProjectInvoiceChargeModel.cs" />
+    <Compile Include="Models\DTO\Request\Project\ProjectRepCreateUpdateModel.cs" />
+    <Compile Include="Models\DTO\Request\Client\ClientCreateUpdateModel.cs" />
+    <Compile Include="Models\DTO\Request\Project\ProjectCreateUpdateModel.cs" />
+    <Compile Include="Models\DTO\Request\Project\ProjectSimpleCandidateModel.cs" />
+    <Compile Include="Models\DTO\Response\Admin\UserListModel.cs" />
+    <Compile Include="Models\DTO\Response\Board\BoardDetailViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Board\DocumentTypeModel.cs" />
+    <Compile Include="Models\DTO\Response\Board\BoardListModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\CandidateResumeFilterResultModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\CandidateDetailViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\CandidateHistoryListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Candidate\CandidateListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\ClientDetailViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\AttentionListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\ActivityListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\ContactListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\ClientListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\ClientProjectStatusCntModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\ClientProjectSearchModel.cs" />
+    <Compile Include="Models\DTO\Response\Client\ClientPjtStatusCntModel.cs" />
+    <Compile Include="Models\DTO\Response\Dashboard\ClientDetailViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Dashboard\KPIModel.cs" />
+    <Compile Include="Models\DTO\Response\Dashboard\UnBilledInvoiceListModel.cs" />
+    <Compile Include="Models\DTO\Response\Project\MyProjectKPIModel.cs" />
+    <Compile Include="Models\DTO\Response\Project\InorderSearchModel.cs" />
+    <Compile Include="Models\DTO\Response\ResponseCalendar.cs" />
+    <Compile Include="Models\DTO\Response\Sms\SmsServiceModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\BusiJobStatisticsListModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\ClientProjectStatisticsListModel.cs" />
+    <Compile Include="Models\DTO\Response\Statistics\SalesHistoryListViewModel.cs" />
+    <Compile Include="Models\DTO\Response\Project\WorkSheetStatisticsListModel.cs" />
+    <Compile Include="Models\DTO\schedule.cs" />
+    <Compile Include="Models\DTO\schedule_attend.cs" />
+    <Compile Include="Models\DTO\sms_history.cs" />
+    <Compile Include="Models\DTO\sms_report.cs" />
+    <Compile Include="Models\DTO\uv_user_attend.cs" />
+    <Compile Include="Models\DTO\uv_vacation.cs" />
+    <Compile Include="Models\DTO\uv_vacation_history_dtl.cs" />
+    <Compile Include="Models\DTO\view_can_activity.cs" />
+    <Compile Include="Models\DTO\Response\Project\MyProjectSearchModel.cs" />
+    <Compile Include="Models\DTO\Response\Project\PjtProgressCntModel.cs" />
+    <Compile Include="Models\DTO\Response\Project\ProjectStatusCntModel.cs" />
+    <Compile Include="Models\InvoiceInsertResult.cs" />
+    <Compile Include="Models\EntityListViewModel.cs" />
+    <Compile Include="Models\HomePage\home_project.cs" />
+    <Compile Include="Models\HomePage\HomepageContext.cs" />
+    <Compile Include="Models\HomePage\home_privacy_agree.cs" />
+    <Compile Include="Models\HomePage\home_privacy_agree_dtl.cs" />
+    <Compile Include="Models\HomePage\home_sms_history.cs" />
+    <Compile Include="Models\HomePage\home_sms_report.cs" />
+    <Compile Include="Models\PagingList.cs" />
+    <Compile Include="Repositories\AccountLogRepository.cs" />
+    <Compile Include="Repositories\AccountEntityRepository.cs" />
+    <Compile Include="Repositories\GptUseHistoryRepository.cs" />
+    <Compile Include="Repositories\Homepage\HomepageBaseRepository.cs" />
+    <Compile Include="Repositories\Homepage\HomepageEntityRepository.cs" />
+    <Compile Include="Repositories\Homepage\HomepageSmsEntityRepository.cs" />
+    <Compile Include="Repositories\InvoiceRepository.cs" />
+    <Compile Include="Repositories\MailResume\MailResumeEntityRepository.cs" />
+    <Compile Include="Repositories\MailResume\MailResumeRepository.cs" />
+    <Compile Include="Repositories\RememberTESTInvoiceEntityRepository.cs" />
+    <Compile Include="Repositories\RememberInvoiceEntityRepository.cs" />
+    <Compile Include="Repositories\RememberTaskEntityRepository.cs" />
+    <Compile Include="Repositories\ExchangeEntityRepository.cs" />
+    <Compile Include="Repositories\ApiEntityRepository.cs" />
+    <Compile Include="Repositories\CandidateLogRepository.cs" />
+    <Compile Include="Repositories\ClientLogRepository.cs" />
+    <Compile Include="Repositories\MailReportRepository.cs" />
+    <Compile Include="Repositories\ConsoleRepository.cs" />
+    <Compile Include="Repositories\ExchangeRepository.cs" />
+    <Compile Include="Repositories\PrivacyRepository.cs" />
+    <Compile Include="Repositories\ProjectLogRepository.cs" />
+    <Compile Include="Repositories\RememberInvoiceRepository.cs" />
+    <Compile Include="Repositories\RememberTaskRepository.cs" />
+    <Compile Include="Repositories\StatisticsRepository.cs" />
+    <Compile Include="Repositories\SmsEntityRepository.cs" />
+    <Compile Include="Repositories\SearchEngineRepository.cs" />
+    <Compile Include="Repositories\ScheduleEntityRepository.cs" />
+    <Compile Include="Repositories\ScheduleRepository.cs" />
+    <Compile Include="Repositories\MeetingRoomRepository.cs" />
+    <Compile Include="Repositories\MyListRepository.cs" />
+    <Compile Include="Repositories\AdminRepository.cs" />
+    <Compile Include="Repositories\AdminEntityRepository.cs" />
+    <Compile Include="Repositories\BoardEntityRepository.cs" />
+    <Compile Include="Repositories\BoardRepository.cs" />
+    <Compile Include="Repositories\MyListEntityRepository.cs" />
+    <Compile Include="Repositories\MeetingRoomEntityRepository.cs" />
+    <Compile Include="Repositories\ProjectEntityRepository.cs" />
+    <Compile Include="Repositories\CandidateEntityRepository.cs" />
+    <Compile Include="Models\DTO\can_career_job.cs" />
+    <Compile Include="Models\DTO\can_foreign_lan.cs" />
+    <Compile Include="Models\DTO\can_place.cs" />
+    <Compile Include="Models\DTO\code_position.cs" />
+    <Compile Include="Models\DTO\code_rank.cs" />
+    <Compile Include="Models\DTO\addr1.cs" />
+    <Compile Include="Models\DTO\addr2.cs" />
+    <Compile Include="Models\DTO\addr3.cs" />
+    <Compile Include="Models\DTO\alarm_message.cs" />
+    <Compile Include="Models\DTO\alarm_user.cs" />
+    <Compile Include="Models\DTO\api_company.cs" />
+    <Compile Include="Models\DTO\candidate.cs" />
+    <Compile Include="Models\DTO\candidate_resume.cs" />
+    <Compile Include="Models\DTO\can_activity.cs" />
+    <Compile Include="Models\DTO\can_business_code.cs" />
+    <Compile Include="Models\DTO\can_career.cs" />
+    <Compile Include="Models\DTO\can_interest.cs" />
+    <Compile Include="Models\DTO\can_interview_sheet.cs" />
+    <Compile Include="Models\DTO\can_job_code.cs" />
+    <Compile Include="Models\DTO\can_memo.cs" />
+    <Compile Include="Models\DTO\can_resume.cs" />
+    <Compile Include="Models\DTO\can_school.cs" />
+    <Compile Include="Models\DTO\client.cs" />
+    <Compile Include="Models\DTO\client_activity_log.cs" />
+    <Compile Include="Models\DTO\client_annual_income_rate.cs" />
+    <Compile Include="Models\DTO\client_contact.cs" />
+    <Compile Include="Models\DTO\client_contract.cs" />
+    <Compile Include="Models\DTO\client_favorite.cs" />
+    <Compile Include="Models\DTO\client_file.cs" />
+    <Compile Include="Models\DTO\client_position_rate.cs" />
+    <Compile Include="Models\DTO\client_tax_contact.cs" />
+    <Compile Include="Models\DTO\code_business1.cs" />
+    <Compile Include="Models\DTO\code_business2.cs" />
+    <Compile Include="Models\DTO\code_business3.cs" />
+    <Compile Include="Models\DTO\code_education_level.cs" />
+    <Compile Include="Models\DTO\code_foreign_lan.cs" />
+    <Compile Include="Models\DTO\code_job1.cs" />
+    <Compile Include="Models\DTO\code_job2.cs" />
+    <Compile Include="Models\DTO\code_job3.cs" />
+    <Compile Include="Models\DTO\code_major_2018.cs" />
+    <Compile Include="Models\DTO\Code_Money_Unit_Table.cs" />
+    <Compile Include="Models\DTO\code_pjt_interview_status.cs" />
+    <Compile Include="Models\DTO\code_salary_code.cs" />
+    <Compile Include="Models\DTO\code_school.cs" />
+    <Compile Include="Models\DTO\code_sectors1.cs" />
+    <Compile Include="Models\DTO\code_sectors2.cs" />
+    <Compile Include="Models\DTO\code_sectors3.cs" />
+    <Compile Include="Models\DTO\code_work_type.cs" />
+    <Compile Include="Models\DTO\gov_api_company.cs" />
+    <Compile Include="Models\DTO\UnivisionContext.cs" />
+    <Compile Include="Models\DTO\meeting_room.cs" />
+    <Compile Include="Models\DTO\MEETING_ROOM_NOTICE.cs" />
+    <Compile Include="Models\DTO\meeting_room_schedule.cs" />
+    <Compile Include="Models\DTO\pjt_business_code.cs" />
+    <Compile Include="Models\DTO\pjt_contact.cs" />
+    <Compile Include="Models\DTO\pjt_director.cs" />
+    <Compile Include="Models\DTO\pjt_file.cs" />
+    <Compile Include="Models\DTO\pjt_icandidate.cs" />
+    <Compile Include="Models\DTO\pjt_invoice_info.cs" />
+    <Compile Include="Models\DTO\pjt_invoice_sales.cs" />
+    <Compile Include="Models\DTO\pjt_job_code.cs" />
+    <Compile Include="Models\DTO\pjt_manager.cs" />
+    <Compile Include="Models\DTO\pjt_memo.cs" />
+    <Compile Include="Models\DTO\pjt_recandidate.cs" />
+    <Compile Include="Models\DTO\pjt_tax_contract.cs" />
+    <Compile Include="Models\DTO\pjt_tmp_icandidate.cs" />
+    <Compile Include="Models\DTO\project.cs" />
+    <Compile Include="Models\DTO\Response\Api\ResponseAlramList.cs" />
+    <Compile Include="Models\DTO\Response\Api\ResponseJobBusinessCodeDto.cs" />
+    <Compile Include="Models\DTO\Response\Api\ResponseMajorDto.cs" />
+    <Compile Include="Models\DTO\Request\Candidate\CandidateCreateUpdateModel.cs" />
+    <Compile Include="Models\DTO\Response\dashboard.cs" />
+    <Compile Include="Models\DTO\Response\SelectModel.cs" />
+    <Compile Include="Models\DTO\simple_candidate.cs" />
+    <Compile Include="Models\DTO\uv_auth.cs" />
+    <Compile Include="Models\DTO\uv_division.cs" />
+    <Compile Include="Models\DTO\uv_failed_login.cs" />
+    <Compile Include="Models\DTO\uv_login_history.cs" />
+    <Compile Include="Models\DTO\uv_user.cs" />
+    <Compile Include="Models\DTO\uv_vacation_history.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repositories\AccountRepository.cs" />
+    <Compile Include="Repositories\ClientEntityRepository.cs" />
+    <Compile Include="Repositories\ProjectRepository.cs" />
+    <Compile Include="Repositories\CandidateRepository.cs" />
+    <Compile Include="Repositories\ApiRepository.cs" />
+    <Compile Include="Repositories\BaseRepository.cs" />
+    <Compile Include="Repositories\BilledRepository.cs" />
+    <Compile Include="Repositories\ClientRepository.cs" />
+    <Compile Include="Repositories\DashboardRepository.cs" />
+    <Compile Include="Repositories\NoticeRepository.cs" />
+    <Compile Include="Repositories\OpenprojRepository.cs" />
+    <Compile Include="Repositories\SimpleCandiRepository.cs" />
+    <Compile Include="Repositories\UnbilledRepository.cs" />
+    <Compile Include="Repositories\winformRepository.cs" />
+    <Compile Include="Security\AppIdentity.cs" />
+    <Compile Include="Security\UniClaimTypes.cs" />
+    <Compile Include="Security\userAuth.cs" />
+    <Compile Include="UnivisionExtension.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Dll\kmpdl.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dll\ksearch\kmpdl.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dll\ksearch\lib32\ATLKSearch.dll" />
+    <Content Include="Dll\ksearch\lib32\ATLKSearch.RCW.dll" />
+    <Content Include="Dll\ksearch\lib32\kqlc.h" />
+    <Content Include="Dll\ksearch\lib32\ksearch.4.11.dll" />
+    <Content Include="Dll\ksearch\lib32\ksearch.4.8.dll" />
+    <Content Include="Dll\ksearch\lib32\ksearch.h" />
+    <Content Include="Dll\ksearch\lib32\ksearch2.h" />
+    <Content Include="Dll\ksearch\lib32\TlbImp.exe" />
+    <Content Include="Dll\ksearch\lib64\ATLKSearch.dll" />
+    <Content Include="Dll\ksearch\lib64\ATLKSearch.RCW.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dll\ksearch\lib64\kqlc.h" />
+    <Content Include="Dll\ksearch\lib64\ksearch.4.11.dll" />
+    <Content Include="Dll\ksearch\lib64\ksearch.4.8.dll" />
+    <Content Include="Dll\ksearch\lib64\ksearch.h" />
+    <Content Include="Dll\ksearch\lib64\ksearch2.h" />
+    <Content Include="Dll\ksearch\lib64\TlbImp.exe" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

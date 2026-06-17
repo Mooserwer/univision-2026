@@ -1,0 +1,380 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.ProjectActionListModel
+@using Univision.Security
+
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-content container-fluid">
+
+  <!-- row -->
+  @using (Html.BeginForm("ProjectActivity", "Statistics", FormMethod.Get, new { @id = "SearchForm" }))
+  {
+    <div class="row">
+      <!-- block -->
+      <div class="col-md-3 form-group ">
+        <div class="input-group input-group-sm">
+          @{
+            var userList = new SelectList(Model.userList, "uv_seq", "name").ToList();
+            if (Univision.Security.AppIdentity.ua_seq <= 3)
+            {
+              userList.Insert(0, new SelectListItem { Value = "-1", Text = "전체" });
+            }
+
+
+          }
+          @Html.DropDownListFor(x => x.search.uv_seq, userList, new { @class = "form-control" })
+        </div>
+      </div>
+      <!-- // block -->
+      <div class="col-md-5 form-group">
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">
+            <h5>기간 :</h5>
+          </span>
+          @Html.TextBoxFor(x => x.search.startDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+          <span class="input-group-addon">
+            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+          </span>
+          <sapn class="input-group-addon bg-transparent border-0"> ~ </sapn>
+          @Html.TextBoxFor(x => x.search.endDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+          <span class="input-group-addon">
+            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+          </span>
+        </div>
+      </div>
+      <div class="col-md-1 offset-3">
+        <button type="submit" class="btn btn-sm btn-raised btn-primary btn-block">검색</button>
+      </div>
+      <!-- block -->
+    </div>
+  }
+
+  <!-- //row -->
+  <!-- row -->
+  <div class="row" id="univision_activity_body">
+    <div class="col-xl-12">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title py-10">
+            유니비전 주간 과정지표 데이터
+          </h3>
+        </header>
+        <div class="panel-body">
+          <div data-role="container" style="padding:0 !important; margin:0 !important;">
+            <div data-role="content" style="padding:0 !important; margin:0 !important;">
+              <div class="table-responsive">
+                <table id="default-table" class="table table-hover table-bordered" style="table-layout:fixed;font-size:0.85em;">
+                  <thead>
+                    <tr>
+                      <th>
+                        프로젝트코드
+                      </th>
+                      <th>
+                        등록일
+                      </th>
+                      <th>
+                        종료일
+                      </th>
+                      <th>
+                        종료/재진행 사유
+                      </th>
+                      <td>
+                        고객사명
+                      </td>
+                      <th>
+                        구인제목
+                      </th>
+                      <th>
+                        프로젝트상태
+                      </th>
+                      <th>
+                        AM
+                      </th>
+                      <th>
+                        SM
+                      </th>
+                      <th>
+                        후보자코드
+                      </th>
+                      <th>
+                        후보자명
+                      </th>
+                      <th>
+                        후보자상태
+                      </th>
+                      <th>
+                        상태일자
+                      </th>
+                      <th>
+                        내용
+                      </th>
+                      <th>
+                        작업자
+                      </th>
+                      <th>
+                        작업일
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                    @if (Model.list.Count > 0)
+                    {
+                      foreach (var data in Model.list)
+                      {
+                        <tr>
+                          <th>
+                            @data.p_seq
+                          </th>
+                          <th>
+                            @data.create_dt
+                          </th>
+                          <th>
+                            @data.close_dt
+                          </th>
+                          <th>
+                            @data.status_comment
+                          </th>
+                          <td>
+                            @data.client_kor_name
+                          </td>
+                          <th>
+                            @data.pjt_title
+                          </th>
+                          <th>
+                            @data.pjt_status_name
+                          </th>
+                          <th>
+                            @data.am
+                          </th>
+                          <th>
+                            @data.sm
+                          </th>
+                          <th>
+                            @data.c_seq
+                          </th>
+                          <th>
+                            @data.recan_name
+                          </th>
+                          <th>
+                            @data.recan_schedule_dt
+                          </th>
+                          <th>
+                            @data.recan_status
+                          </th>
+                          <th>
+                            @data.recan_memo
+                          </th>
+                          <th>
+                            @data.recan_create_user_name
+                          </th>
+                          <th>
+                            @data.recan_create_dt
+                          </th>
+                        </tr>
+                      }
+                    }
+                    else
+                    {
+                      <tr>
+                        <td colspan="16">정보가 없습니다.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- // row -->
+
+
+</div>
+
+@section scripts {
+
+  <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            BindDatePicker($(".jDatePicker"));
+            AuthControll(1);
+
+
+            $("#btnSearch").click(function () {
+
+
+            });
+
+            $('#search_uv_seq').change(function () {
+                $('#SearchForm').submit()
+            })
+
+
+        });
+
+        function PopMemoList(from, to) {
+            $.fancybox.open({
+                href : "@Url.Action("UnivisionMemoList", "Statistics")",
+                ajax : {
+                    type: "post",
+                    data: {
+                        uv_seq: $('#search_uv_seq').val(),
+                        from_month_str: from,
+                        to_month_str : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: true,
+                'title': '메모장 내역 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+
+        function PopCandidateList(direct, from, to) {
+            $.fancybox.open({
+                href : "@Url.Action("UnivisionCandidateList", "Statistics")",
+                ajax : {
+                    type: "post",
+                    data: {
+                        is_direct : direct,
+                        uv_seq: $('#search_uv_seq').val(),
+                        from_month_str: from,
+                        to_month_str : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: false,
+                'title': '후보자 등록현황 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+
+    function PopRecommList(status, from, to) {
+      var pop_title = "추천";
+      if (status == 50) {
+        pop_title = "면접";
+      }
+            $.fancybox.open({
+                href : "@Url.Action("UnivisionPjtCandidateList", "Statistics")",
+                ajax : {
+                    type: "post",
+                    data: {
+                      status: status,
+                      uv_seq: $('#search_uv_seq').val(),
+                      from_month_str: from,
+                      to_month_str : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: false,
+              'title': pop_title  + ' 후보자 현황 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+    function PopHireList(status, from, to) {
+      var pop_title = "채용";
+
+            $.fancybox.open({
+                href : "@Url.Action("UnivisionPjtHireCandidateList", "Statistics")",
+                ajax : {
+                    type: "post",
+                    data: {
+                      status: status,
+                      uv_seq: $('#search_uv_seq').val(),
+                      from_month_str: from,
+                      to_month_str : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: false,
+              'title': pop_title  + ' 후보자 현황 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+
+        function PopCandidateUpdateList(from, to) {
+            $.fancybox.open({
+                href : "@Url.Action("UnivisionCandidateUpdateList", "Statistics")",
+                ajax : {
+                    type: "post",
+                    data: {
+                        uv_seq: $('#search_uv_seq').val(),
+                        from_month_str: from,
+                        to_month_str : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: false,
+                'title': '후보자 업데이트현황 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+
+        //권한별 부서, User select 제어
+        function AuthControll(ua_seq) {
+            var userDisabled = "";
+
+            switch (ua_seq)
+            {
+                case 1:
+                case 2:
+                case 3:
+                    userDisabled = "";
+                    break;
+                case 4:
+                    userDisabled = "";
+                    break;
+                default:
+                    userDisabled = "disabled";
+                    break;
+
+            }
+
+            if (userDisabled != "")
+                $("#search_uv_seq").attr("disabled", userDisabled);
+        };
+
+
+  </script>
+
+}

@@ -1,0 +1,78 @@
+﻿@model Univision.Main.Models.Api.JobBusiSuggListModel
+
+@if (Model.list.Count > 0)
+{
+  <div class="p-5 border border-info mt-5">
+    <h6 class="text-primary">산업/직무 제안 <small>(클릭하시면 자동으로 산업 직무가 추가 됩니다.)</small></h6>
+    @foreach (var data in Model.list)
+    {
+      if (@data.type == "J")
+      {
+        <a href="javascript:void(0)" class="btn btn-sm btn-outline-info" onclick="CreateBadge_sugg('job', '@data.code1', '@data.name1', '@data.code2', '@data.name2')">
+          <span class="badge badge-info">직무</span>
+          @data.name1&gt;@data.name2
+        </a>
+      }
+      else
+      {
+        <a href="javascript:void(0)" class="btn btn-sm btn-outline-primary" onclick="CreateBadge_sugg('busi', '@data.code1', '@data.name1', '@data.code2', '@data.name2')">
+          <span class="badge badge-primary">산업</span>
+          @data.name1&gt;@data.name2
+        </a>
+      }
+    }
+  </div>
+
+  <script>
+
+    //하단 바인딩 부분에 카테고리 생성.
+    function CreateCategoryBadge_sugg(type, code1, code1Name) {
+
+      if ($("#" + type + "CodeList").find("#" + type + code1).length > 0) {
+        return false;
+      }
+
+      var appendHtml = "";
+      appendHtml += "<div id='" + type + code1 + "' code1='" + code1 + "' class='"+type+"Row catRow col-md-12 no-side-space'>";
+      appendHtml += "<span class='category'>";
+      appendHtml += "<span class='badge badge-outline badge-default bg-white cur_hand badge-lg " + type + "Code1badge' code1='" + code1 + "' name1='" + code1Name + "' onclick=\"DelCategoryBadge('" + type +"', this)\">" + code1Name + "<i class='far fa-times-circle'></i></span>";
+      appendHtml += "</span>";
+      appendHtml += "</div>";
+
+      $("#" + type +"CodeList").append(appendHtml.toString());
+    }
+
+    //카테고리 하위 배지
+    function CreateBadge_sugg(type, code1, code1Name, code2, code2Name) {
+      //debugger;
+      CreateCategoryBadge_sugg(type, code1, code1Name);
+
+      var category = $("#" + type + "CodeList").find("#" + type + code1);
+
+      if ($("#" + type + "CodeList").find("#" + type + code1).find("#" + code2).length > 0) {
+        return false;
+      }
+
+
+
+      var appendHtml = "";
+      appendHtml += "<span class='badge badge-outline badge-default bg-white badge-lg cur_hand " + type + "Code2badge' code1='" + code1 + "' code2='" + code2 + "' id='" + code2 + "' " + type + "Code2Name='" + code2Name + "' onclick=\"DelBadge('" + type +"', this)\">";
+      appendHtml += code2Name;
+      appendHtml += "<i class='far fa-times-circle'></i>";
+      appendHtml += "</span>";
+
+      $(category).append(appendHtml.toString());
+
+      if ($('#CreateForm').formValidation) {
+        $('#CreateForm').formValidation('revalidateField', type +'CodeList');
+      } else if (validator) {
+        validator.element('#'+ type +'CodeList_hid');
+      }
+
+      getJobBusiSugg();
+
+    }
+
+    
+  </script>
+}

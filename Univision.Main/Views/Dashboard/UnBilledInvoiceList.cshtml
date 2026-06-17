@@ -1,0 +1,107 @@
+﻿@model Univision.Core.Models.DTO.Response.Dashboard.UnBilledInvoiceListModel
+
+@{
+    ViewBag.Title = "UnBilledInvoiceList";
+    Layout = null;
+    int windowWidth = ViewBag.windowWidth;
+}
+
+    <div class="table-responsive">
+        @if (windowWidth < 1300)
+        {
+            <table id="default-table" class="table table-hover" style="table-layout:fixed;">
+              
+                <thead>
+                    <tr>
+                        <th class="tbw60" title="고객사 / 구인제목">Clien / Title</th>
+                        <th class="tbw20" title="후보자">Candidate</th>
+                        <th class="tbw20" title="입사일(발행예정일)" style="word-break:keep-all">Join Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.list.Count > 0)
+                    {
+                        foreach (var data in Model.list)
+                        {
+                            <tr>
+                                <td class="text-left text-truncate" title="@data.client_name / @data.title">
+                                    <a href="@Url.Action("ClientDetail", "Client", new { @c_seq = data.client_seq })">
+                                        @Utils.Truncate(data.client_name, 10)
+                                    </a>
+                                    <br />
+                                    <span class="text-truncate s2">
+                                        <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })">
+                                            @Utils.Truncate(data.title, 40)
+                                        </a>
+                                    </span>
+                                </td>
+                                <td class="text-truncate">
+                                    <a href="@Url.Action("CandidateDetail", "Candidate", new { @c_seq = data.candidate_seq })">
+                                        @data.candidate_name
+                                    </a>
+                                </td>   
+                                <td style="min-width:100px;">
+                                    @Utils.ConvertDateTimeToString(data.schedule_date)
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4">미발행 인보이스가 없습니다.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        }
+        else
+        {
+            <table id="default-table" class="table table-hover" style="table-layout: fixed;">
+                <thead>
+                    <tr>
+                        <th title="고객사">Client</th>
+                        <th title="구인제목">Title</th>
+                        <th title="후보자">Candidate</th>
+                        <th title="입사일(발행예정일)" style="word-break:keep-all">Join Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.list.Count > 0)
+                    {
+                        foreach (var data in Model.list)
+                        {
+                            <tr>
+                                <td class="text-left text-truncate" title="@data.client_name">
+                                    <a href="@Url.Action("ClientDetail", "Client", new { @c_seq = data.client_seq })">
+                                        @Utils.Truncate(data.client_name, 10)
+                                    </a>
+                                </td>
+                                <td class="text-left text-truncate" title="@data.title">
+                                    <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })">
+                                        @Utils.Truncate(data.title, 40)
+                                    </a>
+                                </td>
+                                <td class="text-truncate">
+                                    <a href="@Url.Action("CandidateDetail", "Candidate", new { @c_seq = data.candidate_seq })">
+                                        @data.candidate_name
+                                    </a>
+                                </td>
+                                <td style="min-width:100px;">
+                                    @Utils.ConvertDateTimeToString(data.schedule_date)
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4">미발행 인보이스가 없습니다.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+    </div>

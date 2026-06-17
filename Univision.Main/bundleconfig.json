@@ -1,0 +1,68 @@
+[
+  {
+    "outputFileName": "Scripts/Common.min.js",
+    "inputFiles": [
+      "Scripts/Common.js"
+    ]
+  },
+  {
+    "outputFileName": "Content/Common.min.css",
+    "inputFiles": [
+      "Content/Common.css"
+    ]
+  },
+  {
+    "outputFileName": "Content/jquery-ui.min.css",
+    "inputFiles": [
+      "Content/jquery-ui.css"
+    ]
+  },
+  {
+    "outputFileName": "Content/jquery.isloading.min.css",
+    "inputFiles": [
+      "Content/jquery.isloading.css"
+    ]
+  },
+  {
+    "outputFileName": "Content/Site.min.css",
+    "inputFiles": [
+      "Content/Site.css"
+    ]
+  },
+  {
+    "outputFileName": "Scripts/Account/index.min.js",
+    "inputFiles": [
+      "Scripts/Account/index.js"
+    ]
+  },
+  {
+    "outputFileName": "Scripts/Dashboard/index.min.js",
+    "inputFiles": [
+      "Scripts/Dashboard/index.js"
+    ]
+  },
+  {
+    "outputFileName": "Scripts/CommonAlert.min.js",
+    "inputFiles": [
+      "Scripts/CommonAlert.js"
+    ]
+  },
+  {
+    "outputFileName": "Scripts/CommonFormat.min.js",
+    "inputFiles": [
+      "Scripts/CommonFormat.js"
+    ]
+  },
+  {
+    "outputFileName": "Libs/remark/base/assets/js/Plugin/menu.min.js",
+    "inputFiles": [
+      "Libs/remark/base/assets/js/Plugin/menu.js"
+    ]
+  },
+  {
+    "outputFileName": "Libs/remark/global/vendor/bootstrap-tokenfield/bootstrap-tokenfield.min.js",
+    "inputFiles": [
+      "Libs/remark/global/vendor/bootstrap-tokenfield/bootstrap-tokenfield.js"
+    ]
+  }
+]

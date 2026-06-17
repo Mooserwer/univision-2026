@@ -1,0 +1,200 @@
+﻿@model Univision.Main.Models.Project.SearchProjectClientModel
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+</style>
+
+<script>
+    $('#searchTxt').keypress(function (event) {
+        debugger;
+        if (event.which == 13) {
+            FancyBoxSearchAndPageMove(1);
+            return false;
+        }
+    });
+</script>
+
+<div class="form-inline mb-10">
+    <div class="input-group col-md-12 no-side-space">
+        @Html.TextBoxFor(x => x.searchTxt, new { @class = "form-control", @placeholder = "고객사 이름" })
+        <button type="button" class="btn btn-primary" onclick="FancyBoxSearchAndPageMove(1);"><i class="fas fa-search" aria-hidden="true"></i></button>
+    </div>
+</div>
+<div class="panel" style="margin-bottom:0px !important;">
+    <div class="panel-body" style="padding: 5px 10px 5px 10px;">
+        <table class="table table-borderless table-hover">
+            <thead class="text-center">
+                <tr>
+                    <th>고객사명</th>
+                    <th>사업자번호</th>
+                    <th>업태</th>
+                    <th>품목</th>
+                    <th>주소</th>
+                </tr>
+            </thead>
+            <tbody class="text-center" style="vertical-align:middle;">
+                @if (Model.list.Count > 0)
+                {
+                    foreach (var data in Model.list)
+                    {
+                        @*<tr style="cursor:pointer" onclick="selectCompany('@data.c_seq', '@data.kor_name', '@data.main_contract', '@data.main_contract_name', '@data.main_contract_dept');">*@
+                        <tr style="cursor:pointer" onclick="selectCompany('@data.c_seq')">
+                            <td>
+                                @data.kor_name
+                            </td>
+                            <td>
+                                @data.biz_code
+                            </td>
+                            <td>
+                                @data.biz_type
+                            </td>
+                            <td>
+                                @data.biz_category
+                            </td>
+                            <td>
+                                @data.addr1
+                            </td>
+                        </tr>
+                        }
+                        }
+                        else
+                        {
+                        <tr>
+                            <td colspan="5">데이터가 없습니다.</td>
+                        </tr>
+                        }
+
+                    </tbody>
+        </table>
+        @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                     ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                     x => String.Format("javascript:FancyBoxSearchAndPageMove({0})", x))
+
+    </div>
+    <div class="panel-footer">
+
+        <a href="@Url.Action("ClientCreate", "Client")">
+            <span style="color:red">
+                * 찾는 고객사가 없을 시, 여기를 눌러 등록해주세요.
+            </span>
+        </a>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    function selectCompany(c_seq) {
+
+        //$("#c_seq").val(c_seq);        
+        //$("#company_name").val(kor_name);
+        
+        //var appendHtml = "<span class='category mr-5'>";
+        //appendHtml += "<span class='badge badge-outline badge-default bg-white cur_hand badge-lg'  am_seq='" + main_contract +"'>";
+        //appendHtml += "[" + main_contract_dept + "] " + main_contract_name;
+        //appendHtml += "<i class='far fa-times-circle' onclick='removeBadge(this)'></i>";
+        //appendHtml += "</span>";
+        //appendHtml += "</span>";
+
+        //$("#AMDiv").html(appendHtml.toString());
+
+        ////유효성 검사 다시.
+        //$('#CreateForm').formValidation('revalidateField', 'c_seq');
+        //$('#CreateForm').formValidation('revalidateField', 'company_name');
+        //$('#CreateForm').formValidation('revalidateField', 'AMDiv');
+        //$.fancybox.close();
+
+
+        //debugger;
+        var c_seq = c_seq;
+        var cal_seq = "";
+
+        $.ajax({
+            url: '@Url.Action("PopActivity", "Client")',
+            data: { cal_seq: cal_seq, c_seq: c_seq },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+            $.fancybox.open({
+                'content':json,
+                'width': '620',
+                'height': '320',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': '활동내역',
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.1');
+            });
+
+        
+    }
+
+    //FancyBox 팝업 내의 페이지 이동.
+    function FancyBoxSearchAndPageMove(page) {
+        if (page == null || page == undefined)
+            page = 1;
+
+        $.ajax({
+            url: '@Url.Action("SearchClient", "Client")',
+            data: {
+                searchTxt: $("#searchTxt").val()
+                , page: page
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function () {
+
+            }
+        })
+        .done(function (view) {
+
+            $.fancybox({
+                'content': view,
+                'width': $(".fancybox-outer").width(),
+                'height': $(".fancybox-outer").height(),
+                'autoDimensions': false,
+                'type': 'iframe',
+                'autoSize': false,
+                'title': $(".fancybox-title").text(),
+                helpers: {
+                    title: {
+                        type: 'inside',
+                        position: 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+
+        })
+        .always(function () {
+
+        });
+    }
+
+</script>

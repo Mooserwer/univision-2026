@@ -1,0 +1,694 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.DirectorDetailViewModel
+@using Univision.Security
+
+@{
+  //ViewBag.Title = "후보자 상세보기";
+  ViewBag.use_validation = true;
+  ViewBag.noJqueryUi = false;
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+  .extend-box {
+    position: absolute !important;
+    top: 1.9em;
+    right: 1em;
+  }
+
+  .job_list {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 250px;
+    display: inline-block;
+  }
+
+  .placeDiv span {
+    font-size: 15px;
+  }
+
+  .category::after {
+    content: " > "
+  }
+
+  .catRow {
+    margin-top: 3px;
+  }
+
+  .form-group {
+    margin-bottom: 10px !important;
+  }
+
+  .form-control-label {
+    margin-bottom: 0px !important;
+    padding-bottom: 0px !important;
+  }
+
+  .no-top-line {
+    border-top: 0px !important;
+  }
+
+  .table thead th {
+    font-weight: bold;
+  }
+
+  #resumeBody h4 {
+    font-size: 14px;
+    margin-bottom: 0px;
+  }
+
+  .page-profile .user-background .timeline-item,
+  .page-profile .user-background .timeline-single .page-profile .user-background .timeline-item {
+    margin-bottom: 12px;
+    padding-left: 10px
+  }
+
+  .page-profile .user-background .timeline-dot {
+    height: 10px;
+    width: 10px;
+    margin-left: -5px;
+    line-height: 10px;
+    background-color: #ccd5db
+  }
+
+  .page-profile .user-background .timeline-content > img {
+    max-width: 120px
+  }
+
+  .pl-2em {
+    padding-left: 2em !important;
+  }
+
+  .text-strike {
+    text-decoration: line-through !important;
+  }
+
+  #resumeBody.removal-lock .btn-resume-remove {
+    display: none;
+  }
+
+  #resumeBody .link-resume {
+    width: 85%;
+  }
+
+  .note-frame {
+    margin-bottom: 0 !important;
+  }
+
+  #resumeBody.removal-lock .link-resume {
+    width: 100% !important;
+  }
+
+  .file_rst > div:nth-child(1n+4).btn-more, .file_rst.more > div:nth-child(1n+4).btn-collapse,
+  .timeline > li:nth-child(1n+4).btn-li-more, .timeline.more > li:nth-child(1n+4).btn-li-collapse,
+  .active_list > div:nth-child(1n+12).btn-memo-more, .active_list.more > div:nth-child(1n+12).btn-memo-collapse {
+    cursor: pointer;
+    display: block;
+  }
+
+  .file_rst > div:nth-child(1n+4).btn-collapse, .file_rst.more > div:nth-child(1n+4).btn-more,
+  .timeline > li:nth-child(1n+4).btn-li-collapse, .timeline.more > li:nth-child(1n+4).btn-li-more,
+  .active_list > div:nth-child(1n+12).btn-memo-collapse, .active_list.more > div:nth-child(1n+12).btn-memo-more {
+    display: none;
+  }
+
+  .file_rst.more > div.file_div,
+  .timeline.more > li.timeline-item,
+  .active_list.more > li.can_activities {
+    display: block !important;
+  }
+
+  .file_rst > div.btn-more, .file_rst > div.btn-collapse,
+  .timeline > li.btn-li-more, .timeline > li.btn-li-collapse,
+  .active_list > div.btn-memo-more, .active_list > div.btn-memo-collapse {
+    display: none;
+  }
+
+  .btn-memo-more, .btn-memo-collapse {
+    display: none;
+  }
+
+  .after_modal_appended {
+    position: relative;
+  }
+</style>
+<link rel="stylesheet" href="~/Libs/bootstrap-toggle/css/bootstrap-toggle.min.css">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/profile-v2.min599c.css?v4.0.4">
+<div class="page-profile-v2">
+  <div class="page-content container-fluid">
+    <div class="row">
+      <!-- Left Column -->
+      <div class="col-lg-4 col-xl-3 order-xl-1">
+        <div class="user-info card card-shadow text-center">
+          <div class="user-job card-block">
+            [@Utils.ReturnRegCDTypeTxt(Model.data.reg_type)]
+          </div>
+          <div class="user-base card-block">
+            <a class="avatar img-bordered avatar-100" href="javascript:void(0)">
+              @if (!String.IsNullOrEmpty(Model.data.picture_path))
+              {
+                <img src="@Model.data.picture_path" alt="@Model.data.kor_name">
+              }
+              else
+              {
+                <img src="/Content/images/user.png" alt="@Model.data.kor_name">
+              }
+            </a>
+            <h4 class="user-name">@Model.data.kor_name (@Model.data.birth_year / @Utils.ReturnGenderTxt(Model.data.gender))</h4>
+            <p class="user-job">@Model.data.comp_name <small>(@Model.data.group_name)</small></p>
+            <p class="user-job">
+              @Model.data.curr_pos
+              @(!String.IsNullOrEmpty(Model.data.curr_work) ? "/ " + Model.data.curr_work : "")
+              / @Utils.ReturnExecTypeTxt(Model.data.exec_type)
+            </p>
+          </div>
+          <div class="user-base card-block">
+            @{
+              if (!string.IsNullOrWhiteSpace(Model.data.keyword))
+              {
+                string[] keywordList = Model.data.keyword.Split(',');
+                if (keywordList.Length > 0)
+                {
+                  int key_cnt = 0;
+                  <p class="">
+                    @foreach (var keyword in keywordList)
+                    {
+                      key_cnt++;
+                      if (!string.IsNullOrWhiteSpace(keyword))
+                      {
+
+                        <keywordbox style="word-break:keep-all;">@Html.Raw(keyword)</keywordbox>
+
+
+                        if (key_cnt >= 15) { break; }
+
+                      }
+
+                    }
+
+                  </p>
+                }
+              }
+            }
+          </div>
+          <hr />
+          <div class="user-socials list-group list-group-full">
+            @if (!String.IsNullOrEmpty(Model.data.phone))
+            {
+              <a class="list-group-item justify-content-center py-1" href="javascript:void(0)">
+                <i class="fa fa-at fa-phone" aria-hidden="true" title="Tel"></i> @Model.data.phone
+              </a>
+            }
+            @if (!String.IsNullOrEmpty(Model.data.cell_phone))
+            {
+              <a class="list-group-item justify-content-center py-1" href="javascript:void(0)">
+                <i class="fa fa-at fa-phone" aria-hidden="true" title="Tel"></i> @Model.data.cell_phone
+              </a>
+            }
+            @if (!String.IsNullOrEmpty(Model.data.email1))
+            {
+              <a class="list-group-item justify-content-center py-1" href="mailto:@Model.data.email1">
+                <i class="fa fa-at fa-envelope" aria-hidden="true"></i> @Model.data.email1
+              </a>
+            }
+            @if (!String.IsNullOrEmpty(Model.data.email2))
+            {
+              <a class="list-group-item justify-content-center py-1" href="mailto:@Model.data.email2">
+                <i class="fa fa-at fa-envelope" aria-hidden="true"></i> @Model.data.email2
+              </a>
+            }
+
+          </div>
+          <hr />
+          <div class="user-actions">
+            <a class="btn btn-outline-success w-150" href="@Url.Action("DirectorCreate", "Candidate", new { @d_seq = Model.data.d_seq, @is_pop = ViewBag.is_pop })"><i class="icon wb-edit"></i> 정보 수정</a>
+          </div>
+          <div class="user-actions">
+            <span title="최종 업데이트">@Model.data.modify_dt (@Model.data.modify_name)</span><br />
+            <small class="text-secondary" title="최초 등록일">[ @Model.data.create_dt (@Model.data.create_name) ]</small>
+          </div>
+        </div>
+        <!-- End User Info -->
+        <!-- Exp List -->
+        <div class="user-background card card-shadow">
+          @if (Model.DirectorList.Count > 0)
+          {
+            <div class="card-block">
+              <h5 class="card-title">
+                <i class="fas fa-fw fa-briefcase" aria-hidden="true"></i>
+                <span>사외이사 경력</span>
+              </h5>
+              <ul class="timeline timeline-single">
+                @foreach (var director in Model.DirectorList)
+                {
+                  <li class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                      <span class="block font-size-15 mb-5">
+                        @director.company_name
+                        <small>@(!String.IsNullOrEmpty(director.group_name) ? "("+director.group_name+")" : "")</small>
+                      </span>
+                      <span class="block font-size-12 mb-5">@director.division_name</span>
+                      <!--<span class="block mb-5"></span>-->
+
+                    </div>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+          @if (Model.careerList.Count > 0)
+          {
+            <div class="card-block">
+              <h5 class="card-title">
+                <i class="fas fa-fw fa-building" aria-hidden="true"></i>
+                <span>일반경력</span>
+              </h5>
+
+              <ul class="timeline timeline-single">
+
+                @foreach (var expr in Model.careerList)
+                {
+
+                  <li class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                      <span class="block font-size-15 mb-5">
+                        @expr.company_name
+                        <small>@(!String.IsNullOrEmpty(expr.group_name) ? "("+ expr.group_name+")" : "")</small>
+                      </span>
+                      <span class="block font-size-12 mb-5">@expr.division_name</span>
+
+                    </div>
+                  </li>
+                }
+              </ul>
+
+
+            </div>
+          }
+          @if (Model.schoolList.Count > 0)
+          {
+            <div class="card-block">
+              <h5 class="card-title">
+                <i class="fas fa-fw fa-graduation-cap" aria-hidden="true"></i>
+                <span>Education</span>
+              </h5>
+
+              <ul class="timeline timeline-single">
+
+                @foreach (var school in Model.schoolList)
+                {
+
+                  <li class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                      <span class="block font-size-15 mb-5">
+                        @school.schoolName @school.gubun_str
+                      </span>
+                      <span class="block mb-5">@school.major_name</span>
+                      <!--
+                      <span class="block mb-5">Company Name</span>
+                      -->
+                    </div>
+                  </li>
+                }
+              </ul>
+
+
+            </div>
+          }
+        </div>
+        <!-- End Exp List -->
+        <!-- Ind List -->
+        <div class="user-background card card-shadow">
+          <div class="card-block">
+            <h5 class="card-title">
+              <i class="fas fa-fw fa-clipboard" aria-hidden="true"></i>
+              <span>Industry</span>
+            </h5>
+            <ul class="list-group list-group-full mb-5">
+
+              @if (Model.businessList.Count > 0)
+              {
+                double bef_busi_code = 0;
+                foreach (var busi in Model.businessList)
+                {
+                  if (busi.code1 != bef_busi_code)
+                  {
+                    <li class="list-group-item p-5 border-0">
+                      <i class="fa fa-minus fa-fw"></i>
+
+                      <label class="badge badge-lg badge-info">
+                        @busi.code_name1
+                      </label>
+                      @if (Model.businessList.Where(x => x.code1 == busi.code1 && !String.IsNullOrWhiteSpace(x.code_name2)).Count() > 0)
+                      {
+                        <i class="fa fa-caret-right fa-fw"></i>
+                        foreach (var sub_busi in Model.businessList.Where(x => x.code1 == busi.code1 && !String.IsNullOrWhiteSpace(x.code_name2)))
+                        {
+                          <label class="badge badge-lg badge-secondary">
+                            @sub_busi.code_name2
+                          </label>
+                        }
+
+                      }
+
+
+                    </li>
+                  }
+                  bef_busi_code = busi.code1;
+                }
+              }
+              else
+              {
+                <li class="list-group-item p-5">
+                  <i class="fa fa-database fa-fw"></i>
+                  No Industry Data.
+                </li>
+              }
+            </ul>
+
+
+          </div>
+
+          <div class="card-block">
+            <h5 class="card-title">
+              <i class="fas fa-fw fa-project-diagram" aria-hidden="true"></i>
+              <span>Job</span>
+            </h5>
+            <ul class="list-group list-group-full mb-5">
+              @if (Model.jobList.Count > 0)
+              {
+                double bef_job_code = 0;
+                foreach (var job in Model.jobList)
+                {
+                  if (job.code1 != bef_job_code)
+                  {
+                    <li class="list-group-item p-5 border-0">
+                      <i class="fa fa-minus fa-fw"></i>
+
+                      <label class="badge badge-lg badge-info">
+                        @job.code_name1
+                      </label>
+                      @if (Model.jobList.Where(x => x.code1 == job.code1 && !String.IsNullOrWhiteSpace(x.code_name2)).Count() > 0)
+                      {
+                        <i class="fa fa-caret-right fa-fw"></i>
+                        foreach (var sub_job in Model.jobList.Where(x => x.code1 == job.code1 && !String.IsNullOrWhiteSpace(x.code_name2)))
+                        {
+                          <label class="badge badge-lg badge-secondary">
+                            @sub_job.code_name2
+                          </label>
+                        }
+                      }
+                    </li>
+                  }
+                  bef_job_code = job.code1;
+                }
+              }
+              else
+              {
+                <li class="list-group-item p-5">
+                  <i class="fa fa-database fa-fw"></i>
+                  No Industry Data.
+                </li>
+              }
+            </ul>
+
+          </div>
+
+
+        </div>
+        <!-- End Ind List -->
+      </div>
+      <!-- End Left Column -->
+      <!-- Middle Column -->
+      <div class="col-lg-8 col-xl-9 order-xl-2">
+        <div class="user-release card card-shadow">
+          @using (Html.BeginForm("CreateDirectorActivity", "Candidate", FormMethod.Get, new { @id = "CreateActivityForm" }))
+          {
+            <div class="card-block p-0">
+
+              <textarea type="text" id="memo" name="memo"></textarea>
+
+            </div>
+            <div class="card-footer p-1 row no-gutters">
+              <div class="col-6 no-gutters">
+                <button class="btn btn-default">Cancel</button>
+              </div>
+              <div class="col-6 no-gutters">
+                <div class="form-inline float-right">
+                  <select id="memo_type" name="memo_type" class="form-control">
+                    <option value="">[카테고리 선택]</option>
+                    <option value="2">메모</option>
+                    <option value="1">뉴스</option>
+                    <option value="3">자료</option>
+                    <option value="4">기타</option>
+                  </select>
+
+                  <button type="submit" id="btnCreateActivity" class="btn btn-success">Post</button>
+                </div>
+
+              </div>
+            </div>
+          }
+        </div>
+
+
+        <!-- User Posts -->
+        <div class="user-posts card">
+          <div class="row py-3">
+            <div class="col">
+              <input type="text" id="memo_search_text" name="memo_search_text" class="form-control form-control-sm" placeholder="메모장 검색(Filter)" />
+            </div>
+          </div>
+          <ul class="nav nav-tabs nav-tabs-line" role="tablist">
+            <li class="nav-item" role="presentation"><a class="active nav-link" data-toggle="tab" href="#0" onclick="javascript:callActivityList('@Model.data.d_seq', 0);" aria-controls="all" role="tab" aria-selected="true">전체</a></li>
+            <li class="nav-item" role="presentation"><a class="nav-link" data-toggle="tab" href="#2" onclick="javascript:callActivityList('@Model.data.d_seq', 2)" aria-controls="memo" role="tab" aria-selected="false">메모</a></li>
+            <li class="nav-item" role="presentation"><a class="nav-link" data-toggle="tab" href="#1" onclick="javascript:callActivityList('@Model.data.d_seq', 1);" aria-controls="news" role="tab" aria-selected="false">뉴스</a></li>
+            <li class="nav-item" role="presentation"><a class="nav-link" data-toggle="tab" href="#3" onclick="javascript:callActivityList('@Model.data.d_seq', 3)" aria-controls="data" role="tab" aria-selected="false">자료</a></li>
+            <li class="nav-item" role="presentation"><a class="nav-link" data-toggle="tab" href="#4" onclick="javascript:callActivityList('@Model.data.d_seq', 4)" aria-controls="etc" role="tab" aria-selected="false">기타</a></li>
+            <li class="nav-item"><a class="nav-link" href="https://news.google.com/search?q=@(Model.data.kor_name)+@(Model.data.comp_name)&hl=ko&gl=KR&ceid=KR:ko" target="_blank">뉴스검색(Google)</a></li>
+            
+          </ul>
+
+          <div class="tab-content" id="activityBody">
+
+          </div>
+
+
+        </div>
+        <!-- End User Posts -->
+      </div>
+
+
+    </div>
+  </div>
+</div>
+
+
+@section scripts{
+  <script src="~/Libs/summernote/summernote.min.js"></script>
+  <script src="~/Libs/summernote/summernote-file.js"></script>
+  <script src="~/Libs/summernote/lang/summernote-ko-KR.min.js"></script>
+  <script src="~/Libs/bootstrap-toggle/js/bootstrap-toggle.min.js"></script>
+
+  <script type="text/javascript">
+    window.currentactivityTab = 0;
+
+    $('#memo').summernote({
+      toolbar: [
+        // [groupName, [list of button]]
+        ['style', ['bold', 'italic', 'underline', 'clear']],
+        ['fontsize', ['fontsize']],
+        ['color', ['color']],
+        ['insert', ['link', 'picture', 'video', 'file']],
+        ['view', ['codeview', 'help']],
+      ],
+      placeholder: '메모/뉴스/자료 등을 여기에 등록',
+      tabsize: 1,
+      height: 150,
+
+      callbacks: {	//여기 부분이 이미지를 첨부하는 부분
+        onImageUpload: function (files) {
+          uploadSummernoteImageFile(files[0], this);
+        },
+        onFileUpload: function (files) {
+          uploadSummernoteImageFile(files[0], this);
+        },
+        onPaste: function (e) {
+          var clipboardData = e.originalEvent.clipboardData;
+          if (clipboardData && clipboardData.items && clipboardData.items.length) {
+            var item = clipboardData.items[0];
+            if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
+              e.preventDefault();
+            }
+          }
+        }
+      }
+
+    });
+
+    function uploadSummernoteImageFile(file, editor) {
+      data = new FormData();
+      data.append("d_seq", "@Model.data.d_seq");
+      data.append("file", file);
+      $.ajax({
+        data: data,
+        type: "POST",
+        url: "@Url.Action("UploadDirectorActivityFile", "Candidate")",
+        contentType: false,
+        processData: false,
+        success: function (rst) {
+          //항상 업로드된 파일의 url이 있어야 한다.
+          console.log(rst)
+          if (rst.ok) {
+            let listMimeImg = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg'];
+            let listMimeAudio = ['audio/mpeg', 'audio/ogg'];
+            let listMimeVideo = ['video/mpeg', 'video/mp4', 'video/webm'];
+            let elem;
+
+            if (listMimeImg.indexOf(file.type) > -1) {
+              $(editor).summernote('insertImage', "/" + rst.file_path);
+            } else if (listMimeAudio.indexOf(file.type) > -1) {
+              elem = document.createElement("audio");
+              elem.setAttribute("src", "/" + rst.file_path);
+              elem.setAttribute("controls", "controls");
+              elem.setAttribute("preload", "metadata");
+              $(editor).summernote('insertNode', elem);
+
+            } else if (listMimeVideo.indexOf(file.type) > -1) {
+              elem = document.createElement("video");
+              elem.setAttribute("src", "/"+rst.file_path);
+              elem.setAttribute("controls", "controls");
+              elem.setAttribute("preload", "metadata");
+              $(editor).summernote('insertNode', elem);
+            } else {
+              elem = document.createElement("a");
+              let linkText = document.createTextNode(rst.file_name);
+              elem.appendChild(linkText);
+              elem.title = rst.file_name;
+              elem.href = "/" + rst.file_path;
+              $(editor).summernote('insertNode', elem);
+            }
+          } else {
+            ErrorAlert(rst.message);
+          }
+
+        }
+      });
+    }
+
+
+
+    var director_validate_opt = {
+      ignore: ".note-codable",
+    rules: {
+      memo_type: {
+        required:true
+      }
+    },
+    messages: {
+      memo_type: {
+        required: "카테고리 선택은 필수 항목 입니다."
+      }
+    },
+    submitHandler: function (form) {
+      var d_seq = "@Model.data.d_seq"
+
+      if ($('#memo').summernote('isEmpty')) {
+        alert('내용을 입력해 주십시오.');
+        return;
+      }
+      var markup = $('#memo').summernote('code');
+      //form 전송을 위한 데이터 생성.
+      //기본정보
+      var Activity = {
+        d_seq: d_seq,
+        memo_type: $("#memo_type").val(),
+        memo: markup
+      };
+
+      var formURL = $("#CreateActivityForm").attr("action");
+      ajxCall({
+          url: formURL,
+          type: "POST",
+          dataType: 'json',
+          data: {
+              data : Activity
+          },
+        loading: true,
+        loading_target: '#CreateActivityForm',
+          suc: function (json) {
+              //$('#btnCreateMemo').prop("disabled", false);
+              //$('#btnCreateMemo').removeClass("disabled");
+              if (json.ok) {
+                $("#memo").summernote("reset");
+                $("#memo_type").val("");
+
+                callActivityList(d_seq, window.currentactivityTab)
+              }
+              else {
+                  ErrorAlert(json.message);
+              }
+          },
+          err: function (jqXHR, textStatus, errorThrown) {
+
+              ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+          }
+      });
+    }
+  }
+
+  var valid_memo_option = $.extend({}, valid_option, director_validate_opt);
+
+  var validator_memo = $("#CreateActivityForm").validate(valid_memo_option);
+
+
+        //후보자 활동내역 Partial View
+    function callActivityList(d_seq, type) {
+      window.currentactivityTab = type;
+            $.ajax({
+                url: '@Url.Action("DirectorActivityList", "Candidate")',
+                data: {
+                  d_seq: d_seq
+                  ,type : type
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#activityBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#activityBody');
+                $('#activityBody').html(view);
+            })
+            .always(function () {
+                hideLoading('#activityBody');
+            });
+        }
+
+    $('#memo_search_text').keyup(function (e) {
+      if ($(this).val() == "") {
+        $(".dir_activities").each(function () {
+          $(this).css("display", "");
+        });
+      } else {
+        var search_string = $(this).val();
+        $(".dir_activities").each(function () {
+          $(this).css("display", "none");
+        });
+
+        $(".dir_activities").filter(function (index) {
+          return $(this).find(".profile-brief").text().indexOf(search_string) > 0;
+        }).css("display", "");
+
+        //replaceText(search_string);
+      }
+    });
+
+    callActivityList("@Model.data.d_seq", window.currentactivityTab);
+  </script>
+
+}

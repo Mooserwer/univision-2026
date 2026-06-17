@@ -1,0 +1,208 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.CandidateInterviewList
+
+    <div class="col-md-12 row no-space mb-5">
+        <div class="form-inline vertical-align no-space">
+            <div class="vertical-align-middle col-md-12">               
+                <div class="input-group">
+                    <input type="text" id="interview_dt" class="form-control" onkeyup="return DateFormat(event, this)" onkeypress="return DateFormat(event, this)">
+                    <span class="input-group-addon">
+                        <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="col-md-12 row no-space mb-10">
+        <div class="form-group vertical-align col-md-11 no-space text-left">
+            <div class="vertical-align-middle col-md-12">
+                <textarea class="form-control" id="cisMemo" rows="3"></textarea>
+            </div>
+        </div>
+        <div class="form-group vertical-align col-md-1 no-space text-center">
+            <div class="vertical-align-middle w-p100 h-p100">
+                <button type="button" id="btnCreateCIS" class="btn btn-primary w-p100 h-p100">등록</button>
+            </div>
+        </div>
+    </div>
+    <table class="table table-borderless">
+        <thead class="text-center">
+            <tr>
+                <th>No.</th>
+                <th>날짜</th>
+                <th>내용</th>
+                <th>작성자</th>
+                <th>등록일</th>
+                <th>비고</th>
+            </tr>
+        </thead>
+        <tbody class="text-center">
+            @if (Model.interviewList.Count > 0)
+            {
+                int num = (Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage + 1;
+                foreach (var data in Model.interviewList)
+                {
+                    <tr>
+                        <td>
+                            @(num++)
+                        </td>
+                        <td>
+                            @Utils.ConvertDateTimeToString(data.interview_dt)
+                        </td>
+                        <td>
+                            @data.memo
+                        </td>
+                        <td>
+                            @data.uv_name
+                        </td>
+                        <td>
+                            @Utils.ConvertDateTimeToString(data.create_dt)
+                        </td>
+                        <td>
+                            <button type="button" id="btnDelCIS" class="btn btn-sm btn-warning" onclick="ConfirmDeleteInterview('인터뷰 삭제', '후보자 인터뷰를 삭제 하시겠습니까?', '@data.cis_seq')">삭제</button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5">
+                        인터뷰가 없습니다.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                         ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                         x => String.Format("javascript:callInterviewList({0}, {1})", Model.c_seq, x))
+
+    <script type="text/javascript">
+
+    $(document).ready(function () {
+
+        BindDatePicker("#interview_dt");
+
+        $("#btnCreateCIS").click(function () {
+
+            if ($("#interview_dt").val() == "") {
+                ErrorAlert("인터뷰 날짜를 선택 하세요.")
+                return false;
+            }
+
+            if ($("#cisMemo").val() == "") {
+                ErrorAlert("인터뷰 내용을 작성 하세요.");
+                return false;
+            }
+
+            ConfirmCreateInterview("인터뷰 등록", "후보자 인터뷰를 등록 하시겠습니까?")
+        });
+
+    });
+
+    function ConfirmCreateInterview(title, msg) {
+
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+                    CreateInterview();
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>' + title)
+            .setting({
+                message: msg,
+            })
+            .show();
+    }
+
+    function CreateInterview() {
+        $.ajax({
+               url: '@Url.Action("CreateCandidateInterview", "Candidate")',
+               data: {
+                    c_seq: '@Model.c_seq'
+                   ,memo: $("#cisMemo").val()
+                   ,interview_dt: $("#interview_dt").val()
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+
+                    NormalAlert(json.message);
+                    callInterviewList('@Model.c_seq', 1);
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+
+    function ConfirmDeleteInterview(title, msg, cis_seq) {
+
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+                    DeleteInterview(cis_seq);
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>' + title)
+            .setting({
+                message: msg,
+            })
+            .show();
+    }
+
+    function DeleteInterview(cis_seq) {
+        $.ajax({
+               url: '@Url.Action("DeleteCandidateInterview", "Candidate")',
+               data: {
+                   cis_seq: cis_seq
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+
+                    NormalAlert(json.message);
+                    callInterviewList('@Model.c_seq', 1);
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+
+    </script>

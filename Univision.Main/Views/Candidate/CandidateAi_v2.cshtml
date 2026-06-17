@@ -1,0 +1,238 @@
+﻿@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!--<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>-->
+<script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_ai.css?v=1533562669">
+<style>
+  .loader {
+    width: 32px;
+    height: 32px;
+    border: 5px solid #FFF;
+    border-bottom-color: #FF3D00;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+  }
+
+  @@keyframes rotation {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+<div class="page-content" style="position:relative;">
+
+  <div class="panel panel-success panel-line shadow">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-upload"></i>
+        이력서 신규등록 (AI)
+      </h3>
+      <div class="panel-actions">
+
+      </div>
+    </div>
+
+    <div id="resume_upload_panel" class="panel-body pt-20">
+
+      <div class="row">
+        <div class="col-8 offset-2">
+          <form id="create-ai-resume" class="dropzone h-full text-left">
+            <div class="row py-2">
+              <div class="col">
+                <div class="dz-message" id="upload_message">
+                  <h4>AI 이력서 등록</h4>
+
+                  <small>[이력서 파일을 여기에 끌어놓거나 클릭하여 파일을 선택해주세요.]</small><br />
+                  <p>
+                    - 글자 인식이 가능한 이력서만 등록이 가능합니다.(이미지 형식은 인식 불가)<br />
+                    - 내용이 너무 길거나 용량이 큰 파일은 인식이 어려울 수 있습니다.<br />
+                    <span class="text-danger">- GPT가 분석한 내용은 정확하지 않을 수 있습니다.<br /> <span class="font-weight-800">꼭 저장하시기전 틀린내용이 없는지 검수가 필요합니다.</span></span>
+                    <br /><br />
+                    <span>* 대표적으로 <span class="text-danger font-weight-800 font-size-14">[잡코리아] PDF 이력서</span>는<br />회사,학교,연락처 글자 인식이 되지 않습니다 ㅠㅠ</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel shadow">
+    <div class="panel-heading">
+      <h3 class="panel-title" title="프로젝트 현황">
+        <i class="fas fa-clock"></i>
+        GPT 작업 내역
+      </h3>
+      <div class="panel-actions">
+        <div class="form-inline">
+          <select id="project_state" name="project_state" class="form-control w-150" onchange="">
+            <option value="0">[전체 종류]</option>
+            <option value="1">이력서등록(직접)</option>
+            <option value="2">이력서등록(메일연동)</option>
+          </select>
+          <select id="project_state" name="project_state" class="form-control w-150" onchange="">
+            <option value="0">[전체(완료 제외) 결과]</option>
+            <option value="0">[전체 결과]</option>
+            <option value="1">요청</option>
+            <option value="2">진행 중</option>
+            <option value="2">등록 대기</option>
+            <option value="2">오류</option>
+          </select>
+          <select id="project_pageSize" name="project_pageSize" class="form-control w-150" onchange="">
+            <option value="5">5건 씩 보기</option>
+            <option value="10">10건 씩 보기</option>
+            <option value="15">15건 씩 보기</option>
+            <option value="20">20건 씩 보기</option>
+            <option value="50">50건 씩 보기</option>
+            <option value="100">100건 씩 보기</option>
+          </select>
+
+          <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+        </div>
+      </div>
+    </div>
+    <div class="panel-body pt-10" id="request_list">
+      <div class="row">
+        <div class="panel col shadow">
+          <div class="panel-heading">
+            <h3 class="panel-title">[직접등록] 이현창.docx</h3>
+            <div class="panel-actions">
+              <button class="btn btn-dark btn-block" id="exampleButtonRandom" type="button">취소</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col">
+                요청 대기 중<br />
+                2025-05-13 16:22:50
+              </div>
+            </div>
+            <div class="progress progress-sm">
+              <div class="progress-bar progress-bar-indicating active" style="width: 40%;" role="progressbar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="panel col shadow">
+          <div class="panel-heading">
+            <h3 class="panel-title">[자동수집] 이현창.docx</h3>
+            <div class="panel-actions">
+              <button class="btn btn-dark btn-block" id="exampleButtonRandom" type="button">취소</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col">
+                요청 대기 중<br />
+                2025-05-13 16:22:50
+              </div>
+            </div>
+            <div class="progress progress-sm">
+              <div class="progress-bar progress-bar-indicating active" style="width: 40%;" role="progressbar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="panel col shadow">
+          <div class="panel-heading">
+            <h3 class="panel-title">[자동수집] 이현창.docx</h3>
+            <div class="panel-actions">
+              <button class="btn btn-dark" id="exampleButtonRandom" type="button">신규등록</button>
+              <button class="btn btn-dark" id="exampleButtonRandom" type="button">숨기기</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col">
+                등록 대기중<br />
+                2025-05-13 16:22:50
+              </div>
+            </div>
+            <div class="progress progress-sm">
+              <div class="progress-bar progress-bar-indicating active" style="width: 99%;" role="progressbar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="panel col shadow">
+          <div class="panel-heading">
+            <h3 class="panel-title">[자동수집] 이현창.docx</h3>
+            <div class="panel-actions">
+              <button class="btn btn-dark" id="exampleButtonRandom" type="button">재요청</button>
+              <button class="btn btn-dark" id="exampleButtonRandom" type="button">삭제</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col">
+                요청 취소 됨<br />
+                2025-05-13 16:22:50
+              </div>
+            </div>
+            <div class="progress progress-sm">
+              <div class="progress-bar progress-bar-indicating active" style="width: 0%;" role="progressbar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="panel col shadow">
+          <div class="panel-heading">
+            <h3 class="panel-title">[자동수집] 이현창.docx</h3>
+            <div class="panel-actions">
+              <button class="btn btn-dark" id="exampleButtonRandom" type="button">삭제</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col">
+                내용 분석 중 오류 발생<br />
+                2025-05-13 16:22:50
+              </div>
+            </div>
+            <div class="progress progress-sm">
+              <div class="progress-bar progress-bar-danger progress-bar-indicating" style="width: 60%;" role="progressbar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="panel col shadow">
+          <div class="panel-heading">
+            <h3 class="panel-title">[자동수집] 이현창.docx</h3>
+            <div class="panel-actions">
+              <button class="btn btn-dark" id="exampleButtonRandom" type="button">숨기기</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col">
+                등록 완료<br />
+                2025-05-13 16:22:50
+              </div>
+            </div>
+            <div class="progress progress-sm">
+              <div class="progress-bar progress-bar-success progress-bar-indicating" style="width: 100%;" role="progressbar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

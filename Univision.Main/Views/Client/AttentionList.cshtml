@@ -1,0 +1,597 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.AttentionListViewModel
+@{
+    ViewBag.Title = "AttentionLIst";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+
+    .extend-box {
+        position: absolute !important;
+        top: 1.9em;
+        right: 1em;
+    }
+
+
+    .panel-body .input-search .form-control {
+        border-radius: 2px;
+    }
+
+    .panel-body .form-control-label {
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+    }
+
+    .panel-body .form-group {
+        margin-bottom: 3px;
+    }
+
+    .panel {
+        margin-bottom: 1rem;
+    }
+
+    .table thead th {
+        font-weight: bold;
+    }
+
+    /*.innertable {
+        border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;
+    }*/
+
+    .innertable tr {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        /*border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;*/
+    }
+
+    .innertable tr td {
+        width: 100%;
+        border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;
+    }
+</style>
+
+<link href="~/Libs/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/user.min599c.css?v4.0.4">
+
+
+<div class="page-user">
+    <div class="page-content">
+        <!--검색 Form -->
+        @using (Html.BeginForm("AttentionList", "Client", FormMethod.Get, new { @id = "SearchForm" }))
+        {
+
+            @Html.HiddenFor(x => x.search.orderTxt)
+            @Html.HiddenFor(x => x.search.orderOption)
+            <!-- 검색 패널 시작 -->
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <div class="panel-title">
+                        <i class="fas fa-search"></i>
+                        업체 통합검색
+                    </div>
+                    <a class="panel-action icon wb-minus extend-box" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true">
+                    </a>
+                </div>
+
+                <div class="panel-body bg-blue-grey-200">
+                    <hr class="d-md-none d-block" />
+                    <!-- 검색조건 첫째줄 시작 -->
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.kor_name, "업체명(Kor_Name)", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.search.kor_name, new { @class = "form-control" })
+                        </div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.eng_name, "업체명(Eng_Name)", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.search.eng_name, new { @class = "form-control" })
+                        </div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.ceo, "대표자(CEO Name)", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.search.ceo, new { @class = "form-control" })
+                        </div>
+                        <div class="col-md-6 col-lg-4 col-xxl-2 pt-2">
+                            @Html.LabelFor(x => x.search.biz_num, "사업자번호(Biz Num)", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.search.biz_num, new { @class = "form-control", @size = "10", @placeholder = "Biz Num." })
+                        </div>
+                    </div>
+                    <!-- 검색조건 첫째줄 끝 -->
+                    <!-- 검색조건 둘째줄 시작 -->
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.contact_name, "Contact명(Contact Name)", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.search.contact_name, new { @class = "form-control" })
+                        </div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.contact_email, "Contact Email(Contact Email)", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.search.contact_email, new { @class = "form-control" })
+                        </div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.am_name, "AM명(AM Name)", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.search.am_name, new { @class = "form-control" })
+                        </div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.create_user, "등록자명(Register)", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.search.create_user, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <!-- 검색조건 둘째줄 끝 -->
+                    <!-- 검색조건 셋째줄 시작 -->
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.is_foreign, "외국계기업(Foreign)", new { @class = "form-control-label" })
+                            <div class="form-group form-inline">
+                                <div class="radio-custom radio-primary pr-3 pt-2">
+                                    @Html.RadioButtonFor(x => x.search.is_foreign, 0, new { @id = "search_gender_all", @class = "form-control-label" })
+                                    <label for="search_gender_all">All</label>
+                                </div>
+                                <div class="radio-custom radio-primary pr-3 pt-2">
+                                    @Html.RadioButtonFor(x => x.search.is_foreign, 1, new { @id = "search_gender_male", @class = "form-control-label" })
+                                    <label for="search_gender_male">Dosmatic</label>
+                                </div>
+                                <div class="radio-custom radio-primary pt-2">
+                                    @Html.RadioButtonFor(x => x.search.is_foreign, 2, new { @id = "search_gender_female", @class = "form-control-label" })
+                                    <label for="search_gender_female">Foreign</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-100 d-none d-md-block d-lg-none"></div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.offlimit, "OffLimit", new { @class = "form-control-label" })
+                            <div class="form-group form-inline">
+                                <div class="radio-custom radio-primary pr-3 pt-2">
+                                    @Html.RadioButtonFor(x => x.search.offlimit, 0, new { @id = "search_gender_all", @class = "form-control-label" })
+                                    <label for="search_gender_all">All</label>
+                                </div>
+                                <div class="radio-custom radio-primary pr-3 pt-2">
+                                    @Html.RadioButtonFor(x => x.search.offlimit, 1, new { @id = "search_gender_male", @class = "form-control-label" })
+                                    <label for="search_gender_male">Yes</label>
+                                </div>
+                                <div class="radio-custom radio-primary pt-2">
+                                    @Html.RadioButtonFor(x => x.search.offlimit, 2, new { @id = "search_gender_female", @class = "form-control-label" })
+                                    <label for="search_gender_female">No</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-100 d-none d-md-block d-lg-none"></div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.is_contract, "계약여부(Contract)", new { @class = "form-control-label" })
+                            <div class="form-group form-inline">
+                                <div class="radio-custom radio-primary pr-3 pt-2">
+                                    @Html.RadioButtonFor(x => x.search.is_contract, 0, new { @id = "search_gender_all", @class = "form-control-label" })
+                                    <label for="search_gender_all">All</label>
+                                </div>
+                                <div class="radio-custom radio-primary pr-3 pt-2">
+                                    @Html.RadioButtonFor(x => x.search.is_contract, 1, new { @id = "search_gender_male", @class = "form-control-label" })
+                                    <label for="search_gender_male">Contract</label>
+                                </div>
+                                <div class="radio-custom radio-primary pt-2">
+                                    @Html.RadioButtonFor(x => x.search.is_contract, 2, new { @id = "search_gender_female", @class = "form-control-label" })
+                                    <label for="search_gender_female">No Contract</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-100 d-none d-md-block d-lg-none"></div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.createStart, "등록일", new { @class = "form-control-label" })
+                            <div class="form-group">
+                                <div class="input-group">
+                                    @Html.TextBoxFor(x => x.search.createStart, new { @class = "form-control", @placeholder = "YYYY-MM-DD" })
+                                    <div class="input-group-text pl-5 pr-5">
+                                        ~
+                                    </div>
+                                    @Html.TextBoxFor(x => x.search.createEnd, new { @class = "form-control", @placeholder = "YYYY-MM-DD" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-100 d-none d-md-block d-lg-none"></div>
+
+                    </div>
+                    <!-- 검색조건 셋째줄 끝 -->
+                    <!-- 검색조건 네째줄 시작 -->
+                    <div class="row pt-2">
+                        <div class="col">
+                            <div class="form-group text-right">
+                                <button type="submit" id="btnSearch" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-search"></i>
+                                    검색
+                                </button>
+                                <button type="button" id="btnReset" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-redo"></i>
+                                    초기화
+                                </button>
+                            </div>
+                        </div>
+                    </div>                    
+                    <!-- 검색조건 네째줄 끝 -->
+                </div>
+            </div>
+            <!-- 검색 패널 끝 -->
+        }
+        <div class="panel">
+
+            <div class="panel-body">                
+                <div class="tablesaw-bar tablesaw-mode-columntoggle"></div>
+                <table class="tablesaw table-striped table-bordered tablesaw-columntoggle" data-tablesaw-mode="columntoggle" data-tablesaw-minimap="" id="tablesaw-1256">
+                    <thead>
+                        <tr>
+                            <th data-tablesaw-priority="6" class="tablesaw-priority-6">No</th>
+
+                            <th data-tablesaw-priority="persist">
+                                <table class="innertable">
+                                    <tr>
+                                        <td style="width:90%">Client Name</td>
+                                        <td>
+                                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "kor_name", Model.search.orderOption) colSort" orderTxt="kor_name"></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:90%">[CEO]</td>
+                                        <td><i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "ceo", Model.search.orderOption) colSort" orderTxt="ceo"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:90%">[Biz Num]</td>
+                                        <td></td>
+                                    </tr>
+                                </table>
+                            </th>
+
+                            <th data-tablesaw-priority="2" class="tablesaw-priority-2">
+                                <table class="innertable">
+                                    <tr>
+                                        <td style="width:90%">AM</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:90%">[Industry]</td>
+                                        <td></td>
+                                    </tr>
+                                </table>
+                            </th>                            
+                            <th data-tablesaw-priority="3" class="tablesaw-priority-3">
+                                Info
+                            </th>
+                            <th data-tablesaw-priority="4" class="tablesaw-priority-4">
+                                <table class="innertable">
+                                    <tr>
+                                        <td style="width:90%">Regist Date</td>
+                                        <td>
+                                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "create_dt", Model.search.orderOption) colSort" orderTxt="create_dt"></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:90%">Update</td>
+                                        <td><i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "modify_dt", Model.search.orderOption) colSort" orderTxt="modify_dt"></i></td>
+                                    </tr>
+                                </table>
+                            </th>
+
+                            <th data-tablesaw-priority="5" class="tablesaw-priority-5">
+                                Project
+                            </th>                            
+                            <th data-tablesaw-priority="1" class="tablesaw-priority-1">
+                                Remark
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.list.Count > 0)
+                        {
+                            int num = 1;
+                            foreach (var data in Model.list)
+                            {
+                                <tr>
+                                    <th class="tablesaw-priority-6">@(num++)</th>
+                                    <td>
+                                        <a href="@Url.Action("ClientDetail", "Client", new { c_seq = data.c_seq})">@data.kor_name</a>
+                                        <br />
+                                        [@data.ceo]
+                                        <br />
+                                        [@data.biz_code]
+                                    </td>
+
+                                    <td class="tablesaw-priority-2" style="width:20%">
+                                        @if (data.am_name != null)
+                                        {
+                                            string[] arrAm = data.am_name.Split('/');
+                                            @*<text>@arrAm.Length</text><br />*@
+                                            for (int k = 1; k < arrAm.Length; k++)
+                                            {
+                                                if (k == 1)
+                                                {
+                                                    @arrAm[k]
+                                                }
+                                                else
+                                                {
+                                                    <text>,</text> @arrAm[k]
+                                                }
+
+                                            }
+                                        }
+                                        @*@data.am_name*@
+                                        <br />
+                                        @if (data.biz_industry != null)
+                                        {
+                                            <text>[</text> @data.biz_industry <text>]</text>
+                                        }
+
+                                    </td>
+
+                                    <td class="tablesaw-priority-3">
+                                        <div id="contractValue" style="@(data.is_contract == 1 ? "color:green;font:bold;" : "color:#e0e0e0;")">Contract</div>
+                                        <div id="contractValue" style="@(data.is_foreign == 1 ? "color:blue;font:bold;" : "color:#e0e0e0;")">Foreign</div>
+                                        <div id="contractValue" style="@(data.offlimit == 1 ? "color:red;font:bold;" : "color:#e0e0e0;")">Offlimit</div>
+                                    </td>
+                                    
+
+                                    <td class="tablesaw-priority-4" style="width:15%">
+                                        <div style="color:blue;">R : @(((DateTime)data.create_dt).ToString("yyyy-MM-dd"))</div>
+                                        <div style="color:darkcyan;">
+                                            M :
+                                            @if (data.modify_dt != null)
+                                            {
+                                                @(((DateTime)data.modify_dt).ToString("yyyy-MM-dd"))
+                                            }
+                                            else
+                                            {
+                                                <text></text>
+                                            }
+
+                                        </div>
+                                    </td>
+
+                                    <td class="tablesaw-priority-5" style="width:15%">
+                                        @*<div class="row">
+                                            <div class="col-md-3 col-lg-4 col-xxl-3 pt-2" style="color:red;"><b>T : </b>@data.total_prj</div>
+                                            <div class="col-md-3 col-lg-4 col-xxl-3 pt-2" style="color:blue;"><b>S : </b>@data.success_prj</div>
+                                            <div class="col-md-3 col-lg-4 col-xxl-3 pt-2" style="color:green"><b>P : </b>@data.ing_prj</div>
+                                            <div class="col-md-3 col-lg-4 col-xxl-3 pt-2" style="color:chocolate"><b>F : </b>@data.cancel_prj</div>
+                                        </div>*@
+                                        <div style="color:red;">Total : @data.total_prj</div>
+                                        <div style="color:blue;">Success : @data.success_prj</div>
+                                        <div style="color:green;">Progress : @data.ing_prj</div>
+                                        <div style="color:chocolate;">Failure : @data.cancel_prj</div>
+                                    </td>
+
+                                    <td class="tablesaw-priority-1" style="width:10%">
+                                        @if (data.cf_seq != null)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-default" onclick="DeleteAttentionConfirm(this, '@data.cf_seq', '@data.c_seq')">관심취소</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-info" onclick="CreateAttentionConfirm(this, '@data.c_seq')">관심등록</button>
+                                        }
+                                        </td>
+                                </tr>
+                            }
+                        }
+
+                        else
+                        {
+                            <tr>
+                                <td colspan="15" style="text-align:center;height:200px;vertical-align:middle;"><b>No Data.</b></td>
+                            </tr>
+                        }
+
+                    </tbody>
+                </table>
+                <br />
+                @Html.PageAjaxLinks(Model.PagingInfo,
+                      ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                      x => Url.Action("AttentionList", new
+                      {
+                          page = x
+                      }))
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+@section scripts{
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+
+            $(".colSort").click(function () {
+
+                $(".colSort").not(this).each(function () {
+
+                    $(this).removeClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $(this).addClass("fa-sort");
+                })
+
+                $(this).removeClass("fa-sort");
+
+                if ($(this).hasClass("fa-sort-up")) {
+                    $(this).addClass("fa-sort-down");
+                    $(this).removeClass("fa-sort-up");
+                    $("#search_orderTxt").val($(this).attr("orderTxt"));
+                    $("#search_orderOption").val("DESC");
+                }
+                else {
+                    $(this).addClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $("#search_orderTxt").val($(this).attr("orderTxt"));
+                    $("#search_orderOption").val("ASC");
+                }
+
+                $("#SearchForm").submit();
+
+            });
+
+
+            $("#btnReset").click(function () {
+                $("#search_searchNum").val("10");
+                $("#search_SelectOption").val("");
+                $("#search_SearchString").val("");
+                $("#search_phone").val("");
+                $("#search_email").val("");
+                $("#search_createStart").val("");
+                $("#search_createEnd").val("");
+
+                $("#SearchForm").submit();
+            });
+        });
+
+        function changeSearchState(state) {
+
+                $("#search_state").val(state);
+                $("#SearchForm").submit();
+
+        }
+
+        function resetSearchForm() {
+            $("#search_searchTxt").val("");
+            $("#search_orderTxt").val("");
+            $("#search_orderOption").val("");
+            $("#SearchForm").submit();
+        }
+
+
+
+        $("#btnReset").click(function () {
+            $("#search_searchNum").val("10");
+            $("#search_SelectOption").val("");
+            $("#search_SearchString").val("");
+            $("#search_phone").val("");
+            $("#search_email").val("");
+            $("#search_createStart").val("");
+            $("#search_createEnd").val("");
+
+            $("#SearchForm").submit();
+        });
+
+        function CreateAttentionConfirm(obj, c_seq) {
+
+            alertify.confirm()
+                .set({
+                    'labels': { ok: '확인', cancel: '취소' },
+                    'onok': function () {
+                        CreateAttention(obj, c_seq)
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>관심업체 등록')
+                .setting({
+                    message: "관심업체를 등록 하시겠습니까?",
+                })
+                .show();
+        }
+
+        //관심기업 등록
+        function CreateAttention(obj, c_seq) {
+            $.ajax({
+               url: '@Url.Action("CreateAttention", "Client")',
+               data: {
+                   c_seq: c_seq
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                    showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+
+                    delHtml = "<button type='button' class='btn btn-sm btn-default' onclick='DeleteAttentionConfirm(this, &quot;" + json.cf_seq + "&quot;, &quot;" + c_seq + "&quot;)'>관심취소</button>";
+
+                    var td = $(obj).closest("td");
+
+                    $(td).empty();
+                    $(td).html(delHtml);
+
+                    NormalAlert(json.message);
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+
+        function DeleteAttentionConfirm(obj, cf_seq, c_seq) {
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            DeleteAttention(obj, cf_seq, c_seq)
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>관심업체 취소')
+                    .setting({
+                        message: "관심업체를 취소 하시겠습니까?",
+                    })
+                    .show();
+
+        }
+
+        //관심후보 삭제.
+        function DeleteAttention(obj, cf_seq, c_seq) {
+
+            $.ajax({
+               url: '@Url.Action("DeleteAttention", "Client")',
+               data: {
+                   cf_seq: cf_seq
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+
+                    delHtml = "<button type='button' class='btn btn-sm btn-info' onclick='CreateAttentionConfirm(this, &quot;" + c_seq + "&quot;)'>관심등록</button>";
+
+                    var td = $(obj).closest("td");
+
+                    $(td).empty();
+                    $(td).html(delHtml);
+
+                    NormalAlert(json.message);
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+    </script>
+}

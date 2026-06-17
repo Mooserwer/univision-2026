@@ -1,0 +1,327 @@
+﻿@model Univision.Main.Models.Project.ProjectCandiSuggetionListModel
+@using Univision.Security
+@{
+  long from = 0, to = 0;
+  if (Model.PagingInfo.TotalItems > 0)
+  {
+    from = ((Model.PagingInfo.CurrentPage-1) * 4) + 1;
+    to = from + 4 - 1;
+    if (to > Model.PagingInfo.TotalItems)
+    {
+      to = Model.PagingInfo.TotalItems;
+    }
+
+  }
+}
+<div class="row" id="suggetionList">
+
+  @if (Model.list.Count > 0)
+  {
+    @*
+      <div style="width:4%;padding-top:80px;" class="text-center">
+        @if (Model.PagingInfo.CurrentPage > 1)
+        {
+          <i class="fas fa-chevron-left cur_hand" onclick="callProjectCandiSuggetionList('@Model.p_seq', '@(Model.PagingInfo.CurrentPage-1)')"></i>
+        }
+
+      </div>
+    *@
+    <div class="row" style="width:100%;">
+      @foreach (var data in Model.list)
+      {
+        <div class="col-md-3">
+          <div class="card border border-primary shadow">
+            <div class="card-block">
+              <h4 class="card-title" style="font-size:0.95rem;">
+                <a href="javascript:openCandidatePop('@data.c_seq');">
+                  @data.kor_name
+                  - @Utils.YearSeparate(data.birth_date)
+                  <span class="text-danger">
+                    @Utils.Get1ToString(data.ex_birthdate, "[추정]")
+                  </span>
+                  /
+                  (@Utils.ReturnGenderTxt(data.gender))
+                </a>
+                @if (data.cur_career_month > 0)
+                {
+                  <span class="text-primary">
+                    [경력 :
+                    @if ((data.cur_career_month / 12) > 0)
+                    {
+                      <text>@(data.cur_career_month / 12)Y </text>
+                    }
+                    @if ((data.cur_career_month % 12) > 0)
+                    {
+                      <text>@(data.cur_career_month % 12)M </text>
+                    }]
+                  </span>
+                }
+              </h4>
+              <p class="card-text text-truncate mb-3" title="@Html.Raw(data.school_name) @Html.Raw(!String.IsNullOrEmpty(data.major_name) ? data.major_name : "")">
+                최종학력:
+                @Html.Raw(data.school_name) /
+                @(!String.IsNullOrEmpty(data.category1_name) ? "[" + data.category1_name + "]" : "")
+                @Html.Raw(!String.IsNullOrEmpty(data.major_name) ? data.major_name : "")
+              </p>
+              <p class="card-text text-truncate mb-3">
+
+                @{
+                  string all_company = String.Empty;
+                  if (!String.IsNullOrEmpty(data.all_company))
+                  {
+                    all_company = data.all_company.Replace("\n", " ← ");
+                  }
+                }
+
+                <span title="@all_company">최종회사: @Html.Raw(all_company)</span>
+
+              </p>
+              @if (Model.no_business > 0)
+              {
+                <p class="card-text text-truncate mb-3">
+                  <span title="@data.busiName">
+                    산업:
+
+                    @if (!string.IsNullOrWhiteSpace(data.busiName))
+                    {
+                      string[] businessList = data.busiName.Split('\n');
+                      if (businessList.Length > 0)
+                      {
+                        int busi_cnt = 0;
+                        foreach (var business in businessList)
+                        {
+                          busi_cnt++;
+
+
+                          if (business.IndexOf(":") > 1)
+                          {
+                            <jobbusibox>@Html.Raw(business.Substring(business.IndexOf(":") + 1).Replace("\r", ""))</jobbusibox>
+                            @*<label class="badge badge-outline badge-dark" style="font-size:95%;">
+                                @business.Substring(job.IndexOf(":")+1)
+                              </label>*@
+                          }
+
+                        }
+
+                      }
+                    }
+
+                  </span>
+
+                </p>
+              }
+              @if (Model.no_job > 0)
+              {
+                <p class="card-text text-truncate mb-3">
+                  <span title="@data.jobName">
+                    직무:
+                    @if (!string.IsNullOrWhiteSpace(data.jobName))
+                    {
+                      string[] jobList = data.jobName.Split('\n');
+                      if (jobList.Length > 0)
+                      {
+                        int job_cnt = 0;
+                        foreach (var job in jobList)
+                        {
+                          job_cnt++;
+
+
+                          if (job.IndexOf(":") > 1)
+                          {
+                            <jobbusibox>@Html.Raw(job.Substring(job.IndexOf(":") + 1).Replace("\r", ""))</jobbusibox>
+                            @*<label class="badge badge-outline badge-dark" style="font-size:95%;">
+                                @business.Substring(job.IndexOf(":")+1)
+                              </label>*@
+                          }
+
+                        }
+
+                      }
+                    }
+                  </span>
+
+                </p>
+              }
+              <p class="card-text small">
+                [Update : @Utils.ConvertDateTimeToString(data.modify_dt) / <span class="text-secondary">Reg. : @Utils.ConvertDateTimeToString(data.create_dt)</span>]
+              </p>
+              @*<p class="card-text">
+                    연락처:
+                    @data.cell_phone
+                </p>*@
+              <button type="button" class="btn btn-sm btn-primary" onclick="CreateRecandidate(@Model.p_seq, @data.c_seq)">등록</button>
+            </div>
+          </div>
+        </div>
+      }
+      @if (Model.list.Count < 8)
+      {
+        <div class="col-md-3">
+          <span class="red-600">
+            더 이상 제안 할 후보자가 없습니다.<br />
+          </span>
+          <div class="row">
+            @if (Model.no_business == 0)
+            {
+              <div class="col-12">
+                <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', 2);" class="btn btn-sm btn-block btn-outline-primary">[현재 산업 대분류]로 확장하여 제안 받기</a>
+              </div>
+              <div class="col-12">
+                <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', 1);" class="btn btn-sm btn-block btn-primary">[전체 산업]으로 확장하여 제안 받기</a>
+              </div>
+            }
+            else if (Model.no_business == 2)
+            {
+              <div class="col-12">
+                <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', 1);" class="btn btn-sm btn-block btn-primary">[전체 산업]으로 확장하여 제안 받기</a>
+              </div>
+            }
+            @if (Model.no_job == 0)
+            {
+              <div class="col-12">
+                <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', null, 2);" class="btn btn-block btn-sm btn-outline-info">[현재 직무 대분류]로 확장하여 제안 받기</a>
+              </div>
+              <div class="col-12">
+                <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', null, 1);" class="btn btn-block btn-sm btn-info">[전체 직무]로 확장하여 제안 받기</a>
+              </div>
+            }
+            else if (Model.no_job == 2)
+            {
+              <div class="col-12">
+                <a href="#" onclick="ProjectSetSuggType(event, '@Model.p_seq', null, 1);" class="btn btn-sm btn-info">[전체 직무]로 확장하여 제안 받기</a>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+    @*
+      <div style="width:4%;padding-top:80px;" class="text-center">
+        @if (Model.list.Count == 4 && Model.PagingInfo.TotalItems + 1 > to)
+        {
+          <i class="fas fa-chevron-right cur_hand" onclick="callProjectCandiSuggetionList('@Model.p_seq', '@(Model.PagingInfo.CurrentPage+1)')"></i>
+        }
+
+      </div>
+    *@
+  }
+  else
+  {
+    <div class="col-md-12 text-center">
+      <span class="red-600">
+        현재 프로젝트에 제안 할 후보자가 없습니다.
+        @if (Model.no_business != 1 || Model.no_job != 1)
+        {
+          <br />
+          <text>산업 또는 직무 조건을 확장하여 제안을 받아보세요.</text>
+        }
+      </span>
+      <div class="row pt-20">
+
+        @if (Model.no_business == 0)
+        {
+          <div class="offset-2 col-4 form-group">
+            <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', 2);" class="btn btn-sm btn-outline-primary btn-block">[현재 산업 대분류]로 확장하여 제안 받기</a>
+          </div>
+          <div class="col-4 form-group">
+            <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', 1);" class="btn btn-sm btn-primary btn-block">[전체 산업]으로 확장하여 제안 받기</a>
+          </div>
+        }
+        else if (Model.no_business == 2)
+        {
+          <div class="col-6 offset-3 form-group">
+            <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', 1);" class="btn btn-sm btn-primary btn-block">[전체 산업]으로 확장하여 제안 받기</a>
+          </div>
+        }
+
+      </div>
+      <div class="row">
+
+        @if (Model.no_job == 0)
+        {
+          <div class="offset-2 col-4 form-group">
+            <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', null, 2);" class="btn btn-sm btn-outline-info btn-block">[현재 직무 대분류]로 확장하여 제안 받기</a>
+          </div>
+          <div class="col-4 form-group">
+            <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', null, 1);" class="btn btn-sm btn-info btn-block">[전체 직무]로 확장하여 제안 받기</a>
+          </div>
+        }
+        else if (Model.no_job == 2)
+        {
+          <div class="col-6 offset-3 form-group">
+            <a href="#" onclick="ProjectSetSuggType(event,'@Model.p_seq', null, 1);" class="btn btn-sm btn-info btn-block">[전체 직무]로 확장하여 제안 받기</a>
+          </div>
+        }
+
+      </div>
+
+    </div>
+  }
+  
+
+  @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                         ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                         x => String.Format("javascript:callProjectCandiSuggetionList({0}, {1})", Model.p_seq, x))
+
+</div>
+
+<script type="text/javascript">
+    function setSuggPaging(from, to, total) {
+        var msg = "";
+        if (total && total >= 0) {
+            msg = "(" + from + " ~ " + to + " / " + total + ")";
+        }
+        $('#pjg_sugg_total').text(msg);
+    }
+    function CreateRecandidate(p_seq, c_seq) {
+
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+                    $.ajax({
+                       url: '@Url.Action("ProjectRecandidateCreate", "Project")',
+                       data: {
+                           p_seq: p_seq,
+                           c_seq: c_seq
+                        },
+                        dataType: 'json',
+                        type: 'POST',
+                       beforeSend: function ()
+                       {
+                           showLoading();
+                       }
+                    })
+                    .done(function (json) {
+                        hideLoading();
+                        if (json.ok) {
+
+                            //NormalAlert(json.message);
+                            callProjectProgress(@Model.p_seq, 0, 1);
+                            callProjectCandiSuggetionList(@Model.p_seq, @Model.PagingInfo.CurrentPage);
+
+                        } else {
+                            ErrorAlert(json.message);
+                        }
+                    })
+                    .fail(function (e) {
+                        hideLoading();
+                        ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    });
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>잠재후보 등록')
+            .setting({
+                message: "해당 후보자를 잠재후보로 등록하시겠습니까?",
+            })
+            .show();
+
+
+    }
+
+    setSuggPaging('@from', '@to', '@Model.totalCnt');
+</script>

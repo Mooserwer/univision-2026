@@ -1,0 +1,551 @@
+﻿@model Univision.Main.Models.DashBoard.DashBoardTopSummaryModel
+
+@{
+  ViewBag.Title = "Home(Dash Board)";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+  .receipt-blinking {
+    -webkit-animation: blink 1.0s ease-in-out infinite alternate;
+    -moz-animation: blink 1.0s ease-in-out infinite alternate;
+    animation: blink 1.0s ease-in-out infinite alternate;
+  }
+
+  @@-webkit-keyframes blink {
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @@-moz-keyframes blink {
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @@keyframes blink {
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+</style>
+<div class="page-content container-fluid">
+  <div class="row d-none" id="ReceiptReady">
+    <div class="col-md-12">
+      <div class="page-header h-200 mb-30 border-danger border bg-red-100 shadow">
+        <div class="text-center m-0 mt-30">
+          <div class="font-size-20 mb-30 text-danger receipt-blinking">
+            ※ 제출이 필요한 제경비<span class="text-dark" id="receiptReadyList"></span>가 있습니다.
+
+          </div>
+
+          <ul class="list-inline font-size-14">
+            <li class="list-inline-item">
+              <a href="@Url.Action("ReceiptList", "MyList")" title="제경비 제출하러 가기"><i class="fas fa-arrow-right" aria-hidden="true"> 제경비 제출하러 가기</i></a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+
+    <div class="col-4 col-lg-2">
+      <!-- Card -->
+      <div class="card card-block p-15 shadow">
+        <div class="counter counter-md text-left">
+          <div class="counter-label small text-uppercase mb-3" title="현재 진행 중인 프로젝트 수">PROJECT <small><br />in progress</small><br /><span class="blue-900 d-none d-md-inline-block">&lt;진행 프로젝트&gt;</span></div>
+          <div class="counter-number-group mb-5 text-right">
+            <span class="counter-number font-size-20" title="현재"><a href="@Url.Action("MyProjectList", "Project")" class="text-dark">@Model.pjtCnt</a></span>
+            <span class="counter-number font-size-14 text-secondary" title="목표">/ 8</span>
+          </div>
+          <div class="counter-label">
+            @{
+              double pjt_per = Model.pjtCnt / 8.0 * 100;
+            }
+            <div class="progress progress-xs mb-5" title="@(pjt_per)%">
+              <div class="progress-bar progress-bar-info bg-blue-600" aria-valuenow="@pjt_per" aria-valuemin="0"
+                   aria-valuemax="100" style="width: @(pjt_per)%" role="progressbar">
+                <span class="sr-only">@(pjt_per)%</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <!-- End Card -->
+    </div>
+    <div class="col-4 col-lg-2">
+      <!-- Card -->
+      <div class="card card-block p-15 shadow">
+        <div class="counter counter-md text-left">
+          <div class="counter-label small text-uppercase mb-3" title="이번달 후보자 추천 수">Recommend <small><br />candidates</small><br /><span class="indigo-900 d-none d-md-inline-block">&lt;추천후보자 수&gt;</span></div>
+          <div class="counter-number-group mb-5 text-right">
+            <span class="counter-number font-size-20" title="현재"><a href="@Url.Action("UnivisionActivity", "Statistics")" class="text-dark">@Model.rCandidateCnt</a></span>
+            <span class="counter-number font-size-14 text-secondary" title="월 목표">/ 20</span>
+          </div>
+          <div class="counter-label">
+            @{
+              double rec_per = Model.rCandidateCnt / 20.0 * 100;
+            }
+            <div class="progress progress-xs mb-5" title="@(rec_per)%">
+              <div class="progress-bar progress-bar-info bg-indigo-600" aria-valuenow="@rec_per" aria-valuemin="0"
+                   aria-valuemax="100" style="width: @(rec_per)%" role="progressbar">
+                <span class="sr-only">@(rec_per)%</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <!-- End Card -->
+    </div>
+    <div class="col-4 col-lg-2">
+      <!-- Card -->
+      <div class="card card-block p-15 shadow">
+        <div class="counter counter-md text-left">
+          <div class="counter-label small text-uppercase mb-3" title="이번달 후보자 면접">
+            Interview <small><br />candidates</small>
+            <br /><span class="orange-900 d-none d-md-inline-block">&lt;면접후보자 수&gt;</span>
+          </div>
+          <div class="counter-number-group mb-5 text-right">
+            <span class="counter-number font-size-20" title="현재"><a href="@Url.Action("UnivisionActivity", "Statistics")" class="text-dark">@Model.intvCandidateCnt</a></span>
+            <span class="counter-number font-size-14 text-secondary" title="월 목표">/ 10</span>
+          </div>
+          <div class="counter-label">
+            @{
+              double itv_per = Model.intvCandidateCnt / 10.0 * 100;
+            }
+            <div class="progress progress-xs mb-5" title="@(itv_per)%">
+              <div class="progress-bar progress-bar-info bg-orange-600" aria-valuenow="@itv_per" aria-valuemin="0"
+                   aria-valuemax="100" style="width: @(itv_per)%" role="progressbar">
+                <span class="sr-only">@(itv_per)%</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <!-- End Card -->
+    </div>
+    <div class="col-4 col-lg-2">
+      <!-- Card -->
+      <div class="card card-block p-15 shadow">
+        <div class="counter counter-md text-left">
+          <div class="counter-label small text-uppercase mb-3" title="이번달 후보자 등록 및 업데이트">Candidate <small class="text-truncate"><br />reg. &amp; update</small><br /><span class="green-900 d-none d-md-inline-block">&lt;후보자 등록/업데이트&gt;</span></div>
+          <div class="counter-number-group mb-5 text-right">
+            <span class="counter-number font-size-20" title="현재"><a href="@Url.Action("UnivisionActivity", "Statistics")" class="text-dark">@(Model.candidateCnt+ Model.candidateUdCnt)</a></span>
+            <span class="counter-number font-size-14 text-secondary" title="월 목표">/ 20</span>
+          </div>
+          <div class="counter-label">
+            @{
+              double reg_per = (Model.candidateCnt + +Model.candidateUdCnt) / 20.0 * 100;
+            }
+            <div class="progress progress-xs mb-5" title="@(reg_per)%">
+              <div class="progress-bar progress-bar-info bg-green-600" aria-valuenow="@reg_per" aria-valuemin="0"
+                   aria-valuemax="100" style="width: @(reg_per)%" role="progressbar">
+                <span class="sr-only">@(reg_per)%</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <!-- End Card -->
+    </div>
+    <div class="col-4 col-lg-2">
+      <!-- Card -->
+      <div class="card card-block p-15 shadow">
+        <div class="counter counter-md text-left">
+          <div class="counter-label small text-uppercase mb-3" title="이번달 후보자 메모 등록">Memo <small><br />registration</small><br /><span class="cyan-900 d-none d-md-inline-block">&lt;후보자메모 등록&gt;</span></div>
+          <div class="counter-number-group mb-5 text-right">
+            <span class="counter-number font-size-20" title="현재"><a href="@Url.Action("UnivisionActivity", "Statistics")" class="text-dark">@Model.MemoCnt</a></span>
+            <span class="counter-number font-size-14 text-secondary" title="월 목표">/ 20</span>
+          </div>
+          <div class="counter-label">
+            @{
+              double mem_per = Model.MemoCnt / 20.0 * 100;
+            }
+            <div class="progress progress-xs mb-5" title="@(mem_per)%">
+              <div class="progress-bar progress-bar-info bg-cyan-600" aria-valuenow="@mem_per" aria-valuemin="0"
+                   aria-valuemax="100" style="width: @(mem_per)%" role="progressbar">
+                <span class="sr-only">@(mem_per)%</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <!-- End Card -->
+    </div>
+
+    @*
+      <div class="col-4 col-lg-2">
+        <!-- Card -->
+        <div class="card card-block p-15 shadow border border-primary">
+
+          <div class="counter counter-md text-left mb-15">
+            <div class="counter-label h3" title="PMS 바로가기">
+              PMS 바로가기
+            </div>
+            <div class="my-5">
+              <a href="https://headhunting-pro.rememberapp.co.kr/" target="_blank" class="btn btn-info btn-block">리멤버 PMS 바로가기</a>
+            </div>
+
+          </div>
+        </div>
+        <!-- End Card -->
+      </div>
+      <div class="col-4 col-lg-2">
+        <!-- Card -->
+        <div class="card card-block p-15 shadow border border-primary">
+
+          <div class="counter counter-md text-left mb-15">
+            <div class="counter-label h3" title="AI메이크업">
+              AI메이크업
+            </div>
+            <div class="my-5">
+              <a href="/GPT/MakeupAi" class="btn btn-success btn-block btn-outline">준비중</a>
+            </div>
+
+          </div>
+        </div>
+        <!-- End Card -->
+      </div>
+      <div class="col-4 col-lg-2">
+        <!-- Card -->
+        <div class="card card-block p-15 shadow">
+
+          <div class="counter counter-md text-left mb-15">
+            <div class="counter-label h4" title="표준계약서 양식">
+              표준계약서 양식 <br /><small> - @Model.contract_update_date</small>
+            </div>
+            <div class="my-5">
+              <a href="/Board/ExternalDetail?b_seq=1441" class="btn btn-primary btn-block">표준계약서 바로가기</a>
+            </div>
+
+          </div>
+        </div>
+        <!-- End Card -->
+      </div>
+      <div class="col-4 col-lg-2">
+        <!-- Card -->
+        <div class="card card-block p-15 shadow">
+
+          <div class="counter counter-md text-left mb-15">
+            <div class="counter-label h4" title="회사 소개서(국문)">
+              회사 소개서(국문) <br /><small> - @Model.kr_intro_update_date</small>
+            </div>
+            <div class="my-5">
+              <a href="/Board/ExternalDetail?b_seq=1350" class="btn btn-primary btn-block">소개서(국문) 바로가기</a>
+            </div>
+
+          </div>
+        </div>
+        <!-- End Card -->
+      </div>
+      <div class="col-4 col-lg-2">
+        <!-- Card -->
+        <div class="card card-block p-15 shadow">
+
+          <div class="counter counter-md text-left mb-15">
+            <div class="counter-label h4" title="회사 소개서(영문)">
+              회사 소개서(영문) <br /> <small> - @Model.en_intro_update_date</small>
+            </div>
+            <div class="my-5">
+              <a href="/Board/ExternalDetail?b_seq=1351" class="btn btn-primary btn-block">소개서(영문) 바로가기</a>
+            </div>
+
+          </div>
+        </div>
+        <!-- End Card -->
+      </div>
+    *@
+    <div class="col-4 col-lg-2">
+      <!-- Card -->
+      <div class="card card-block p-15 shadow">
+        @{
+          double vac_remain = Model.totalVacation - Model.usedVacation;
+          double vac_per = (Model.usedVacation * 1.0) / Model.totalVacation * 100;
+        }
+        <div class="counter counter-md text-left">
+          <div class="counter-label small text-uppercase mb-3" title="잔여 연차">Vacation <small><br />Remaining</small><br /><span class="brown-900 d-none d-md-inline-block">&lt;잔여 연차&gt;</span></div>
+          <div class="counter-number-group mb-5 text-right">
+            <span class="counter-number font-size-20" title="잔여 연차"><a href="@Url.Action("MyVacationList", "MyList")" class="text-dark">@(vac_remain)</a></span>
+            <span class="counter-number font-size-14 text-secondary" title="총 할당">/ @Model.totalVacation</span>
+          </div>
+          <div class="counter-label">
+
+            <div class="progress progress-xs mb-5" title="@(vac_per)%">
+              <div class="progress-bar progress-bar-info bg-brown-600" aria-valuenow="@vac_per" aria-valuemin="0"
+                   aria-valuemax="100" style="width: @(vac_per)%" role="progressbar">
+                <span class="sr-only">@(vac_per)%</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <!-- End Card -->
+    </div>
+  </div>
+
+
+  <div class="row d-none" id="vcationAppr">
+    <div class="col-md-12">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase py-5">
+            Vacation Approval  <small>(휴가 승인)</small>
+          </h3>
+        </header>
+        <div id="vacationApprBody" class="panel-body equal"></div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="panel custom1 shadow">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase py-5">
+            Notice <small>(공지사항)</small>
+          </h3>
+          <div class="panel-actions panel-actions-keep">
+            <a href="@Url.Action("InternalList", "Board", new {b_type_sub1=10, b_type_sub2=10})" title="Move to Notice list"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+          </div>
+        </header>
+        <div id="noticeBody" class="panel-body equal"></div>
+      </div>
+    </div>
+
+
+    <div class="col-md-6">
+      <div class="panel custom1 shadow">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase py-5 text-truncate">
+            New BD Client List <small>(신규 등록 고객사)</small>
+          </h3>
+          <div class="panel-actions panel-actions-keep">
+            <a href="@Url.Action("ClientList", "Client")" title="Move to Client list"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+          </div>
+        </header>
+
+        <div id="clientBody" class="panel-body equal"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+
+    <div class="col-4 col-lg-3">
+      <!-- Card -->
+      <div class="card card-block p-15-x p-5 shadow border-x border-primary-x">
+        <div class="counter counter-md text-left mb-15-x">
+          <div class="my-5">
+            <a href="https://headhunting-pro.rememberapp.co.kr/" target="_blank" class="btn btn-info btn-block btn-outline">리멤버 PMS 바로가기</a>
+          </div>
+        </div>
+      </div>
+      <!-- End Card -->
+    </div>
+
+    <div class="col-4 col-lg-3">
+      <!-- Card -->
+      <div class="card card-block p-15-x p-5 shadow border-x border-primary-x">
+        <div class="counter counter-md text-left mb-15-x">
+          <div class="my-5">
+            <a href="/Board/ExternalDetail?b_seq=1441" class="btn btn-primary btn-block">표준계약서(@Model.contract_update_date) 바로가기</a>
+          </div>
+
+        </div>
+      </div>
+      <!-- End Card -->
+    </div>
+    <div class="col-4 col-lg-3">
+      <!-- Card -->
+      <div class="card card-block p-15-x p-5 shadow border-x border-primary-x">
+        <div class="counter counter-md text-left mb-15-x">
+          <div class="my-5">
+            <a href="/Board/ExternalDetail?b_seq=1350" class="btn btn-primary btn-block ">국문 소개서(@Model.kr_intro_update_date) 바로가기</a>
+          </div>
+
+        </div>
+      </div>
+      <!-- End Card -->
+    </div>
+    <div class="col-4 col-lg-3">
+      <!-- Card -->
+      <div class="card card-block p-15-x p-5 shadow border-x border-primary-x">
+        <div class="counter counter-md text-left mb-15-x">
+          <div class="my-5">
+            <a href="/Board/ExternalDetail?b_seq=1351" class="btn btn-primary btn-block">영문 소개서(@Model.kr_intro_update_date) 바로가기</a>
+          </div>
+
+        </div>
+      </div>
+      <!-- End Card -->
+    </div>
+
+  </div>
+
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase  py-5">
+            Weekly Schedule <small>(주간 일정)</small>
+          </h3>
+          @*<div class="panel-actions panel-actions-keep row" style="width:20%;">
+                <select class="form-control" style="width:49%; margin-right:2%;">
+                    <option>월간보기</option>
+                    <option>일간보기</option>
+                    <option>년간보기</option>
+                </select>
+                <button type="button" class="btn btn-default btn-sm" style="width:49%;">설정</button>
+            </div>*@
+        </header>
+        <div id="calendarBody" class="panel-body h-300">
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row ">
+    <div class="col-xl-12 ">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase py-5">
+            Sourcing/Floating <small>(후보 소싱 부탁 드려요)</small>
+            <i class="fas fa-info-circle text-primary d-none" title=""></i>
+          </h3>
+          <div class="panel-actions panel-actions-keep">
+            <a href="@Url.Action("ShareProjectList", "Project")" title="Move to Shared project list"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+          </div>
+        </header>
+
+        <div id="openprjBody" class="panel-body"></div>
+      </div>
+    </div>
+  </div>
+  <div class="row ">
+    <div class="col-xl-12 ">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase  py-5">
+            Find SM <small>(Searching Manager 찾아요)</small>
+            <i class="fas fa-info-circle text-primary d-none" title=""></i>
+          </h3>
+          <div class="panel-actions panel-actions-keep">
+            <a href="@Url.Action("CoWorkProjectList", "Project")" title="Move to Co-work project list"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+          </div>
+        </header>
+
+        <div id="CoworkprjBody" class="panel-body"></div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xl-7">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase  py-5">
+            My Invoice List <small>(최근 발행된 인보이스)</small>
+          </h3>
+          @*<div class="panel-actions panel-actions-keep">
+                <button type="button" class="btn btn-default btn-sm ">더보기</button>
+            </div>*@
+        </header>
+
+        <div id="invoiceBody" class="panel-body"></div>
+      </div>
+    </div>
+
+    <div class="col-xl-5">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase  py-5">
+            Upcoming Invoice <small>(발행예정 인보이스)</small>
+          </h3>
+          @*<div class="panel-actions panel-actions-keep">
+                <button type="button" class="btn btn-default btn-sm ">더보기</button>
+            </div>*@
+        </header>
+        <div class="panel-body" id="unbilledBody">
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xl-12 border_t">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase py-5">
+            Meetingroom <small>(회의실 현황)</small>
+          </h3>
+          <div class="panel-actions panel-actions-keep">
+            <a href="@Url.Action("MeetingRoomView", "MeetingRoom")" title="Move to Meetingroom"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+          </div>
+        </header>
+        <div id="meetingRoomBody" class="panel-body p-5">
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--원래 주간일정 있던 자리-->
+  <!--
+    <div class="row">
+      <div class="col-xl-12 border_t">
+        <div class="panel custom1">
+          <header class="panel-heading">
+            <h3 class="panel-title text-uppercase py-5">
+              KPI
+            </h3>
+            <div class="panel-actions panel-actions-keep">
+              @*<button type="button" class="btn btn-default btn-sm "><i class="icon wb-plus text" aria-hidden="true"></i></button>*@
+            </div>
+          </header>
+          <div id="kpiBody" class="panel-body">
+
+          </div>
+        </div>
+      </div>
+    </div>
+  -->
+
+</div>
+
+@section scripts {
+
+  <script type="text/javascript">
+    window.weekly_url = '@Url.Action("WeeklyCalendarView", "Dashboard")';
+    window.meetingroom_url = '@Url.Action("MeetingRoomStatusList", "Dashboard")';
+    window.vacationappr_url = '@Url.Action("VacationApprList", "Dashboard")';
+    window.notice_url = '@Url.Action("NoticeList", "Dashboard")';
+    window.client_url = '@Url.Action("ClientList", "Dashboard")';
+    window.kpi_url = '@Url.Action("KPIList", "Dashboard")';
+    window.unbilled_url = '@Url.Action("UnBilledInvoiceList", "Dashboard")';
+    window.invoice_url = '@Url.Action("BilledInvoiceList", "Dashboard")';
+    window.cowork_url = '@Url.Action("CoworkProjectList", "Dashboard")';
+    window.openprj_url = '@Url.Action("OpenProjectList", "Dashboard")';
+  </script>
+  <script src="~/Scripts/Dashboard/index.js"></script>
+
+}

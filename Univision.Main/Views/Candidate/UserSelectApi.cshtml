@@ -1,0 +1,44 @@
+﻿@using Univision.Core.Models.DTO;
+@model List<uv_user>
+<div id="rpPanel" class="panel panel-bordered w-400 m-0">
+    <div class="panel-body">
+           
+        <div class="list-group list-group-bordered addrDiv" id="board_type1">
+            <div class="list-group-item flex-column text-center list-group-item-dark">
+                권한 코드
+            </div>
+            @if (Model.Count() > 0)
+            {
+                foreach (var data in Model)
+                {
+                    <a href='javascript:void(0)' onclick="javascript: selectCode(this);" class='list-group-item flex-column align-items-start ua-code' data-code="@data.ua_seq" data-name="@data.name" id="code_@data.ua_seq" name="code_@data.ua_seq" >
+                        <p class='mb-0'>[@data.ua_seq] @data.name </p>
+                    </a>
+                }
+            }
+        </div>
+            
+    </div>
+    <div class="panel-footer border-top">
+        <div class="row">
+            <div class="col text-right">
+                <button id="btnCancel" type="button" class="btn btn-sm btn-default" onclick="javascript:$.fancybox.close();">취소</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    function selectCode(obj) {
+        var code = $(obj).attr("data-code");
+        var name = $(obj).attr("data-name");
+        $("#ua_seq").val(code);
+        $("#ua_name").val(name);
+        //$("#label_ua_seq_name").html("<span class='text-primary'>" + name + "</span>");
+        $("#CreateForm").formValidation('revalidateField', 'ua_name');
+        $.fancybox.close();
+    }
+
+
+</script>

@@ -1,0 +1,652 @@
+﻿@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_ai.css?v=1533562669">
+<style>
+  .loader {
+    width: 32px;
+    height: 32px;
+    border: 5px solid #FFF;
+    border-bottom-color: #FF3D00;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+  }
+
+  @@keyframes rotation {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+<div class="page-content" style="position:relative;">
+
+  <div class="panel panel-success panel-line shadow">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-upload"></i>
+        이력서 신규등록 (AI) <span class="badge badge-success">Beta</span>
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action" aria-hidden="true" title="업로드 초기화" href="javascript:ResetUploadPage();"><i class="fa fa-redo"></i></a>
+      </div>
+    </div>
+
+    <div id="resume_upload_panel" class="panel-body pt-20">
+      <div class="modal fade" id="modal_upload_progress" tabindex="-1" role="dialog" aria-labelledby="modal_upload_progress_label" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-title">
+              <h3 class="pl-20"><span id="ai_modal_title">ChatGPT가 파일을 분석 중 입니다..</span></h3>
+            </div>
+            <div class="modal-body text-center" id="ai_modal_contents">
+              <span id="summary_loader" class="loader"></span>
+            </div>
+            <div class="modal-footer">
+              <span style="" class="text-center">
+                <button type="button" class="btn btn-danger" style="min-width:200px;" id="btn_cancel_result" disabled="true">요청취소</button>
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-8 offset-2">
+          <form id="create-ai-resume" class="dropzone h-full text-left">
+            <div class="row py-2">
+              <div class="col">
+                <div class="dz-message" id="upload_message">
+                  <h4>AI 이력서 등록 <span class="badge badge-success">Beta</span></h4>
+
+                  <small>[이력서 파일을 여기에 끌어놓거나 클릭하여 파일을 선택해주세요.]</small><br />
+                  <p>
+                    - 글자 인식이 가능한 이력서만 등록이 가능합니다.(이미지 형식은 인식 불가)<br />
+                    - 내용이 너무 길거나 용량이 큰 파일은 인식이 어려울 수 있습니다.<br />
+                    <span class="text-danger">- GPT가 분석한 내용은 정확하지 않을 수 있습니다.<br /> <span class="font-weight-800">꼭 저장하시기전 틀린내용이 없는지 검수가 필요합니다.</span></span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="debug_area" class="row d-none">
+    <div class="col">
+      <form id="ai_resume_form" method="post" action="@Url.Action("CandidateAiCreate", "Candidate")" target="_blank">
+        <input type="hidden" name="uploadFolder" id="uploadFolder" value="" required/>
+        <textarea class="form-control" id="candidate_model" name="candidate_model" required></textarea> 
+      </form>
+
+        <textarea class="form-control" id="prompt" readonly="true">다음 이력서내용에서 
+내용 중 url, 특수문자 제외하고 한글이 많은지 영어가 많은지 여부 ('resume_type'  : 한글이 많으면 K 영어가 많으면 E),
+이름('kor_name' : 한글이름은 띄어쓰기 없이), 
+영어이름('eng_name' : 없으면 ''), 
+생년월일('birth_date' : yyyy-MM-dd형식으로) , 
+성별('gender' : 남자면 1 여자면 2), 
+전화번호('cell_phone' : 비공개일 경우 ''), 
+이메일('email1' : 비공개일 경우 ''), 
+국적코드('country_cd' : 알 수 없으면 KR),
+국적명('country_name' : 알 수 없으면 '한국'),
+최소 희망연봉 ('hope_salary' : 숫자로만),
+최대 희망연봉 ('hope_salary2' : 숫자로만),
+거주지 주소 ('addr1'),
+학력사항('schoolList' : 최신 학력부터  내림차순 정렬, 배열형태), 
+경력사항('companyList' : 최신 경력부터 내림차순 정렬, 배열형태)을 요약해서 json형태로 출력합니다., 
+학력사항은 학력구분('gubun': 고등학교면 1,전문대면 2,학사면  3,석사학위면 4, 박사학위면5 ), 학교명('schoolName'), 전공('major_name'), 입학일('admission_year': yyyy-MM형식으로만), 졸업일('graduate_year': yyyy-MM형식으로만) 로 추출 해주고 
+경력사항은 회사명('company_name'), 부서와 직급('division_name': 년차는 제외), 업무시작일('join_dt': yyyy-MM형식으로만), 퇴사일('leave_dt': yyyy-MM형식의 년월만 년월이 없으면 '') 추출해줍니다.
+회사명이 같으면 하나의 회사로 간주합니다.</textarea>
+        <textarea class="form-control" rows="5" name="file_content" id="file_content" readonly="true"></textarea>
+        <textarea class="form-control" rows="5" name="ai_summary_stream" id="ai_summary_stream" readonly="true"></textarea>
+      
+    </div>
+  </div>
+  <div class="row d-none" id="log_panel">
+    <div class="col-12">
+      <div class="panel shadow">
+        <div class="panel-heading">
+          <h5 class="panel-title">
+            분석 내용
+          </h5>
+        </div>
+        <div class="panel-body bg-light py-5">
+          <p id="ai_upload_log">
+
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+
+
+
+</div>
+
+@section scripts{
+  <script type="text/javascript">
+    window.url_candidate_ai_create = "@Url.Action("CandidateAiCreate", "Candidate")";
+    window.url_find_duplicate_candidate = "@Url.Action("FindDuplicateCandidate", "Candidate")";
+    window.url_resume_upload_get_contents = "@Url.Action("ResumeUploadGetContents", "Candidate")";
+  </script>
+  <script type="text/javascript">
+    Dropzone.autoDiscover = false;
+
+    const API_URL = "https://api.openai.com/v1/chat/completions";
+    //const API_KEY = "YOUR_OPENAI_API_KEY";
+    const API_KEY = "YOUR_OPENAI_API_KEY"; //유료키
+    const prompt = document.getElementById("prompt"); //명령어
+    const file_content = document.getElementById("file_content"); //1차 추출된 파일내용
+    const ai_summary_stream = document.getElementById("ai_summary_stream"); //분석된 내용 (JSON)
+
+    const btn_cancel_result = document.getElementById("btn_cancel_result"); //요청 취소 버튼
+
+    const ai_modal_title = document.getElementById("ai_modal_title")
+    const ai_modal_contents = document.getElementById("ai_modal_contents")
+
+    let controller = null;
+    let isprogress = true; // 다음 진행 가능 여부
+    var can_resume_info = {}; // 이력서 파일 업로드 정보
+
+    //업로드 컴포넌트
+    var myDropzone = new Dropzone("#create-ai-resume", {
+      uploadMultiple: false,
+      maxFiles: 1,
+      url: window.url_resume_upload_get_contents,
+      method: "post",
+    });
+    //
+    myDropzone.on("success", function (file, response) {
+      if (response.ok) {
+
+        ai_progress(response)
+        //SubmitToAiCreate(response);
+      } else {
+        this.removeFile(file);
+        //ErrorAlert("[ERROR]" + response.message);
+        document.getElementById('log_panel').classList.remove('d-none');
+        AddLog("danger", "파일 업로드 실패 : " + response.message);
+      }
+
+    });
+
+    const ai_progress = async (response) => {
+      document.getElementById('log_panel').classList.remove('d-none');
+
+      AddLog("info", "파일 업로드 성공");
+
+
+      //업로드 완료 후
+      await UploadProgressModal(); // 진행상태 팝업 띄우기
+      isprogress = await SetFileInfo(response); // 업로드 파일 정보 설정 및 파일 분석 시작
+      //console.log("SetFileInfo", isprogress)
+      if (!isprogress)
+        return;
+
+      isprogress = await GenerateJsonFromResumeStream();
+      //console.log("GenerateJsonFromResumeStream", isprogress)
+
+      if (!isprogress)
+        return;
+
+      //console.log(ai_summary_stream.value);
+      var candidate_result = await ConvertCandidateCreateModel(ai_summary_stream.value);
+      //console.log("ConvertCandidateCreateModel", isprogress, candidate_result)
+      if (!candidate_result.result) {
+        isprogress = false;
+      }
+
+      if (candidate_result.result) {
+        var progress_flag = await FetchFindDuplicate(candidate_result.phone, candidate_result.email);
+        //console.log("FetchFindDuplicate", isprogress)
+        if (progress_flag == 0 || progress_flag == 1) {
+          if (progress_flag == 0) {
+            await AddLog('success', '이력서 등록 준비 완료<br><button class="btn btn-success btn-block" id="btn-submit-candidate">이력서 등록하러 가기</button>');
+
+            
+          } else {
+            await AddLog('warning', '이력서 등록 준비 완료<br><button class="btn btn-warning btn-block" id="btn-submit-candidate">중복 후보자 무시하고 이력서 등록하러 가기</button>');
+          }
+          var submit = document.getElementById('btn-submit-candidate').addEventListener('click', function (e) {
+            e.preventDefault();
+            form = document.getElementById('ai_resume_form')
+            form.submit();
+          })
+
+          ai_modal_title.innerHTML = "이력서 분석완료"
+          ai_modal_contents.innerHTML = "이력서 분석이 완료 되었습니다.<br/>아래에 [이력서 등록하기] 버튼을 눌러 진행해주세요.<br/><span class='text-danger'>분석된 내용이 정확하지 않을 수 있습니다.<br/> 등록 하시기전 꼭 생성된 데이터가 정확한지 꼭 확인하신 후 등록해주세요.</span>"
+          btn_cancel_result.style.display = "none";
+
+          isprogress = true;
+        } else {
+          isprogress = false;
+        }
+      }
+
+      
+
+
+      
+      //console.log("AddLog", isprogress)
+    }
+
+    function UploadProgressModal() {
+      $('#upload_message').addClass('d-none');
+      $('#modal_upload_progress').modal({
+        backdrop: 'static',
+        keyboard: false
+      });
+      $("#resume_upload_panel").addClass("position-relative");
+      $('.modal-backdrop').appendTo('#resume_upload_panel');
+      $('.modal-backdrop').css("position", "absolute");
+      $('.modal-backdrop').css("z-index", "1300");
+      $('#modal_upload_progress').css("position", "absolute");
+      $('#modal_upload_progress').css("padding-left", "13px");
+      $('#modal_upload_progress').css("padding-top", "10px");
+      $('#modal_upload_progress').css("z-index", "1400");
+
+      $('body').removeClass("modal-open");
+      $('body').css("padding-right", "");
+    }
+
+    function SetFileInfo(response) {
+      try {
+        AddLog("info", "파일 내용 확인 중..");
+        can_resume_info = response.result;
+        can_resume_info.file_dir = "/" + can_resume_info.file_dir
+        $('#uploadFolder').val(response.temp_folder);
+
+        if (response.file_content == "") {
+          throw "내용을 확인 할 수 없는 파일입니다.";
+        }
+
+        file_content.value = response.file_content
+
+        AddLog("info", "파일 내용 확인 완료" + "<textarea class='form-control border-info' rows='5' readonly='true'>" + response.file_content + "</textarea>");
+        return true;
+
+      } catch (error) {
+        AddLog("danger", "파일 내용 확인 중 오류 발생 " + error);
+        return false;
+      }
+
+
+
+    }
+
+    const GenerateJsonFromResumeStream = async () => {
+      var result = true;
+      const start_time = new Date();
+      AddLog("info", "파일 내용 분석 준비..");
+      AddLog("info", "ChatGPT를 통해 내용 분석 중..<span id='generate_sec'></span>" + "<textarea class='form-control border-info' id='openai-stream' rows='10' readonly='true'></textarea>");
+      var openai_stream = document.getElementById("openai-stream")
+      controller = new AbortController();
+      var signal = controller.signal
+      try {
+        btn_cancel_result.disabled = false;
+        openai_stream.value = "내용 분석 중..."
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            temperature: 0,
+            top_p: 0,
+            messages: [
+              { role: "system", content: prompt.value },
+              { role: "user", content: file_content.value }
+            ],
+            stream: true,
+          }),
+          signal,
+        });
+
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        ai_summary_stream.value = "";
+        openai_stream.value = "";
+        let buffer = "";
+
+        while (true) {
+          let now = parseInt((new Date() - start_time) / 1000);
+          document.getElementById('generate_sec').innerText = '(' + now + ' 초 경과)';
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop(); // 마지막 라인은 버퍼에 남겨둠
+
+          const parsedLines = lines
+            .map((line) => line.replace(/^data: /, "").trim()) // "data: " 접두사 제거
+            .filter((line) => line !== "" && line !== "[DONE]"); // 빈 줄과 "[DONE]" 제거
+
+
+          for (const line of parsedLines) {
+            try {
+              //console.log(line)
+              const parsedLine = JSON.parse(line); // JSON 문자열 파싱
+              const { choices } = parsedLine;
+              const { delta } = choices[0];
+              const { content } = delta;
+              // Update the UI with the new content
+              if (content) {
+                ai_summary_stream.value += content;
+                openai_stream.value += content;
+                openai_stream.scrollTop = openai_stream.scrollHeight;
+              }
+            } catch (error) {
+              console.error('JSON 파싱 오류:', error);
+            }
+          }
+
+        }
+        AddLog("info", "파일 내용 분석 완료");
+        result = true;
+        //ConvertCandidateCreateModel(ai_summary_stream.value);
+      } catch (error) {
+        // Handle fetch request errors
+        if (signal.aborted) {
+          AddLog("danger", "요청이 중지 되었습니다.");
+        } else {
+          console.error("Error:", error);
+          ai_summary_stream.value += "\n분석 중 오류가 발생하였습니다.\n내용:" + error;
+        }
+        result = false;
+      } finally {
+        btn_cancel_result.disabled = true;
+        controller = null; // Reset the AbortController instance
+      }
+
+      return result
+    }
+
+    function AddLog(type, contents) {
+      if (!type) {
+        type = "info";
+      }
+      var event_time = "[" + new Date().toISOString() + "]";
+      var reset_btn = '';
+      if (type == "danger") {
+        reset_btn = '<button class="btn btn-primary" onclick="ResetUploadPage();">다시 업로드 하기</button> ';
+      }
+      var card = `<div class='card border border-${type} shadow'>
+                            <div class="card-block text-${type} py-2 ">
+                              <span class='text-dark'>${event_time}</span><br/>
+                              ${contents}
+                            </div>
+                            ${reset_btn}
+                          </div>`;
+      let temp = document.createElement("div");
+      temp.innerHTML = card;
+      temp.style.opacity = '0';
+      temp.style.transition = 'opacity 500ms';
+      document.getElementById('ai_upload_log').prepend(temp);
+
+      setInterval(() => temp.style.opacity = '1', 100);
+
+      if (type == "danger") {
+        ai_modal_title.innerText = "오류발생 / 중지";
+        ai_modal_contents.innerHTML = contents.replace(/\\n/gi, "<br/>");
+        btn_cancel_result.style.display = "none";
+      }
+    }
+
+    btn_cancel_result.addEventListener('click', function () {
+      if (controller) {
+        controller.abort();
+        controller = null;
+      }
+    })
+
+    function ResetUploadPage() {
+      alertify.confirm()
+        .set({
+          'labels': { ok: 'OK', cancel: 'Cancel' },
+          'onok': function () {
+            location.reload();
+          },
+          'oncancel': function () {
+            return;
+          },
+        })
+        .setting({
+          message: "업로드 화면을 초기화 하시겠습니까?",
+        })
+        .show();
+
+    }
+
+
+
+    const ConvertCandidateCreateModel = async (data1) => {
+      AddLog("info", "분석된 이력서 내용을 유니비전 데이터로 변환 시도 중...");
+      try {
+        console.log(typeof (data1), data1);
+        if (data1) {
+          if (typeof (data1) == "string") {
+            data1 = data1.replace(/json/, "").replace(/```/gi, "")
+          }
+          //var data = Object.assign({}, data1);
+          var data = JSON.parse(data1);
+        } else {
+          var data = JSON.parse($('#ai_summary_stream').val());
+        }
+        //console.log(data);
+      } catch (error) {
+        console.error(error)
+        AddLog("danger", "데이터 변환 중 오류가 발생했습니다. <br/>분석된 데이터가 올바르지 않거나 서버오류가 발생했을 가능성이 있습니다.<br/>" + error);
+        return;
+      }
+
+      try {
+
+        if (data?.birth_date != "") {
+          var birth = data.birth_date;
+          if (birth.substring(5) == "00-00") {
+            birth = birth.substring(0, 5) + "01-01";
+          }
+        }
+
+        var currentData = {
+          c_seq: 0,
+          kor_name: data?.kor_name ?? '',
+          eng_name: data?.eng_name ?? '',
+          birth_date: birth ?? '',
+          gender: data?.gender ?? 0,
+          //ex_birthdate: data?.birthdate ?? 1,
+          country_code: data?.country_cd ?? 'KR',
+          country_name: data?.country_name ?? '한국',
+          addr1: data?.addr1 ?? '',
+          cell_phone: data?.cell_phone ?? '',
+          email1: data?.email1 ?? '',
+          sns_link1: data?.sns_link1 ?? '',
+          //keyword: data?.keyword,
+          hope_salary: data?.hope_salary,
+          hope_salary2: data?.hope_salary2,
+          schoolList: [],
+          companyList: [],
+          //placeList: [],
+          //jobList: [],
+          //busiList: [],
+          //foreignList: [],
+          resumeList: []
+        };
+
+        if (data.schoolList?.length >= 1) {
+
+          for (var edu_i = 0; edu_i < data.schoolList.length; edu_i++) {
+            var school = {};
+
+            if (data.schoolList[edu_i]?.gubun == "1")
+              continue;
+
+            school.gubun = data.schoolList[edu_i]?.gubun ?? "3";
+
+            if (data.schoolList[edu_i]?.schoolName != "" && data.schoolList[edu_i]?.schoolName != null) {
+              school.schoolName = data.schoolList[edu_i].schoolName
+            }
+            if (data.schoolList[edu_i]?.major_name != "" && data.schoolList[edu_i]?.major_name != null) {
+              school.major_name = data.schoolList[edu_i].major_name
+            }
+            if (data.schoolList[edu_i]?.admission_year != "" && data.schoolList[edu_i]?.admission_year != null) {
+              var edu_st = data.schoolList[edu_i].admission_year;
+              if (edu_st.substring(5) == "00") {
+                edu_st = edu_st.substring(0, 5) + "01";
+              }
+              school.admission_year = edu_st
+            }
+
+            if (data.schoolList[edu_i]?.graduate_year != "" && data.schoolList[edu_i]?.graduate_year != null) {
+              var edu_ed = data.schoolList[edu_i].graduate_year;
+              if (edu_ed.substring(5) == "00") {
+                edu_ed = edu_ed.substring(0, 5) + "01";
+              }
+
+              school.graduate_year = edu_ed
+            }
+
+            currentData.schoolList.push(school);
+          }
+        }
+
+
+        if (data.companyList?.length >= 1) {
+
+          for (var exp_i = 0; exp_i < data.companyList.length; exp_i++) {
+            var company = {};
+            if (data.companyList[exp_i]?.company_name != "" && data.companyList[exp_i]?.company_name != null) {
+              company.company_name = data.companyList[exp_i].company_name
+            }
+
+            if (data.companyList[exp_i]?.division_name != "" && data.companyList[exp_i]?.division_name != null) {
+              company.division_name = data.companyList[exp_i].division_name
+            }
+
+            if (data.companyList[exp_i]?.join_dt != "" && data.companyList[exp_i]?.join_dt != null) {
+              var exp_st = data.companyList[exp_i].join_dt;
+              if (exp_st.substring(5) == "00") {
+                exp_st = exp_st.substring(0, 5) + "01";
+              }
+              company.join_dt = exp_st
+            }
+
+            if (data.companyList[exp_i]?.leave_dt != "" && data.companyList[exp_i]?.leave_dt != null) {
+              var exp_ed = data.companyList[exp_i].leave_dt;
+              if (exp_ed.substring(5) == "00") {
+                exp_ed = exp_ed.substring(0, 5) + "01";
+              }
+
+              company.leave_dt = exp_ed
+            }
+
+            currentData.companyList.push(company);
+          }
+        }
+        can_resume_info.file_type = data?.type ?? 'K';
+
+
+
+        currentData.resumeList.push(can_resume_info);
+        $('#candidate_model').val(JSON.stringify(currentData));
+
+        AddLog("info", "유니비전 데이터 변환 완료");
+        return {
+          result: true,
+          phone: currentData.cell_phone,
+          email: currentData.email1
+        }
+
+        //$('#btn_ai_create').click();
+      } catch (error) {
+        console.error(error)
+        AddLog("danger", "데이터 변환 중 오류가 발생했습니다.<br/>올바르지 않은 데이터가 포함되어 있을 가능성이 있습니다.<br/>" + error);
+      }
+    }
+
+    const FetchFindDuplicate = async (phone, email) => {
+      if (phone == '' && email == '') {
+        return 0;
+      }
+
+      AddLog("info", "분석된 정보 기반으로 중복 데이터 확인중...<br/>[" + phone + ", " + email + "]");
+      var result = 1;
+      await fetch(window.url_find_duplicate_candidate, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: phone,
+          email: email,
+          except_c: 0,
+        }),
+      }).then((response) => response.json())
+        .then((data) => {
+          if (data.ok == true) {
+            //console.log(data)
+            if (data.candidate?.c_seq > 0) {
+              AddLog("warning", "연락처가 중복되는 후보자가 있습니다.<p id='duplicate_info'></p>");
+
+              var duplicate_info = document.getElementById('duplicate_info');
+              var dup_html = `<div class="card border border-warning">
+                        <div class="card-header card-header-transparent card-header-bordered">
+                          중복후보자 정보
+                        </div>
+                        <div class="card-block">
+                          <h4 class="card-title">${data.candidate?.kor_name}</h4>
+                          <p class="card-text">
+                            - ${data.candidate?.cell_phone}<br/>
+                            - ${data.candidate?.email1}
+                          </p>
+                          <a href="/Candidate/CandidateDetail?c_seq=${data.candidate.c_seq}" class="btn btn-primary" target="_blank">상세페이지</a>
+                        </div>
+                      </div>`;
+              let temp = document.createElement("div");
+              temp.innerHTML = dup_html;
+              duplicate_info.prepend(temp);
+              result = 1;
+            } else {
+              AddLog("info", "중복 후보자 없음.");
+              result = 0;
+            }
+          } else {
+            AddLog("danger", "중복데이터 확인 중 오류가 발생했습니다.<br/>" + data.message);
+            result = false;
+          }
+        })
+        .catch((error) => {
+          AddLog("danger", "중복데이터 확인 중 오류가 발생했습니다.<br/>" + error);
+          console.error(error)
+          result = -1;
+        });
+
+      return result;
+    }
+
+  </script>
+
+}

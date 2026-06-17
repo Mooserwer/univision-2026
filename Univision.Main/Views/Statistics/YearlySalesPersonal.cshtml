@@ -1,0 +1,418 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.YearlySalesModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/charts/chartjs.min599c.css?v4.0.4">
+
+<div class="page-content container-fluid">
+
+    <div class="row">
+        <!-- block -->
+        <div class="col-xl-5">
+            <div class="panel custom1">
+                <div data-role="container">
+                    <div data-role="content">
+                        <header class="panel-heading">
+                            <h3 class="panel-title">
+                                년도별 매출내역 합산
+                            </h3>
+                        </header>
+
+                        <div class="h-350" data-plugin="scrollable">
+                            <div data-role="container" style="padding:0 !important; margin:0 !important;">
+                                <div data-role="content" style="padding:0 !important; margin:0 !important;">
+                                    <div class="table-responsive">
+                                        <table id="default-table" class="table table-hover">
+                                            <colgroup>
+                                                <col style="width:30%;">
+                                                <col style="width:30%;">
+                                                <col style="">
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th>년도</th>
+                                                    <th>건수</th>
+                                                    <th>금액</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (Model.salesYearlySumList.Count > 0)
+                                                {
+                                                    foreach (var data in Model.salesYearlySumList)
+                                                    {
+                                                        <tr>
+                                                            <td>
+                                                                @data.billing_dt
+                                                            </td>
+                                                            <td>
+                                                                @Utils.ConvertMoneyToString(data.total_cnt)
+                                                            </td>
+                                                            <td>
+                                                                @Utils.ConvertMoneyToString(data.sales_money)
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <tr>
+                                                        <td colspan="3">
+                                                            년도별 데이터가 없습니다.
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+        <!-- block -->
+        <div class="col-xl-7">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        년도별 매출현황 그래프
+                    </h3>
+                </header>
+                <div class="panel-body pd_ex">
+                    <div class="text-center" id="yearlyWrapper">
+                        <canvas id="yearlySalesChart" height="320" width="450"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+
+    </div>
+    <!-- // row -->
+    <!-- row -->
+    <div class="row">
+        <!-- block -->
+        <div class="col-xl-12">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        개인별 매출현황 그래프
+                    </h3>
+                    <div class="panel-actions panel-actions-keep row" style="width:20%;">
+                    </div>
+                </header>
+
+                <div class="panel-body row expad">
+
+                    <div class="col-xl-3 text-center exchart centerfl">
+                        <canvas id="myChart3" width="100"></canvas>
+                    </div>
+
+                    <div class="col-xl-3 text-center exboard centerfl">
+                        <table id="default-table" class="table table-hover">
+                            <colgroup>
+                                <col style="width:30%;">
+                                <col style="width:25%;">
+                                <col style="width:25%;">
+                                <col style="">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>직군</th>
+                                    <th>건수</th>
+                                    <th>금액</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.businessList.Count > 0)
+                                {
+                                    foreach (var data in Model.businessList)
+                                    {
+                                        <tr>
+                                            <td>@data.title</td>
+                                            <td>@data.allCnt</td>
+                                            <td>@Utils.ConvertMoneyToString(data.billing_money)</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3">산업별 매출 데이터가 없습니다.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="col-xl-3 text-center exchart centerfl pie">
+                        <canvas id="pjtSuccessRatePie" width="100"></canvas>
+                        <span>@(Model.pjtSuccessRate)%</span>
+                    </div>
+
+                    <div class="col-xl-3 text-center exchart centerfl pie">
+                        <canvas id="feeRatePieChart" width="100"></canvas>
+                        <span>수수료율</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+    </div>
+    <!-- // row -->
+    <!-- row -->
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="panel custom1" id="yearlySalesList">
+
+            </div>
+        </div>
+    </div>
+    <!-- // row -->
+
+</div>
+
+<!-- 현재 페이지 사용 시작 -->
+<!-- charts -->
+<script src="~/Libs/remark/global/vendor/chart-js/Chart.min599c.js?v4.0.4"></script>
+
+@section scripts
+{
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            yearlySalesChart();
+            RenderBusinessChart();
+            RenderPjtSuccessRate();
+            RenderFeeRate();
+            callYearlySalesPersonalList(1);
+
+        });
+
+        //월별 매출현황
+        function yearlySalesChart() {
+
+            var yearlyList = @Html.Raw(Json.Encode(Model.salesYearlySumList));
+
+            if (yearlyList.length == 0) {
+                $("#yearlyWrapper").html("").html('<div id="yearlySalesChart" height="300px" width="450px">해당 년도에 데이터가 없습니다.</div>');
+            }
+            else {
+                $("#yearlyWrapper").html("").html('<canvas id="yearlySalesChart" height="300px" width="450px"></canvas>');
+
+
+                // 월별 매출현황 그래프
+                var ctx = document.getElementById('yearlySalesChart').getContext('2d');
+                var options = {
+                    legend: {
+                        display: false
+                    },
+                    maintainAspectRatio: false,
+                    spanGaps: false,
+                    elements: {
+                        line: {
+                            tension: 0.4
+                        }
+                    },
+                    plugins: {
+                        filler: {
+                            propagate: false
+                        }
+                    },
+                    scales: {
+                        xAxes: [{
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 0
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function (tooltipItem, data) {
+                                var value = data.datasets[0].data[tooltipItem.index];
+                                if (parseInt(value) >= 1000) {
+                                    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                } else {
+                                    return value + '원';
+                                }
+                            }
+                        } // end callbacks:
+                    }, //end tooltips
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true,
+                                callback: function (value, index, values) {
+                                    if (parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                    } else {
+                                        return value + '원';
+                                    }
+                                }
+                            }
+                        }]
+                    }
+                };
+                var myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            data: yearlyList.map(function (e) { return e.sales_money }),
+                            backgroundColor: 'rgba(62,142,247,0.2)',
+                            borderColor: 'rgba(62,142,247, 0.6)',
+                        }],
+                        labels: yearlyList.map(function (e) { return e.billing_dt }),
+                    },
+                    options: Chart.helpers.merge(options, {
+                        title: {
+                            //text: 'fill: ',// + boundary,
+                            display: false
+                        }
+                    })
+
+                });
+            }
+        };
+
+
+        //산업별 매출추이
+        function RenderBusinessChart() {
+            var businessList = @Html.Raw(Json.Encode(Model.businessList));
+
+            // 개인별 매출현황 그래프1
+            var ctx3 = document.getElementById('myChart3').getContext('2d');
+            var myChart3 = new Chart(ctx3, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: businessList.map(function (e) { return e.billing_money }),
+                        backgroundColor: [
+                            'rgba(148,99,247,0.7)', 'rgba(255,102,107,0.7)', 'rgba(73,222,148,0.7)', 'rgba(62,142,247,0.5)'
+                        ],
+                    }],
+                    labels: businessList.map(function (e) { return e.title }),
+                },
+                options: {
+                    legend: {
+                        //display: false
+                    },
+                    responsive: true,
+                    tooltips: {
+                        callbacks: {
+                            label: function (tooltipItem, data) {
+                                var value = data.datasets[0].data[tooltipItem.index];
+                                if (parseInt(value) >= 1000) {
+                                    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                } else {
+                                    return value + '원';
+                                }
+                            }
+                        } // end callbacks:
+                    }
+                }
+            });
+        };
+
+        //프로젝트 성공률
+        function RenderPjtSuccessRate() {
+
+            var pjtSuccessRate = @Model.pjtSuccessRate;
+
+            var ctx4 = document.getElementById('pjtSuccessRatePie').getContext('2d');
+            var myChart4 = new Chart(ctx4, {
+                type: 'doughnut',
+
+                data: {
+                    datasets: [{
+                        data: [pjtSuccessRate, (100 - pjtSuccessRate)], // 73프로 성공 , 27프로 실패 (캔버스 다음 span 에도 표현해주어야 해요 > pie 클래스 검색)
+                        backgroundColor: [
+                            'rgba(62,142,247,0.5)'
+                        ],
+                        max: 100
+                    }],
+                    labels: [
+                        '프로젝트 성공율',
+                    ]
+                },
+                options: {
+
+                    legend: {
+                        //display: false
+                    },
+                    responsive: true,
+                    tooltips: {
+                        enabled: false
+                    }
+                },
+            });
+        }
+
+        //수수료율 파이 차트
+        function RenderFeeRate() {
+            var feeRateList = @Html.Raw(Json.Encode(Model.feeRateList));
+            var ctx4 = document.getElementById('feeRatePieChart').getContext('2d');
+            var feeRatePieChart = new Chart(ctx4, {
+                type: 'doughnut',
+
+                data: {
+                    datasets: [{
+                        data: feeRateList.map(function (e) { return e.billing_money }),
+                        backgroundColor: [
+                            'rgba(255,205,85,0.7)','rgba(2,181,278,0.7)','rgba(68,87,114,0.7)','rgba(62,142,247,0.5)'
+                        ],
+                    }],
+                    labels: feeRateList.map(function (e) { return e.title }),
+                },
+                options: {
+                    legend: {
+                        //display: false
+                    },
+                    responsive: true,
+                    tooltips: {
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                var value = data.datasets[0].data[tooltipItem.index];
+                                if(parseInt(value) >= 1000){
+                                    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                    } else {
+                                    return value + '원';
+                                    }
+                            }
+                        } // end callbacks:
+                    }
+                }
+            });
+        }
+
+        //하단 리스트
+        function callYearlySalesPersonalList(page) {
+
+            $.ajax({
+                url: '@Url.Action("YearlySalesPersonalList", "Statistics")',
+                data: {
+                    page: page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#yearlySalesList');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#yearlySalesList');
+                $('#yearlySalesList').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#yearlySalesList');
+            });
+        };
+
+    </script>
+
+}

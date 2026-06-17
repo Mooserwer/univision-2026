@@ -1,0 +1,71 @@
+﻿@model Univision.Core.Models.DTO.candidate_search_save
+
+@{
+  Layout = null;
+}
+
+@using (Html.BeginForm("CandidateSearchCreate", "Candidate", FormMethod.Post, new { @id = "CreateSearchForm", @autocomplete = "off" }))
+{
+  @Html.HiddenFor(x => x.css_seq)
+  @Html.HiddenFor(x => x.url)
+  <div class="row mb-10">
+    <div class="col form-group">
+      @Html.LabelFor(x => x.title, "설명(제목)", new { @class = "form-control-label" })
+      <span class="label-reqired">*</span>
+      <div class="input-group input-group-sm">
+        @Html.TextBoxFor(x => x.title, new { @class = "form-control phone-group", @placeholder = "검색조건 설명을 입력해주세요." })
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col text-right">
+      <button type="button" class="btn btn-sm btn-primary w-150" id="btnCanSearchSave" title="저장"><i class="icon wb-check"></i> 저장</button>
+    </div>
+  </div>
+
+}
+
+<script type="text/javascript">
+
+  StopEnterSubmit();
+
+  $("#btnCanSearchSave").click(function () {
+    var request_data = {
+      css_seq: $("#css_seq").val(),
+      url: $("#url").val(),
+      title: $("#title").val().trim(), //
+    };
+    if (request_data.url == "") {
+      NormalAlert("검색조건이 잘못 되었습니다. 팝업을 닫고 다시 시도하여 주세요.")
+      return;
+    }
+
+    if (request_data.title == "") {
+      NormalAlert("검색조건 설명을 입력해주세요.")
+      return;
+    }
+
+    ConfirmAlert('검색조건 저장 ', '검색조건을 저장 하시겠습니까?', function () {
+      ajxCall({
+        type: 'POST',
+        url: $("#CreateSearchForm").attr("action"),
+        data: request_data,
+        dataType: 'json',
+        loading: true,
+        loading_target: '#CreateSearchForm',
+        suc: function (json) {
+          
+          if (json.ok) {
+            $.fancybox.close();
+          }
+          NormalAlert(json.message);
+            
+        },
+        err: function (e) {
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.\n' + e.message);
+        }
+      })
+    });
+  });
+
+</script>

@@ -1,0 +1,352 @@
+﻿@{
+    //ViewBag.Title = "후보자 상세보기";
+    ViewBag.MenuFold = true;
+    ViewBag.noJqueryUi = true;
+}
+
+<link rel="stylesheet" href="~/Libs/handsontable/handsontable.full.css">
+
+<div class="page-content">
+    
+    <span id="cand_ct_log" class="text-primary">데이터 변경 시 자동 저장 됩니다.</span>
+                <div id="handson"></div>
+        
+        
+    
+</div>
+
+
+@section scripts {
+    <script src="~/Libs/handsontable/handsontable.full.min.js"></script>
+    <script type="text/javascript">
+        const container = document.getElementById('handson');
+        var autosaveNotification, last_saved 
+        var debounceFn = Handsontable.helper.debounce(function (colIndex, event) {
+            var filtersPlugin = hot.getPlugin('filters');
+
+            filtersPlugin.removeConditions(colIndex);
+            filtersPlugin.addCondition(colIndex, 'contains', [event.target.value]);
+            filtersPlugin.filter();
+        }, 200);
+
+        var addEventListeners = function (input, colIndex) {
+          input.addEventListener('keydown', function(event) {
+            debounceFn(colIndex, event);
+          });
+        };
+
+        // Build elements which will be displayed in header.
+        var getInitializedElements = function(colIndex) {
+          var div = document.createElement('div');
+          var input = document.createElement('input');
+            input.placeholder = "검색어 입력";
+            input.style.width = "90%";
+            div.style.borderTop = '1px solid #ccc';
+            div.style.padding = '3px 0';
+          addEventListeners(input, colIndex);
+
+          div.appendChild(input);
+
+          return div;
+        };
+
+        // Add elements to header on `afterGetColHeader` hook.
+        var addInput = function(col, TH) {
+          // Hooks can return value other than number (for example `columnSorting` plugin use this).
+          if (typeof col !== 'number') {
+            return col;
+          }
+
+          if (col >= 0 && TH.childElementCount < 2) {
+            TH.appendChild(getInitializedElements(col));
+          }
+        };
+
+        // Deselect column after click on input.
+        var doNotSelectColumn = function (event, coords) {
+          if (coords.row === -1 && event.target.nodeName === 'INPUT') {
+            event.stopImmediatePropagation();
+            this.deselectCell();
+          }
+        };
+
+        const hot = new Handsontable(container, {
+            //data: data,
+            multiColumnSorting: {
+                indicator: true
+            },
+            rowHeaders: true,
+            colHeaders: true,
+            height: "85vh",
+            manualRowResize: true,
+            manualColumnResize: true,
+            manualRowMove: true,
+            //manualColumnMove: true,
+            //contextMenu: true,
+            contextMenu: ['row_above', 'row_below', 'remove_row'],
+            filters: true,
+            //dropdownMenu: true,
+            //dropdownMenu: ['filter_by_condition', 'filter_action_bar'],
+            afterGetColHeader: addInput,
+            beforeOnCellMouseDown: doNotSelectColumn,
+            //dataSchema: {sc_seq: 0},
+            licenseKey: 'non-commercial-and-evaluation',
+            colHeaders: [
+                '이름(Name)',
+                '생년(Birth)',
+                '최종학력(Edu.)',
+                '현직장',
+                '전직장',
+                '핸드폰',
+                '이메일',
+                'URL',
+                'Comment/진행사항',
+                '최초 등록자',
+                '최초 등록일',
+                '최종 수정자',
+                '최종 수정일',
+                'Key'
+            ],
+            colWidths: [120, 120, 200, 200, 200, 150,150,150, 300, 120, 200, 120, 200, 100],
+            columns: [
+                {data: 'kor_name', type: 'text'},
+                {data: 'birth_str', type: 'text'},
+                {data: 'school', type: 'text'},
+                {data: 'company', type: 'text'},
+                {data: 'company_desc', type: 'text'},
+                {data: 'cell_phone', type: 'text'},
+                {data: 'email', type: 'text'},
+                {data: 'sns_url', type: 'text'},
+                {data: 'comments', type: 'text'},
+                {data: 'create_name', type: 'text',readOnly:true},
+                {data: 'create_dt_str',type: 'text',readOnly:true},
+                {data: 'modify_name',type: 'text',readOnly:true},
+                {data: 'modify_dt_str',type: 'text',readOnly:true},
+                {data: 'sc_seq',type: 'numeric',readOnly:true}
+            ],
+            hiddenColumns: {
+                columns: [9, 10, 11, 12, 13],
+                indicators: false
+            }
+        });
+        
+        var visualObjectRow = function(row) {
+            var obj = {}, key, name;
+            for (var i = 0; i < hot.countCols(); i++) {
+                obj[hot.colToProp(i)] = hot.getDataAtCell(row, i);
+            }
+            return obj;
+        }
+
+        var getColIndexByName = function(name) {
+            for (var i = 0; i < hot.countCols(); i++) {
+                if (hot.colToProp(i) == name)
+                    return i;
+            }
+            return -1;
+        }
+
+
+        var checkObjectNullOrEmpty = function (object) {
+
+            for (var o in object) {
+                if (object[o] != null && object[o] != undefined && object[o] != 0 && $.trim(object[o]) != "") 
+                    return true;
+                
+            }
+
+            return false;
+        }
+
+        function loadData(hot_instance, filter) {
+            var data = $.Deferred();
+            $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: '@Url.Action("LoadSimpleCandidateList", "Candidate")',
+                dataType: "json",
+                data: filter,
+                async: true
+            }).done(function (response) {
+                //console.log(response)
+                hot_instance.loadData(response.data);
+                hot_instance.updateSettings({
+                    minSpareRows: 3
+                });
+                //$(".totalCnt").text(response.totalCnt);
+            });
+        }
+
+        loadData(hot);
+
+        hot.updateSettings({
+            //minSpareRows: 3,
+            /*
+             afterCreateRow: function (index, amount, source) {
+                console.log("afterCreateRow", index, amount, source);
+            },
+            */
+            beforeRemoveRow: function (index, amount) {
+                //console.log("beforeRemoveRow", index, amount)
+                if (confirm("선택하신 행을 삭제 하시겠습니까?")) {
+                    var data_arr = [];
+                        for (var i = index; i < index + amount; i++) {
+                            var data_removed = visualObjectRow(i)
+                            if (hot.getCellMeta(i, 0).key != undefined) {
+                                data_removed.sc_seq = hot.getCellMeta(i, 0).key;
+                            }  
+                            if (data_removed.sc_seq > 0) {
+                                 data_arr.push(data_removed);
+                            }
+                        }
+
+                        if (data_arr.length > 0) {
+                            //console.log("beforeRemoveRow", data_arr);
+                            $.ajax({
+                                type: "POST",
+                                url: '@Url.Action("RemoveSimpleCandidate", "Candidate")',
+                                dataType: "json",
+                                data: {
+                                    remove_list: data_arr,
+                                }
+                            }).done(function (response) {
+                                console.log("beforeRemoveRow", response);
+                                if (response.ok) {
+                                    
+                                }
+                            });
+                        }
+                } else {
+                    return false;
+                }
+            },
+            /*
+            beforeChange: function (changes, source) {
+                console.log("beforeChange", changes, source);
+                //for (var i = 0; i < changes.length; i++) {
+                    //console.log(changes[i][3], $.trim(changes[i][3]))
+                    //changes[i][3] = $.trim(changes[i][3])
+                //}
+            },
+            */
+            afterChange: function (changes, source) {
+                //console.log("afterChange", changes, source);
+                if (source === 'loadData') {
+                    return;
+                }
+                
+                var data_arr = [];
+                var log_arr = [];
+                var rowThatHasBeenChanged = -1
+                for (var i = 0; i < changes.length; i++) {
+                    if (rowThatHasBeenChanged == changes[i][0]) {
+                        continue;
+                    }
+
+                    rowThatHasBeenChanged = changes[i][0];
+                    var columnThatHasBeenChanged = changes[i][1],
+                        previousValue = changes[i][2],
+                        newValue = changes[i][3];
+                    //if (columnThatHasBeenChanged == "sc_seq") {
+                    //    return;
+                    //}
+                    //var sourceRow = hot.getSourceDataAtRow(rowThatHasBeenChanged), //will provide an information about the source data written under the same index [provides an object]
+                    //    visualRow = hot.getDataAtRow(rowThatHasBeenChanged); //will provide an information about the actual (visible) data written under the same index [provides an array]
+
+                    //console.log('* the getSourceDataAtRow:');
+                    //console.log(sourceRow);
+                    //console.log('* the getDataAtRow:');
+                    //console.log(visualRow);
+                    //console.log('* the visualObjectRow function:');
+                    //console.log(visualObjectRow(rowThatHasBeenChanged))
+
+                    var data_changed = visualObjectRow(rowThatHasBeenChanged)
+                    
+                    //console.log("afterChange", checkObjectNullOrEmpty(data_changed));
+                    if (checkObjectNullOrEmpty(data_changed)) {
+                        data_changed.rowindex = rowThatHasBeenChanged
+                        if (hot.getCellMeta(rowThatHasBeenChanged, 0).key != undefined) {
+                            data_changed.sc_seq = hot.getCellMeta(rowThatHasBeenChanged, 0).key;
+                        }  
+                        //console.log(data_changed.sc_seq);
+                        //데이터가 있을 경우 저장
+                        data_arr.push(data_changed);
+
+                        if (data_changed.sc_seq > 0) {
+                            log_arr.push({
+                                sc_seq: data_changed.sc_seq,
+                                change_type: columnThatHasBeenChanged,
+                                previous_value: previousValue,
+                                new_value: newValue
+                            })
+                        }
+                    }
+                }
+                
+                if (data_arr.length > 0) {
+                    //console.log("afterChange", data_arr);
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("SaveSimpleCandidate", "Candidate")',
+                        dataType: "json",
+                        data: {
+                            data_list: data_arr,
+                            log_list: log_arr
+                        }
+                    }).done(function (response) {
+                        //console.log("afterChange", response);
+                        if (response.ok) {
+                            for (var i = 0; i < response.data.length; i++) {
+                                var rst = response.data[i];
+                                if (rst.ok) {
+                                    /*
+                                    if (rst.create_name) {
+                                        hot.setDataAtCell(rst.rowindex, getColIndexByName("create_name"), rst.create_name)
+                                    }
+                                    hot.setDataAtCell(rst.rowindex, getColIndexByName("modify_name"), rst.modify_name)
+                                    hot.setDataAtCell(rst.rowindex, getColIndexByName("create_dt_str"), rst.create_dt_str)
+                                    hot.setDataAtCell(rst.rowindex, getColIndexByName("modify_dt_str"), rst.modify_dt_str)
+                                    */
+
+                                    hot.setCellMeta(rst.rowindex, 0, "key", rst.sc_seq)
+
+                                }
+                            }
+                            clearTimeout(autosaveNotification);
+                            last_saved = new Date().toISOString()
+                            $('#cand_ct_log').html('자동저장 됨 (마지막 저장 : <span class="text-success">' + last_saved + '</span>)');
+                            autosaveNotification = setTimeout(function () {
+                                $('#cand_ct_log').html('데이터 변경 시 자동 저장 됩니다. - (마지막 저장 : <span class="text-success">' + last_saved + '</span>)');
+                            }, 3000);
+                        } else {
+                            clearTimeout(autosaveNotification);
+                            $('#cand_ct_log').html('<span class="text-danger">[ERROR]정상적으로 저장 되지 않았습니다.</span>)');
+                        }
+
+                        //console.log(response)
+                        //hot.loadData(response.data);
+                        //$(".totalCnt").text(response.totalCnt);
+                    });
+                }
+            }
+        });
+
+        
+        //loadData(hot_all);
+
+        /*
+        $('a[data-toggle="tab"]').on('click', function (e) {
+            if (e.target.hash == "#my_list") {
+                setTimeout(function () {
+                    hot.render();d  
+                }, 10);
+            } else if (e.target.hash == "#all_list") {
+                setTimeout(function () {
+                    
+                    hot_all.render();
+                }, 100);
+            }
+        });
+        */
+    </script>
+}

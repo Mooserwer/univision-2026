@@ -1,0 +1,277 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.PrivacyAgreeListViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string pageTag = ViewBag.pageTag;
+    ViewBag.Title = "개인정보 제 3자 동의";
+}
+@*<link rel="stylesheet" href="~/Libs/remark/global/vendor/tablesaw/tablesaw.min599c.css?v4.0.4">*@
+<link rel="stylesheet" href="~/Libs/tablesaw/tablesaw.css?v4.0.4">
+<div class="page-content">
+    <!--검색 Form -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <!-- 검색 패널 시작 -->
+        @using (Html.BeginForm("PrivacyAgreeList", "Candidate", FormMethod.Get, new { @id = "searchForm" }))
+        {
+            @Html.HiddenFor(x => x.search.orderTxt)
+            @Html.HiddenFor(x => x.search.orderOption)
+            <div class="panel-heading">
+                <div class="panel-title">
+                    <i class="fas fa-info-circle"></i>
+                    Privacy Agreement (개인정보 제3자 제공 동의)
+                </div>
+                <div class="panel-actions" style="display:flex">
+                    <div class="panel-action input-search">
+                        <select id="search_searchOption" name="search.searchOption" class="form-control">
+                            <option value="PA.can_name">이름</option>
+                            <option value="PA.can_contact">연락처</option>
+                            <option value="PD2.client_name">제공회사</option>
+                        </select>
+                    </div>
+                    <div class="panel-action input-search">
+                        <button type="submit" class="input-search-btn">
+                            <i class="icon wb-search" aria-hidden="true"></i>
+                            &nbsp;&nbsp;
+                        </button>
+                        @Html.TextBoxFor(x => x.search.searchTxt, new { @class = "form-control" })
+                    </div>
+                </div>
+            </div>
+            <!-- 검색 패널 끝 -->
+        }
+
+        <div class="panel-body pt-5">
+            <div class="">
+                <table class="block_table table table-striped tablesaw-columntoggle" data-tablesaw-mode="columntoggle" data-tablesaw-minimap>
+                    <thead>
+                      <tr>
+                        <th class="text-center tbw20">
+                          이름
+                        </th>
+                        <th class="text-center">
+                          동의서 종류
+                        </th>
+                        <th class="text-center hidden-sm-down">
+                          요청일자
+                          <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "PA.send_dt", Model.search.orderOption) colSort" orderTxt="PA.send_dt"></i>
+                        </th>
+                        <th class="text-center">
+                          동의일
+                          <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "PA.agree_dt", Model.search.orderOption) colSort" orderTxt="PA.agree_dt"></i>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.list.Count > 0)
+                        {
+                            foreach (var data in Model.list)
+                            {
+                        <tr>
+                          <td class="text-left">
+                            @if (data.c_seq > 0)
+                            {
+                              <a href="javascript: openCandidatePop('@data.c_seq')">
+                                @data.can_name
+                              </a>
+                            }
+                            else
+                            {
+                              @data.can_name
+                            }
+                            (@data.can_contact)
+                          </td>
+                          <td class="text-left">
+                            <a href="javascript:openPrivacyPop('@data.c_seq','@data.agree_code3')">
+                              @if (data.agree_gubun == 3)
+                              {
+                                <text>개인정보 수집 및 제3자 제공 (@data.client_name)</text>
+                              }
+                              else if (data.agree_gubun == 1)
+                              {
+                                <text>개인정보 수집</text>
+                              }
+                              else if (data.agree_gubun == 2)
+                              {
+                                <text>개인정보 제3자 제공 (@data.client_name)</text>
+                              }
+                              </a>
+                          </td>
+
+                            <td class="text-center hidden-sm-down ">
+                                @Utils.ConvertDateTimeToString(data.send_dt)
+                            </td>
+                            
+                            <td class="text-center hidden-sm-down ">
+                                @Utils.ConvertDateTimeToString(data.agree_dt)
+                            </td>
+                        </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td class="text-center" colspan="7">
+                                    No Data.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (Model != null && Model.list.Count > 0)
+                {
+                    @Html.PageAjaxLinks(Model.PagingInfo,
+                     ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                     x => Url.Action("PrivacyAgreeList", new
+                     {
+                         page = x
+                     }))
+
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="MyCandidateModifyModal" aria-hidden="false" aria-labelledby="MyCandidateModifyModalLabel" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-simple">
+        <div class="modal-content" style="width:500px;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 class="modal-title text-center" id="MyCandidateModifyModalLabel">
+                    <i class="fas fa-user"></i>
+                    My Candidate Information
+                </h4>
+            </div>
+            <div class="modal-body" style="max-height:800px; overflow-y:auto">
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+
+  <script type="text/javascript">
+
+        $(document).ready(function () {
+
+        });
+
+        $(".colSort").click(function () {
+
+            $(".colSort").not(this).each(function () {
+
+                $(this).removeClass("fa-sort-up");
+                $(this).removeClass("fa-sort-down");
+                $(this).addClass("fa-sort");
+            })
+
+            $(this).removeClass("fa-sort");
+
+            if ($(this).hasClass("fa-sort-up")) {
+                $(this).addClass("fa-sort-down");
+                $(this).removeClass("fa-sort-up");
+                $("#search_orderTxt").val($(this).attr("orderTxt"));
+                $("#search_orderOption").val("DESC");
+            }
+            else {
+                $(this).addClass("fa-sort-up");
+                $(this).removeClass("fa-sort-down");
+                $("#search_orderTxt").val($(this).attr("orderTxt"));
+                $("#search_orderOption").val("ASC");
+            }
+
+            $("#searchForm").submit();
+
+        });
+
+        //관심후보자 메모, 추천회사, 포지션 수정
+        function callModifyFavoriteInfo(cf_seq) {
+            $.ajax({
+                url: '@Url.Action("MyCandidateModify", "Candidate")',
+                data: {
+                    cf_seq: cf_seq
+                },
+                dataType: 'html',
+                type: 'GET',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (view) {
+                hideLoading();
+
+                $("#MyCandidateModifyModal .modal-body").html(view)
+                $('#MyCandidateModifyModal').modal('toggle');
+
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+
+        //마이리스트 삭제 (confirm)
+        function DeleteMyListConfirm(cf_seq) {
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            DeleteMyList(cf_seq)
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>Remove from My List')
+                    .setting({
+                        message: "Are you sure want to remove this candidate from My List?",
+                    })
+                    .show();
+
+        }
+
+      function openPrivacyPop(c_seq, key_str) {
+        var win_tag = (c_seq ? 'PRIVACY_' + c_seq : 'PRIVACY');
+        var win = window.open('https://www.unicosearch.com/privacysuccess/' + key_str, win_tag, 'width=800, height=600');
+        win.focus();
+        return
+      }
+        //마이리스트 삭제
+        function DeleteMyList(cf_seq) {
+
+            $.ajax({
+               url: '@Url.Action("DeleteMyList", "Candidate")',
+               data: {
+                   cf_seq: cf_seq
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+                    NormalAlert(json.message);
+                    location.reload();
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+
+  </script>
+
+}

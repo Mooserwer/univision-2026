@@ -1,0 +1,110 @@
+﻿@using Univision.Core.Models.DTO;
+@model List<code_board_sub1>
+<div id="rpPanel" class="panel panel-bordered w-400 m-0">
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-6 pr-0">
+                <div class="list-group list-group-bordered addrDiv" id="board_type1">
+                    <div class="list-group-item flex-column text-center list-group-item-dark">
+                        대분류
+                    </div>
+                    @if (Model.Count() > 0)
+                    {
+                        foreach (var data in Model)
+                        {
+                            <a href="javascript:void(0);" class="list-group-item flex-column align-items-start code1" data-code="@data.code1" data-name="[@data.code1] @data.code_name" id="code1_@data.code1" name="code1_@data.code1" onclick="Code1Select(this, '@data.type', '@data.code1')">
+                                <p class="mb-0">[@data.code1] @data.code_name</p>
+                            </a>
+                        }
+                    }
+                </div>
+            </div>
+            <div class="col-md-6 pl-0">
+                <div class="list-group list-group-bordered" id="addr2">
+                    <div class="list-group-item flex-column text-center list-group-item-dark">
+                        소분류
+                    </div>
+                </div>
+        </div>
+    </div>
+    <div class="panel-footer border-top">
+        <div class="row">
+            <div class="col text-right">
+                <button id="btnCancel" type="button" class="btn btn-sm btn-default" onclick="javascript:$.fancybox.close();">취소</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+
+    });
+
+
+    function Code1Select(obj, type, code1) {
+
+        //현재 선택한 직무 단계에 a 태그 active 클래스 부여.
+        $(obj).addClass("active");
+        //현재 선택한 직무 단계 이외의 a 태그 active 클래스 제거
+        $(".code1").not(obj).removeClass("active");
+        $.ajax({
+               url: '@Url.Action("BoardType2SelectApi", "Board")',
+               data: {
+                   type : type,
+                   code1: code1
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+
+               }
+        })
+        .done(function (json) {
+            var row = "<div class='list-group-item flex-column text-center list-group-item-dark'>소분류</div>";
+            if (json.ok) {
+                if (json.list.length > 0) {
+                    
+
+                    for (var i = 0; i < json.list.length; i++) {
+
+                        var data = json.list[i];
+                        row += "<a href='javascript:void(0)' class='list-group-item flex-column align-items-start code2' data-code='"+data.code2+"' data-name='[" + data.code1 +"-" + data.code2 +'] ' + data.code_name+"' id='code_" + data.code1 + "_" + data.code2 + "' name= 'code_" + data.code1 + "_" + data.code2 + "' onclick='Code2Select(this)'>";
+                        row += "  <p class='mb-0'>[" + data.code1 +"-" + data.code2 +'] ' + data.code_name + "</p>";
+                        row += "</a>";
+                    }
+                }
+            } 
+            $("#addr2").empty();
+            $("#addr2").append(row);
+        })
+        .fail(function (e) {
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+        }
+
+    function Code2Select(obj) {
+        //현재 선택한 직무 단계에 a 태그 active 클래스 부여.
+        $(obj).addClass("active");
+
+        //현재 선택한 직무 단계 이외의 a 태그 active 클래스 제거
+        $(".code2").not(obj).removeClass("active");
+
+        var code1 = $(".code1.active").attr("data-code");
+        var name1 = $(".code1.active").attr("data-name");
+        var code2 = $(".code2.active").attr("data-code");
+        var name2 = $(".code2.active").attr("data-name");
+        $("#data_b_type_sub1").val(code1);
+        $("#data_b_type_sub2").val(code2);
+        $("#data_b_type_sub_name").val( name1 + " > " + name2);
+        $("#CreateForm").formValidation('revalidateField', 'data_b_type_sub_name');
+        
+        //$("#label_doc_category").html("<span class='text-primary'>" + name1 + " > " + name2 + "</span>");
+        $.fancybox.close();
+    }
+
+</script>

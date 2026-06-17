@@ -1,0 +1,498 @@
+﻿
+@{
+    ViewBag.Title = "기간별 매출통계 - 전체";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/layout-grid/layout-grid.min599c.css?v4.0.4">
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/c3/c3.min599c.css?v4.0.4">
+
+<div class="page-content">
+
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            <i class="fas fa-newspaper"></i>
+            기간별 매출통계 - 전체
+        </h3>
+        <div class="panel-actions">
+            <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+        </div>
+    </div>
+    <div class="panel-body">
+        <!-- Example Layout grid -->
+        <div class="lt-container
+            lt-xs-h-6
+            lt-sm-h-6
+            lt-md-h-4
+            lt-lg-h-4">
+
+            <!-- 1번 시작 -->
+            <div class="lt
+              lt-xs-x-0
+              lt-xs-y-0
+              lt-xs-w-1
+              lt-xs-h-1
+              lt-sm-x-0
+              lt-sm-y-0
+              lt-sm-w-1
+              lt-sm-h-1
+              lt-md-x-0
+              lt-md-y-0
+              lt-md-w-1
+              lt-md-h-1
+              lt-lg-x-0
+              lt-lg-y-0
+              lt-lg-w-1
+              lt-lg-h-1">
+                <div class="lt-body bg-white text-center p-10">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>년월</th>
+                                <th>건수</th>
+                                <th>금액</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2019/04</td>
+                                <td>10</td>
+                                <td>15,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>2019/03</td>
+                                <td>5</td>
+                                <td>7,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>2019/02</td>
+                                <td>3</td>
+                                <td>6,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>2019/01</td>
+                                <td>2</td>
+                                <td>1,000,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+
+                </div>
+            </div>
+            <!-- 1번 끝 -->
+            <!-- 2번 시작 -->
+            <div class="lt
+              lt-xs-x-0
+              lt-xs-y-1
+              lt-xs-w-1
+              lt-xs-h-2
+              lt-sm-x-0
+              lt-sm-y-1
+              lt-sm-w-1
+              lt-sm-h-2
+              lt-md-x-1
+              lt-md-y-0
+              lt-md-w-3
+              lt-md-h-1
+              lt-lg-x-1
+              lt-lg-y-0
+              lt-lg-w-3
+              lt-lg-h-1">
+                <div id="barChart" class="lt-body bg-white text-center p-10">
+                    <div class="form-inline text-left">
+                        <select class="form-control">
+                            <option>2015</option>
+                            <option>2016</option>
+                            <option>2017</option>
+                            <option>2018</option>
+                            <option selected>2019</option>
+                        </select>&nbsp;
+                        <button class="btn btn-sm btn-primary">
+                            검색
+                        </button>
+                    </div>
+                    <div id="barChart1" style="height:200px;">
+
+                    </div>
+
+                </div>
+            </div>
+            <!-- 2번 끝 -->
+            <!-- 3번 시작 -->
+            <div class="lt
+              lt-xs-x-0
+              lt-xs-y-3
+              lt-xs-w-1
+              lt-xs-h-2
+              lt-sm-x-0
+              lt-sm-y-3
+              lt-sm-w-1
+              lt-sm-h-2
+              lt-md-x-0
+              lt-md-y-1
+              lt-md-w-4
+              lt-md-h-1
+              lt-lg-x-0
+              lt-lg-y-1
+              lt-lg-w-4
+              lt-lg-h-1">
+                <div class="lt-body bg-white text-center p-10">
+                    <div class="form-inline text-left">
+                        <select class="form-control">
+                            <option>01월</option>
+                            <option>02월</option>
+                            <option>03월</option>
+                            <option>04월</option>
+                            <option>05월</option>
+                            <option>06월</option>
+                            <option>07월</option>
+                            <option>08월</option>
+                            <option>09월</option>
+                            <option>10월</option>
+                            <option>11월</option>
+                            <option>12월</option>
+                        </select>&nbsp;
+                        <button class="btn btn-sm btn-primary">
+                            검색
+                        </button>
+                    </div>
+                    <div id="barChart2" style="height:200px;">
+
+                    </div>
+                </div>
+            </div>
+            <!-- 3번 끝 -->
+            <!-- 4번 시작 -->
+            <div class="lt
+              lt-xs-x-0
+              lt-xs-y-5
+              lt-xs-w-1
+              lt-xs-h-1
+              lt-sm-x-0
+              lt-sm-y-5
+              lt-sm-w-1
+              lt-sm-h-1
+              lt-md-x-0
+              lt-md-y-2
+              lt-md-w-4
+              lt-md-h-2
+              lt-lg-x-0
+              lt-lg-y-2
+              lt-lg-w-4
+              lt-lg-h-2">
+                <div class="lt-body bg-white text-center p-30">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="vertical-align:middle">No</th>
+                                <th rowspan="2" style="vertical-align:middle">고객사</th>
+                                <th colspan="4">담당</th>
+                                <th colspan="3">일정</th>
+                                <th colspan="3">완료일</th>
+                                <th colspan="2">인정매출</th>
+                            </tr>
+                            <tr>
+                                <th>책임</th>
+                                <th>담당</th>
+                                <th>Contact</th>
+                                <th>입사자</th>
+
+                                <th>입사</th>
+                                <th>빌링</th>
+                                <th>입금</th>
+
+                                <th>연봉</th>
+                                <th>수수료</th>
+                                <th>매출액</th>
+
+                                <th>비율</th>
+                                <th>성과</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>국민은행</td>
+
+                                <td>책임1</td>
+                                <td>담당1, 담당2</td>
+                                <td>회사담당</td>
+                                <td>이기융</td>
+
+                                <td>2019.02.04</td>
+                                <td>2019.06.04</td>
+                                <td></td>
+
+                                <td>80,000,000</td>
+                                <td>20%</td>
+                                <td>16,000,000</td>
+
+                                <td>100%</td>
+                                <td>16,000,000</td>
+
+                            </tr>
+
+                            <tr>
+                                <td>2</td>
+                                <td>한국은행</td>
+
+                                <td>책임1</td>
+                                <td>담당3, 담당2</td>
+                                <td>회사담당1</td>
+                                <td>최한국</td>
+
+                                <td>2019.02.04</td>
+                                <td>2019.06.04</td>
+                                <td>2016.04.01</td>
+
+                                <td>15,000,000</td>
+                                <td>20%</td>
+                                <td>3,000,000</td>
+
+                                <td>100%</td>
+                                <td>3,000,000</td>
+
+                            </tr>
+
+                            <tr>
+                                <td>3</td>
+                                <td>삼성SDI</td>
+
+                                <td>책임1</td>
+                                <td>담당1, 담당2</td>
+                                <td>회사담당1</td>
+                                <td>고삼성</td>
+
+                                <td>2019.02.04</td>
+                                <td>2019.06.04</td>
+                                <td></td>
+
+                                <td>30,000,000</td>
+                                <td>25%</td>
+                                <td>7,500,000</td>
+
+                                <td>100%</td>
+                                <td>7,500,000</td>
+
+                            </tr>
+
+                            <tr>
+                                <td>4</td>
+                                <td>현대자동차</td>
+
+                                <td>책임1</td>
+                                <td>담당1,담당2</td>
+                                <td>회사담당1</td>
+                                <td>차현대</td>
+
+                                <td>2019.02.04</td>
+                                <td>2019.06.04</td>
+                                <td></td>
+
+                                <td>70,000,000</td>
+                                <td>30%</td>
+                                <td>21,000,000</td>
+
+                                <td>50%</td>
+                                <td>10,500,000</td>
+
+                            </tr>
+
+                            <tr>
+                                <td>5</td>
+                                <td>포항제철</td>
+
+                                <td>책임1</td>
+                                <td>담당1, 담당2</td>
+                                <td>회사담당1</td>
+                                <td>차포철</td>
+
+                                <td>2019.02.04</td>
+                                <td>2019.06.04</td>
+                                <td></td>
+
+                                <td>100,000,000</td>
+                                <td>25%</td>
+                                <td>25,000,000</td>
+
+                                <td>100%</td>
+                                <td>25,000,000</td>
+
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="9">합계</th>
+                                <th>295,000,000</th>
+                                <th></th>
+                                <th>72,500,000</th>
+                                <th></th>
+                                <th>59,300,000</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <div class="row col-md-12 justify-content-center"><nav><ul class="pagination pagination-no-border"><li class="disabled page-item"><a aria-label="Previous" class="page-link" href="/Project/MyProjectList?page=1"><span aria-hidden="true">«</span></a></li><li class="active page-item"><a class="page-link" href="/Project/MyProjectList?page=1">1<span class="sr-only">(current)</span></a></li><li class="disabled page-item"><a aria-label="Next" class="page-link" href="/Project/MyProjectList?page=1"><span aria-hidden="true">»</span></a></li></ul></nav></div>
+                </div>
+            </div>
+            <!-- 4번 끝-->
+
+
+
+        </div>
+        <!-- End Example Layout grid -->
+    </div>
+
+</div>
+
+@section scripts {
+
+    <script src="~/Libs/remark/global/vendor/layout-grid/layout-grid.min599c.js?v4.0.4"></script>
+    <script src="~/Libs/remark/global/vendor/d3/d3.min599c.js?v4.0.4"></script>
+    <script src="~/Libs/remark/global/vendor/c3/c3.min599c.js?v4.0.4"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            verticalBarChart();
+            //horizontalBarChart()
+
+            google.charts.load('current', { packages: ['corechart', 'bar'] });
+            google.charts.setOnLoadCallback(horizontalBarChart);
+
+        });
+
+        function verticalBarChart() {
+
+            var chart = c3.generate({
+                bindto: d3.select('#barChart1'),
+                size: {
+                    height: $("#barChart1").height()
+                },
+                data: {
+                    x: 'date',
+                    json: [
+                        { date: '2019-01-01', amt: 15000000 },
+                        { date: '2019-02-01', amt: 7000000 },
+                        { date: '2019-03-01', amt: 6000000 },
+                        { date: '2019-04-01', amt: 1000000 },
+                        { date: '2019-05-01', amt: 0 },
+                        { date: '2019-06-01', amt: 0 },
+                        { date: '2019-07-01', amt: 0 },
+                        { date: '2019-08-01', amt: 0 },
+                        { date: '2019-09-01', amt: 0 },
+                        { date: '2019-10-01', amt: 0 },
+                        { date: '2019-11-01', amt: 0 },
+                        { date: '2019-12-01', amt: 0 }
+                    ],
+                    keys: { x: 'date', value: ['amt'] },
+                    type: 'bar',
+                    names: {
+                        amt: '월별 매출'
+                    }
+                },
+                bar: {
+                    width: {
+                        ratio: 0.5 // this makes bar width 50% of length between ticks
+                    }
+                },
+                axis: {
+                    x: {
+                        type: 'timeseries',
+                        tick: {
+                            format: '%Y-%-m'
+                        }
+                    },
+                    y: {
+                        tick: {
+                            format: d3.format(',')
+                        }
+                    }
+
+                },
+                tooltip: {
+                    format: {
+                        value: function (value, ratio, id) {
+                            var format = d3.format(',');
+                            return format(value);
+                        }
+                    }
+                }
+
+            });
+
+        }
+
+        function horizontalBarChart() {
+
+            var data = google.visualization.arrayToDataTable([
+                ['팀명', '총 매출',],
+                ['1팀', 40000000],
+                ['2팀', 61000000],
+                ['3팀', 30000000],
+                ['4팀', 80000000],
+                ['5팀', 39000000],
+                ['6팀', 110000000],
+            ]);
+
+            var options = {
+                title: '팀별 매출현황',
+                chartArea: { width: '85%' },
+                
+            };
+
+            var chart = new google.visualization.BarChart(document.getElementById('barChart2'));
+
+            chart.draw(data, options);
+
+            //var chart = c3.generate({
+            //    bindto: d3.select('#barChart2'),
+            //    //size: {
+            //    //    height: $("#barChart2").height()
+            //    //},
+            //    data: {
+            //        columns: [
+            //            ['1팀', 40000000],
+            //            ['2팀', 61000000],
+            //            ['3팀', 30000000],
+            //            ['4팀', 80000000],
+            //            ['5팀', 39000000],
+            //            ['6팀', 110000000],
+            //        ],
+            //        type: 'bar',
+
+            //    },
+            //    bar: {
+            //        width: {
+            //            ratio: 0.5 // this makes bar width 50% of length between ticks
+            //        }
+            //    },
+            //    axis: {
+            //        rotated: true,
+            //        x: {
+
+            //        },
+            //        y: {
+            //            tick: {
+            //                format: d3.format(',')
+            //            }
+            //        }
+
+            //    },
+            //    tooltip: {
+            //        format: {
+            //            value: function (value, ratio, id) {
+            //                var format = d3.format(',');
+            //                return format(value);
+            //            }
+            //        }
+            //    }
+
+            //});
+
+        }
+
+    </script>
+}

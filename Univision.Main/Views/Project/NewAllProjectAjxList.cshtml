@@ -1,0 +1,516 @@
+﻿@model Univision.Core.Models.DTO.Response.Project.ProjectListViewModel
+@{
+  Layout = null;
+}
+<div class="nav-tabs-horizontal nav-tabs-animate">
+  
+  <div class="dropdown page-user-sortlist">
+
+    정렬 : <a class="dropdown-toggle inline-block" data-toggle="dropdown" href="#" aria-expanded="false">
+      @if (Model.search.orderOption1 == "DESC")
+      {
+        <text>↓</text>
+      }
+      else
+      {
+        <text>↑</text>
+      }
+
+      @if (Model.search.orderTxt1 == "client_sort_idx")
+      {
+        <text>고객사</text>
+      }
+      else if (Model.search.orderTxt1 == "title_sort_idx")
+      {
+        <text>구인제목</text>
+      }
+      else if (Model.search.orderTxt1 == "business_sort_idx")
+      {
+        <text>주산업</text>
+      }
+      else if (Model.search.orderTxt1 == "job_sort_idx")
+      {
+        <text>주직무</text>
+      }
+
+      else if (Model.search.orderTxt1 == "create_dt_idx")
+      {
+        <text>최초 등록일</text>
+      }
+      else if (Model.search.orderTxt1 == "modify_dt_idx")
+      {
+        <text>최종 수정일</text>
+      }
+      else if (Model.search.orderTxt1 == "position_idx")
+      {
+        <text>Position</text>
+      }
+
+
+    </a>
+    <div class="dropdown-menu animation-scale-up animation-top-right animation-duration-250"
+         role="menu">
+      <a class="active dropdown-item" href="javascript:cd_order_set('client_sort_idx')">고객사</a>
+      <a class="dropdown-item" href="javascript:cd_order_set('title_sort_idx')">구인제목</a>
+      <a class="dropdown-item" href="javascript:cd_order_set('business_sort_idx')">주산업</a>
+      <a class="dropdown-item" href="javascript:cd_order_set('job_sort_idx')">주직무</a>
+      <a class="dropdown-item" href="javascript:cd_order_set('create_dt_idx')">최초 등록일</a>
+      <a class="dropdown-item" href="javascript:cd_order_set('modify_dt_idx')">최종 수정일</a>
+      <a class="dropdown-item" href="javascript:cd_order_set('position_idx')">Position</a>
+    </div>
+
+ 
+
+  </div>
+  <ul class="nav nav-tabs nav-tabs-line">
+    <li class="nav-item" role="presentation">
+      <a class="@(Model.search.state == 0 ? "active " : "")nav-link" data-toggle="tab" href="#all" onclick="javascript:cd_state_set(0);" aria-controls="0" role="tab">
+        전체 <span class="badge badge-dark badge-outline badge-pill font-size-12">@Utils.ConvertMoneyToString(Model.cntData.allCnt)</span>
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="@(Model.search.state == 1 ? "active " : "")nav-link" data-toggle="tab" href="#prog" onclick="javascript:cd_state_set(1);" aria-controls="1" role="tab">
+        진행  <span class="badge badge-primary badge-outline badge-pill font-size-12">@Utils.ConvertMoneyToString(Model.cntData.progressCnt)</span>
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="@(Model.search.state == 4 ? "active " : "")nav-link" data-toggle="tab" href="#comp" onclick="javascript:cd_state_set(4);" aria-controls="4" role="tab">
+        완료  <span class="badge badge-info badge-outline badge-pill font-size-12">@Utils.ConvertMoneyToString(Model.cntData.completeCnt)</span>
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="@(Model.search.state == 5 ? "active " : "")nav-link" data-toggle="tab" href="#suc" onclick="javascript:cd_state_set(5);" aria-controls="5" role="tab">
+        성공  <span class="badge badge-success badge-outline badge-pill font-size-12">@Utils.ConvertMoneyToString(Model.cntData.successCnt)</span>
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="@(Model.search.state == 2 ? "active " : "")nav-link" data-toggle="tab" href="#hold" onclick="javascript:cd_state_set(2);" aria-controls="2" role="tab">
+        보류  <span class="badge badge-warning badge-outline badge-pill font-size-12">@Utils.ConvertMoneyToString(Model.cntData.waitCnt)</span>
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="@(Model.search.state == 3 ? "active " : "")nav-link" data-toggle="tab" href="#fail" onclick="javascript:cd_state_set(3);" aria-controls="3" role="tab">
+        취소(실패) <span class="badge badge-danger badge-outline badge-pill font-size-12">@Utils.ConvertMoneyToString(Model.cntData.failCnt)</span>
+      </a>
+    </li>
+  </ul>
+  
+  <div class="tab-content">
+    <div class="tab-pane animation-fade active" id="all_contacts" role="tabpanel">
+      <table class="table table-project-all">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Subject</th>
+            <th>AM &amp; SM</th>
+            <th class="text-center">Industry &amp; Job</th>
+            <th class="text-center">Position</th>
+            <!--<th class="text-center">Actions</th>-->
+          </tr>
+        </thead>
+        <tbody>
+          @if (Model.list.Count > 0)
+          {
+            foreach (var data in Model.list)
+            {
+              <tr>
+                <td class="work-status">
+                  @{
+                    string badgeClass = "";
+                    switch (data.pjt_status)
+                    {
+                      case 1:
+                        badgeClass = "badge-primary";
+                        break;
+                      case 2:
+                        badgeClass = "badge-warning";
+                        break;
+                      case 3:
+                        badgeClass = "badge-danger";
+                        break;
+                      case 4:
+                        badgeClass = "badge-info";
+                        break;
+                      case 5:
+                        badgeClass = "badge-success";
+                        break;
+                    }
+                  }
+                  <h5>
+                    <span class="badge badge-pill font-size-12 @badgeClass">@data.pjt_status_str</span>
+                  </h5>
+                </td>
+                <td class="subject">
+                  <div class="table-content">
+                    <p>
+                      <span class="cus-d-1000 badge badge-pill font-size-12 @badgeClass">@data.pjt_status_str</span>
+                      @Html.Raw(data.company_name)
+                      @if (data.is_pe == 1)
+                      {
+                        <span class="badge badge-secondary">PE</span>
+                      }
+                      <span class="cus-h-1000 text-right small blue-grey-400 float-right pr-10">
+                        Update : @Utils.ConvertDateTimeToString(data.modify_dt)
+                        <br />Reg. : @Utils.ConvertDateTimeToString(data.create_dt)
+                      </span>
+                      <br />
+
+                      @{
+                        string badgeClass_type = "";
+                        switch (data.pjt_type)
+                        {
+                          case 1:
+                            badgeClass_type = "badge-primary";
+                            break;
+                          default:
+                            badgeClass_type = "badge-info ";
+                            break;
+
+                        }
+                      }
+                      <span class="badge badge-outline font-size-12 @badgeClass_type">@data.pjt_type_str</span>
+                      @if (data.pjt_type == 1)
+                      {
+                        <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })" title="@data.title" class="clearfix">
+                          @Html.Raw(data.title)
+                        </a>
+                      }
+                      else
+                      {
+                        <a href="@Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq })" title="@data.title" class="clearfix">
+                          @Html.Raw(data.title)
+                        </a>
+                      }
+
+                      <div class="cus-d-1000">
+                        <span class="badge badge-outline badge-primary font-size-12">
+                          @data.business_names2
+                        </span>
+                        @if (!String.IsNullOrEmpty(data.sub_business_names2))
+                        {
+                          <span class="badge badge-outline badge-primary font-size-12">
+                            @data.sub_business_names2
+                          </span>
+                        }
+                        <span class="badge badge-outline badge-info font-size-12">
+                          @data.job_names2
+                        </span>
+                        @if (!String.IsNullOrEmpty(data.sub_job_names2))
+                        {
+                          <span class="badge badge-outline badge-info font-size-12">
+                            @data.sub_job_names2
+                          </span>
+                        }
+                      </div>
+
+                      <span class="cus-d-1000 text-right small blue-grey-400 float-right pr-10">
+                        <br />Update : @Utils.ConvertDateTimeToString(data.modify_dt) / Reg. : @Utils.ConvertDateTimeToString(data.create_dt)
+                      </span>
+                    </p>
+
+
+
+
+                  </div>
+                </td>
+                <td class="members">
+                  <div class="table-content">
+                    @if (!string.IsNullOrWhiteSpace(data.am_names))
+                    {
+                      <h5>
+
+                        @{
+                          string[] am_names_arr = data.am_names.Split('\n');
+                          if (am_names_arr.Length > 0)
+                          {
+                            int am_cnt = 0;
+
+                            foreach (var am in am_names_arr)
+                            {
+
+                              if (!string.IsNullOrWhiteSpace(am))
+                              {
+
+
+                                @Html.Raw(am.Replace("\r", ""))
+
+
+                                am_cnt++;
+                              }
+
+                            }
+                          }
+                        }
+                      </h5>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(data.searcher_names))
+                    {
+                      <h5>
+
+                        @{
+                          string[] searcher_names_arr = data.searcher_names.Split('\n');
+                          if (searcher_names_arr.Length > 0)
+                          {
+                            int searcher_cnt = 0;
+
+                            foreach (var searcher in searcher_names_arr)
+                            {
+
+                              if (!string.IsNullOrWhiteSpace(searcher))
+                              {
+                                if (searcher_cnt > 0)
+                                {
+                                  <text>, </text>
+                                }
+                                @Html.Raw(searcher.Replace("\r", ""))
+
+                                searcher_cnt++;
+                              }
+
+                            }
+
+                          }
+                        }
+                      </h5>
+                    }
+
+                  </div>
+                </td>
+                <td>
+                  <div>
+                    <h5>
+                      <span class="badge badge-outline badge-primary font-size-12">
+                        @data.business_names2
+                      </span>
+                      @if (!String.IsNullOrEmpty(data.sub_business_names2))
+                      {
+                        <span class="badge badge-outline badge-primary font-size-12">
+                          @data.sub_business_names2
+                        </span>
+                      }
+                    </h5>
+                    <h5>
+                      <span class="badge badge-outline badge-info font-size-12">
+                        @data.job_names2
+                      </span>
+                      @if (!String.IsNullOrEmpty(data.sub_job_names2))
+                      {
+                        <span class="badge badge-outline badge-info font-size-12">
+                          @data.sub_job_names2
+                        </span>
+                      }
+                    </h5>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <div>
+                    <h5>
+                      @data.position_name
+                    </h5>
+                  </div>
+                </td>
+                <!--
+                <td class="actions text-center">
+                  <div class="table-content">
+                    <i class="icon wb-menu" data-url="panel.tpl" data-toggle="slidePanel"></i>
+                  </div>
+                </td>
+                  -->
+
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+
+      @*
+        <ul class="list-group">
+          @if (Model.list.Count > 0)
+          {
+            foreach (var data in Model.list)
+            {
+
+
+
+              <li class="list-group-item py-10">
+                <div class="media">
+                  <div class="align-self-center mt-0">
+
+
+                    @{
+                      string badgeClass = "";
+                      switch (data.pjt_status)
+                      {
+                        case 1:
+                          badgeClass = "badge-primary";
+                          break;
+                        case 2:
+                          badgeClass = "badge-warning";
+                          break;
+                        case 3:
+                          badgeClass = "badge-danger";
+                          break;
+                        case 4:
+                          badgeClass = "badge-info";
+                          break;
+                        case 5:
+                          badgeClass = "badge-success";
+                          break;
+                      }
+                    }
+                    <span class="badge badge-lg @badgeClass">@data.pjt_status_str</span>
+                    <br />
+                    @{
+                      string badgeClass_type = "";
+                      switch (data.pjt_type)
+                      {
+                        case 1:
+                          badgeClass_type = "badge-primary";
+                          break;
+                        default:
+                          badgeClass_type = "badge-info ";
+                          break;
+
+                      }
+                    }
+                    <span class="badge badge-outline @badgeClass_type">@data.pjt_type_str</span>
+
+                  </div>
+                  <div class="media-body align-self-center cd-border-list">
+                    <h5 class="mt-0">
+                      @data.company_name <br />
+                      <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })" title="@data.title" class="clearfix">
+                        @data.title
+                      </a>
+                    </h5>
+                  </div>
+                  <div class="media-body align-self-center cd-border-list">
+                    <h5 class="mt-0">
+                      산업 : @data.business_names2 <br />
+                      직무 : @data.job_names2
+                    </h5>
+                  </div>
+                  <div class="media-body align-self-center cd-border-list">
+                    AM: @Html.Raw(data.am_names)<br />
+                    SM: @data.searcher_names
+                  </div>
+                  <div class="media-body align-self-center cd-border-list">
+                    @Utils.ConvertDateTimeToString(data.modify_dt)<br />
+                    <small>@Utils.ConvertDateTimeToString(data.create_dt) (Reg.)</small>
+                  </div>
+
+
+                </div>
+              </li>
+            }
+          }
+        </ul>
+      *@
+    </div>
+  </div>
+</div>
+@*
+  <table class="table block_table table-bordered table-hover table-striped" style="table-layout:fixed;font-size:0.8em;">
+    <thead>
+      <tr>
+        <th class="text-center" style="width:100px">Company</th>
+        <th class="text-center" style="width:100px">Name</th>
+        <th class="text-center">Exp.</th>
+        <th class="text-center">Edu</th>
+        <th class="text-center" style="width:135px">Ind.</th>
+        <th class="text-center" style="width:135px">Job</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (Model.Items.Count > 0)
+      {
+        int num = 1;
+        foreach (var data in Model.Items)
+        {
+          <tr id="cd_list_@data.di_cd_seq">
+            <td class="text-center">
+              @data.dv_comp_group_name
+              <br />
+              [@data.dv_company_name]
+            </td>
+            <td class="text-center text-truncate">
+              <a href="javascript:openCandidateDirector('@data.di_cd_seq')" class="clearfix">
+                @data.dv_kor_name<br />
+                (@data.di_birth_year / @Utils.ReturnGenderTxt(data.di_gender))
+              </a>
+            </td>
+
+
+            <td class="text-truncate">
+              @data.dv_exp_history
+            </td>
+            <td class="text-truncate">
+              @data.dv_edu_history
+            </td>
+
+            <td class="text-truncate" title="@data.dv_ind_str">
+              @if (!string.IsNullOrWhiteSpace(data.dv_ind_str))
+              {
+                string[] businessList = data.dv_ind_str.Split('\n');
+                if (businessList.Length > 0)
+                {
+                  int busi_cnt = 0;
+                  foreach (var business in businessList)
+                  {
+                    busi_cnt++;
+                    <span class="clearfix">- [@business]</span>
+                    if (busi_cnt >= 2)
+                    {
+                      break;
+                    }
+                  }
+
+                }
+              }
+            </td>
+            <td class="col-12 text-truncate" title="@data.dv_job_str">
+
+              @if (!string.IsNullOrWhiteSpace(data.dv_job_str))
+              {
+                string[] jobList = data.dv_job_str.Split('\n');
+                if (jobList.Length > 0)
+                {
+                  int job_cnt = 0;
+                  foreach (var job in jobList)
+                  {
+                    job_cnt++;
+                    <span class="clearfix">- [@job]</span>
+                    if (job_cnt >= 2)
+                    {
+                      break;
+                    }
+                  }
+
+                }
+              }
+            </td>
+          </tr>
+
+
+
+
+        }
+      }
+      else
+      {
+        <li class="list-group-item text-center">
+          No Data Found.
+        </li>
+        <tr>
+          <td colspan="6" class="text-center">No Data Found.</td>
+        </tr>
+
+      }
+    </tbody>
+  </table>
+*@
+
+@Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                 ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                 x => String.Format("javascript:SearchPaging({0})", x))

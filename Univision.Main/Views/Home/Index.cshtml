@@ -1,0 +1,28 @@
+﻿@using Univision.Security;
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-content">
+    <h2>Blank</h2>
+    <p>
+        <a href="@Url.Action("ApiPage", "Home")">
+            공통 Api 및 기능 페이지 이동!!!
+        </a>
+        <br />
+        loginid = @AppIdentity.user_seq
+
+    </p>
+</div>
+
+<!-- Page 내부에서 사용하는 Script 작성 영역-->
+@section scripts {
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+        });
+
+    </script>
+}

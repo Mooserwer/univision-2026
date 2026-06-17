@@ -1,0 +1,168 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.UnivisionMemoListModel
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+
+    .client-md, .member-title-md, .client-sm, .member-title-sm {
+        display: none;
+    }
+
+    @@media (max-width:898px) {
+        .client-md {
+            display: block;
+        }
+
+        .member-title-md {
+            display: inline;
+        }
+
+        .table.table-memo-list thead th:nth-of-type(1) {
+            display: none
+        }
+
+        .table.table-memo-list tbody td:nth-of-type(1) {
+            display: none
+        }
+
+        .table.table-memo-list thead th:nth-of-type(4) {
+            display: none
+        }
+
+        .table.table-memo-list tbody td:nth-of-type(4) {
+            display: none
+        }
+
+        .app-work .panel-body .table .work-progress {
+            display: none
+        }
+    }
+
+    @@media (max-width:500px) {
+        .client-sm {
+            display: block;
+        }
+
+        .member-title-sm {
+            display: inline;
+        }
+
+        .table.table-memo-list thead th:nth-of-type(3) {
+            display: none
+        }
+
+        .table.table-memo-list tbody td:nth-of-type(3) {
+            display: none
+        }
+
+        .app-work .panel-body .table .work-progress {
+            display: none
+        }
+    }
+</style>
+<div id="pop_search_project" class="p-0">
+    <div class="mb-10" style="display:none;">
+        <div class="row">
+            <div class="col">
+                @using (Html.BeginForm("UnivisionActivity", "Statistics", FormMethod.Get, new { @id = "SearchFormMemo" }))
+                {
+                    <div class="input-group input-group-sm">
+                        @Html.HiddenFor(x => x.search.uv_seq)
+                        @Html.HiddenFor(x => x.search.from_month_str)
+                        @Html.HiddenFor(x => x.search.to_month_str)
+                        @Html.TextBoxFor(x => x.search.search_txt, new { @id = "searchTxt", @class = "form-control", @placeholder = "내용" })
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-primary" id="btn_pop_search_memo">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                            </button>
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="panel" id="searchMemo">
+        <div class="panel-body">
+            <table class="table table-borderless table-hover table-memo-list" style="table-layout:fixed;">
+                <thead class="text-center">
+                    <tr>
+                        <th style="width:10%;">#</th>
+                        <th style="width:25%;">후보자</th>
+                        <th>내용</th>
+                        <th style="width:15%;">등록일</th>
+                    </tr>
+                </thead>
+                <tbody class="text-center">
+                    @if (Model.list.Count > 0)
+                    {
+                        int seq = Model.list.Count;
+                        foreach (var data in Model.list)
+                        {
+                            <tr style="cursor:pointer" onclick="javascript:openPopCandidate('@data.c_seq');">
+                                <td class="text-center">
+                                    @(seq--)
+                                </td>
+                                <td class="text-left text-truncate">
+                                    @data.kor_name
+                                </td>
+                                <td class="text-left text-truncate">
+                                    @Html.Raw(data.memo.Replace("\r\n", "\n").Replace("\n", "<br />"))
+                                </td>
+                                <td class="text-center">
+                                    @Utils.ConvertDateTimeToString(data.create_dt)
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3">No Data Found.</td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#btn_pop_search_memo').click(function () {
+        FancyBoxSearchAndPageMove(1);
+    });
+
+    function openPopCandidate(val1) {
+        var url = "/Candidate/CandidateDetail?c_seq=" + val1;
+
+        var win = window.open(url + "&is_pop=1", "WIN_CAN_" + val1, "scrollbars=yes,resizable=yes,width=850,height=750");
+        win.focus();
+    }
+
+        //FancyBox 팝업 내의 페이지 이동.
+        function FancyBoxSearchAndPageMove(page) {
+            if (page == null || page == undefined)
+                page = 1;
+
+            $.ajax({
+                url: '@Url.Action("UnivisionMemoList", "Statistics")',
+                data: $('#SearchFormMemo').serialize(),
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#searchMemo');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#searchMemo');
+                $(".fancybox-inner").html(view);
+            })
+            .always(function () {
+                hideLoading('#searchMemo');
+            });
+        }
+</script>

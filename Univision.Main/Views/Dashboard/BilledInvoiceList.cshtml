@@ -1,0 +1,151 @@
+﻿@model Univision.Main.Models.Project.ProjectInvoiceListModel
+@{
+    Layout = null;
+    int windowWidth = ViewBag.windowWidth;
+}
+
+<div class="table-responsive">
+    
+    @if (windowWidth < 1300)
+    {
+        <table id="default-table" class="table table-hover" style="table-layout:fixed;">
+            <thead>
+                <tr>
+                    <th class="tbw55" title="고객사 / 구인제목">Client / Title</th>
+                    <th class="tbw25" title="후보자 / 총매출액">Candidate<br /> / Total Amount</th>
+                    <th class="tbw20" title="발행일" style="word-break:keep-all">Billing Date</th>
+                </tr>
+            </thead>
+            <tbody>
+              @if (Model.list.Count > 0)
+              {
+                foreach (var data in Model.list)
+                {
+
+                  string url = "";
+                  switch (data.pjt_type)
+                  {
+                    case ProjectTypeCode.hire:
+                      url = Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq });
+                      break;
+                    case ProjectTypeCode.repitation:
+                    case ProjectTypeCode.rejoin:
+                    case ProjectTypeCode.etc:
+                      url = Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq });
+                      break;
+                  }
+
+                  <tr>
+                    <td class="text-truncate text-left" title="@data.client_name / @data.pjt_title">
+                      <a href="@Url.Action("ClientDetail", "Client", new { @c_seq = data.client_seq })">
+                        @Utils.Truncate(data.client_name, 10)
+                      </a>
+                      <br />
+                      <span class="text-truncate s2">
+                        <a href="@url">@Utils.Truncate(data.pjt_title, 30)</a>
+                      </span>
+                    </td>
+
+                    @{
+                      url = "";
+                      if (data.candidate_seq != null && data.candidate_seq > 0)
+                      {
+                        url = Url.Action("CandidateDetail", "Candidate", new { @c_seq = data.candidate_seq });
+                      }
+                      else
+                      {
+                        url = Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq });
+                      }
+                    }
+                    <td class="text-truncate text-left" title="@data.candidate_name / @Utils.ConvertMoneyToString(data.billing_money)">
+                      <a href="@url">
+                        @data.candidate_name
+                      </a>
+                      <br />
+                      @Utils.ConvertMoneyToString(data.billing_money)
+                    </td>
+                    <td class="text-truncate">@Utils.ConvertDateTimeToString(data.billing_dt)</td>
+                  </tr>
+                }
+              }
+              else
+              {
+                <tr>
+                  <td colspan="3">발행 인보이스가 없습니다.</td>
+                </tr>
+              }
+            </tbody>
+        </table>
+    }
+    else
+    {
+
+        <table id="default-table" class="table table-hover" style="table-layout: fixed;">
+            <thead>
+              <tr>
+                <th class="tbw25" title="고객사">Client</th>
+                <th class="tbw25" title="구인제목">Title</th>
+                <th class="tbw15" title="후보자 / 발행내역">Candidate</th>
+                <th class="tbw20" title="총매출액" style="word-break:keep-all">Total amount</th>
+                <th class="tbw15" title="발행일" style="word-break:keep-all">Billing date</th>
+                <th class="tbw15" title="Warranty expiration date" style="word-break:keep-all">보증종료일</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (Model.list.Count > 0)
+              {
+                foreach (var data in Model.list)
+                {
+                  <tr>
+                    <td class="text-truncate text-left" title="@data.client_name">
+                      <a href="@Url.Action("ClientDetail", "Client", new { @c_seq = data.client_seq })">
+                        @data.client_name
+                      </a>
+                    </td>
+                    @{
+                      string url = "";
+                      switch (data.pjt_type)
+                      {
+                        case ProjectTypeCode.hire:
+                          url = Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq });
+                          break;
+                        case ProjectTypeCode.repitation:
+                        case ProjectTypeCode.rejoin:
+                        case ProjectTypeCode.etc:
+                          url = Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq });
+                          break;
+                      }
+                    }
+                    <td class="text-truncate text-left" title="@data.pjt_title"><a href="@url">@data.pjt_title</a></td>
+                    @{
+                      url = "";
+                      if (data.candidate_seq > 0)
+                      {
+                        url = Url.Action("CandidateDetail", "Candidate", new { @c_seq = data.candidate_seq });
+                      }
+                      else
+                      {
+                        url = Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq });
+                      }
+                    }
+                    <td class="text-truncate text-left" title="@data.candidate_name">
+                      <a href="@url">
+                        @data.candidate_name
+                      </a>
+                    </td>
+                    <td class="text-truncate text-right" title="@Utils.ConvertMoneyToString(data.billing_money)">@Utils.ConvertMoneyToString(data.billing_money)</td>
+                    <td class="text-truncate">@Utils.ConvertDateTimeToString(data.billing_dt)</td>
+                    <td class="text-truncate">@Utils.ConvertDateTimeToString(data.expire_guarantee)</td>
+                  </tr>
+                }
+              }
+              else
+              {
+                <tr>
+                  <td colspan="6">발행 인보이스가 없습니다.</td>
+                </tr>
+              }
+            </tbody>
+        </table>
+    }
+</div>

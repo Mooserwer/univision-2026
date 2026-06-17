@@ -1,0 +1,272 @@
+﻿@model Univision.Main.Models.Project.MyProjectListModel
+
+@{
+    Layout = null;
+}
+
+    <div class="panel-heading">
+        <h2 class="panel-title font-size-26 py-10">My Project List - Consulting </h2>
+        <ul class="panel-info font-size-10">
+            <li onclick="changeSearchState2(0)">
+                <div class="num blue-600">@Model.cntData.allCnt</div>
+                <p class="@Utils.ReturnPjtHighlight(Model.search.state, 0)">전체</p>
+            </li>
+            <li onclick="changeSearchState2('@ProjectStatusCode.progress')">
+                <div class="num blue-600">@Model.cntData.progressCnt</div>
+                <p class="@Utils.ReturnPjtHighlight(Model.search.state, ProjectStatusCode.progress)">진행</p>
+            </li>
+            <li onclick="changeSearchState2('@ProjectStatusCode.complete')">
+                <div class="num cyan-600">@Model.cntData.completeCnt</div>
+                <p class="@Utils.ReturnPjtHighlight(Model.search.state, ProjectStatusCode.complete)">완료</p>
+            </li>
+            <li onclick="changeSearchState2('@ProjectStatusCode.success')">
+                <div class="num green-600">@Model.cntData.successCnt</div>
+                <p class="@Utils.ReturnPjtHighlight(Model.search.state, ProjectStatusCode.success)">성공</p>
+            </li>
+            <li onclick="changeSearchState2('@ProjectStatusCode.hold')">
+                <div class="num orange-600">@Model.cntData.waitCnt</div>
+                <p class="@Utils.ReturnPjtHighlight(Model.search.state, ProjectStatusCode.hold)">보류</p>
+            </li>
+            <li onclick="changeSearchState2('@ProjectStatusCode.fail')">
+                <div class="num red-600">@Model.cntData.failCnt</div>
+                <p class="@Utils.ReturnPjtHighlight(Model.search.state, ProjectStatusCode.fail)">종료</p>
+            </li>
+        </ul>
+       
+
+
+    </div>
+    <div class="panel-body">
+        @using (Html.BeginForm("MyProjectRepList", "Project", FormMethod.Get, new { @id = "SearchRepForm", @class = "p-0" }))
+        {
+            @Html.Hidden("search.state2", Model.search.state, new { @id = "search_state2" })
+            @Html.Hidden("search.orderTxt2", Model.search.orderTxt, new { @id = "search_orderTxt2" })
+            @Html.Hidden("search.orderOption2", Model.search.orderOption, new { @id = "search_orderOption2" })
+
+
+            <div class="row">
+                <div class="col-sm-12 col-md-5">
+                    @Html.TextBox("search.searchTxt2", Model.search.searchTxt, new { @id = "search_searchTxt2", @class = "form-control form-control-sm", @placeholder = "제목 또는 업체명 검색어 입력" })
+                </div>
+                <div class="col-sm-8 col-md-4">
+                    <div class="input-group">
+                        @Html.TextBox("search.startDt2", Model.search.startDt, new { @class = "form-control jDatePicker form-control-sm", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                        <span class="input-group-text">
+                            &nbsp;~&nbsp;
+                        </span>
+                        @Html.TextBox("search.endDt2", Model.search.endDt, new { @class = "form-control form-control-sm jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                    </div>
+                </div>
+                <div class="col-sm-4 col-md-3 text-right">
+                    <button type="submit" class="btn btn-sm btn-primary" title="Search">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="resetSearchRepForm();">
+                        <i class="fas fa-redo"></i>
+                    </button>
+
+                </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col pt-10 text-right">
+                <button class="btn btn-sm btn-success" id="btnExcelRep" title="엑셀 다운로드">Excel Download</button>
+                <a href="@Url.Action("ProjectRepCreate", "Project")" class="btn btn-sm btn-primary" title="컨설팅 프로젝트 등록">New Project(Consulting)</a>
+            </div>
+        </div>
+        <table class="table" id="repTable">
+            <thead>
+                <tr>
+                    <th>
+                        Status
+                        <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.pjt_status", Model.search.orderOption) colSort" orderTxt="P.pjt_status"></i>
+                    </th>
+                    <th>
+                        Client
+                        <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "C.kor_name", Model.search.orderOption) colSort" orderTxt="C.kor_name"></i>
+                    </th>
+                    <th>
+                        Title
+                        <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.title", Model.search.orderOption) colSort" orderTxt="P.title"></i>
+                        /
+                        Reg.Date
+                        <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "P.create_dt", Model.search.orderOption) colSort" orderTxt="P.create_dt"></i>
+                    </th>
+                    <th>AM</th>
+                    <th>SM</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.list.Count > 0)
+                {
+                    foreach (var data in Model.list)
+                    {
+                        <tr>
+                            @{
+                                string badgeClass = "";
+                                switch (data.pjt_status)
+                                {
+                                    case 1:
+                                        badgeClass = "badge-primary";
+                                        break;
+                                    case 2:
+                                        badgeClass = "badge-warning";
+                                        break;
+                                    case 3:
+                                        badgeClass = "badge-danger";
+                                        break;
+                                    case 4:
+                                        badgeClass = "badge-info";
+                                        break;
+                                    case 5:
+                                        badgeClass = "badge-success";
+                                        break;
+                                }
+
+                            }
+                            <td class="work-status" style="width:5% !important">
+                                <span class="badge @badgeClass">@(Utils.ReturnProjectStatusTxt(data.pjt_status))</span>
+                            </td>
+                            <td class="subject" style="width:20% !important">
+                                <div class="table-content">
+                                    @data.company_name
+                                </div>
+                            </td>
+                            <td class="subject" style="width:30% !important">
+                                <div class="table-content">
+                                    <p class="blue-grey-500">
+                                        <a href="@Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq })">
+                                            @data.title
+                                        </a>
+                                    </p>
+                                    <span class="blue-grey-400">등록일 : @Utils.ConvertDateTimeToString(data.create_dt)</span>
+                                </div>
+                            </td>
+                            @*<td class="work-progress" style="width:15% !important">
+                                <div class="progress progress-xs table-content">
+
+                                    <div class="progress-bar @progressClass progress-bar-indicating" style="width: @(progress)%" role="progressbar">
+                                        <span class="sr-only">@(progress)%</span>
+                                    </div>
+                                </div>
+                                <span>@(progress)%</span>
+                            </td>*@
+                            <td class="actions" style="width:10% !important">
+                                <div class="table-content">
+                                    @data.am_names
+                                </div>
+                            </td>
+                            <td class="actions" style="width:10% !important">
+                                <div class="table-content">
+                                    @data.searcher_names
+                                </div>
+                            </td>
+                            @*<td class="members" style="width:10% !important">
+                                @data.business_names
+                                <button data-url="panel.tpl" data-toggle="slidePanel" type="button" class="btn btn-outline btn-success ">Achievements</button>
+                                    <div class="table-content">
+                                        <i class="icon wb-menu" data-url="panel.tpl" data-toggle="slidePanel"></i>
+                                    </div>
+                            </td>*@
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+<div class="panel-footer">
+    @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                 ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                 x => String.Format("javascript:callMyProjectRepList('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}')", Model.search.searchTxt, Model.search.startDt, Model.search.endDt, Model.search.state, Model.search.orderTxt, Model.search.orderOption, false, x))
+</div>
+
+@using (Html.BeginForm("MyProjectRepListExcelDown", "Project", FormMethod.Get, new { @id = "ExcelFormRep" }))
+{
+    @Html.Hidden("searchOption", Model.search.searchOption)
+    @Html.Hidden("searchTxt", Model.search.searchTxt)
+    @Html.Hidden("searchStartDt", Model.search.startDt)
+    @Html.Hidden("searchEndDt", Model.search.endDt)
+    @Html.Hidden("orderOption", Model.search.orderOption)
+    @Html.Hidden("orderTxt", Model.search.orderTxt)
+}
+
+<script type="text/javascript">
+
+        $(document).ready(function () {
+
+            BindDatePicker($(".jDatePicker"));
+
+            $("#btnExcelRep").click(function () {
+
+                $("#ExcelFormRep #searchOption").val($("#search_searchOption2").val());
+                $("#ExcelFormRep #searchTxt").val($("#search_searchTxt2").val());
+                $("#ExcelFormRep #searchStartDt").val($("#search_startDt2").val());
+                $("#ExcelFormRep #searchEndDt").val($("#search_endDt2").val());
+                $("#ExcelFormRep #orderOption").val($("#search_orderOption2").val());
+                $("#ExcelFormRep #orderTxt").val($("#search_orderTxt2").val());
+
+                //MyProjectExcelDown($("#search_searchTxt").val(), $("#search_state").val(), $("#search_orderTxt").val(), $("#search_orderOption").val());
+                $("#ExcelFormRep").submit();
+            });
+
+            $("#repTable .colSort").click(function () {
+
+                $("#repTable .colSort").not(this).each(function () {
+
+                    $(this).removeClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $(this).addClass("fa-sort");
+                })
+
+                $(this).removeClass("fa-sort");
+
+                if ($(this).hasClass("fa-sort-up")) {
+                    $(this).addClass("fa-sort-down");
+                    $(this).removeClass("fa-sort-up");
+                    $("#search_orderTxt2").val($(this).attr("orderTxt"));
+                    $("#search_orderOption2").val("DESC");
+                }
+                else {
+                    $(this).addClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $("#search_orderTxt2").val($(this).attr("orderTxt"));
+                    $("#search_orderOption2").val("ASC");
+                }
+
+                callMyProjectRepList($("#search_searchTxt").val(), $("#search_startDt2").val(), $("#search_endDt2").val(), $("#search_state2").val(), $("#search_orderTxt2").val(), $("#search_orderOption2").val(), false, 1);
+            });
+
+            $('#SearchRepForm').bind('submit', function (e) {
+
+            	e.preventDefault();
+                e.stopPropagation();
+
+                callMyProjectRepList($("#search_searchTxt2").val(), $("#search_startDt2").val(), $("#search_endDt2").val(), $("#search_state2").val(), $("#search_orderTxt2").val(), $("#search_orderOption2").val(), false, 1);
+            });
+
+        });
+
+        function resetSearchRepForm() {
+
+            $("#search_searchTxt2").val("");
+            $("#search_startDt2").val("");
+            $("#search_endDt2").val("");
+            $("#search_orderTxt2").val("P.create_dt");
+            $("#search_orderOption2").val("DESC");
+
+            $("#repTable .colSort").each(function () {
+                $(this).removeClass("fa-sort-up");
+                $(this).removeClass("fa-sort-down");
+                $(this).addClass("fa-sort");
+            });
+
+            $("#SearchRepForm").submit();
+
+        }
+
+        function changeSearchState2(state) {
+            $("#search_state2").val(state);
+            $("#SearchRepForm").submit();
+        }
+
+</script>

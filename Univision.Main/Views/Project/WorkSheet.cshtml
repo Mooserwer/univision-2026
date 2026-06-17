@@ -1,0 +1,316 @@
+﻿@model Univision.Core.Models.DTO.Response.Project.WorkSheetMainModel
+@using Univision.Security
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+    <div class="page-content container-fluid">
+
+        <!-- row -->
+        @using (Html.BeginForm("WorkSheet", "Project", FormMethod.Get, new { @id = "SearchForm" }))
+        {
+            <div class="panel shadow" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-body p-10">
+                    <!-- 검색조건 첫째줄 시작 -->
+                    <div class="row">
+                        <div class="col-12 col-lg-6 pt-2">
+                            @Html.Label("Division / User", new { @class = "form-control-label small", @for= "search_ud_seq"})
+                            <div class="input-group input-group-sm">
+
+                                @{
+                                    var deptList = new SelectList(Model.deptList, "ud_seq", "ud_name").ToList();
+                                    deptList.Insert(0, new SelectListItem { Value = "-1", Text = "팀 전체" });
+                                }
+                                @Html.DropDownListFor(x => x.search.ud_seq, deptList, new { @class = "form-control " })
+
+
+                                @{
+                                    var userList = new SelectList(Model.userList, "uv_seq", "name").ToList();
+                                    userList.Insert(0, new SelectListItem { Value = "-1", Text = "전체" });
+                                }
+                                @Html.DropDownListFor(x => x.search.uv_seq, userList, new { @class = "form-control" })
+
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 pt-2">
+                            @Html.LabelFor(x => x.search.startDt, "Date(활동일)", new { @class = "form-control-label small" })
+                            <div class="input-group input-group-sm">
+                                @Html.TextBoxFor(x => x.search.startDt, new { @class = "form-control text-center jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                                <sapn class="input-group-addon bg-transparent border-0"> ~ </sapn>
+                                @Html.TextBoxFor(x => x.search.endDt, new { @class = "form-control text-center jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row pt-5">
+                        <div class="col">
+                            <div class="form-group text-right">
+                                <div class="btn-group">
+                                    <button type="submit" id="btnSearch" class="btn btn-sm btn-primary w-150" title="검색">
+                                        <i class="fas fa-search"></i>
+                                        Search
+                                    </button>
+                                    <!--
+    <button type="button" id="btnExcel" class="btn btn-sm btn-success" title="엑셀 다운로드">
+        <i class="fas fa-file-excel"></i>
+        Excel
+    </button>
+
+    <button type="button" id="btnPrint" class="btn btn-sm btn-secondary" title="출력">
+        <i class="fas fa-print"></i>
+        Print
+    </button>
+        -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 검색조건 네째줄 끝 -->
+                </div>
+            </div>
+            <!-- 검색 패널 끝 -->
+        }
+
+        <!-- //row -->
+        <!-- row -->
+        <div class="row" id="invoiceBody">
+
+        </div>
+        <!-- // row -->
+        <!-- row -->
+        <div class="row" id="worksheetBody">
+
+        </div>
+        <!-- // row -->
+
+    </div>
+
+@section scripts {
+
+  <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            BindDatePicker($(".jDatePicker"));
+
+            callInvoiceList('PR.billing_dt', 'DESC', 1);
+            callWorkSheetList('C.kor_name', 'ASC', 1);
+          @if (Univision.Security.AppIdentity.user_seq == 123)
+            {
+              <text>
+          AuthControll(1);
+          </text>
+           } else
+            {
+              <text>
+              AuthControll(@AppIdentity.ua_seq);
+              </text>
+            }
+
+
+            $("#btnReset").click(function () {
+
+                //부서 select 0번 선택
+                //$("#search_ud_seq ").find("option:eq(0)").prop("selected", true);
+
+                //팀원 select 초기화.
+                //InitDivisionUserList();
+
+                $("#search_startDt").val("");
+                $("#search_endDt").val("");
+
+                $("#invoice_orderTxt").val("PR.billing_dt");
+                $("#invoice_orderOption").val("DESC");
+
+                $("#worksheet_orderTxt").val("C.kor_name");
+                $("#worksheet_orderOption").val("ASC");
+
+                $(".invoiceColSort").each(function () {
+                    $(this).removeClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $(this).addClass("fa-sort");
+                });
+
+                $(".worksheetColSort").each(function () {
+                    $(this).removeClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $(this).addClass("fa-sort");
+                });
+
+                callInvoiceList('PR.billing_dt', 'DESC', 1);
+                callWorkSheetList('C.kor_name', 'ASC', 1);
+            });
+
+            $("#btnSearch").click(function () {
+
+                callInvoiceList($("#invoice_orderTxt").val(), $("#invoice_orderOption").val(), 1);
+                callWorkSheetList($("#worksheet_orderTxt").val(), $("#worksheet_orderOption").val(), 1);
+
+            });
+
+            //부서 변경 시,
+            $("#search_ud_seq").change(function () {
+
+                //부서에 속한 팀원 select 초기화.
+                /*
+                if ($("#search_ud_seq").val() == "0") {
+
+                    InitDivisionUserList();
+
+                    return false;
+                }
+                else if ($("#search_ud_seq").val() == "-1") {
+                    $('#search_uv_seq').empty();
+                    var appendHtml = "";
+                    appendHtml += "<option value='-1'>전체</option>";
+                    $('#search_uv_seq').append(appendHtml.toString());
+                    return false;
+                }
+                */
+                $.ajax({
+                    url: '@Url.Action("FindDivisionUserList", "Account")',
+                    data: {
+                        ud_seq: $("#search_ud_seq").val()
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                    beforeSend: function () {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+                    if (json.ok) {
+
+                        if (json.list.length > 0) {
+
+                            $('#search_uv_seq').empty();
+
+                            var appendHtml = "";
+                            appendHtml += "<option value='-1'>전체</option>";
+                            for (var i = 0; i < json.list.length; i++) {
+                                appendHtml += "<option value='" + json.list[i].uv_seq + "'>" + json.list[i].name + "</option>";
+                            }
+
+                            $('#search_uv_seq').append(appendHtml.toString());
+                        }
+                        else {
+                            $('#search_uv_seq').empty();
+                            var option = $("<option value='0'>해당 부서에 속한 팀원이 없습니다.</option>");
+                            $('#search_uv_seq').append(option);
+                        }
+                    }
+                    else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .always(function () {
+                    hideLoading();
+                });
+
+
+            });
+
+        });
+
+        //권한별 부서, User select 제어
+        function AuthControll(ua_seq) {
+            var divisionDisabled = "";
+            var userDisabled = "";
+
+            switch (ua_seq)
+            {
+                case 1:
+                case 2:
+                    divisionDisabled = "";
+                    userDisabled = "";
+                    break;
+                case 3:
+                    divisionDisabled = "";
+                    userDisabled = "";
+                    break;
+                case 4:
+                    divisionDisabled = "disabled";
+                    userDisabled = "";
+                    break;
+                case 5:
+                    divisionDisabled = "disabled";
+                    userDisabled = "";
+                    break;
+            }
+
+            if (divisionDisabled != "")
+                $("#search_ud_seq").attr("disabled", divisionDisabled);
+
+            if (userDisabled != "")
+                $("#search_uv_seq").attr("disabled", userDisabled);
+        };
+
+        function callWorkSheetList(orderTxt, orderOption, page) {
+
+            $.ajax({
+                url: '@Url.Action("WorkSheetList", "Project")',
+                data: {
+                    "search.ud_seq": $("#search_ud_seq").val(),
+                    "search.uv_seq": $("#search_uv_seq").val(),
+                    "search.startDt": $("#search_startDt").val(),
+                    "search.endDt":   $("#search_endDt").val(),
+                    "search.worksheet_orderTxt": orderTxt,
+                    "search.worksheet_orderOption": orderOption,
+                    page: page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#worksheetBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#worksheetBody');
+                $('#worksheetBody').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#worksheetBody');
+            });
+        };
+
+        function callInvoiceList(orderTxt, orderOption, page) {
+
+            $.ajax({
+                url: '@Url.Action("WorkSheetInvoiceList", "Project")',
+                data: {
+                    "search.ud_seq": $("#search_ud_seq").val(),
+                    "search.uv_seq": $("#search_uv_seq").val(),
+                    "search.startDt": $("#search_startDt").val(),
+                    "search.endDt":   $("#search_endDt").val(),
+                    "search.invoice_orderTxt": orderTxt,
+                    "search.invoice_orderOption": orderOption,
+                    page: page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#invoiceBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#invoiceBody');
+                $('#invoiceBody').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#invoiceBody');
+            });
+        };
+
+        //부서 팀원 select 초기화.
+        function InitDivisionUserList() {
+            $('#search_uv_seq').empty();
+            var option = $("<option value='0'>먼저 팀을 선택하세요.</option>");
+            $('#search_uv_seq').append(option);
+        }
+
+  </script>
+
+}

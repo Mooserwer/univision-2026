@@ -1,0 +1,87 @@
+﻿@model List<Univision.Core.Models.DTO.candidate_search_save>
+<div id="pop_search_saved" class="p-0">
+  <div class="panel" id="search_saved">
+    <div class="panel-body">
+      @if (Model.Count > 0)
+      {
+        foreach (var data in Model)
+        {
+          <div class="row border border-right-0 border-left-0 border-bottom-0 py-10">
+            <div class="col-md-8 col-6">
+              @data.title
+              <br />
+              <div>
+                <a href="@Url.Action("CandidateList", "Candidate")?@data.url">
+                  [현재창으로 열기]
+                </a>&nbsp;
+                <a href="@Url.Action("CandidateList", "Candidate")?@data.url" target="_blank">
+                  [새창으로 열기]
+                </a>
+                <span class="float-right">
+                  [@Utils.ConvertDateTimeToString(data.create_dt)]
+                </span>
+              </div>
+            </div>
+            <div class="col-md-4 col-6 text-right">
+              <button class="btn btn-sm btn-danger" onclick="SearchDeleteConfirm('@data.css_seq');">삭제</button>
+            </div>
+          </div>
+
+        }
+      }
+      else
+      {
+        <div class="row">
+          <div class="col text-center">저장된 검색조건이 없습니다. <br/> 검색 조건을 저장하신 후 불러올 수 있습니다.</div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  function SearchDeleteConfirm(css_seq) {
+    alertify.confirm()
+      .set({
+        'labels': { ok: '확인', cancel: '취소' },
+        'onok': function () {
+
+          $.ajax({
+            url: '/Candidate/DeleteCandidateSearchSave',
+            type: "POST",
+            dataType: 'json',
+            data: {
+              css_seq: css_seq
+            },
+            beforeSend: function () {
+              showLoading('#pop_search_saved');
+            },
+            success: function (json) {
+              hideLoading('#pop_search_saved');
+              if (json.ok) {
+                NormalAlert(json.message);
+                SearchSavedList(function (s) {
+                  $('#pop_search_saved').parent().html(s);
+                })
+              }
+              else {
+                ErrorAlert(json.message);
+              }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+              hideLoading('#pop_search_saved');
+              ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+            }
+          });
+        },
+        'oncancel': function () {
+          return;
+        },
+      })
+      .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>검색조건 삭제')
+      .setting({
+        message: "검색조건을 삭제하시겠습니까?"
+      }).show();
+  }
+
+</script>

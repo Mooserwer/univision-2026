@@ -1,0 +1,273 @@
+﻿@model Univision.Main.Models.Invoice.InvoiceCreateModel
+
+@using (Html.BeginForm("", "", FormMethod.Post, new { @id = "frmInvoiceStep5" }))
+{
+
+  <div class="card mg-t-10 mg-x-10 bd bd-indigo no_print">
+    <div class="card-header bg-dark tx-white tx-medium tx-bold bd-0 top-head">
+      발행금액 및 매출분배 확인
+    </div>
+    <div class="card-body part_show_inv_step5" style="display:none;">
+      <div class="row">
+        <div class="col-12">
+          <label class="section-title">발행 금액 설정</label>
+        </div>
+        <div class="col-12">
+          <div class="form-group">
+            <label class="form-control-label">VAT 구분: <span class="tx-danger">*</span></label>
+            <div class="form-inline">
+              <label class="rdiobox pd-r-10">
+                <input type="radio" id="vat_type_3" name="vat_type" value="3" @(Model.vat_type == 3 ? "checked" : "")>
+                <span>면세</span>
+              </label>
+              <label class="rdiobox pd-r-10">
+                <input type="radio" id="vat_type_1" name="vat_type" value="1" @(Model.vat_type == 1 ? "checked" : "")>
+                <span>VAT 별도</span>
+              </label>
+              <label class="rdiobox pd-r-10">
+                <input type="radio" id="vat_type_0" name="vat_type" value="0" @(Model.vat_type == 0 ? "checked" : "")>
+                <span>VAT 포함</span>
+              </label>
+
+              <label class="rdiobox">
+                <input type="radio" id="vat_type_2" name="vat_type" value="2" @(Model.vat_type == 2 ? "checked" : "")>
+                <span>영세율</span>
+              </label>
+            </div>
+          </div>
+          @if (Model.pre_invoice != null)
+          {
+            string vat_str = "VAT 별도";
+            if (@Model.pre_invoice.vat_type == 0)
+            {
+              vat_str = "VAT 포함";
+            }
+            else if (@Model.pre_invoice.vat_type == 2)
+            {
+              vat_str = "영세율";
+            }
+            else if (@Model.pre_invoice.vat_type == 3)
+            {
+              vat_str = "면세";
+            }
+
+            <div class="alert alert-info pd-5">
+              <i class="fa fa-info-circle"></i>
+              직전 인보이스 VAT 구분 : <b>[@vat_str]</b>
+            </div>
+          }
+        </div>
+      </div>
+      <hr />
+      <div class="row" style="@((Model.invoice_type == 0 || Model.invoice_type == 2) ? "" : "display:none;")">
+        <div class="col-6 part_show_invoice_type_con">
+          <div class="form-group">
+            <label class="form-control-label">후보자 연봉: <span class="tx-danger">*</span></label>
+            <div class="input-group">
+              @Html.TextBox("ann_income", Utils.ConvertMoneyToString(Model.ann_income), new { @class = "form-control tx-right", @autocomplete = "off", @readonly = "true" })
+              <div class="input-group-append">
+                @Html.HiddenFor(x => x.income_currency_cd)
+                <span class="input-group-text print_income_currency_cd">KRW</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-4 part_show_billing_type_no">
+          <div class="form-group">
+            <label class="form-control-label">수수료율: <span class="tx-danger">*</span></label>
+            <div class="input-group">
+              @Html.TextBoxFor(x => x.fee_rate, new { @class = "form-control tx-right", @autocomplete = "off" })
+              <div class="input-group-append">
+                <span class="input-group-text ">%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-2 feeChkDiv">
+          <label class="form-control-label" for="billing_type">&nbsp;</label>
+          <label class="ckbox">
+            <input type="checkbox" value="1" name="billing_type" id="billing_type" @((Model.invoice_type == 3 ||Model.invoice_type == 4 || Model.invoice_type == 5) ? "checked" : "")>
+            <span>정액</span>
+          </label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="form-group">
+            <label class="form-control-label">발행금액: <span class="tx-danger">*</span></label>
+            <div class="input-group">
+
+              @{
+                double billing_money = (double)Model.billing_money;
+              }
+              @Html.TextBox("billing_money", Utils.ConvertMoneyToString(billing_money), new { @class = "form-control form-control-lg tx-bold tx-indigo tx-right money_input", @autocomplete = "off", @placeholder = "발행금액", @readonly = "true" })
+              <div class="input-group-append">
+                <select name="bill_currency_cd" id="bill_currency_cd" class="form-control form-control-lg wd-95" readonly="true">
+                  <option value="KRW" @(Model.bill_currency_cd == "KRW" ? "selected" : "")>KRW  (원)</option>
+                  <option value="USD" @(Model.bill_currency_cd == "USD" ? "selected" : "")>USD  (달러)</option>
+                  <option value="HKD" @(Model.bill_currency_cd == "HKD" ? "selected" : "")>HKD  (홍콩달러)</option>
+                  <option value="JPY" @(Model.bill_currency_cd == "JPY" ? "selected" : "")>JPY  (엔화)</option>
+                  <option value="SGD" @(Model.bill_currency_cd == "SGD" ? "selected" : "")>SGD  (싱가폴 달러)</option>
+                  <option value="GBP" @(Model.bill_currency_cd == "GBP" ? "selected" : "")>GBP  (파운드)</option>
+                  <option value="DEM" @(Model.bill_currency_cd == "DEM" ? "selected" : "")>DEM  (마르크)</option>
+                  <option value="FRF" @(Model.bill_currency_cd == "FRF" ? "selected" : "")>FRF  (프랑스 프랑)</option>
+                  <option value="CHF" @(Model.bill_currency_cd == "CHF" ? "selected" : "")>CHF  (스위스 프랑)</option>
+                  <option value="EUR" @(Model.bill_currency_cd == "EUR" ? "selected" : "")>EUR  (유로)</option>
+                  <option value="CNY" @(Model.bill_currency_cd == "CNY" ? "selected" : "")>CNY  (위안)</option>
+                  <option value="AUD" @(Model.bill_currency_cd == "AUD" ? "selected" : "")>AUD  (호주달러)</option>
+                  <option value="NZD" @(Model.bill_currency_cd == "NZD" ? "selected" : "")>NZD  (뉴질랜드달러)</option>
+                  <option value="CAD" @(Model.bill_currency_cd == "CAD" ? "selected" : "")>CAD  (캐나다달러)</option>
+                  <option value="THB" @(Model.bill_currency_cd == "THB" ? "selected" : "")>THB  (태국 밧)</option>
+                  <option value="TWD" @(Model.bill_currency_cd == "TWD" ? "selected" : "")>TWD  (신타이완달러)</option>
+                  <option value="VND" @(Model.bill_currency_cd == "VND" ? "selected" : "")>VND  (베트남 동)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="form-group">
+            <label class="form-control-label">예상 원화 환산 금액 (예상치이며, 실제 환율에 따라 변동 될 수 있습니다.)</label>
+            <div class="input-group input-group-sm bd-0">
+
+              @Html.TextBoxFor(x => x.billing_won, new { @class = "form-control form-conrol-sm text-right", @readonly = "true" })
+              <div class="input-group-append">
+                <span class="input-group-text">KRW</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="col-12">
+          <label class="section-title">발행 금액 검토</label>
+        </div>
+        <div class="col-12">
+          <div class="form-group">
+            <label class="form-control-label">총 금액</label>
+            <div class="input-group input-group-sm">
+              @Html.TextBoxFor(x => x.billing_total, new { @class = "form-control text-right tx-bold", @readonly = "true" })
+              <div class="input-group-append">
+                <span class="input-group-text print_fee_currency">KRW</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <div class="form-group">
+            <label class="form-control-label">공급가</label>
+            <div class="input-group input-group-sm">
+              @Html.TextBoxFor(x => x.billing_amt, new { @class = "form-control text-right tx-bold", @readonly = "true" })
+              <div class="input-group-append">
+                <span class="input-group-text print_fee_currency">KRW</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col col_retainer_input" style="@(Model.retainer_amt == 0 ? "display:none;" : "")">
+          <div class="form-group">
+            <label class="form-control-label">선수금</label>
+            <div class="input-group input-group-sm">
+              @Html.TextBox("retainer_amt", Utils.ConvertMoneyToString(Model.retainer_amt), new { @class = "form-control text-right tx-bold", @readonly = "true" })
+              <div class="input-group-append">
+                <span class="input-group-text print_fee_currency">KRW</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="form-group">
+            <label class="form-control-label">VAT</label>
+            <div class="input-group input-group-sm">
+              @Html.TextBoxFor(x => x.billing_vat, new { @class = "form-control text-right tx-bold", @readonly = "true" })
+              <div class="input-group-append">
+                <span class="input-group-text print_fee_currency">KRW</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+      <div class="row">
+        <div class="col-12">
+          <label class="section-title">
+            매출분배(Fee Sharing)
+            <input type="hidden" id="inv_total_share_per" value="0" />
+            <input type="hidden" id="inv_total_share_amt" value="0" />
+            <span id="total_share_per" class="tx-primary">
+              (0%)
+            </span>
+          </label>
+        </div>
+        <div class="col-6">
+          <label class="ckbox">
+            <input type="checkbox" value="1" id="share_money_type">
+            <span>금액으로 분배하기</span>
+          </label>
+        </div>
+        <div class="col-12">
+          <div class="list-group list-group-user" id="share_list" name="share_list">
+            @if (Model.chargeList != null && Model.chargeList.Count > 0)
+            {
+              foreach (var data in Model.chargeList)
+              {
+                <div class="row no-gutters share_row pd-5 bd-1 bd mg-b-5">
+
+                  <label class="col-2 form-control-label">
+                    @Html.HiddenFor(x => data.uv_seq)
+                    @Html.HiddenFor(x => data.ud_seq)
+                    @Html.HiddenFor(x => data.name)
+                    @data.name
+                  </label>
+                  <div class="col-2 form-control-label">
+                    <div class="input-group input-group-sm">
+                      <input class="form-control form-control-sm tx-right share_fee_input" type="number" name="share_fee_rate" value="@data.sales_rate" placeholder="백분율" max="100">
+                      <span class="input-group-append">
+                        <span class="input-group-text">%</span>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-3 form-control-label">
+                    <input class="form-control form-control-sm tx-right share_fee_input money_input" type="text" name="share_amt" value="@data.sales_money" placeholder="분배금액" readonly="readonly">
+                  </div>
+                  <div class="col-4 form-control-label">
+                    <input class="form-control form-control-sm" type="text" name="share_comments" value="@data.comments" placeholder="Comment">
+                  </div>
+
+                  <div class="col-1 form-control-label flex-tx-right">
+                    <button type="button" class="btn btn-sm btn-outline-light btn-icon" onclick="removeShareRow(this);">
+                      <div class="tx-20"><i class="icon ion-android-close"></i></div>
+                    </button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </div>
+        <div class="col-12">
+          <button type="button" class="btn wd-100p btn-sm btn-outline-info" id="btn-add-share">
+            <i class="fa fa-plus"></i>
+            컨설턴트 추가 (Add consultant)
+          </button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 pd-t-15">
+          <label class="ckbox">
+            <input type="checkbox" value="1" name="opt_is_send_only_share" id="opt_is_send_only_share" @(Model.opt_is_send_only_share == 1 ? "checked" : "")><span>발행요청 시 매출 대상자에게만 메일 발송</span>
+          </label>
+        </div>
+      </div>
+      <div class="row pd-t-25">
+        <div class="col-12 tx-right">
+          <button type="button" id="btn_chk_step5" class="btn btn btn-indigo">다음(Next)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

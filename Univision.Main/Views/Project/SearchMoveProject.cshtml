@@ -1,0 +1,56 @@
+﻿@model Univision.Main.Models.Project.MyProjectListModel
+
+<table class="table table-borderless table-hover table-my-project" style="table-layout:fixed;">
+  <thead class="text-center">
+    <tr>
+      <th style="">Client / Title</th>
+      <th style="width:25%;">AM/SM</th>
+
+      <!--
+      <th style="width:45%;">&nbsp;</th>
+          -->
+    </tr>
+  </thead>
+  <tbody class="text-center">
+    @if (Model.list.Count > 0)
+    {
+      foreach (var data in Model.list)
+      {
+        <tr style="cursor:pointer" onclick="ConfirmMoveProject('@data.p_seq');">
+          <td class="text-left text-truncate">
+            <span >
+              <div class="font-weight-900">
+                [@data.company_name]
+              </div>
+              @if (data.is_my_key == 1)
+              {
+                <i class="fa fa-key yellow-700" title="Key project"></i>
+              }
+              @data.title
+            </span>
+          </td>
+          <td class="text-center">
+            <span class="">AM : </span> @data.am_names
+            <div class="">
+              SM : @data.searcher_names
+            </div>
+          </td>
+
+        </tr>
+      }
+    }
+    else
+    {
+      <tr>
+        <td colspan="4">No Data Found.</td>
+      </tr>
+    }
+
+  </tbody>
+</table>
+
+@Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+             ViewContext.HttpContext.Request.Url.AbsoluteUri,
+             x => String.Format("javascript:callProjectMoveList({0})", x))
+
+

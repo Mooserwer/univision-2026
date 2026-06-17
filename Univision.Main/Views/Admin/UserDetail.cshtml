@@ -1,0 +1,156 @@
+﻿@model Univision.Core.Models.DTO.uv_user
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="page-content">
+    <!--검색 Form -->
+    @using (Html.BeginForm("UserDetail", "Admin", FormMethod.Post, new { @id = "DetailForm", @autocomplete = "off" }))
+    {
+        @Html.HiddenFor(x => x.uv_seq)
+        <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fas fa-address-card"></i>
+                    @ViewBag.Title
+                </h3>
+                <div class="panel-actions">
+                    <div class="panel-action">
+                        <button type="button" class="btn btn-info" id="btnLogin">Login </button>
+                        <button type="button" class="btn btn-primary" id="btnModify">Modify </button>
+                        <button type="button" class="btn btn-warning" id="btnRemove">Remove </button>
+                        <button type="button" class="btn btn-default btn-outline" id="btnList">List</button>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="panel-body">
+
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">Name (ID) : </label>
+                    <label class="col-md-10 col-form-label">
+                        @(Model.name + "(" + Model.user_id + ")")
+                    </label>
+                </div>
+                <hr />
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">User Auth : </label>
+                    <label class="col-md-10 col-form-label">@(Model.ua_name)</label>
+                </div>
+                <hr />
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">Division : </label>
+                    <label class="col-md-10 col-form-label">@(Model.ud_name)</label>
+                </div>
+                <hr />
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-legend">Entry: </label>
+                    <label class="col-md-10 col-form-legend">@(Model.entry_date)</label>
+                </div>
+                @if (Model.retire_date != null)
+                {
+                    <hr />
+                    <div class="form-group row">
+                        <label class="col-md-2 col-form-legend">Retire: </label>
+                        <label class="col-md-10 col-form-legend">@(Model.retire_date)</label>
+                    </div>
+                }
+                <hr />
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-legend">Email: </label>
+                    <label class="col-md-10 col-form-legend">@(Model.email)</label>
+                </div>
+                <hr />
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-legend">Tel: </label>
+                    <label class="col-md-10 col-form-legend">@(Model.tel)</label>
+                </div>
+                <hr />
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-legend">Hp: </label>
+                    <label class="col-md-10 col-form-legend">@(Model.hp)</label>
+                </div>
+                <hr />
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-legend">Image: </label>
+                    <label class="col-md-10 col-form-legend">
+                        @if (Model.img_dir != "" && Model.img_dir != null)
+                        {
+                            <img src="@("/"+Model.img_dir)" style="max-width:150px;max-height:150px;"/>
+                        }
+                        &nbsp;
+                    </label>
+                </div>
+                <hr />
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-legend">Reg./Mod: </label>
+                    <label class="col-md-10 col-form-legend">
+                        @(Model.create_dt != null ? ((DateTime)Model.create_dt).ToString("yyyy-MM-dd") : "")
+                        / @(Model.modify_dt != null ? ((DateTime)Model.modify_dt).ToString("yyyy-MM-dd") : "")
+                    </label>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section scripts{
+    <script type="text/javascript">
+        $("#btnModify").click(function () {
+            location.href = "@Url.Action("UserCreate", "Admin", new { uv_seq = Model.uv_seq })";
+        })
+
+        $("#btnRemove").click(function () {
+            ConfirmAlert("Remove", "Are you sure want to remove this User?", function () {
+                $.ajax({
+                    url: '@Url.Action("UserRemove", "Admin")',
+                    data: {
+                        uv_seq: "@Model.uv_seq"
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                })
+                    .done(function (data) {
+                        if (data.ok) {
+                            NormalAlert(data.message
+                                , function () {
+                                    location.href = "@Url.Action("UserList", "Admin")";
+                                }
+                            );
+
+                        } else {
+                            ErrorAlert("[ERROR]" + data.message);
+                        }
+
+                    })
+            });
+        })
+
+        $("#btnList").click(function () {
+            location.href = "@Url.Action("UserList", "Admin")";//, new { b_seq = Model.b_seq })";
+        })
+
+        $("#btnLogin").click(function () {
+              
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("LoginFromAdmin", "Admin")",
+                data: { uv_seq: $("#uv_seq").val() }, // serializes the form's elements.
+                success: function (data) {
+                    if (data != null && data.isLogin) {
+                        location.href = "@Url.Action("Index", "Home")";
+                    } else {
+                        alert("아이디 또는 패스워드가 틀립니다.");
+                    }
+
+                }
+            }); 
+        })
+
+
+
+     
+
+
+    </script>
+}

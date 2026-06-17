@@ -1,0 +1,924 @@
+﻿@model Univision.Main.Models.Project.InorderCreateModel
+@using Univision.Security
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string pageTag = ViewBag.pageTag;
+}
+
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_cus.css?v=1533562669">
+
+
+<style>
+    @@media(max-width: 500px) {
+        .ml-xxs-5 {
+            margin-left: 5px !important;
+        }
+    }
+
+    .invalid-feedback-custom {
+        margin-top: .25rem;
+        font-size: .875rem;
+        color: #ff4c52;
+    }
+</style>
+
+<div class="page-content container-fluid">
+    <div class="row">
+
+    </div>
+    <div class="row">
+        <div class="col-md-12 col-12">
+            <div class="text-right mb-10">
+                <button type="button" class="btn btn-sm btn-success" id="btnModify">Modify</button>
+                <button type="button" class="btn btn-sm btn-warning" id="btnRemove">Remove</button>
+                <button type="button" class="btn btn-sm btn-default btn-outline" id="btnList">List</button>
+                @if (Model.log_cnt > 0)
+                {
+                    <a href="@Url.Action("InorderLog", "Log", new { i_seq = Model.i_seq})" id="btnHisotry" class="btn btn-sm btn-default">Log</a>
+                }
+            </div>
+        </div>
+        <div class="col-md-6 col-xxl-6 col-12">
+            <!-- Client Information Start -->
+
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-newspaper"></i>
+                        Client Information
+                    </h3>
+                    <div class="panel-actions">
+                        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+                    </div>
+                </div>
+                <div class="panel-body" style="padding-bottom:10px !important;">
+                    <div class="row">
+                        <div class="col-md-3 col-6 form-group ">
+                            <label class="form-control-label form-control-label-sm text-secondary">Client Name</label>
+                            <p class="form-control-plaintext">
+                                @(Model.clt_name)
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Business Type</label>
+                            <p class="form-control-plaintext">
+                                @(Model.clt_busi_type)
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Homepage</label>
+                            <p class="form-control-plaintext text-truncate">
+                                <a href="@Model.clt_url" class="text-truncate s2">
+                                    @(Model.clt_url)
+                                </a>
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">InOrder Reg.</label>
+                            <p class="form-control-plaintext">
+                                @Utils.ConvertDateTimeHourToString2(Model.create_dt)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 col-12 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">담당 컨설턴트</label>
+                            <div class="card-block" style="padding:0px !important;" id="directorDiv">
+                                <div class="py-1">
+                                    @Html.HiddenFor(x => x.director_seq, new { @class = "user_seq" })
+                                    <i class="fa fa-users" aria-hidden="true" title="name"></i>
+                                    @if (!string.IsNullOrWhiteSpace(Model.director_name))
+                                    {
+                                        <span id="director_name" class="user_name">
+                                            @Model.director_name
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span id="director_name" class="red-600 user_name">
+                                            아직 담당컨설턴트가 배정되지 않았습니다.
+                                        </span>
+                                    }
+
+                                    @if (AppIdentity.ua_seq <= 3)
+                                    {
+                                        <button id="btnSearchDirector" type="button" class="btn btn-sm btn-primary ml-5" title="search">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                        <button id="btnSaveDirector" type="button" class="btn btn-sm btn-success ml-5" title="save">
+                                            <i class="fas fa-save"></i>
+                                        </button>
+                                    }
+                                    @if (AppIdentity.user_seq == Model.director_seq)
+                                    {
+                                        if (!Model.c_seq.HasValue)
+                                        {
+                                            <button type="button" id="btnAddClient" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-plus"> Add New Client</i>
+                                            </button>
+                                        }
+                                        <button type="button" id="btnReject" class="btn btn-sm btn-warning ml-5">
+                                            <i class="fas fa-redo-alt"> Reject</i>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div id="rejectBody" class="border border-danger mt-10 p-10" style="display:none">
+                        @using (Html.BeginForm("InOrderReject", "Project", FormMethod.Post, new { @id = "SendRejectForm" }))
+                        {
+                            <div class="row">
+                                <div class="col-md-12 col-12 form-group ">
+                                    <label class="form-control-label">반려사유</label>
+                                    <span class="label-reqired">*</span>
+                                    <div>
+                                        <div class="radio-custom radio-default radio-inline">
+                                            <input type="radio" id="condition" name="rejectReason" value="1" required="required">
+                                            <label for="condition">수임료 조건</label>
+                                        </div>
+                                        <div class="radio-custom radio-default radio-inline ml-xxs-5">
+                                            <input type="radio" id="noProject" name="rejectReason" value="2" required="required">
+                                            <label for="noProject">프로젝트 여유없음</label>
+                                        </div>
+                                        <div class="radio-custom radio-default radio-inline ml-xxs-5">
+                                            <input type="radio" id="etc" name="rejectReason" value="3" required="required">
+                                            <label for="etc">기타</label>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="col-md-12 col-12 form-group">
+                                    <label class="form-control-label">상세내용</label>
+                                    <span class="label-reqired">*</span>
+                                    <textarea id="rejectComment" class="form-control" rows="5" required="required"></textarea>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 col-12 text-right">
+                                    <button type="submit" id="btnRejectSend" class="btn btn-sm btn-warning">Send</button>
+                                    <button type="button" id="btnRejectClose" class="btn btn-sm btn-info ml-5">Cancel</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            </div>
+            <!-- End -->
+            <!-- Contact Information  Start -->
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-address-card"></i>
+                        Contact Information
+                    </h3>
+                    <div class="panel-actions">
+                        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+                    </div>
+                </div>
+                <div id="contactInfo" class="panel-body">
+                    <div class="row">
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Contact Name</label>
+                            <p class="form-control-plaintext">
+                                @(Model.cc_name)
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Gender</label>
+                            <p class="form-control-plaintext">
+                                @Utils.ReturnGenderTxt(Model.cc_gender)
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Position</label>
+                            <p class="form-control-plaintext">
+                                @(Model.cc_position)
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Dept.</label>
+                            <p class="form-control-plaintext">
+                                @(Model.cc_division)
+                            </p>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Phone</label>
+                            <p class="form-control-plaintext">
+                                @(Model.cc_phone)
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Mobile</label>
+                            <p class="form-control-plaintext">
+                                @(Model.cc_cell_phone)
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-12 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">E-mail</label>
+                            <p class="form-control-plaintext">
+                                @(Model.cc_email)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12 col-12 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">
+                                Known path
+                            </label>
+                            <div>
+                                <label class="form-control" style="min-height:100px; height:auto">
+                                    @Html.Raw(Model.cc_reason) &nbsp;
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Contact Information End -->
+            <!-- Description of the Request Start -->
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-share"></i>
+                        Description of the Request
+                    </h3>
+                    <div class="panel-actions">
+                        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+                    </div>
+                </div>
+                <div id="inorderInfo" class="panel-body">
+                    <div class="row">
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Order date</label>
+                            <p class="form-control-plaintext">
+                                @Utils.ConvertDateTimeToString(Model.inorder_dt)
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Inorder type</label>
+                            <p class="form-control-plaintext">
+                                @if (Model.inorder_type.HasValue)
+                                {
+                                    @Utils.ReturnInOrderTypeTxt(Model.inorder_type)
+                                }
+                                else
+                                {
+                                    <text>[의뢰구분 선택]</text>
+                                }
+
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Recruting department</label>
+                            <p class="form-control-plaintext">
+                                @(Model.can_dept)
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-6 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Recruting position</label>
+                            <p class="form-control-plaintext">
+                                @(Model.can_pos)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 col-12 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">Location</label>
+                            <p class="form-control-plaintext">
+                                @(Model.can_location)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 col-12 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">
+                                Job description
+                            </label>
+                            <div>
+                                <label class="form-control" style="min-height:100px; height:auto">
+                                    @Html.Raw(Model.can_jobdesc) &nbsp;
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-12 form-group">
+                            <label class="form-control-label form-control-label-sm text-secondary">
+                                Qualifications
+                            </label>
+                            <div>
+                                <label class="form-control" style="min-height:100px; height:auto">
+                                    @Html.Raw(Model.can_contents) &nbsp;
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-10" id="inorder_file">
+                        <div class="col-12">
+                            <div id="inorder_file" class="dropzone h-full text-left">
+                                <label for="inorder_file" class="form-control-label">Files</label>
+                                <div class="row py-2">
+                                    <div class="col">
+                                        <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+                                    </div>
+                                </div>
+                                <div class="row py-2" id="inorder_file_rst">
+                                    @if (Model.fileList.Count > 0)
+                                    {
+                                        foreach (var data in Model.fileList)
+                                        {
+                                            <div class="py-0 file_div col-12">
+                                                <input type="hidden" name="if_seq" value="@data.if_seq">
+                                                <input type="hidden" name="file_origin_path" value="'@data.file_origin_path">
+                                                <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.if_seq, @type = "inorder" })" class="file_info text-left text-truncate cur_hand badge badge-secondary link-resume" title="@data.file_path // @Utils.ConvertDateTimeToString(data.create_dt)" style="width:85%">
+                                                    <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                                                    @data.file_path
+                                                    <small>[@Utils.ConvertDateTimeToString(data.create_dt)]</small>
+                                                </a>
+                                                <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:10%;" onclick="RemoveFile(this);">
+                                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                                </a>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Description of the Request End -->
+        </div>
+        <div class="col-md-6 col-xxl-6 col-12">
+            <!-- 관련 프로젝트 세부사항 Start -->
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-list"></i>
+                        관련 프로젝트 세부사항
+                    </h3>
+                    <div class="panel-actions">
+
+                        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+                    </div>
+                </div>
+                <div class="panel-body" style="padding-bottom:10px !important;">
+                    @if (!Model.p_seq.HasValue)
+                    {
+                        <div class="row">
+                            <div class="col-md-8 col-7">
+                                등록된 프로젝트가 없습니다.
+
+                                @if (!Model.c_seq.HasValue)
+                                {
+                                    <br />
+                                    <small class="red-600">고객사를 등록해야 프로젝트 등록이 가능 합니다.</small>
+                                }
+                            </div>
+                            <div class="col-md-4 col-5 text-right">
+                                @if (Model.c_seq.HasValue)
+                                {
+                                    <button type="button" id="btnAddProject" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus">Add New Project</i>
+                                    </button>
+                                }
+
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row">
+                            <div class="col-md-5 col-8 form-group ">
+                                <label class="form-control-label form-control-label-sm text-secondary">Title</label>
+                                <p class="form-control-plaintext">
+                                    <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = Model.p_seq })" class="text-truncate s2">
+                                        @(Model.project_title)
+                                    </a>
+
+                                </p>
+                            </div>
+                            <div class="col-md-2 col-4 form-group">
+                                <label class="form-control-label form-control-label-sm text-secondary">Progress</label>
+                                <p class="form-control-plaintext text-truncate">
+                                    @{
+                                        string badgeClass = "";
+                                        switch (Model.pjt_status)
+                                        {
+                                            case 1:
+                                                badgeClass = "badge-primary";
+                                                break;
+                                            case 2:
+                                                badgeClass = "badge-warning";
+                                                break;
+                                            case 3:
+                                                badgeClass = "badge-danger";
+                                                break;
+                                            case 4:
+                                                badgeClass = "badge-info";
+                                                break;
+                                            case 5:
+                                                badgeClass = "badge-success";
+                                                break;
+                                        }
+                                    }
+                                    <span class="badge @badgeClass">@(Utils.ReturnProjectStatusTxt(Model.pjt_status))</span>
+                                </p>
+                            </div>
+                            <div class="col-md-3 col-8 form-group">
+                                <label class="form-control-label form-control-label-sm text-secondary">AM/Searcher</label>
+                                <p class="form-control-plaintext text-truncate">
+                                    <span class="text-truncate s2">
+                                        @Model.am_names / @Model.searcher_names
+                                    </span>
+                                </p>
+                            </div>
+
+                            <div class="col-md-2 col-4 form-group">
+                                <label class="form-control-label form-control-label-sm text-secondary">Project Reg.</label>
+                                <p class="form-control-plaintext">
+                                    @Utils.ConvertDateTimeToString(Model.project_dt)
+                                </p>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+
+            <!-- 관련프로젝트 세부사항 End -->
+            <!-- 인오더 메모 Start -->
+            <div class="card">
+                <div class="card-block">
+                    <h5 class="card-title">
+                        <i class="fas fa-history "></i>
+                        InOrder 메모 (Memo)
+                    </h5>
+                    @using (Html.BeginForm("CreateInOrderMemo", "Project", FormMethod.Post, new { @id = "CreateMemoForm" }))
+                    {
+                        <div class="row">
+                            <div class="col-12 form-group">
+                                <textarea class="form-control" id="memo" name="memo" rows="3" placeholder="InOrder 대한 관련사항 등을 입력해주세요."></textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" id="btnCreateMemo" class="btn btn-primary btn-sm w-full">Post</button>
+                            </div>
+                        </div>
+                    }
+                    <hr />
+                    <div id="memoBody">
+
+                    </div>
+                </div>
+                <!-- 인오더 메모 End -->
+            </div>
+        </div>
+    </div>
+
+
+</div>
+@section scripts{
+    <script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/additional-methods.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/validation/localization/messages_ko.min.js"></script>
+    <script src="~/Scripts/validation/valid_option.js"></script>
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            $("#btnModify").click(function () {
+                location.href = "@Url.Action("InorderCreate", "Project", new { i_seq = Model.i_seq })";
+            });
+
+            $("#btnRemove").click(function () {
+                ConfirmAlert("Remove", "Do you want to remove this Order?", function () {
+                    $.ajax({
+                        url: '@Url.Action("InorderRemove", "Project")',
+                        data: {
+                            i_seq: "@Model.i_seq"
+                        },
+                        dataType: 'json',
+                        type: 'POST',
+                        beforeSend: function () {
+                            showLoading();
+                        }
+                    })
+                    .done(function (data) {
+                        hideLoading();
+                        if (data.ok) {
+                            NormalAlert(data.message
+                                , function () {
+                                    location.href = "@Url.Action("InorderList", "Project")";
+                                }
+                            );
+
+                        } else {
+                            ErrorAlert("[ERROR]" + data.message);
+                        }
+
+                    })
+                    .fail(function (e) {
+                        hideLoading();
+                        ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    });
+                });
+            });
+
+            $("#btnList").click(function () {
+                location.href = "@Url.Action("inorderList", "Project")";//, new { b_seq = Model.b_seq })";
+            });
+
+            //담당컨설턴트 검색
+            $("#btnSearchDirector").click(function () {
+
+                $.ajax({
+                    url: '@Url.Action("SelectOneUser", "Partial")',
+                    data: {
+                        bindObj: "#directorDiv"
+                    },
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':json,
+                        'width': '500',
+                        'height': '385',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': '담당컨설턴트 목록',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+            //담당컨설턴트 저장
+            $("#btnSaveDirector").click(function () {
+
+                if ($("#director_seq").val() == "") {
+                    ErrorAlert("저장하려는 담당 컨설턴트를 선택 하세요.");
+                    return false;
+                }
+
+                ConfirmAlert("Save Director", "담당 컨설턴트를 저장하시겠습니까?<br /><small class='red-600'>*담당 컨설턴트 저장 시, 자동으로 알림과 이메일이 발송 됩니다.</small>", function () {
+                    $.ajax({
+                        url: '@Url.Action("SaveInorderDirector", "Project")',
+                        data: {
+                            i_seq: "@Model.i_seq",
+                            director_seq: $("#director_seq").val()
+                        },
+                        dataType: 'json',
+                        type: 'POST',
+                        beforeSend: function () {
+                            showLoading();
+                        }
+                    })
+                    .done(function (data) {
+                        hideLoading();
+                        if (data.ok) {
+                            NormalAlert(data.message);
+
+                        } else {
+                            ErrorAlert("[ERROR]" + data.message);
+                        }
+
+                    })
+                    .fail(function (e) {
+                        hideLoading();
+                        ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    });
+                });
+            });
+
+            //반려 폼 호출
+            $("#btnReject").click(function () {
+                $("#rejectBody").css("display", "block");
+                $(this).css("display", "none")
+            });
+
+            //반려 폼 취소
+            $("#btnRejectClose").click(function () {
+
+                $('input[name="rejectReason"]').removeAttr('checked');
+                $("#rejectComment").val("");
+                $("#rejectBody").css("display", "none");
+                $("#btnReject").css("display", "inline");
+
+            });
+
+            //고객사 등록
+            $("#btnAddClient").click(function () {
+                ConfirmAlert("Add new client", "새로운 고객사를 등록하시겠습니까?", function () {
+
+                    location.href = '@Url.Action("CreateInorderClient", "Client", new { @i_seq = Model.i_seq })';
+                });
+            });
+
+            //프로젝트 등록
+            $("#btnAddProject").click(function () {
+
+                ConfirmAlert("Add new project", "새로운 프로젝트를 등록하시겠습니까?", function () {
+
+                    location.href = '@Url.Action("CreateInorderProject", "Project", new { @i_seq = Model.i_seq })';
+                });
+            });
+
+             var valid_option = {
+                ignore:[],
+                errorClass: "is-invalid invalid-feedback-custom",
+                validClass: "is-valid",
+                errorPlacement: function(error, element) {
+                    var obj = element;
+                    obj = obj.closest('.form-group');
+                    error.appendTo(obj);
+                },
+                submitHandler: validHanlder
+             }
+
+            function validHanlder(form) {
+                //form 전송을 위한 데이터 생성.
+                //기본정보
+                var formURL = $("#SendRejectForm").attr("action");
+                $.ajax({
+                    url: formURL,
+                    type: "POST",
+                    dataType: 'json',
+                    data: {
+                        i_seq: "@Model.i_seq",
+                        rejectReason: $("label[for='" + $("input[name='rejectReason']:checked").attr("id") + "']").text(),
+                        rejectComment: $("#rejectComment").val()
+                    },
+                    beforeSend: function () {
+                        showLoading("#SendRejectForm");
+                    },
+                    success: function (json) {
+                        hideLoading("#SendRejectForm");
+                        if (json.ok) {
+                            location.reload();
+                        }
+                        else {
+                            ErrorAlert(json.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        hideLoading("#SendRejectForm");
+                        ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                    }
+                });
+
+            };
+
+
+
+            $("#SendRejectForm").validate(valid_option);
+
+            //메모 폼 밸리데이션
+            $("#CreateMemoForm").formValidation({
+                framework: "bootstrap4",
+                button: {
+                    selector: "#btnCreateMemo",
+                    disabled: "disabled"
+                },
+                submitHandler: function () {
+
+                },
+                icon: null,
+                fields: {
+                    memo: {
+                        validators: {
+                            notEmpty: {
+                                message: "메모내용은 필수 입력 항목 입니다."
+                            }
+                        }
+                    }
+                },
+                err: {
+                    clazz: "invalid-feedback"
+                },
+                control: {
+                    valid: "is-valid",
+                    invalid: "is-invalid"
+                },
+                row: {
+                    invalid: "has-danger"
+                }
+            })
+            //validation 성공시, ajax submit.
+            //ajax submit 사용하지 않을 경우, on 부분은 삭제해도 됨.
+            .on('success.form.fv', function (e) {
+                //기본 submit 이벤트 취소.
+                e.preventDefault();
+
+                var formURL = $("#CreateMemoForm").attr("action");
+                $.ajax({
+                    url: formURL,
+                    type: "POST",
+                    dataType: 'json',
+                    data: {
+                        i_seq: "@Model.i_seq",
+                        memo: $("#memo").val()
+                    },
+                    beforeSend: function () {
+                        showLoading('#CreateMemoForm');
+
+                    },
+                    success: function (json) {
+                        hideLoading('#CreateMemoForm');
+
+                        $('#btnCreateMemo').prop("disabled", false);
+                        $('#btnCreateMemo').removeClass("disabled");
+                        if (json.ok) {
+                            $("#memo").val("");
+
+                            callMemoList("@Model.i_seq", 1)
+                        }
+                        else {
+                            ErrorAlert(json.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        hideLoading('#CreateMemoForm');
+                        ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                    }
+                });
+            });
+        });
+
+
+
+        if ($('.dropzone').length > 0) {
+            var myDropzone = new Dropzone("div#inorder_file", {
+                url: "@Url.Action("CreateInorderFile", "Project")",
+                method: "post",
+                params: {
+                    "i_seq": @Model.i_seq,
+                    "uploadFolder": "@ViewBag.uploadFolder"
+                }
+            });
+
+            myDropzone.on("success", function (file, response) {
+                if (response.ok) {
+
+                    file_html = MakeHtmlFileList(response.result);
+                    $('#inorder_file_rst').prepend($(file_html).hide().fadeIn(1000));
+                    console.log(response.file_rst);
+                    //NormalAlert(response.file_rst);
+                    this.removeFile(file);
+
+                } else {
+                    ErrorAlert("[ERROR]" + response.message);
+                }
+            });
+        };
+
+        function MakeHtmlFileList(obj_file) {
+            var cols = ""
+            if(obj_file.file_path && obj_file.file_path != ''){
+                var icon_str = "";
+                var badge_str = "badge-secondary";
+                var width_str = 'style="width:85%;"';
+                var btn_str = "";
+
+                if (obj_file.file_extension == ".pdf") {
+                  icon_str = "far fa-file-pdf text-primary"
+                } else if ( obj_file.file_extension == ".jpg" || obj_file.file_extension == ".png" || obj_file.file_extension == ".gif" || obj_file.file_extension == ".bmp" ){
+                  icon_str = "far fa-file-image text-primary";
+                } else if ( obj_file.file_extension == ".doc" || obj_file.file_extension == ".docx" ){
+                  icon_str = "far fa-file-word text-primary";
+                } else if ( obj_file.file_extension == ".xls" || obj_file.file_extension == ".xlsx"  ){
+                  icon_str = "far fa-file-excel text-primary";
+                } else if ( obj_file.file_extension == ".ppt" || obj_file.file_extension == ".pptx"){
+                  icon_str = "far fa-file-powerpoint text-primary";
+                } else {
+                  icon_str = "fa fa-file-alt text-light";
+                }
+
+                cols += '<div class="py-0 file_div col-12">' //'+obj_file.col+'
+                cols += '<input type="hidden" name="if_seq" value=' + obj_file.if_seq  + '>'
+                cols += '  <input type="hidden" name="file_origin_path" value="'+obj_file.file_origin_path+'">'
+                cols += '  <a href="/DownloadFile/Download?element_seq='+obj_file.if_seq+'&type=inorder" class="file_info text-left text-truncate pointer badge '+badge_str+' link-resume" title="'+obj_file.file_path+'" ' + width_str
+                cols += '  >';
+                cols += '    <i class="'+icon_str+'" aria-hidden="true"></i> ' + obj_file.file_path ;
+                cols += '  </a>'
+                cols += '  <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger" style="width:10%;" onclick="RemoveFile(this);">';
+                cols += '   <i class="fa fa-trash pointer" aria-hidden="true"></i>';
+                cols += '  </a>' + btn_str;
+                cols += '</div>';
+
+            }
+            return cols;
+        };
+
+        function RemoveFile(obj) {
+
+            alertify.confirm()
+                .set({
+                    'labels': { ok: 'OK', cancel: 'Cancel' },
+                    'onok': function () {
+                        //TODO:실제 서버에서 파일 삭제 프로세스 추가 예정
+                        DeleteFile(obj)
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('Remove file')
+                .setting({
+                    message: "Are you sure want to delete this file?",
+                })
+                .show();
+        };
+
+        //파일 삭제
+        function DeleteFile(obj) {
+            if_seq = $(obj).closest('.file_div').find("input[name=if_seq]").val();
+            $.ajax({
+                    url: '@Url.Action("DeleteInorderFile", "Project")',
+                    data: {
+                        if_seq: if_seq
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                    beforeSend: function () {
+                        showLoading("#inorder_file");
+                    }
+                })
+                .done(function (json) {
+                    hideLoading("#inorder_file");
+                    if (json.ok) {
+                        parent = $(obj).closest(".file_rst");
+                        parent.find('.more_cnt').text("(" + (parseInt(parent.find('div.file_div').length) - 2) + ")")
+                        $(obj).closest('.file_div').remove();
+
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    hideLoading("#inorder_file");
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+        };
+
+        function callMemoList(i_seq, page) {
+
+            if(page == null || page == undefined)
+                page = 1;
+
+            $.ajax({
+                url: '@Url.Action("InOrderMemoList", "Project")',
+                data: {
+                    i_seq: i_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#memoBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#memoBody');
+                if (page == 1) {
+                    $('#memoBody').html(view);
+                } else {
+                    $('#memoBody').append(view);
+                }
+            })
+            .always(function () {
+                hideLoading('#memoBody');
+            });
+        }
+
+        callMemoList('@Model.i_seq', 1);
+    </script>
+}

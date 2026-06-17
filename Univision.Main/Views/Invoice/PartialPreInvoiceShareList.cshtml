@@ -1,0 +1,39 @@
+﻿@model List<Univision.Core.Models.DTO.Request.Project.ProjectInvoiceChargeModel>
+@{
+  Layout = null;
+}
+@if (Model != null && Model.Count > 0)
+{
+  foreach (var data in Model)
+  {
+    <div class="row no-gutters share_row pd-5 bd-1 bd mg-b-5">
+
+      <label class="col-2 form-control-label">
+        @Html.HiddenFor(x => data.uv_seq)
+        @Html.HiddenFor(x => data.ud_seq)
+        @Html.HiddenFor(x => data.name)
+        @data.name
+      </label>
+      <div class="col-2 form-control-label">
+        <div class="input-group input-group-sm">
+          <input class="form-control form-control-sm tx-right share_fee_input" type="number" name="share_fee_rate" value="@data.sales_rate" placeholder="백분율" max="100">
+          <span class="input-group-append">
+            <span class="input-group-text">%</span>
+          </span>
+        </div>
+      </div>
+      <div class="col-3 form-control-label">
+        <input class="form-control form-control-sm tx-right share_fee_input money_input" type="text" name="share_amt" value="0" placeholder="분배금액" readonly="readonly">
+      </div>
+      <div class="col-4 form-control-label">
+        <input class="form-control form-control-sm" type="text" name="share_comments" value="" placeholder="Comment">
+      </div>
+
+      <div class="col-1 form-control-label flex-tx-right">
+        <button type="button" class="btn btn-sm btn-outline-light btn-icon" onclick="removeShareRow(this);">
+          <div class="tx-20"><i class="icon ion-android-close"></i></div>
+        </button>
+      </div>
+    </div>
+  }
+}

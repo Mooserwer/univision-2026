@@ -1,0 +1,179 @@
+﻿@using Univision.Core.Models;
+@using Univision.Core.Models.DTO;
+@using Univision.Core.Models.DTO.Response.Board;
+@model Univision.Core.Models.DTO.Response.Board.BoardListModel
+@{
+    //ViewBag.Title = "NoticeList";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string pageTag = ViewBag.pageTag;
+}
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/tablesaw/tablesaw.min599c.css?v4.0.4">
+<div class="page-content">
+    <!--검색 Form -->
+
+
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <!-- 검색 패널 시작 -->
+        @using (Html.BeginForm(pageTag + "List", "Board", FormMethod.Get, new { @id = "searchForm" }))
+        {
+            <div class="panel-heading">
+                <div class="panel-title">
+                    <i class="fas fa-info-circle"></i>
+                    @ViewBag.Title
+                </div>
+                <div class="panel-actions" style="display:flex">
+                    <div class="panel-action input-search">
+                        <select name="SelectOption" id="SelectOption" class="form-control form-control-sm" style="max-width:150px;">
+                            <option value="title" @(ViewBag.searchOption == "title" ? "selected" : "")>Title</option>
+                            <option value="contents" @(ViewBag.searchOption == "contents" ? "selected" : "")>Contents</option>
+                            <option value="writer" @(ViewBag.searchOption == "writer" ? "selected" : "")>Writer</option>
+                        </select>
+                    </div>
+                    <div class="panel-action input-search">
+                        <button type="submit" class="input-search-btn">
+                            <i class="icon wb-search" aria-hidden="true"></i>
+                            &nbsp;&nbsp;
+                        </button>
+                        <input type="text" class="form-control" name="SearchString" id="SearchString" placeholder="" value="@ViewBag.searchString">
+                    </div>
+                </div>
+            </div>
+            <!-- 검색 패널 끝 -->
+        }
+
+
+
+        <div class="panel panel-line">
+
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col text-right pb-5">
+                        <a href="@Url.Action(pageTag+"Create", "Board")" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Write
+                        </a>
+                    </div>
+                </div>
+                @if (Model.DocumentTypeList != null && Model.DocumentTypeList.Count() > 0)
+                {
+            <div class="nav-tabs-horizontal">
+                <ul class="nav nav-tabs nav-tabs-reverse" role="tablist">
+
+
+                    @foreach (DocumentTypeModel cate in Model.DocumentTypeList)
+                    {
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link @(cate.is_select ? "active" : "")" data-toggle="1" href="@cate.href"
+                               aria-controls="1" role="tab">@cate.text</a>
+                        </li>
+                    }
+
+                </ul>
+                @foreach (DocumentTypeModel cate in Model.DocumentTypeList)
+                {
+                    if (cate.is_select && cate.nodes != null && cate.nodes.Count() > 0)
+                    {
+                        <div class="tab-content pl-20 pt-5 bg-blue-grey-100">
+                            <div class="row nav nav-pills">
+
+
+                                @foreach (DocumentTypeModel cate_sub in cate.nodes)
+                                {
+                                <div class="nav-item nav-fill" role="presentation">
+                                    <a class="nav-link @(cate_sub.is_select ? "active" : "")" href="@cate_sub.href"
+                                       aria-controls="1" role="tab">@cate_sub.text</a>
+                                </div>
+                                }
+
+
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+                }
+
+
+                @*
+                    <div class="col-4">
+                        <div data-plugin="treeview" data-source="getExampleTreeview" data-expand-icon="icon wb-chevron-right"
+                             data-collapse-icon="icon wb-chevron-down" data-node-icon="icon wb-bookmark"
+                             id="documentTreeView"></div>
+                    </div>
+                *@
+
+                <div class="mt-10">
+                    <table class="block_table table table-striped table-hover mt-10" data-tablesaw-mode="columntoggle">
+                        <thead>
+                            <tr>
+                                <th data-tablesaw-priority="3" class="tablesaw-priority-4 text-center hidden-sm-down" style="width: 10%">No.</th>
+                                <th data-tablesaw-priority="persist" class="text-center tbw25">Category</th>
+                                <th data-tablesaw-priority="persist" class="text-center tbw40">Title</th>
+                                <th data-tablesaw-priority="persist" class="text-center tbw15">Files</th>
+                                <th data-tablesaw-priority="1" class="tablesaw-priority-1 text-center tbw20" style="width: 20%">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @if (Model != null && Model.BoardList.Count > 0)
+                            {
+                                int i = (int)Model.PagingInfo.TotalItems;
+                                foreach (board bd in Model.BoardList)
+                                {
+                            <tr>
+                                <th class="tablesaw-priority-2 text-center hidden-sm-down">@i</th>
+                                <td>@bd.b_type_sub_name</td>
+                                <td><a href="@Url.Action(pageTag+"Detail", "Board", new { b_seq = bd.b_seq})" data-rel="external">@bd.title</a></td>
+                                <td class="text-center">
+                                    @if (bd.file_list.Count() > 0)
+                                    {
+                                        foreach (var bf in bd.file_list)
+                                        {
+                                            <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = bf.bf_seq, @type = "board" })" title="@bf.file_path">
+                                                <i class="fas @Utils.ReturnFileExtensionClass(bf.file_extension)"></i>
+                                            </a>
+                                        }
+                                    }
+                                    
+
+                                </td>
+                                <td class="tablesaw-priority-1 text-center">@(((DateTime)bd.modify_dt).ToString("yyyy-MM-dd"))</td>
+
+                            </tr>
+                                    i--;
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" style="text-align:center;height:200px;vertical-align:middle;"><b>No Data.</b></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    @if (Model != null && Model.BoardList.Count > 0)
+                    {
+
+                        @Html.PageAjaxLinks(Model.PagingInfo,
+                            ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                            x => Url.Action(pageTag + "List", new
+                            {
+                                page = x
+                            }))
+
+                    }
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+@section scripts{
+    <script src="~/Libs/remark/global/vendor/tablesaw/tablesaw.jquery599c.js?v4.0.4"></script>
+    <script src="~/Libs/remark/global/vendor/tablesaw/tablesaw-init599c.js?v4.0.4"></script>
+
+    <script src="~/Libs/remark/global/js/Plugin/tablesaw.min599c.js?v4.0.4"></script>
+    <script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+}

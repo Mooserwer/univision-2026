@@ -1,0 +1,207 @@
+﻿@model Univision.Main.Models.Invoice.InvoiceCreateModel
+
+@using (Html.BeginForm("", "", FormMethod.Post, new { @id = "frmInvoiceStep4_1" }))
+{
+
+  <div class="card mg-t-10 mg-x-10 bd bd-indigo no_print">
+    <div class="card-header bg-dark tx-white tx-medium tx-bold bd-0 top-head">
+      취소/환불 대상(기존 발행 인보이스) 선택
+    </div>
+    <div class="card-body part_show_inv_step4_1" style="display:none;">
+      <div class="row">
+        <div class="col-12 col-md-12">
+          <div class="form-group">
+            <label class="form-control-label">취소/환불 대상(기존 발행 인보이스) 선택: <span class="tx-danger">*</span></label>
+            <div class="row">
+              @if (Model.pre_invoice_list != null && Model.pre_invoice_list.Count > 0)
+              {
+                foreach (var invoice in Model.pre_invoice_list)
+                {
+                  string invoice_name = "";
+                  if (invoice.invoice_type == 0 || invoice.invoice_type == 2)
+                  {
+                    invoice_name = "성공 인보이스 <b>(" + invoice.candidate_name + ")</b>";
+                  }
+                  else if (invoice.invoice_type == 1)
+                  {
+                    invoice_name = "선수금";
+                  }
+
+                  <div class="col">
+                    <div class="card pic_selector">
+                      <div class="card-header">
+                        <label class="rdiobox pd-r-10">
+                          <input type="radio" id="pre_pii_seq_@invoice.pii_seq" name="pre_pii_seq" value="@invoice.pii_seq" class="pii_seq"
+                                 data-prc_seq="@invoice.prc_seq"
+                                 data-c_seq="@invoice.c_seq"
+                                 data-invoice_type="@invoice.invoice_type"
+                                 data-vat_type="@invoice.vat_type"
+                                 data-candidate_name="@invoice.candidate_name"
+                                 data-billing_amt="@invoice.billing_amt"
+                                 data-ann_income="@invoice.ann_income"
+                                 data-bill_currency_cd="@invoice.bill_currency_cd"
+                                 data-join_dt="@Utils.ConvertDateTimeToString(invoice.join_dt)"
+                                 data-expire_dt="@Utils.ConvertDateTimeToString(invoice.expire_guarantee)"
+                                 @((Model.pre_pii == invoice.pii_seq && Model.pre_pii > 0) ? "checked" : "")>
+                          <span>
+                            @Html.Raw(invoice_name)
+                          </span>
+
+
+
+
+                        </label>
+                      </div>
+                      <div class="card-body">
+                        <b>
+                          - 발행금액 : @Utils.ConvertMoneyToString(invoice.billing_amt) [@invoice.bill_currency_cd]
+                          <br />
+                          - 발 행 일 : @Utils.ConvertDateTimeToString(invoice.billing_dt)
+                          @if (invoice.invoice_type == 0 || invoice.invoice_type == 2)
+                          {<hr />
+                            <span>
+                              - 입 사 일 : @Utils.ConvertDateTimeToString(invoice.join_dt)<br />
+                              - 보 증 일 : @Utils.ConvertDateTimeToString(invoice.expire_guarantee)
+                            </span>
+                          }
+                        </b>
+
+                      </div>
+                    </div>
+
+                  </div>
+                }
+              }
+              else
+              {
+                <p class="text-center tx-danger">* 취소/ 환불 대상이 없습니다. <br />기존에 발행 된 인보이스가 있어야 취소/환불이 가능합니다.</p>
+              }
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <hr />
+      <div class="part_show_pre_pii_seq" style="display:none;">
+        <div class="row">
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-control-label">후보자</label>
+              @Html.TextBox("ref_candidate_name", "", new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "true" })
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-control-label">보증일자</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
+                  </div>
+                </div>
+                @Html.TextBox("ref_expire_guarantee", "", new { @class = "form-control form-control-sm jq-datepicker", @autocomplete = "off" })
+                <span class="input-group-addon">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                </span>
+                <div class="input-group-append">
+                  <span class="input-group-btn">
+                    <button type="button" class="btn btn-sm btn-info bd bd-l-0" title="입사일로 부터 90일 지정" onclick="javascript: fSetAddDay_Ref(90);">
+                      90일
+                    </button>
+                    <button type="button" class="btn btn-sm btn-info bd bd-l-0" title="입사일로 부터 180일 지정" onclick="javascript: fSetAddDay_Ref(180);">
+                      180일
+                    </button>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-control-label">연봉</label>
+              @Html.TextBox("ref_ann_income", "", new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "true" })
+            </div>
+          </div>
+          <div class="col-6">
+
+            <div class="form-group">
+              <label class="form-control-label">기초조사비 공제 여부 <span class="tx-danger">*</span></label>
+              <div class="form-inline">
+                <label class="rdiobox pd-r-10">
+                  <input type="radio" id="construct_debut_y" name="construct_debut_yn" value="Y" @(Model.construct_debut_yn == "Y" ? "checked" : "")>
+                  <span>공제</span>
+                </label>
+                <label class="rdiobox pd-r-10">
+                  <input type="radio" id="construct_debut_n" name="construct_debut_yn" value="N" @(Model.construct_debut_yn == "N" ? "checked" : "")>
+                  <span>미공제</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-control-label">발행금액</label>
+              <div class="input-group input-group-sm">
+                @Html.TextBox("ref_billing_amt", "", new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "true" })
+                <div class="input-group-append">
+                  <span class="input-group-text " id="ref_bill_currency_cd">
+
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-control-label">기초조사비(%) <span class="tx-danger">*</span></label>
+              @Html.TextBox("ref_base_amt", Model.construct_debut_per, new { @input = "number", @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "true" })
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-control-label">입사일</label>
+              @Html.TextBox("ref_join_dt", "", new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "true" })
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-control-label">퇴사일 <span class="tx-danger">*</span></label>
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
+                  </div>
+                </div>
+                @Html.TextBox("retire_dt", "", new { @class = "form-control jq-datepicker", @autocomplete = "off" })
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr />
+        <div class="row">
+          <div class="col text-center">
+            <h5 class="tx-primary">환불금액 계산 공식 : (용역비 - 기초조사비) * (보증일수 - 근무일수 / 보증일수)</h5>
+            <p id="refund_calc_screen">
+              <span class="text-primary"></span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="row pd-t-20">
+        <div class="col-12 tx-right">
+          <button type="button" id="btn_chk_step4_1" style="display:none;" class="btn btn btn-indigo">다음(Next)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,122 @@
+﻿@model Univision.Main.Models.Invoice.InvoiceCreateModel
+
+@using (Html.BeginForm("", "", FormMethod.Post, new { @id = "frmInvoiceStep3" }))
+{
+
+  <div class="card mg-t-10 mg-x-10 bd bd-indigo no_print">
+    <div class="card-header bg-dark tx-white tx-medium tx-bold bd-0 top-head">
+      고객사 정보 확인
+    </div>
+    <div class="card-body part_show_inv_step3" style="display:none;">
+      <div class="row">
+        <div class="col-12">
+          <label class="section-title"></label>
+        </div>
+        <div class="col-6 part_show_lang_kor">
+          <div class="form-group">
+            <label class="form-control-label">회사명 <span class="tx-bold">(국문)</span>: <span class="tx-danger">*</span></label>
+            @Html.TextBoxFor(x => x.client_name_kor, new { @class = "form-control", @autocomplete = "off", @placeholder = "회사명(국문)" })
+          </div>
+          <div class="alert alert-warning pd-5">
+            <i class="fa fa-info-circle"></i>
+            인보이스 상에 기재될 고객사명 입니다. <br />사업자등록증 상에 등록된 "정식 국문 회사명"으로 등록해주세요.
+          </div>
+        </div>
+        <div class="col-6 part_show_lang_eng">
+          <div class="form-group">
+            <label class="form-control-label">회사명 <span class="tx-bold">(영문)</span>: <span class="tx-danger">*</span></label>
+            @Html.TextBoxFor(x => x.client_name_eng, new { @class = "form-control", @autocomplete = "off", @placeholder = "회사명(영문)" })
+          </div>
+          <div class="alert alert-warning pd-5">
+            <i class="fa fa-info-circle"></i>
+            인보이스 상에 기재될 고객사명 입니다. <br />"정식 영문회사명"으로 등록해주세요.
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="form-group">
+            <label class="form-control-label">대표자명: <span class="tx-danger part_show_lang_kor">*</span></label>
+            @Html.TextBoxFor(x => x.ceo_kor, new { @class = "form-control", @autocomplete = "off", @placeholder = "대표자명" })
+          </div>
+        </div>
+        <div class="col-6 part_show_lang_kor">
+          <div class="form-group">
+            <label class="form-control-label">사업자 등록번호: <span class="tx-danger part_show_lang_kor">*</span></label>
+            @Html.TextBoxFor(x => x.client_biz_code, new { @class = "form-control", @autocomplete = "off", @placeholder = "사업자등록번호" })
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="form-group">
+            <label class="form-control-label">고객사 주소: <span class="tx-danger part_show_lang_kor">*</span></label>
+            @Html.TextBoxFor(x => x.addr_kor, new { @class = "form-control", @autocomplete = "off", @placeholder = "고객사 주소" })
+          </div>
+        </div>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="col-12">
+          <label>
+            최근 사업자 등록증 :
+            @if (Model.client_cert_seq.HasValue && Model.client_cert_seq.Value > 0)
+            {
+
+              <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = Model.client_cert_seq, @type = "client" })">
+                <i class="fa fa-file-alt"></i>
+                @*<img src="@(Utils.GetRootUrl(Request) + Utils.ReturnFileExtensionImg(data.extension))" style="width:20px;" />*@
+              <span class="text-truncate">
+                @Model.client_cert_file (@Utils.ConvertDateTimeToString(Model.client_cert_upload_dt))
+              </span>
+              </a>
+              
+            }
+            else
+            {
+              <span class="tx-danger">[없음]</span>
+            }
+          </label>
+          <div class="tx-center mg-b-10 tx-warning pd-y-30 bd bd-1">[사업자 등록증 업로드 하기 기능 추가 예정]</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <label>
+            최근 계약서 :
+            @if (Model.client_agr_seq.HasValue && Model.client_agr_seq.Value > 0)
+            {
+              <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = Model.client_agr_seq, @type = "client" })">
+                <i class="fa fa-file-alt"></i>
+                @*<img src="@(Utils.GetRootUrl(Request) + Utils.ReturnFileExtensionImg(data.extension))" style="width:20px;" />*@
+              <span class="text-truncate">
+                @Model.client_agr_file (@Utils.ConvertDateTimeToString(Model.client_agr_upload_dt))
+              </span>
+              </a>
+            }
+            else
+            {
+              <span class="tx-danger">[없음]</span>
+            }
+          </label>
+          <div class="tx-center mg-b-10 tx-warning pd-y-30 bd bd-1">[계약서 업로드 하기 기능 추가 예정]</div>
+        </div>
+        <div class="col-12 bg-white" id="contract_info" style="display:none;">
+          <label>최근 계약 정보 (참고용) <i class="fa fa-thumb-tack tx-indigo" id="pin_to_top_contract" title="상단 고정" style="display:none;cursor:pointer"></i></label>
+          <div class="bd bd-1 pd-t-5 pd-x-15 pd-b-15 bg-blue-grey-100" id="contract_info_div"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 pd-y-10">
+          <label class="ckbox">
+            <input type="checkbox" value="1" name="opt_is_client_update" id="opt_is_client_update" @(Model.opt_is_client_update == 1 ? "checked" : "")><span>발행요청 시 변경된 고객사 정보 업데이트</span>
+          </label>
+        </div>
+      </div>
+      <div class="row pd-t-20">
+        <div class="col-12 tx-right">
+          <button type="button" id="btn_chk_step3" class="btn btn btn-indigo">다음(Next)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+}

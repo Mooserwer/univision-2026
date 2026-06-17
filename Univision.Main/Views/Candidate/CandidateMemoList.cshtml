@@ -1,0 +1,207 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.CandidateMemoList
+
+<div class="col-md-12 row no-space mb-5">
+    <div class="form-inline vertical-align no-space">
+        <div class="vertical-align-middle col-md-12">
+            <div class="input-group">
+                <input type="text" id="memo_dt" class="form-control" onkeyup="return DateFormat(event, this)" onkeypress="return DateFormat(event, this)">
+                <span class="input-group-addon">
+                    <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                </span>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="col-md-12 row no-space mb-10">
+    <div class="form-group vertical-align col-md-11 no-space text-center">
+        <div class="vertical-align-middle col-md-12">
+            <textarea class="form-control" id="cmMemo" rows="3"></textarea>
+        </div>
+    </div>
+    <div class="form-group vertical-align col-md-1 no-space text-center">
+        <div class="vertical-align-middle w-p100 h-p100">
+            <button type="button" id="btnCreateCM" class="btn btn-primary w-p100 h-p100">등록</button>
+        </div>
+    </div>
+</div>
+<table class="table table-borderless">
+    <thead class="text-center">
+        <tr>
+            <th>No.</th>
+            <th>날짜</th>
+            <th>내용</th>
+            <th>작성자</th>
+            <th>등록일</th>
+            <th>비고</th>
+        </tr>
+    </thead>
+    <tbody class="text-center">
+        @if (Model.memoList.Count > 0)
+        {
+            int num = (Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage + 1;
+            foreach (var data in Model.memoList)
+            {
+                <tr>
+                    <td>
+                        @(num++)
+                    </td>
+                    <td>
+                        @Utils.ConvertDateTimeToString(data.memo_dt)
+                    </td>
+                    <td>
+                        @data.memo
+                    </td>
+                    <td>
+                        @data.uv_name
+                    </td>
+                    <td>
+                        @Utils.ConvertDateTimeToString(data.create_dt)
+                    </td>
+                    <td>
+                        <button type="button" id="btnDelCM" class="btn btn-sm btn-warning" onclick="ConfirmDeleteMemo('메모 삭제', '후보자 메모를 삭제 하시겠습니까?', '@data.cm_seq')">삭제</button>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5">
+                    메모가 없습니다.
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                     ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                     x => String.Format("javascript:callMemoList({0}, {1})", Model.c_seq, x))
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        BindDatePicker("#memo_dt");
+
+        $("#btnCreateCM").click(function () {
+
+            if ($("#memo_dt").val() == "") {
+                ErrorAlert("인터뷰 날짜를 선택 하세요.")
+                return false;
+            }
+
+            if ($("#cmMemo").val() == "") {
+                ErrorAlert("메모 내용을 작성 하세요.");
+                return false;
+            }
+
+            ConfirmCreateMemo("메모 등록", "후보자 메모를 등록 하시겠습니까?")
+        });
+
+    });
+
+    function ConfirmCreateMemo(title, msg) {
+
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+                    CreateMemo();
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>' + title)
+            .setting({
+                message: msg,
+            })
+            .show();
+    }
+
+    function CreateMemo() {
+        $.ajax({
+               url: '@Url.Action("CreateCandidateMemo", "Candidate")',
+               data: {
+                   c_seq: '@Model.c_seq'
+                  ,memo: $("#cmMemo").val()
+                  ,memo_dt : $("#memo_dt").val()
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+
+                    NormalAlert(json.message);
+                    callMemoList('@Model.c_seq', 1);
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+
+    function ConfirmDeleteMemo(title, msg, cm_seq) {
+
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+                    DeleteMemo(cm_seq);
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>' + title)
+            .setting({
+                message: msg,
+            })
+            .show();
+    }
+
+    function DeleteMemo(cm_seq) {
+        $.ajax({
+               url: '@Url.Action("DeleteCandidateMemo", "Candidate")',
+               data: {
+                   cm_seq: cm_seq
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+
+                    NormalAlert(json.message);
+                    callMemoList('@Model.c_seq', 1);
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+
+</script>

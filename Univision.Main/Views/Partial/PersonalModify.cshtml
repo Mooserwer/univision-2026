@@ -1,0 +1,154 @@
+﻿@model Univision.Core.Models.DTO.uv_user
+
+<div class="panel">
+    <div class="panel-body">
+        @using (Html.BeginForm("PersonalModify", "Partial", FormMethod.Post, new { @id = "PersonalCreateForm" }))
+        {
+            @Html.HiddenFor(x => x.uv_seq)
+            <div class="form-group form-material floating" data-plugin="formMaterial">
+                <label class="form-control">
+                    @Model.name [@(Model.ud_name + " / " + Model.ua_name)]
+                </label>
+            </div>
+            <div class="form-group form-material floating" data-plugin="formMaterial">
+                @Html.PasswordFor(x => x.pwd, new { @class = "form-control" })
+                @Html.LabelFor(x => x.pwd, "Password(입력한 경우에만 수정)", new { @class = "floating-label" })
+            </div>
+            <div class="form-group form-material floating" data-plugin="formMaterial">
+                @Html.PasswordFor(x => x.pwd_rp, new { @class = "form-control" })
+                @Html.LabelFor(x => x.pwd_rp, "Re-enter Password", new { @class = "floating-label" })
+            </div>
+            <div class="form-group form-material floating" data-plugin="formMaterial">
+                @Html.TextBoxFor(x => x.hp, new { @class = "form-control" })
+                @Html.LabelFor(x => x.hp, "Phone", new { @class = "floating-label" })
+            </div>
+            <button id="btnSave" type="submit" class="btn btn-primary btn-block btn-lg mt-40">수정</button>
+        }
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var pwdValidator = {
+            selector: '#pwd_rp',
+            validators: {
+                callback: {
+                    message: '입력하신 패스워드와 일치하지 않습니다.',
+                    callback: function (input) {
+
+                        var fv = $("#PersonalCreateForm").data("formValidation");
+                        var pwd = $("#pwd").val();
+
+                        let isEmpty = true;
+
+                        if (input == pwd) {
+                            isEmpty = false;
+                        }
+
+                        if (!isEmpty) {
+                            // Update the status of callback validator for all fields
+                            fv.updateStatus('pwd_rp', 'Valid', 'callback');
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            }
+        }
+
+    $(document).ready(function () {
+        StopEnterSubmit();
+
+        //비밀번호 수정될때, 비밀번호 확인 다시 검사
+        $("#PersonalCreateForm #pwd").change(function () {
+            $('#PersonalCreateForm').formValidation('revalidateField', 'pwd_rp');
+        });
+
+        //폼 유효성 검사
+        $("#PersonalCreateForm").formValidation({
+            framework: "bootstrap4",
+            button: {
+                selector: "#btnSave",
+                disabled: "disabled"
+            },
+            submitHandler: function () {
+                alert("")
+            },
+            icon: null,
+            fields: {
+                pwd_rp: pwdValidator,
+                hp: {
+                    validators: {
+                        regexp: {
+                            regexp: /^(01[016789]{1}|02|0[3-9]{1}[0-9]{1})-?[0-9]{3,4}-?[0-9]{4}$/,
+                            message: 'The value is not a valid phone number',
+                        }
+                    }
+                }
+            },
+            err: {
+                clazz: "invalid-feedback"
+            },
+            control: {
+                valid: "is-valid",
+                invalid: "is-invalid"
+            },
+            row: {
+                invalid: "has-danger"
+            }
+        }).on('success.form.fv', function (e) {
+            //기본 submit 이벤트 취소.
+            e.preventDefault();
+            
+            var form = $('#PersonalCreateForm')[0];
+            var formData = new FormData(form);
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+
+                            var currentData = {
+                                uv_seq: $("#PersonalCreateForm #uv_seq").val(),
+                                pwd: $("#PersonalCreateForm #pwd").val(),
+                                pwd_rp: $("#PersonalCreateForm #pwd_rp").val(),
+                                hp: $("#PersonalCreateForm #hp").val(),
+                            };
+
+                            var formURL = $("#PersonalCreateForm").attr("action");
+                            $.ajax({
+                                url: formURL,
+                                type: "POST",
+                                dataType: 'json',
+                                data: {
+                                    model: currentData
+                                },
+                                success: function (json) {
+
+                                    if (json.ok) {
+
+                                        NormalAlert(json.message);
+                                        $("#personalModal").modal("toggle");
+
+                                    }
+                                    else {
+                                        ErrorAlert(json.message);
+                                    }
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                                }
+                            });
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>개인정보 수정')
+                    .setting({
+                        message: "개인정보를 수정하시겠습니까?"
+                    }).show();
+        });
+
+    });
+
+</script>

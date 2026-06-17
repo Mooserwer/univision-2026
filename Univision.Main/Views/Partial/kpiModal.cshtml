@@ -1,0 +1,188 @@
+﻿@model Univision.Main.Models.DashBoard.DashBoardTopSummaryModel
+
+<link rel="stylesheet" href="~/Scripts/asPie/asPie.css">
+<div class="panel">
+  <div class="panel-body">
+    <div class="row">
+
+      <div class="col-6 col-lg-3">
+        <div class="card shadow card-completed-options">
+          <div class="card-block p-30">
+            <div class="row">
+              <div class="col">
+                @{
+                  double can_per = (Model.candidateCnt + Model.candidateUdCnt) / 20.0 * 100;
+                }
+                <div class="pie_progress" role="progressbar" data-goal="@can_per" data-barsize="10" data-barcolor="#6610f2">
+                  <div class="pie_progress__number">0%</div>
+                  <div class="pie_progress__label">후보자등록</div>
+                  <div class="pie_progress__label2">@(Model.candidateCnt + Model.candidateUdCnt)/20</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card shadow card-completed-options">
+          <div class="card-block p-30">
+            <div class="row">
+              <div class="col">
+                @{
+                  double memo_per = (Model.MemoCnt) / 20.0 * 100;
+                }
+                <div class="pie_progress" role="progressbar" data-goal="@memo_per" data-barsize="10" data-barcolor="#17a2b8">
+                  <div class="pie_progress__number">0%</div>
+                  <div class="pie_progress__label">메모등록</div>
+                  <div class="pie_progress__label2">@Model.MemoCnt/20</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card shadow card-completed-options">
+          <div class="card-block p-30">
+            <div class="row">
+              <div class="col">
+                @{
+                  double rcan_per = (Model.rCandidateCnt) / 16.0 * 100;
+                }
+                <div class="pie_progress" role="progressbar" data-goal="@rcan_per" data-barsize="10" data-barcolor="#007bff">
+                  <div class="pie_progress__number">0%</div>
+                  <div class="pie_progress__label">추천</div>
+                  <div class="pie_progress__label2">@Model.rCandidateCnt/16</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card shadow card-completed-options">
+          <div class="card-block p-30">
+            <div class="row">
+              <div class="col">
+                @{
+                  double ican_per = (Model.intvCandidateCnt) / 8.0 * 100;
+                }
+                <div class="pie_progress" role="progressbar" data-goal="@ican_per" data-barsize="10" data-barcolor="#28a745">
+                  <div class="pie_progress__number">0%</div>
+                  <div class="pie_progress__label">면접</div>
+                  <div class="pie_progress__label2"><span style="font-size:1.2em;">@Model.intvCandidateCnt</span>/8</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card shadow card-completed-options">
+          <div class="card-block p-10">
+            <div class="counter counter-md">
+              <div class="">
+                <div class="counter-label text-uppercase mb-3" title="최초 추천 평균 소요일">
+                  최초 추천 평균 소요일
+                  (
+                  <span class="counter-number font-size-20" title="현재"><a href="@Url.Action("MyProjectList", "Project")" class="text-danger">90.99 일</a></span>
+                  <span class="counter-number font-size-14 text-secondary" title="목표"> / 7일</span>
+                  )
+                </div>
+                <div class="counter-label mb-3 text-right">
+
+                </div>
+              </div>
+              <div class="counter-label clearfix">
+                @{
+
+                  double rdue_per = ((100.0 / 7.0) * 100) - 100;
+                  if (rdue_per > 95)
+                  {
+                    rdue_per = 95;
+                  }
+                }
+                <div class="progress progress-lg mb-5" title="@(rdue_per)%">
+
+                  <div class="progress-bar progress-bar-info bg-blue-600 float-right" aria-valuenow="@rdue_per" aria-valuemin="0"
+                       aria-valuemax="100" style="width: @(rdue_per)%" role="progressbar">
+                    <span class="sr-only">@(rdue_per)%</span>
+                  </div>
+                  <div class="float-right pr-5">
+                    @if (rdue_per <= 0)
+                    {
+                      <img src="~/Images/hooray.gif" style="height:20px;" />
+                    }
+                    else
+                    {
+                      <img src="~/Images/run.gif" style="height:20px;" />
+                    }
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card shadow card-completed-options">
+          <div class="card-block p-10">
+            <div class="counter counter-md">
+              <div class="">
+                <div class="counter-label text-uppercase mb-3" title="최초 추천 평균 소요일">
+                  최초 추천 평균 소요일
+                  (
+                  <span class="counter-number font-size-20" title="현재"><a href="@Url.Action("MyProjectList", "Project")" class="text-success">6.8 일</a></span>
+                  <span class="counter-number font-size-14 text-secondary" title="목표"> / 7일</span>
+                  )
+                </div>
+                <div class="counter-label mb-3 text-right">
+
+                </div>
+              </div>
+              <div class="counter-label clearfix">
+                @{
+                  rdue_per = ((6.0 / 7.0) * 100) - 100;
+                  if (rdue_per > 95)
+                  {
+                    rdue_per = 95;
+                  }
+                }
+                <div class="progress progress-lg mb-5" title="@(rdue_per)%">
+
+                  <div class="progress-bar progress-bar-info bg-blue-600 float-right" aria-valuenow="@rdue_per" aria-valuemin="0"
+                       aria-valuemax="100" style="width: @(rdue_per)%" role="progressbar">
+                    <span class="sr-only">@(rdue_per)%</span>
+                  </div>
+                  <div class="float-right pr-5">
+                    @if (rdue_per <= 0)
+                    {
+                      <img src="~/Images/hooray.gif" style="height:20px;" />
+                    }
+                    else
+                    {
+                      <img src="~/Images/run.gif" style="height:20px;" />
+                    }
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="~/Scripts/asPie/asPie.js"></script>
+<script type="text/javascript">
+  jQuery(function ($) {
+    $('.pie_progress').asPieProgress({
+      namespace: 'pie_progress'
+    });
+
+    $('.pie_progress').asPieProgress('start');
+  });
+</script>

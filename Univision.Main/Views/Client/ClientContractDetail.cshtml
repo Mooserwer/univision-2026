@@ -1,0 +1,476 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientContractDetailModel
+@using Univision.Security
+@{
+  Layout = null;
+}
+@if (Model.data.cc_seq > 0)
+{
+  <div style="text-align:right;">
+    @*PMS 오픈 관련 등록기능 제한*@
+    @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+    {
+      <button type="button" id="btn_renew_contract" class="btn btn-xs btn-primary w-150" title="계약정보 갱신">
+        <i class="icon wb-user-add"></i>
+        Contract renewal
+      </button>
+      <button type="button" class="btn btn-xs btn-secondary" id="btnMakeContractFile">
+        <i class="fa fa-file-word"></i>
+        표준 계약 파일 생성(다운로드)
+      </button>
+    }
+  </div>
+
+  <div class="pt-5">
+    <div class="row">
+      <div class="form-group col-md-4">
+        <div class="row">
+          <div class="col-6 col-md-12">
+            <label class="form-control-label form-control-label-sm text-secondary">최종 계약일</label>
+            <p class="form-control-plaintext">
+              @Model.data.contract_date
+            </p>
+          </div>
+          <div class="col-6 col-md-12">
+            <label class="form-control-label form-control-label-sm text-secondary">후보자 보증기간</label>
+            <p class="form-control-plaintext">
+              @if (!String.IsNullOrEmpty(Model.data.grt_type))
+              {
+                <text>
+                  @Model.data.grt_type [ <span class="font-weight-600">@Model.data.grt_period @Model.data.grt_gubun</span> ]
+                </text>
+              }
+              else
+              {
+                <text>[보증기간 정보 없음]</text>
+              }
+            </p>
+          </div>
+          <div class="col-6 col-md-12">
+            <label class="form-control-label form-control-label-sm text-secondary">VAT 구분</label>
+            <p class="form-control-plaintext">
+              @if (Model.data.vat_type.HasValue)
+              {
+                if (Model.data.vat_type.Value == 3)
+                {
+                  <text>
+                    [ <span class="font-weight-600 text-success">@(Utils.ReturnVatTypeTxt(Model.data.vat_type.Value)) </span> ]
+                  </text>
+                }
+                else if (Model.data.vat_type.Value == 2)
+                {
+                  <text>
+                    [ <span class="font-weight-600 text-danger">@(Utils.ReturnVatTypeTxt(Model.data.vat_type.Value)) </span> ]
+                  </text>
+                }
+                else
+                {
+                  <text>
+                    [ <span class="font-weight-600">@(Utils.ReturnVatTypeTxt(Model.data.vat_type.Value)) </span> ]
+                  </text>
+                }
+              }
+              else
+              {
+                <text>[VAT 구분 정보 없음]</text>
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group col-md-4">
+        <div class="row">
+          <div class="col-6 col-md-12">
+            <label class="form-control-label form-control-label-sm text-secondary">입금일 지정</label>
+            <p class="form-control-plaintext">
+              @if (!String.IsNullOrEmpty(Model.data.deposit_gubun1))
+              {
+                <text>
+                  @Model.data.deposit_gubun1 [<span class="font-weight-600">@Model.data.deposit_period @Model.data.deposit_gubun2</span> ]이내
+                </text>
+              }
+              else
+              {
+                <text>[입금일 정보 없음]</text>
+              }
+
+            </p>
+          </div>
+          <div class="col-6 col-md-12">
+            <label class="form-control-label form-control-label-sm text-secondary">기초조사비 공제 여부</label>
+            <p class="form-control-plaintext">
+              @if (Model.data.is_construct_debut == "Y")
+              {
+                <label class="badge bagde-lg badge-primary">Yes</label>
+                <span>(@Model.data.construct_debut_per %)</span>
+              }
+              else
+              {
+                <label class="badge bagde-lg badge-warning">No</label>
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group col-md-4">
+        <label class="form-control-label form-control-label-sm text-secondary">수수료율 반영 구분</label>
+        <p class="form-control-plaintext">
+          [@Utils.ReturnContractFeeTypeTxt(Model.data.fee_type)]
+          @if (Model.data.fee_type == "C")
+          {
+            <label class="badge bagde-lg badge-primary">@Model.data.fix_fee_rate %</label>
+          }
+          else
+          {
+            if (Model.feeList.Count > 0)
+            {
+              <table class="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th>
+                      @Utils.ReturnContractFeeTypeTxt(Model.data.fee_type).Substring(0, 2) 구간
+                      @((Model.data.fee_type == "A" && !String.IsNullOrEmpty(Model.data.currency_cd)) ? "["+Model.data.currency_cd+"]" : "")
+                    </th>
+                    <th>수수료율</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach (var fee in Model.feeList)
+                  {
+                    <tr>
+                      <td>
+                        @if (Model.data.fee_type == "A")
+                        {
+                          @((fee.start_income == null || fee.start_income <= 0) ? "" : Utils.ConvertMoneyToString(fee.start_income) + " 이상 ")
+                          @((fee.end_income == null || fee.end_income >= 9999999999) ? "" : Utils.ConvertMoneyToString(fee.end_income) + " 미만 ")
+                        }
+                        else if (Model.data.fee_type == "B")
+                        {
+                          @((fee.start_income == null || fee.start_income <= 0) ? "" : fee.start_income_name + " 이상 ")
+                          @((fee.end_income == null || fee.end_income >= 9999999999) ? "" : fee.end_income_name + " 미만 ")
+                        }
+
+
+                      </td>
+                      <td>@fee.percentage %</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          }
+
+        </p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group col">
+        <label class="form-control-label form-control-label-sm text-secondary">계약 참고사항 및 기타 코멘트</label>
+        <p class="form-control-plaintext">
+          @if (!String.IsNullOrEmpty(Model.data.contract_comment))
+          {
+            <text>@Html.Raw(Model.data.contract_comment.Replace("\r\n", "\n").Replace("\n", "<br />"))</text>
+          }
+        </p>
+      </div>
+    </div>
+  </div>
+}
+else
+{
+  <div class="card">
+    <div class="card-block text-center">
+      <h4 class="card-title">계약 정보가 등록되지 않았습니다.</h4>
+      <p class="card-text">
+        "계약 정보 생성" 버튼을 눌러 계약정보를 입력하여 주십시오.
+      </p>
+      <a href="#" id="btn_create_contract" class="btn btn-sm btn-primary"><i class="fas fa-handshake"></i> 계약 정보 생성 <small>[New Contract]</small></a>
+    </div>
+  </div>
+}
+<script>
+        $("#btnMakeContractFile").click(function () {
+
+            $.ajax({
+                url: '@Url.Action("MakeContractFile", "Client")',
+                data: {
+                    c_seq: $("#c_seq").val(),
+                    cc_seq: $("#cc_seq").val(),
+                },
+                dataType: 'json',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    showLoading('#contractInfo');
+                }
+            })
+            .done(function (json) {
+                hideLoading('#contractInfo');
+
+                if (json.ok) {
+                    //NormalAlert(json.message, function () { location.reload(); });
+                    if (json.cf_seq && json.cf_seq > 0) {
+                        location.href = "/DownloadFile/Download?element_seq=" + json.cf_seq + "&type=contract";
+                    }
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading('#contractInfo');
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        });
+
+        $("#btn_renew_contract").click(function (e) {
+
+            //debugger;
+            e.preventDefault();
+            var ctc_seq = e.target.value;
+
+            $.ajax({
+                url: '@Url.Action("PopContractCreate", "Client")',
+                data: { c_seq: $('#c_seq').val() },
+                dataType: 'html',
+                type: 'GET',
+                beforeSend: function ()
+                {
+                    showLoading('#contractInfo');
+                }
+            })
+            .done(function (json) {
+                hideLoading('#contractInfo');
+
+
+
+                height = "430";
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '840',
+                    'height': height,
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': '계약정보 생성/수정',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading('#contractInfo');
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.' + e.message);
+                });
+        });
+
+        $("#btn_create_contract").click(function (e) {
+
+            //debugger;
+            e.preventDefault();
+            var ctc_seq = e.target.value;
+
+            $.ajax({
+                url: '@Url.Action("PopContractCreate", "Client")',
+                data: { c_seq: $('#c_seq').val() },
+                dataType: 'html',
+                type: 'GET',
+                beforeSend: function ()
+                {
+                    showLoading('#contractInfo');
+                }
+            })
+            .done(function (json) {
+                hideLoading('#contractInfo');
+
+
+
+                height = "430";
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '840',
+                    'height': height,
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': '계약정보 생성/수정',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading('#contractInfo');
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.' + e.message);
+                });
+        });
+
+
+        $('.deleteTaxBtn').click(function (e) {
+            var ctc_seq = e.target.value;
+            var c_seq = $("#c_seq").val();
+
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            $.ajax({
+                                url: '@Url.Action("ClientTaxDelete", "Client")',
+                                data: { ctc_seq: ctc_seq },
+                                dataType: 'json',
+                                type: 'POST',
+                                beforeSend: function () {
+                                    showLoading('#taxBody');
+                                }
+                            })
+                            .done(function (json) {
+                                hideLoading('#taxBody');
+                                if (json.ok) {
+                                    location.href = "/Client/ClientDetail?c_seq=" + c_seq;
+                                }
+                                else {
+                                    ErrorAlert('오류입니다.');
+                                }
+                            });
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>담당자 삭제')
+                    .setting({
+                        message: "담당자를 삭제 하시겠습니까?",
+                    })
+                .show();
+
+        });
+
+
+    function openClientTaxContactExternalLockToHref(c_seq, ctc_seq) {
+        alertify.confirm()
+        .set({
+            'labels': { ok: 'OK', cancel: 'Cancel' },
+            'onok': function (e) {
+
+                if (saveElementOpenLogToServer('@Univision.Security.AppIdentity.user_seq', c_seq, 'client', 'client', '', '')) {
+                    TaxDetail(ctc_seq);
+                    callTaxList(c_seq, 1);
+                }
+                else {
+                    return;
+                }
+
+            },
+            'oncancel': function () {
+                return;
+            }
+        })
+        .setHeader('E-Tax 담당자 수정화면 열람 안내')
+        .setting({
+          message: "해당 고객사의 E-Tax 담당자 수정 화면을 열람하시겠습니까?<br />확인 시 개인정보 확인 기록이 서버에 저장되며, 24시간 이내 동일정보는 별도 확인 없이 조회가 가능합니다."
+        })
+        .show();
+    }
+
+    function TaxDetail(ctc_seq) {
+        $.ajax({
+            url: '@Url.Action("PopTax", "Client")',
+            data: { ctc_seq: ctc_seq },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function ()
+            {
+                showLoading('#taxBody');
+            }
+        })
+        .done(function (json) {
+            hideLoading('#taxBody');
+
+            $.fancybox.open({
+                'content':json,
+                'width': '620',
+                'height': '320',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': '활동내역 추가',
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading('#taxBody');
+
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+
+    function openListClientTaxLog(c_seq, ctc_seq) {
+        try {
+                $.ajax({
+                    url: '@Url.Action("ListClientTaxLog", "Log")',
+                    data: { c_seq: c_seq, ctc_seq: ctc_seq },
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (html) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':html,
+                        'width': '850',
+                        'height': '600',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': 'E-Tax History',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.A');
+                });
+
+            } catch (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.A');
+        }
+    }
+
+</script>

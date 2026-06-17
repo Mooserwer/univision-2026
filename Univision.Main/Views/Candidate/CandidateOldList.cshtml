@@ -1,0 +1,1915 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.CandidateListViewModel
+@{
+
+  ViewBag.Title = "후보자 검색";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+
+  int start_item = Model.PagingInfo.TotalItems == 0 ? 0 : ((Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage) + 1;
+  int end_item = Model.PagingInfo.TotalItems == 0 ? 0 : start_item + Model.list.Count() - 1;
+
+
+  int cookie_can_open_win = 0, cookie_can_view_list = 0;
+  if (HttpContext.Current.Request.Cookies.AllKeys.Contains("CAND_OPEN_WINDOW"))
+  {
+    cookie_can_open_win = Convert.ToInt32(Request.Cookies["CAND_OPEN_WINDOW"].Value);
+  }
+
+  if (HttpContext.Current.Request.Cookies.AllKeys.Contains("CAND_VIEW_LIST"))
+  {
+    cookie_can_view_list = Convert.ToInt32(Request.Cookies["CAND_VIEW_LIST"].Value);
+  }
+}
+
+<style>
+  .extend-box {
+    position: absolute !important;
+    top: 1.9em;
+    right: 1em;
+  }
+
+  .panel-body .input-search .form-control {
+    border-radius: 2px;
+  }
+
+  .panel-body .form-control-label {
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+  }
+
+  .panel-body .form-group {
+    margin-bottom: 3px;
+  }
+
+  .panel {
+    margin-bottom: 1rem;
+  }
+
+  .table thead th {
+    font-weight: bold;
+  }
+
+  .bg-warning {
+    background-color: #ab8000 !important;
+  }
+</style>
+<link href="~/Libs/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/user.min599c.css?v4.0.4">
+<div class="page-user">
+  <div class="page-content">
+    <!--검색 Form -->
+    @{
+      string boolean_desc = "<h5>Boolean search 지원</h5><b>- <span class='text-danger'>&amp;&amp;</span> : AND 검색 </b><br/>&nbsp;&nbsp;&nbsp;<small>(A&amp;&amp;B →A와B를 모두 포함하는 결과)</small><br><b>- <span class='text-danger'>||</span> : OR 검색(Shift + ￦)<b/><br/>&nbsp;&nbsp;&nbsp;<small>(A||B →A,B 중 하나 이상을 포함하는 결과)</small><br>- <span class='text-danger'>!!</span> : AND NOT 검색<br/>&nbsp;&nbsp;&nbsp;<small>(A!!B →A는 포함하지만 B는 포함하지 않는 결과)</small>";
+    }
+    @using (Html.BeginForm("CandidateOldList", "Candidate", FormMethod.Get, new { @id = "SearchForm", @autocomplete = "off" }))
+    {
+      @Html.HiddenFor(x => x.search.orderTxt)
+      @Html.HiddenFor(x => x.search.orderOption)
+      <!-- 검색 패널 시작 -->
+      <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+          <div class="panel-title">
+            <i class="fas fa-search"></i>
+            Candidate Search <small>(후보자 통합검색)</small>
+          </div>
+          <div class="panel-actions w-md-p50">
+
+            <div class="panel-action input-search w-full">
+
+              <button type="submit" class="input-search-btn pr-20">
+                <i class="icon wb-search" aria-hidden="true" title="Search"></i>
+                &nbsp;&nbsp;
+                <i class="fas fa-info-circle text-info" data-html="true" data-toggle="popover" data-trigger="hover" data-content="@Html.Raw(boolean_desc)"></i>
+              </button>
+              @Html.TextBoxFor(x => x.search.total, new { @class = "form-control", @placeholder = "통합검색 - 검색어 입력 (이력서 상세 내용, 후보자 정보 등)" })
+
+            </div>
+          </div>
+
+          <a class="panel-action icon wb-minus extend-box cur_hand" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true" title="Advanced Search">
+          </a>
+
+        </div>
+        <div class="panel-body bg-grey-200">
+          <hr class="d-md-none d-block" />
+          <!-- 검색조건 첫째줄 시작 -->
+          <div class="row">
+            <div class="col-6 col-md-4 col-xxl-3">
+              @Html.LabelFor(x => x.search.name, "이름(Name)", new { @class = "form-control-label small" })
+              <div class="form-group">
+                <div class="input-group input-group-sm">
+                  @Html.TextBoxFor(x => x.search.name, new { @class = "form-control" })
+                  <div class="input-group-append checkbox-custom checkbox-custom-sm checkbox-primary ml-1">
+                    @Html.CheckBoxFor(x => x.search.foreign, new { @id = "search_foreign_frgn", @class = "form-control-label small" })
+                    <label for="search_foreign_frgn" title="외국인">Foreigner</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4 col-xxl-3">
+              @Html.LabelFor(x => x.search.startBirth, "생년(Year of Birth)", new { @class = "form-control-label small" })
+              <div class="form-group">
+                <div class="input-group input-group-sm">
+                  @Html.TextBoxFor(x => x.search.startBirth, new { @class = "form-control", @type = "number", @placeholder = "YYYY" })
+                  <div class="input-group-text pl-5 pr-5">
+                    ~
+                  </div>
+                  @Html.TextBoxFor(x => x.search.endBirth, new { @class = "form-control", @type = "number", @placeholder = "YYYY" })
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4 col-xxl-3">
+              @Html.LabelFor(x => x.search.gender, "성별(Gender)", new { @class = "form-control-label small" })
+              <div class="form-group form-inline">
+                <div class="radio-custom radio-custom-sm radio-primary pr-3">
+                  @Html.RadioButtonFor(x => x.search.gender, 0, new { @id = "search_gender_all", @class = "form-control-label small" })
+                  <label for="search_gender_all">All</label>
+                </div>
+                <div class="radio-custom radio-custom-sm radio-primary pr-3">
+                  @Html.RadioButtonFor(x => x.search.gender, 1, new { @id = "search_gender_male", @class = "form-control-label small" })
+                  <label for="search_gender_male">Male</label>
+                </div>
+                <div class="radio-custom radio-custom-sm radio-primary">
+                  @Html.RadioButtonFor(x => x.search.gender, 2, new { @id = "search_gender_female", @class = "form-control-label small" })
+                  <label for="search_gender_female">Female</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-4 col-xxl-3">
+              @Html.LabelFor(x => x.search.phone, "연락처(Tel No.)", new { @class = "form-control-label small" })
+              @Html.TextBoxFor(x => x.search.phone, new { @class = "form-control form-control-sm", @size = "13", @placeholder = "Tel No." })
+            </div>
+            <div class="col-6 col-md-4 col-xxl-6">
+              @Html.LabelFor(x => x.search.email, "E-mail", new { @class = "form-control-label small" })
+              @Html.TextBoxFor(x => x.search.email, new { @class = "form-control form-control-sm", @placeholder = "exam@exam.com" })
+            </div>
+            <div class="col-6 col-md-4 col-xxl-6">
+              @Html.LabelFor(x => x.search.sns, "SNS url", new { @class = "form-control-label small" })
+              @Html.TextBoxFor(x => x.search.sns, new { @class = "form-control form-control-sm", @placeholder = "exam.com/exam" })
+            </div>
+          </div>
+          <!-- 검색조건 첫째줄 끝 -->
+          <!-- 검색조건 둘째줄 시작 -->
+          <div class="row">
+            <div class="col-md-6 col-xl-4">
+              @Html.LabelFor(x => x.search.school, "출신학교(School)", new { @class = "form-control-label small" })
+              <i class="fas fa-info-circle text-info" data-html="true" data-toggle="popover" data-trigger="hover" data-content="@Html.Raw(boolean_desc)"></i>
+              <div class="form-group">
+                @Html.TextBoxFor(x => x.search.school, new { @class = "form-control form-control-sm", placeholder = "학교명" })
+              </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+              @Html.LabelFor(x => x.search.final_edu, "최종학력", new { @class = "form-control-label small" })
+              <div class="input-group input-group-sm">
+                <select id='search_final_edu' name="search.final_edu" class="form-control  form-control-sm selectpicker" data-actions-box="true" multiple title="최종학력">
+
+                  <option value='1' @(Model.search.final_edu.Count == 0 || Model.search.final_edu.Contains(1) ? "selected" : "")>고등학교</option>
+                  <option value='2' @(Model.search.final_edu.Count == 0 || Model.search.final_edu.Contains(2) ? "selected" : "")>전문대</option>
+                  <option value='3' @(Model.search.final_edu.Count == 0 || Model.search.final_edu.Contains(3) ? "selected" : "")>학사</option>
+                  <option value='4' @(Model.search.final_edu.Count == 0 || Model.search.final_edu.Contains(4) ? "selected" : "")>석사</option>
+                  <option value='5' @(Model.search.final_edu.Count == 0 || Model.search.final_edu.Contains(5) ? "selected" : "")>박사</option>
+                  <option value='6' @(Model.search.final_edu.Count == 0 || Model.search.final_edu.Contains(6) ? "selected" : "")>Post Doc</option>
+
+                </select>
+                <div class="input-group-append checkbox-custom checkbox-custom-sm checkbox-primary ml-1" title="해외학교">
+                  @Html.CheckBoxFor(x => x.search.foreign_school, new { @class = "form-control-label small" })
+                  <label for="search_foreign_school">Overseas</label>
+                </div>
+              </div>
+            </div>
+            @*
+              <div class="col-6 col-md-6 col-xl-3">
+                @Html.LabelFor(x => x.search.category1_name, "전공계열(Major)", new { @class = "form-control-label small" })
+                <select id="search_category1_name" name="search.category1_name" class="form-control  form-control-sm">
+                  <option value="">[All]</option>
+                  <option value="인문계열" @(Model.search.category1_name == "인문계열" ? "selected" : "")>인문계열</option>
+                  <option value="사회계열" @(Model.search.category1_name == "사회계열" ? "selected" : "")>사회계열</option>
+                  <option value="공학계열" @(Model.search.category1_name == "공학계열" ? "selected" : "")>공학계열</option>
+                  <option value="자연계열" @(Model.search.category1_name == "자연계열" ? "selected" : "")>자연계열</option>
+                  <option value="교육계열" @(Model.search.category1_name == "교육계열" ? "selected" : "")>교육계열</option>
+                  <option value="의약계열" @(Model.search.category1_name == "의약계열" ? "selected" : "")>의약계열</option>
+                  <option value="예체능계열" @(Model.search.category1_name == "예체능계열" ? "selected" : "")>예체능계열</option>
+                </select>
+              </div>
+            *@
+            <div class="col-md-6 col-xl-4">
+              @Html.LabelFor(x => x.search.major, "전공(Major)", new { @class = "form-control-label small" })
+              <i class="fas fa-info-circle text-info" data-html="true" data-toggle="popover" data-trigger="hover" data-content="@Html.Raw(boolean_desc)"></i>
+              @Html.TextBoxFor(x => x.search.major, new { @class = "form-control  form-control-sm", placeholder = "전공" })
+            </div>
+
+          </div>
+          <!-- 검색조건 둘째줄 끝 -->
+          <!-- 검색조건 셋째줄 시작 -->
+          <div class="row">
+            <div class="col-md-6 col-xl-6">
+              @Html.LabelFor(x => x.search.company, "출신회사(Company)", new { @class = "form-control-label small" })
+              <i class="fas fa-info-circle text-info" data-html="true" data-toggle="popover" data-trigger="hover" data-content="@Html.Raw(boolean_desc)"></i>
+              <div class="form-group">
+                <div class="input-group input-group-sm">
+                  @Html.TextBoxFor(x => x.search.company, new { @class = "form-control", placeholder = "회사명" })
+                  <div class="input-group-append checkbox-custom checkbox-custom-sm checkbox-primary ml-1">
+                    @Html.CheckBoxFor(x => x.search.final_company, new { @class = "form-control-label small" })
+                    <label for="search_final_company" title="Lastest only" class="small">최종회사</label>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <div class="col-md-6">
+              @Html.LabelFor(x => x.search.career_start, "경력기간 (Experience)", new { @class = "form-control-label small" })
+              <small class="text-danger">*검색 시 경력기간이 입력되지 않은 후보자는 검색되지 않습니다.</small>
+              <div class="form-group">
+                <div class="input-group input-group-sm">
+                  <select id="search_career_start" name="search.career_start" class="form-control">
+                    <option value="">[ALL]</option>
+                    <option value="11" @(Model.search.career_start == 11 ? "selected" : "")>1년 이상</option>
+                    <option value="23" @(Model.search.career_start == 23 ? "selected" : "")>2년 이상</option>
+                    <option value="35" @(Model.search.career_start == 35 ? "selected" : "")>3년 이상</option>
+                    <option value="59" @(Model.search.career_start == 59 ? "selected" : "")>5년 이상</option>
+                    <option value="83" @(Model.search.career_start == 83 ? "selected" : "")>7년 이상</option>
+                    <option value="119" @(Model.search.career_start == 119 ? "selected" : "")>10년 이상</option>
+                    <option value="179" @(Model.search.career_start == 179 ? "selected" : "")>15년 이상</option>
+                    <option value="239" @(Model.search.career_start == 239 ? "selected" : "")>20년 이상</option>
+                  </select>
+                  <div class="input-group-text pl-5 pr-5">
+                    ~
+                  </div>
+                  <select id="search_career_end" name="search.career_end" class="form-control">
+                    <option value="">[ALL]</option>
+                    <option value="13" @(Model.search.career_end == 13 ? "selected" : "")>1년 이하</option>
+                    <option value="25" @(Model.search.career_end == 25 ? "selected" : "")>2년 이하</option>
+                    <option value="37" @(Model.search.career_end == 37 ? "selected" : "")>3년 이하</option>
+                    <option value="61" @(Model.search.career_end == 61 ? "selected" : "")>5년 이하</option>
+                    <option value="85" @(Model.search.career_end == 85 ? "selected" : "")>7년 이하</option>
+                    <option value="121" @(Model.search.career_end == 121 ? "selected" : "")>10년 이하</option>
+                    <option value="181" @(Model.search.career_end == 181 ? "selected" : "")>15년 이하</option>
+                    <option value="241" @(Model.search.career_end == 241 ? "selected" : "")>20년 이하</option>
+                    <option value="361" @(Model.search.career_end == 361 ? "selected" : "")>30년 이하</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            @*
+              <div class="col-md-6 col-xl-3  pt-2">
+                  @Html.LabelFor(x => x.search.position_name, "직위()", new { @class = "form-control-label small" })
+                  @Html.TextBoxFor(x => x.search.position_name, new { @class = "form-control", placeholder = "직위(SELECT)", onkeydown = "FindSchool(this)", @readonly = "readonly" })
+              </div>
+              <div class="col-md-6 col-xl-3  pt-2">
+                  @Html.LabelFor(x => x.search.position, "직급()", new { @class = "form-control-label small" })
+                  @Html.TextBoxFor(x => x.search.position, new { @class = "form-control", placeholder = "직급", onkeydown = "FindSchool(this)", @readonly = "readonly" })
+              </div>
+            *@
+            <div class="col-md-6 col-xl-6">
+              @*
+                @Html.LabelFor(x => x.search.isWork, "재직여부(In Office)", new { @class = "form-control-label small" })
+                <div class="form-group form-inline">
+                  <div class="radio-custom radio-custom-sm radio-primary pr-3">
+                    @Html.RadioButtonFor(x => x.search.isWork, "", new { @id = "search_iswork_all", @class = "form-control-label small" })
+                    <label for="search_iswork_all">All</label>
+                  </div>
+                  <div class="radio-custom radio-custom-sm radio-primary pr-3">
+                    @Html.RadioButtonFor(x => x.search.isWork, 1, new { @id = "search_iswork_working", @class = "form-control-label small" })
+                    <label for="search_iswork_working">In office</label>
+                  </div>
+                  <div class="radio-custom radio-custom-sm radio-primary">
+                    @Html.RadioButtonFor(x => x.search.isWork, 2, new { @id = "search_iswork_retire", @class = "form-control-label small" })
+                    <label for="search_iswork_retire">Retire</label>
+                  </div>
+                </div>
+              *@
+            </div>
+          </div>
+          <!-- 검색조건 셋째줄 끝 -->
+          <!-- 검색조건 넷째줄 시작 -->
+          <div class="row">
+            <div class="col-lg-6">
+              <label class="form-control-label small">
+                산업(Industry)
+              </label>
+              <div class="input-group input-group-sm redo-site" id="businessDiv">
+                <div class="bg-white pl-5 pr-5 w-p100 form-inline codeBindDiv" id="busiCodeList">
+                  @if (Model.search.business.Count() > 0)
+                  {
+                    var idx = 0;
+                    foreach (var business in Model.search.business)
+                    {
+                      <div id='busi@(business.code2)' code2='@business.code2' class='busiRow catRow no-side-space'>
+                        <span class='category'>
+                          <span class='badge badge-outline badge-default bg-white cur_hand badge-lg busiCode2badge' code1='@business.code1' code2='@business.code2' code2name='@business.code_name2' onclick='DelCategoryBadge(this)'>@business.code_name2 <i class='far fa-times-circle'></i></span>
+                          <input type="hidden" name="search.business[@idx].code1" value="@business.code1" />
+                          <input type="hidden" name="search.business[@idx].code2" value="@business.code2" />
+                          <input type="hidden" name="search.business[@idx].code_name2" value="@business.code_name2" />
+                        </span>
+                      </div>
+                      idx++;
+                    }
+
+                  }
+                </div>
+                <select id="search_business_search_type" name="search.business_search_type" class="form-control w-100">
+                  <option value="AND" @(Model.search.business_search_type == "AND" ? "selected" : "")>AND</option>
+                  <option value="OR" @(Model.search.business_search_type == "OR" ? "selected" : "")>OR</option>
+                </select>
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-outline-primary" onclick="FindBusiness()">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-outline-primary btn-redo-code">
+                    <i class="fas fa-redo" placeholder="초기화"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+            <div class="col-lg-6">
+              <label class="form-control-label small">
+                직무(Job Functions)
+              </label>
+              <div class="input-group input-group-sm redo-site" id="JobDiv">
+                <div class="bg-white pl-5 pr-5 w-p100 form-inline codeBindDiv" id="jobCodeList">
+                  @if (Model.search.job.Count() > 0)
+                  {
+                    var idx = 0;
+                    foreach (var job in Model.search.job)
+                    {
+                      <div id='job@(job.code2)' code2='@job.code2' class='jobRow catRow no-side-space'>
+                        <span class='category'>
+                          <span class='badge badge-outline badge-default bg-white cur_hand badge-lg jobCode2badge' code1='@job.code1' code2='@job.code2' code2name='@job.code_name2' onclick='DelCategoryBadge(this)'>@job.code_name2<i class='far fa-times-circle'></i></span>
+                          <input type="hidden" name="search.job[@idx].code1" value="@job.code1" />
+                          <input type="hidden" name="search.job[@idx].code2" value="@job.code2" />
+                          <input type="hidden" name="search.job[@idx].code_name2" value="@job.code_name2" />
+                        </span>
+                      </div>
+                      idx++;
+                    }
+                  }
+                </div>
+                <select id="search_job_search_type" name="search.job_search_type" class="form-control w-100">
+                  <option value="AND" @(Model.search.job_search_type == "AND" ? "selected" : "")>AND</option>
+                  <option value="OR" @(Model.search.job_search_type == "OR" ? "selected" : "")>OR</option>
+                </select>
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-outline-primary" onclick="javascript:FindJob()">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-outline-primary btn-redo-code">
+                    <i class="fas fa-redo" placeholder="초기화"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 검색조건 넷째줄 끝 -->
+          <!-- 검색조건 다섯째줄 시작 -->
+          <div class="row">
+            <div class="col-md-6 col-xl-3">
+              @Html.LabelFor(x => x.search.keyword, "키워드(Keywords)", new { @class = "form-control-label small" })
+              <i class="fas fa-info-circle text-info" data-html="true" data-toggle="popover" data-trigger="hover" data-content="@Html.Raw(boolean_desc)"></i>
+              <!--<small class="text-primary">&nbsp;* 띄어쓰기로 구분</small>-->
+              @Html.TextBoxFor(x => x.search.keyword, new { @class = "form-control form-control-sm", placeholder = "키워드" })
+            </div>
+            <div class="col-md-6 col-xl-3">
+              @Html.LabelFor(x => x.search.language, "어학능력(Language)", new { @class = "form-control-label small" })
+              <div class="input-group input-group-sm">
+                <select id="search_language" name="search.language" class="form-control">
+                  <option value="">[ALL]</option>
+                  <option value="01" @(Model.search.language == "01" ? "selected" : "")>중국어(Chinese)</option>
+                  <option value="02" @(Model.search.language == "02" ? "selected" : "")>영어(English)</option>
+                  <option value="03" @(Model.search.language == "03" ? "selected" : "")>불어(French)</option>
+                  <option value="04" @(Model.search.language == "04" ? "selected" : "")>독일어(German)</option>
+                  <option value="05" @(Model.search.language == "05" ? "selected" : "")>일본어(Japanese)</option>
+                  <option value="06" @(Model.search.language == "06" ? "selected" : "")>러시아어(Russian)</option>
+                  <option value="07" @(Model.search.language == "07" ? "selected" : "")>스페인어(Spanish)</option>
+                  <option value="99" @(Model.search.language == "99" ? "selected" : "")>기타(Other)</option>
+                </select>
+                <select id="search_ability" name="search.ability" class="form-control">
+                  <option value="">[ALL]</option>
+                  <option value="1" @(Model.search.ability == 1 ? "selected" : "")>상(Hi.)</option>
+                  <option value="2" @(Model.search.ability == 2 ? "selected" : "")>중(Mid.)</option>
+                  <option value="3" @(Model.search.ability == 3 ? "selected" : "")>하(Low)</option>
+                </select>
+              </div>
+
+            </div>
+            <div class="col-md-6">
+              @Html.LabelFor(x => x.search.create_dt_start, "등록일(Reg.Date)", new { @class = "form-control-label small" })
+              <div class="form-group">
+                <div class="input-group input-group-sm">
+                  @Html.TextBoxFor(x => x.search.create_dt_start, new { @class = "form-control date-time", @placeholder = "YYYY-MM-DD" })
+                  <div class="input-group-text pl-5 pr-5">
+                    ~
+                  </div>
+                  @Html.TextBoxFor(x => x.search.create_dt_end, new { @class = "form-control date-time", @placeholder = "YYYY-MM-DD" })
+                </div>
+              </div>
+            </div>
+
+
+
+            <div class="col-6 col-md-6 col-lg-4 col-xxl-3">
+              @Html.LabelFor(x => x.search.memo, "Memo", new { @class = "form-control-label small" })
+              <i class="fas fa-info-circle text-info" data-html="true" data-toggle="popover" data-trigger="hover" data-content="@Html.Raw(boolean_desc)"></i>
+              @Html.TextBoxFor(x => x.search.memo, new { @class = "form-control form-control-sm", placeholder = "Memo" })
+            </div>
+
+            <div class="col-6 col-md-6 col-lg-4 col-xxl-3">
+              @Html.LabelFor(x => x.search.confidential, "Confidential", new { @class = "form-control-label small" })
+              <div class="form-group form-inline">
+                <div class="radio-custom radio-custom-sm radio-primary pr-3">
+                  @Html.RadioButtonFor(x => x.search.confidential, -1, new { @id = "search_confidential_all", @class = "form-control-label small" })
+                  <label for="search_confidential_all">All</label>
+                </div>
+                <div class="radio-custom radio-custom-sm radio-primary pr-3">
+                  @Html.RadioButtonFor(x => x.search.confidential, 1, new { @id = "search_confidential_on", @class = "form-control-label small" })
+                  <label for="search_confidential_on">Only</label>
+                </div>
+                <div class="radio-custom radio-custom-sm radio-primary">
+                  @Html.RadioButtonFor(x => x.search.confidential, 0, new { @id = "search_confidential_not", @class = "form-control-label small" })
+                  <label for="search_confidential_not">Except</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-6 col-lg-4 col-xxl-3">
+              @Html.LabelFor(x => x.search.inactive, "Active / Inactive", new { @class = "form-control-label small" })
+              <div class="form-group form-inline">
+                <div class="radio-custom radio-custom-sm radio-primary pr-3">
+                  @Html.RadioButtonFor(x => x.search.inactive, -1, new { @id = "search_inactive_all", @class = "form-control-label small" })
+                  <label for="search_inactive_all">All</label>
+                </div>
+                <div class="radio-custom radio-custom-sm radio-primary pr-3">
+                  @Html.RadioButtonFor(x => x.search.inactive, 1, new { @id = "search_inactive_on", @class = "form-control-label small" })
+                  <label for="search_inactive_on">Inactive</label>
+                </div>
+                <div class="radio-custom radio-custom-sm radio-primary">
+                  @Html.RadioButtonFor(x => x.search.inactive, 0, new { @id = "search_inactive_not", @class = "form-control-label small" })
+                  <label for="search_inactive_not">Active</label>
+                </div>
+              </div>
+            </div>
+            @*
+              <div class="col-md-6 col-lg-4 col-xxl-3">
+                  @Html.LabelFor(x => x.search.recent_hire, "최근 6개월 내 채용", new { @class = "form-control-label small" })
+                  <div class="form-group form-inline">
+                      <div class="radio-custom radio-primary pr-3">
+                          @Html.RadioButtonFor(x => x.search.recent_hire, -1, new { @id = "search_recent_hire_all", @class = "form-control-label small" })
+                          <label for="search_recent_hire_all">All</label>
+                      </div>
+                      <div class="radio-custom radio-primary pr-3">
+                          @Html.RadioButtonFor(x => x.search.recent_hire, 1, new { @id = "search_recent_hire_on", @class = "form-control-label small" })
+                          <label for="search_recent_hire_on">Only</label>
+                      </div>
+                      <div class="radio-custom radio-primary">
+                          @Html.RadioButtonFor(x => x.search.recent_hire, 0, new { @id = "search_recent_hire_not", @class = "form-control-label small" })
+                          <label for="search_recent_hire_not">Except</label>
+                      </div>
+                  </div>
+              </div>
+            *@
+          </div>
+          <!-- 검색조건 다섯째줄 끝 -->
+          <!-- 검색조건 여섯째줄 시작 -->
+          <div class="row">
+            <div class="col">
+              <div class="form-group text-right">
+                <div class="btn-group">
+                  <button type="submit" id="btnSearch" class="btn btn-sm btn-primary w-200" title="검색">
+                    <i class="fas fa-search"></i>
+                    Search
+                  </button>
+                  <button type="button" id="btnReset" class="btn btn-sm btn-danger" title="검색조건 초기화">
+                    <i class="fas fa-redo"></i>
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 검색조건 여섯째줄 끝 -->
+        </div>
+      </div>
+      <!-- 검색 패널 끝 -->
+    }
+
+    <div class="panel panel-primary panel-line">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <div class="row">
+            <div class="col-md-6 col-sm-12">
+              Search Results (@start_item.ToString("N0")  ~ @end_item.ToString("N0") of @Model.PagingInfo.TotalItems.ToString("N0"))
+              <span class="panel-desc">
+                Page : @Model.PagingInfo.CurrentPage.ToString("N0") of @(((Model.PagingInfo.TotalItems / Model.PagingInfo.ItemsPerPage) + 1).ToString("N0"))
+              </span>
+            </div>
+            <div class="col-md-6 col-sm-12 text-right">
+              <span class="panel-desc">
+                Sort by : [
+                <small>
+                  <a href="#" class="sort_link">
+                    Reg.Date
+                    <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "create_dt_idx", Model.search.orderOption) colSort" orderTxt="create_dt_idx"></i>
+                  </a>
+                  |
+                  <a href="#" class="sort_link">
+                    Update
+                    <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "modify_dt_idx", Model.search.orderOption) colSort" orderTxt="modify_dt_idx"></i>
+                  </a>
+                  |
+
+                  <a href="#" class="sort_link">
+                    Name
+                    <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "name_sort_idx", Model.search.orderOption) colSort" orderTxt="name_sort_idx"></i>
+                  </a>
+                  |
+
+                  <a href="#" class="sort_link">
+                    Yob
+                    <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "birth_yyyy", Model.search.orderOption) colSort" orderTxt="birth_yyyy"></i>
+                  </a>
+                </small>]
+              </span>
+              <span class="panel-desc">
+                <div class="input-group-append checkbox-custom checkbox-custom-sm checkbox-primary ml-1" title="테이블 형식으로 결과 보기">
+                  <input type="checkbox" name="candidate_view_list" id="candidate_view_list" class="form-control-label" onclick="javascript:fSetViewList(this);" @(cookie_can_view_list == 1 ? "checked" : "") />
+                  <label for="candidate_view_list">Show Table list</label>
+                </div>
+                <div class="input-group-append checkbox-custom checkbox-custom-sm checkbox-primary ml-1" title="항상 후보자를 새창에서 열기">
+                  <input type="checkbox" name="candidate_new_win" id="candidate_new_win" class="form-control-label" onclick="javascript:fSetCandCookie('CAND_OPEN_WINDOW', this);" @(cookie_can_open_win == 1 ? "checked" : "") />
+                  <label for="candidate_new_win">Always open new window</label>
+                </div>
+              </span>
+            </div>
+          </div>
+        </h3>
+      </div>
+      <div class="panel-body">
+        @if (cookie_can_view_list == 0)
+        {
+          <ul class="list-group">
+            @if (Model.list.Count > 0)
+            {
+              int num = 1;
+              foreach (var data in Model.list)
+              {
+                <li class="list-group-item py-10" id="cand_list_@data.c_seq">
+                  <div class="media">
+                    <div class="media-body w-full text-left">
+                      <h4 class="mt-0 mb-5">
+                        <a href="javascript:openCandidate('@data.c_seq')">
+                          @Html.Raw(data.kor_name)
+                        </a>
+                        <a href="@Url.Action("CandidateDetail", "Candidate", new { c_seq = data.c_seq })" target="candidate_@data.c_seq" title="새창에서 열기">
+                          <i class="fa fa-external-link-alt"></i>
+                        </a>
+                        <small>
+                          @Utils.YearSeparate(data.birth_date)
+                          @if (data.is_confidential == 1)
+                          {
+                            <label class="badge badge-sm badge-danger">Confidential</label>
+                          }
+                          @if (data.is_inactive == 1)
+                          {
+                            <label class="badge badge-sm badge-warning">Inactive</label>
+                          }
+                          @if (data.caution_type == 6)
+                          {
+                            <label class="badge badge-sm badge-success">유니코에 의한 채용</label>
+                          }
+                          <span class="text-danger">
+                            @Utils.Get1ToString(data.ex_birthdate, "[추정]")
+                          </span>
+                          (@Utils.ReturnGenderTxt(data.gender))
+                          @if (data.cur_career_month > 0)
+                          {
+                            <span class="text-primary">
+                              [경력 :
+                              @if ((data.cur_career_month / 12) > 0)
+                              {
+                                <text>@(data.cur_career_month / 12)Y </text>
+                              }
+                              @if ((data.cur_career_month % 12) > 0)
+                              {
+                                <text>@(data.cur_career_month % 12)M </text>
+                              }]
+                            </span>
+                          }
+                        </small>
+                        @if (data.is_external_lock == 1)
+                        {
+                          <a class="btn btn-sm badge badge-primary" href="javascript:openCandidateExternalLock('@data.c_seq');" title="Unlock private information">
+                            <i class="fas fa-unlock-alt"></i> 연락처 확인
+                          </a><br />
+                        }
+                        <small>
+                          [Reg. : @Utils.ConvertDateTimeToString(data.create_dt) / <span class="text-secondary">Update : @Utils.ConvertDateTimeToString(data.modify_dt)</span>]
+                          <a class="btn btn-sm" href="javascript:PopMemoList('@data.c_seq', '@data.kor_name.Replace("'", "\\'"))', '@Utils.ReturnGenderTxt(data.gender)', ' @Utils.YearSeparate(data.birth_date) @Utils.Get1ToString(data.ex_birthdate, "[추정]")');" title="Memo List">
+                            <i class="fas fa-list"></i>
+                          </a><br />
+                        </small>
+
+                        @if (!string.IsNullOrWhiteSpace(data.kor_file_ext) || !string.IsNullOrWhiteSpace(data.eng_file_ext))
+                        {
+                          <span class="d-block d-md-none"></span>
+                          if (!string.IsNullOrWhiteSpace(data.kor_file_ext))
+                          {
+
+                            if (data.is_external_lock == 1)
+                            {
+
+
+                              <a class="badge badge-sm badge-outline badge-dark" href="javascript:ErrorAlert('파일을 다운로드 받으려면 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오.');" title="국문이력서 - 파일을 다운로드 받으려면 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오." download>
+                                <i class="fas @Utils.ReturnFileExtensionClass(data.kor_file_ext)"></i> Resume(Kor)
+                              </a>
+
+                            }
+                            else
+                            {
+
+                              <a class="badge badge-sm badge-outline badge-primary" href="javascript:void(0)" onclick="DownloadFile(@data.kor_cr_seq, 'canResume')" title="국문이력서">
+                                <i class="fas @Utils.ReturnFileExtensionClass(data.kor_file_ext)"></i> Resume(Kor)
+                              </a>
+
+                            }
+
+                          }
+                          if (!string.IsNullOrWhiteSpace(data.eng_file_ext))
+                          {
+
+                            if (data.is_external_lock == 1)
+                            {
+
+                              <a class="badge badge-sm badge-outline badge-dark" href="javascript:ErrorAlert('파일을 다운로드 받으려면 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오.');" title="영문이력서 - 파일을 다운로드 받으려면 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오." download>
+                                <i class="fas @Utils.ReturnFileExtensionClass(data.eng_file_ext)"></i> Resume(Eng)
+                              </a>
+
+                            }
+                            else
+                            {
+                              <a class="badge badge-sm badge-outline badge-info" href="javascript:void(0)" onclick="DownloadFile(@data.eng_cr_seq, 'canResume')" title="영문이력서">
+                                <i class="fas @Utils.ReturnFileExtensionClass(data.eng_file_ext)"></i> Resume(Eng)
+                              </a>
+
+                            }
+                          }
+                        }
+                      </h4>
+                      <p>
+                        <div class="row">
+                          <div class="col-md-6">
+                            <div class="row">
+                              <div class="col-12">
+                                <span class="text-secondary small" title="E-mail">- </span>
+                                <!--<i class="fa fa-at fa-fw" aria-hidden="true" title="E-mail"></i>-->
+                                @if (data.is_external_lock == 1)
+                                {
+                                  <span class="text-secondary" title="이메일주소를 확인 하시려면 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                                    @data.email1
+                                  </span>
+                                }
+                                else
+                                {
+                                  @data.email1
+                                }
+                              </div>
+                              <div class="col-12">
+                                <span class="text-secondary small" title="Phone">- </span>
+                                <!--<i class="fa fa-mobile-alt fa-fw" aria-hidden="true" title="Phone"></i>-->
+                                @if (data.is_external_lock == 1)
+                                {
+                                  <span class="text-secondary" title="전화번호를 확인 하시려면 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                                    @data.cell_phone
+                                    @(!String.IsNullOrEmpty(data.phone) ? " / " + @data.phone : @data.phone)
+                                  </span>
+                                }
+                                else
+                                {
+                                  @data.cell_phone
+                                  @(!String.IsNullOrEmpty(data.phone) ? " / " + @data.phone : @data.phone)
+                                }
+                              </div>
+                              @{
+                                string all_school = String.Empty;
+                                if (!String.IsNullOrEmpty(data.all_school))
+                                {
+                                  all_school = data.all_school.Replace("<span class='bg-warning'>", "").Replace("</span>", "").Replace("\n", "←");
+                                }
+                              }
+                              <div class="col-12 text-truncate" title="@all_school">
+                                <span class="text-secondary small" title="School(학교)">- </span>
+
+                                @if (!string.IsNullOrWhiteSpace(data.all_school))
+                                {
+                                  string[] all_school_arr = data.all_school.Split('\n');
+                                  if (all_school_arr.Length > 0)
+                                  {
+                                    int school_cnt = 0;
+
+                                    foreach (var school in all_school_arr)
+                                    {
+
+                                      if (!string.IsNullOrWhiteSpace(school))
+                                      {
+                                        if (school_cnt > 0)
+                                        {
+                                          <text>←</text>
+                                        }
+                                        <blockbox>@Html.Raw(school.Replace("\r", ""))</blockbox>
+
+
+
+                                        school_cnt++;
+                                        if (school_cnt >= 2) { break; }
+                                      }
+
+                                    }
+
+
+                                  }
+                                }
+                                @*
+                                  <!--<i class="fa fa-graduation-cap fa-fw" aria-hidden="true" title="School(학교)"></i>--> @Html.Raw(data.school_name) /
+                                  @Html.Raw(!String.IsNullOrEmpty(data.major_name) ? data.major_name : "")
+                                *@
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-6">
+                            <div class="row">
+                              @{
+                                string all_company = String.Empty;
+                                if (!String.IsNullOrEmpty(data.all_company))
+                                {
+                                  all_company = data.all_company.Replace("\n", " ← ");
+                                }
+                              }
+                              <div class="col-12 text-truncate" title="@Html.Raw(all_company.Replace("<span class='bg-warning'>", "").Replace("</span>", ""))">
+                                <span class="text-secondary small" title="Company(회사/경력)">- </span>
+                                @if (!string.IsNullOrWhiteSpace(data.all_company))
+                                {
+                                  string[] all_company_arr = data.all_company.Replace("[", "").Replace("]", "").Split('\n');
+                                  if (all_company_arr.Length > 0)
+                                  {
+                                    int company_cnt = 0;
+                                    foreach (var company in all_company_arr)
+                                    {
+                                      if (!string.IsNullOrWhiteSpace(company))
+                                      {
+                                        if (company_cnt > 0)
+                                        {
+                                          <text>←</text>
+                                        }
+                                        <blockbox class="offlimit-chk-@(company_cnt)" data="@company.Replace("<span class='bg-warning'>", "").Replace("</span>", "")">@Html.Raw(company.Replace("\r", ""))</blockbox>
+                                        company_cnt++;
+                                        //if (company_cnt >= 3) { break; }
+                                      }
+                                    }
+                                  }
+                                }
+                              </div>
+                              <div class="col-12 text-truncate" title="@Html.Raw(data.busiName)">
+                                <span class="text-secondary small" title="Business(산업)">- </span>
+                                <!--<i class="fa fa-industry fa-fw" aria-hidden="true" title="Business(산업)"></i>-->
+                                @if (!string.IsNullOrWhiteSpace(data.busiName))
+                                {
+                                  string[] businessList = data.busiName.Split('\n');
+                                  if (businessList.Length > 0)
+                                  {
+                                    int busi_cnt = 0;
+                                    foreach (var business in businessList)
+                                    {
+                                      busi_cnt++;
+
+
+                                      if (business.IndexOf(":") > 1)
+                                      {
+                                        <jobbusibox>@Html.Raw(business.Substring(business.IndexOf(":") + 1).Replace("\r", ""))</jobbusibox>
+                                        @*<label class="badge badge-outline badge-dark" style="font-size:95%;">
+                                            @business.Substring(job.IndexOf(":")+1)
+                                          </label>*@
+                                      }
+
+                                    }
+
+                                  }
+                                }
+                              </div>
+                              <div class="col-12 text-truncate" title="@Html.Raw(data.jobName)">
+                                <span class="text-secondary small" title="Job(직무)">- </span>
+                                <!--<i class="fa fa-share-alt fa-fw" aria-hidden="true" title="Job(직무)"></i>-->
+                                @if (!string.IsNullOrWhiteSpace(data.jobName))
+                                {
+                                  string[] jobList = data.jobName.Split('\n');
+                                  if (jobList.Length > 0)
+                                  {
+                                    int job_cnt = 0;
+                                    foreach (var job in jobList)
+                                    {
+                                      job_cnt++;
+                                      if (job.IndexOf(":") > 1)
+                                      {
+                                        <jobbusibox>@Html.Raw(job.Substring(job.IndexOf(":") + 1).Replace("\r", ""))</jobbusibox>
+                                        @*<label class="badge badge-outline badge-dark" style="font-size:95%;">
+                                            @job.Substring(job.IndexOf(":")+1)
+                                          </label>*@
+                                      }
+
+
+
+                                    }
+
+                                  }
+                                }
+                              </div>
+                            </div>
+                          </div>
+                          @if (data.is_external_lock != 1 && (!string.IsNullOrWhiteSpace(data.sns_link1) || !string.IsNullOrWhiteSpace(data.sns_link2) || !string.IsNullOrWhiteSpace(data.sns_link3)))
+                          {
+
+                            <div class="col-12">
+                              @if (!string.IsNullOrWhiteSpace(data.sns_link1))
+                              {
+                                var url = data.sns_link1;
+
+                                if (string.IsNullOrWhiteSpace(url))
+                                {
+                                  url = "javascript:void(0);";
+                                }
+                                else
+                                {
+                                  if (!url.Contains("http://") && !url.Contains("https://"))
+                                  {
+                                    url = "http://" + url;
+                                  }
+                                }
+                                <i class="fab @(Utils.ReturnFALinkClass(data.sns_link1)) fa-fw" aria-hidden="true" title="URL"></i>
+                                <a href="@url" target="_blank">@data.sns_link1</a>
+                              }
+                              @if (!string.IsNullOrWhiteSpace(data.sns_link2))
+                              {
+                                var url = data.sns_link2;
+
+                                if (string.IsNullOrWhiteSpace(url))
+                                {
+                                  url = "javascript:void(0);";
+                                }
+                                else
+                                {
+                                  if (!url.Contains("http://") && !url.Contains("https://"))
+                                  {
+                                    url = "http://" + url;
+                                  }
+                                }
+                                <br />
+                                <i class="fab @(Utils.ReturnFALinkClass(data.sns_link2)) fa-fw" aria-hidden="true" title="URL"></i>
+                                <a href="@url" target="_blank">@data.sns_link2</a>
+                              }
+                              @if (!string.IsNullOrWhiteSpace(data.sns_link3))
+                              {
+                                var url = data.sns_link3;
+
+                                if (string.IsNullOrWhiteSpace(url))
+                                {
+                                  url = "javascript:void(0);";
+                                }
+                                else
+                                {
+                                  if (!url.Contains("http://") && !url.Contains("https://"))
+                                  {
+                                    url = "http://" + url;
+                                  }
+                                }
+                                <br />
+                                <i class="fab @(Utils.ReturnFALinkClass(data.sns_link3)) fa-fw" aria-hidden="true" title="URL"></i>
+                                <a href="@url" target="_blank">@data.sns_link3</a>
+                              }
+                            </div>
+
+                          }
+                        </div>
+                      </p>
+                      @{
+                        if (!string.IsNullOrWhiteSpace(data.keyword))
+                        {
+                          string[] keywordList = data.keyword.Split(',');
+                          if (keywordList.Length > 0)
+                          {
+                            int key_cnt = 0;
+                            <p class="text-truncate">
+                              <i class="fa fa-key fa-fw" aria-hidden="true" title="Keyword"></i>
+
+                              @foreach (var keyword in keywordList)
+                              {
+                                key_cnt++;
+                                if (!string.IsNullOrWhiteSpace(keyword))
+                                {
+
+                                  <keywordbox>@Html.Raw(keyword)</keywordbox>
+
+
+                                  if (key_cnt >= 15) { break; }
+
+                                }
+
+                              }
+
+                            </p>
+                          }
+                        }
+                      }
+
+                      @{
+
+
+                        if (!string.IsNullOrWhiteSpace(data.kor_resume_body))
+                        {
+
+                          <p class="text-truncate" title="@data.kor_resume_body.Replace("<span class='bg-warning'>", "").Replace("</span>", "")">
+                            <i class="fa fa-file fa-fw" aria-hidden="true" title="국문 이력서내용"></i>
+                            <span class="text-primary">[Kor resume]</span> : @Html.Raw(data.kor_resume_body)
+                          </p>
+                        }
+                        if (!string.IsNullOrWhiteSpace(data.eng_resume_body))
+                        {
+
+                          <p class="text-truncate" title="@data.eng_resume_body.Replace("<span class='bg-warning'>", "").Replace("</span>", "")">
+                            <i class="fa fa-file fa-fw" aria-hidden="true" title="영문 이력서내용"></i>
+                            <span class="text-info">[Eng resume]</span> : @Html.Raw(data.eng_resume_body)
+                          </p>
+                        }
+                        if (!string.IsNullOrWhiteSpace(data.memo_str))
+                        {
+
+                          <p class="text-truncate" title="@data.memo_str.Replace("<span class='bg-warning'>", "").Replace("</span>", "")">
+                            <i class="fa fa-sticky-note fa-fw" aria-hidden="true" title="메모(Memo)"></i>
+                            <span class="text-success">[Memo]</span> : @Html.Raw(data.memo_str)
+                          </p>
+                        }
+
+                        if (data.project_history != null)
+                        {
+                          <p class="text-truncate">
+                            <i class="fa fa-paperclip fa-fw" aria-hidden="true" title="최근(6개월) 프로젝트 활동"></i>
+                            <span class="text-truncate small">
+                              [@Utils.ConvertDateTimeToString(data.project_history.ca_date.Value) - <b>@Utils.ReturnProjectHistoryStateTxt(data.project_history.state)</b>]
+                              @data.project_history.memo
+                              <span class="text-truncate text-primary">
+                                [@data.project_history.client_name] -
+                                @{
+                                  string badgeClass = "";
+                                  switch (data.project_history.pjt_status)
+                                  {
+                                    case 1:
+                                      badgeClass = "badge-primary";
+                                      break;
+                                    case 2:
+                                      badgeClass = "badge-warning";
+                                      break;
+                                    case 3:
+                                      badgeClass = "badge-danger";
+                                      break;
+                                    case 4:
+                                      badgeClass = "badge-info";
+                                      break;
+                                    case 5:
+                                      badgeClass = "badge-success";
+                                      break;
+                                  }
+                                }
+
+                                <span class="badge @badgeClass">@(Utils.ReturnProjectStatusTxt(data.project_history.pjt_status))</span>
+                                @data.project_history.pjt_title
+                              </span>
+
+
+                            </span>
+
+                            @{
+                              int progress = 0;
+                              string progressClass = String.Empty;
+                              string stateName = String.Empty;
+                              switch (data.project_history.state)
+                              {
+                                case ProjectHistoryStateCode.interest:
+                                case ProjectHistoryStateCode.fail:
+                                case ProjectHistoryStateCode.selfdrop:
+                                case ProjectHistoryStateCode.no_intrest:
+                                  progress = 0;
+                                  progressClass = "";
+                                  break;
+
+                                case ProjectHistoryStateCode.recommand:
+                                case ProjectHistoryStateCode.paper:
+                                  progress = 25;
+                                  progressClass = "progress-bar-warning";
+                                  break;
+
+                                case ProjectHistoryStateCode.interview:
+                                case ProjectHistoryStateCode.interviewOk:
+                                  progress = 50;
+                                  progressClass = "progress-bar-info";
+                                  break;
+
+                                case ProjectHistoryStateCode.hireReady:
+                                  progress = 75;
+                                  progressClass = "progress-bar-primary";
+                                  break;
+
+                                case ProjectHistoryStateCode.hireOk:
+                                  progress = 100;
+                                  progressClass = "progress-bar-success";
+                                  break;
+                              }
+                            }
+                            <div class="progress progress-xs" style="height:2px;margin-bottom:2px;">
+                              <div class="progress-bar @progressClass" style="width: @(progress)%;" role="progressbar">
+                                <span class="sr-only">@(progress)%</span>
+                              </div>
+                            </div>
+                          </p>
+                        }
+                      }
+
+                    </div>
+                    <div class="pl-0 pl-sm-20 mt-15 mt-sm-0 align-self-center">
+                      <span>
+                        @if (data.cf_seq != 0)
+                        {
+                          <!--
+                          <button type="button" class="btn btn-outline btn-danger btn-sm" onclick="DeleteMyListConfirm(this, '@data.cf_seq', '@data.c_seq')">
+                              <i class="fa fa-minus" aria-hidden="true"></i> Remove My List
+                          </button>
+                          -->
+                          <button type="button" class="btn btn-outline btn-info btn-sm" onclick="CreateMyListConfirm(this, '@data.c_seq')">
+                            <i class="fa fa-user-edit" aria-hidden="true"></i> Update My List
+                          </button>
+                        }
+                        else
+                        {
+                          <button type="button" class="btn btn-outline btn-primary btn-sm" onclick="CreateMyListConfirm(this, '@data.c_seq')">
+                            <i class="fa fa-plus" aria-hidden="true"></i> Add My List
+                          </button>
+                        }
+
+                      </span>
+                      <span>
+                        <button type="button" class="btn btn-outline btn-success btn-sm" onclick="PopupProject('@data.c_seq')">
+                          <i class="fa fa-user-plus" aria-hidden="true"></i>
+                          Add Project
+                        </button>
+                      </span>
+
+
+                    </div>
+                  </div>
+                </li>
+              }
+            }
+            else
+            {
+              <li class="list-group-item text-center">
+                No Data Found.
+              </li>
+
+            }
+          </ul>
+        }
+        else
+        {
+          <table class="table block_table table-bordered table-hover table-striped" style="table-layout:fixed;font-size:0.8em;">
+            <thead>
+              <tr>
+                <th class="text-center" style="width:100px">Name</th>
+                <th class="text-center" style="width:100px">Gender<br />/ Yob</th>
+                <th class="text-center">Exp.</th>
+                <th class="text-center">Edu</th>
+                <th class="text-center" style="width:135px">Ind.</th>
+                <th class="text-center" style="width:135px">Job</th>
+                <th class="text-center" style="width:130px"><i class='fa fa-cog fa-fw' aria-hidden='true'></i></th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (Model.list.Count > 0)
+              {
+                int num = 1;
+                foreach (var data in Model.list)
+                {
+                  <tr id="cand_list_@data.c_seq">
+                    <td class="text-center text-truncate">
+                      @{
+                        string hover_title = String.Empty;
+                        hover_title = "<small class='clearfix'>[Reg. : " + Utils.ConvertDateTimeToString(data.create_dt) + "/ <span class='text-secondary'>Update : " + Utils.ConvertDateTimeToString(data.modify_dt) + "</span>]</small>";
+
+                        if (data.is_external_lock != 1)
+                        {
+                          hover_title += "<span class='clearfix'>Tel : " + data.phone + (!String.IsNullOrEmpty(data.phone) ? " / " + @data.cell_phone : @data.cell_phone) + "</span>";
+                          hover_title += "<span class='clearfix'>E-mail : " + data.email1 + "</span>";
+                        }
+                        if (data.project_history != null)
+                        {
+                          hover_title += @"<p class='clearfix text-truncate'>
+                                                                                                                                                                                                                <i class='fa fa-paperclip fa-fw' aria-hidden='true'></i>
+                                                                                                                                                                                                                <span class='text-truncate small'>
+                                                                                                                                                                                                                    [" + Utils.ConvertDateTimeToString(data.project_history.ca_date.Value) + " - <b>" + Utils.ReturnProjectHistoryStateTxt(data.project_history.state) + "</b>]<br/><i class='invisible fa fa-paperclip fa-fw ' aria-hidden='true'></i>" + data.project_history.memo
+                          + @"<br/><i class='invisible fa fa-paperclip fa-fw ' aria-hidden='true'></i><span class='text-truncate text-primary'>[ " + data.project_history.client_name + "] - " + data.project_history.pjt_title + @"</span>
+                                                                                                                                                                                                                </span>";
+
+
+
+                          int progress = 0;
+                          string progressClass = String.Empty;
+                          string stateName = String.Empty;
+                          switch (data.project_history.state)
+                          {
+                            case ProjectHistoryStateCode.interest:
+                            case ProjectHistoryStateCode.fail:
+                              progress = 0;
+                              progressClass = "";
+                              break;
+
+                            case ProjectHistoryStateCode.recommand:
+                            case ProjectHistoryStateCode.paper:
+                              progress = 25;
+                              progressClass = "progress-bar-warning";
+                              break;
+
+                            case ProjectHistoryStateCode.interview:
+                            case ProjectHistoryStateCode.interviewOk:
+                              progress = 50;
+                              progressClass = "progress-bar-info";
+                              break;
+
+                            case ProjectHistoryStateCode.hireReady:
+                              progress = 75;
+                              progressClass = "progress-bar-primary";
+                              break;
+
+                            case ProjectHistoryStateCode.hireOk:
+                              progress = 100;
+                              progressClass = "progress-bar-success";
+                              break;
+                          }
+
+                          hover_title += @" <div class='progress progress-xs' style='height:2px;margin-bottom:2px;'>
+                                                                                                                                                                                                                                                                                                        <div class='progress-bar " + progressClass + "' style='width:" + (progress) + @"%;' role='progressbar'>
+                                                                                                                                                                                                                                                                                                            <span class='sr-only'>" + (progress) + @"%</span>
+                                                                                                                                                                                                                                                                                                        </div>
+                                                                                                                                                                                                                                                                                                    </div>
+</p>";
+                        }
+                      }
+
+
+
+                      <a href="javascript:openCandidate('@data.c_seq')" class="clearfix" data-html="true" data-toggle="popover" data-trigger="hover" data-content="@Html.Raw(hover_title)">
+                        @Html.Raw(data.kor_name)<br />
+                        <a class="btn btn-sm" href="javascript:PopMemoList('@data.c_seq', '@Html.Raw(data.kor_name.Replace("'", "\'"))', '@Utils.ReturnGenderTxt(data.gender)', ' @Utils.YearSeparate(data.birth_date) @Utils.Get1ToString(data.ex_birthdate, "[추정]")');" title="Memo List">
+                          <i class="fas fa-list"></i>
+                        </a>
+                      </a>
+                      @if (data.is_confidential == 1)
+                      {
+                        <label class="badge badge-sm badge-pill badge-danger" title="Confidential">C</label>
+                      }
+                      @if (data.is_inactive == 1)
+                      {
+                        <label class="badge badge-sm badge-warning" title="Inactive">I</label>
+                      }
+                      @if (data.caution_type == 6)
+                      {
+                        <label class="badge badge-sm badge-success" title="유니코에 의한 채용">채용</label>
+                      }
+                    </td>
+                    <td class="text-center">
+                      <span class="clearfix">
+                        @Utils.YearSeparate(data.birth_date)
+                        <span class="text-danger">
+                          @Utils.Get1ToString(data.ex_birthdate, "[추정]")
+                        </span>
+                      </span>
+                      (@Utils.ReturnGenderTxt(data.gender))
+                    </td>
+                    @{
+                      string all_company = String.Empty;
+                      string[] all_company_arr = new string[] { };
+                      if (!String.IsNullOrEmpty(data.all_company))
+                      {
+                        all_company = data.all_company.Replace("\n", " ← ");
+                        all_company_arr = data.all_company.Split((char)13);
+                      }
+                    }
+                    <td class="text-truncate" title="@Html.Raw(all_company.Replace("<span class='bg-warning'>", "").Replace("</span>", ""))">
+                      @if (all_company_arr.Length > 0)
+                      {
+                        int idx = 0;
+                        foreach (var company in all_company_arr)
+                        {
+                          if (idx == 0)
+                          {
+                            @Html.Raw("<span class='clearfix offlimit-chk-0' data=" + company.Replace("<span class='bg-warning'>", "").Replace("</span>", "") + ">" + company + "</span>")
+                          }
+                          else
+                          {
+                            @Html.Raw("<span> ← " + company + "</span>")
+                          }
+
+                          idx++;
+                        }
+
+                      }
+                    </td>
+                    <td class="text-truncate" title="@data.school_name.Replace("<span class='bg-warning'>", "").Replace("</span>", "") / @data.category1_name / @Html.Raw(data.major_name)">
+                      <span class="clearfix">@Html.Raw(data.school_name) /</span>
+                      <span class="clearfix">
+                        @Html.Raw(!String.IsNullOrEmpty(data.major_name) ? data.major_name : "")
+                        @(!String.IsNullOrEmpty(data.category1_name) ? "[" + data.category1_name + "]" : "")
+                      </span>
+                    </td>
+                    <td class="text-truncate" title="@data.busiName">
+                      @if (!string.IsNullOrWhiteSpace(data.busiName))
+                      {
+                        string[] businessList = data.busiName.Split('\n');
+                        if (businessList.Length > 0)
+                        {
+                          int busi_cnt = 0;
+                          foreach (var business in businessList)
+                          {
+                            busi_cnt++;
+                            <span class="clearfix">- [@business]</span>
+                            if (busi_cnt >= 2)
+                            {
+                              break;
+                            }
+                          }
+
+                        }
+                      }
+                    </td>
+                    <td class="col-12 text-truncate" title="@data.jobName">
+
+                      @if (!string.IsNullOrWhiteSpace(data.jobName))
+                      {
+                        string[] jobList = data.jobName.Split('\n');
+                        if (jobList.Length > 0)
+                        {
+                          int job_cnt = 0;
+                          foreach (var job in jobList)
+                          {
+                            job_cnt++;
+                            <span class="clearfix">- [@job]</span>
+                            if (job_cnt >= 2)
+                            {
+                              break;
+                            }
+                          }
+
+                        }
+                      }
+                    </td>
+                    <td class="text-center">
+                      <span>
+                        @if (data.cf_seq != 0)
+                        {
+                          <button type="button" class="btn btn-outline btn-info btn-xs" onclick="CreateMyListConfirm(this, '@data.c_seq')">
+                            <i class="fa fa-user-edit" aria-hidden="true"></i> Update My List
+                          </button>
+                        }
+                        else
+                        {
+                          <button type="button" class="btn btn-outline btn-primary btn-xs" onclick="CreateMyListConfirm(this, '@data.c_seq')">
+                            <i class="fa fa-plus" aria-hidden="true"></i> Add My List
+                          </button>
+                        }
+
+                      </span>
+                      <span>
+                        <button type="button" class="btn btn-outline btn-success btn-xs" onclick="PopupProject('@data.c_seq')">
+                          <i class="fa fa-user-plus" aria-hidden="true"></i>
+                          Add Project
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+
+
+
+
+                }
+              }
+              else
+              {
+                <li class="list-group-item text-center">
+                  No Data Found.
+                </li>
+                <tr>
+                  <td colspan="6" class="text-center">No Data Found.</td>
+                </tr>
+
+              }
+            </tbody>
+          </table>
+        }
+
+        @Html.PageAjaxLinks(Model.PagingInfo,
+                 ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                 x => Url.Action("CandidateOldList", new
+                 {
+                     page = x
+                 }))
+      </div>
+    </div>
+
+  </div>
+  <button type="button" onclick="location.href='@Url.Action("Candidatecreate", "Candidate")';" class="site-action btn-raised btn btn-success btn-floating" title="Create Candidate"><i class="icon wb-user-add" aria-hidden="true"></i></button>
+
+</div>
+@section scripts{
+  <script src="~/Libs/bootstrap-select/js/bootstrap-select.min.js"></script>
+  <script src='~/Libs/selectize/js/standalone/selectize.js'></script>
+  <script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+  <script type="text/javascript">
+    window.multi_api_hidden_pretext = "search."
+
+    window.id_user_seq = "@Univision.Security.AppIdentity.user_seq";
+
+    window.url_offlimit_check_list = "@Url.Action("OfflimitCheckList", "Partial")";
+    window.url_candidate_activity_list = "@Url.Action("CandidateActivityList", "Candidate")";
+    window.url_candidate_single_list = '@Url.Action("CandidateSingleList", "Candidate")';
+    window.url_candidate_list = "@Url.Action("CandidateOldList", "Candidate")";
+    window.url_find_school_api2 = '@Url.Action("FindSchoolApi2", "Partial")';
+    window.url_find_major_api = '@Url.Action("FindMajorApi", "Partial")';
+    window.url_find_company_api = '@Url.Action("FindCompanyApi", "Partial")';
+    window.url_business_multi_api2 = '@Url.Action("BusinessMultiApi2", "Partial")';
+    window.url_job_multi_api2 = '@Url.Action("JobMultiApi2", "Partial")';
+    window.url_my_candidate_add = '@Url.Action("MyCandidateAdd", "Candidate")';
+    window.url_search_my_project = '@Url.Action("SearchMyProject", "Candidate")';
+  </script>
+  <script type="text/javascript">
+    BindDatePicker('.date-time');
+
+    function fSetViewList(obj) {
+      fSetCandCookie('CAND_VIEW_LIST', obj);
+      $('#SearchForm').submit();
+    }
+
+    function GetOfflimitData() {
+      ajxCall({
+        url: window.url_offlimit_check_list,
+        type: "POST",
+        dataType: 'json',
+        loading: false,
+        suc: function (json) {
+
+          //$('#btnCreateMemo').prop("disabled", false);
+          //$('#btnCreateMemo').removeClass("disabled");
+
+          if (json.ok) {
+            CheckOfflimit(json.list);
+          }
+          else {
+            ErrorAlert("Offlimit Check Error : " + json.message);
+          }
+        },
+        err: function (jqXHR, textStatus, errorThrown) {
+
+          ErrorAlert("Offlimit Check Failed");
+        }
+      });
+    }
+
+    function CheckOfflimit(list) {
+      //console.log(list);
+      $('.offlimit-chk-0').each(function () {
+        var company = $(this).attr("data").toLowerCase().replace(/\n/gi, "");        
+        if (company != "지멘스" && company != "siemens") {
+          var fil = list.filter(item => item.name_all.toLowerCase().indexOf(company) >= 0 || (item.kor_name.length > 2 && company.toLowerCase().indexOf(item.kor_name) >= 0) || (item.eng_name.length > 2 && company.toLowerCase().indexOf(item.eng_name) >= 0))
+          //console.log(company, fil);
+          if (fil.length > 0) {
+            console.log(fil[0]);
+            if (fil[0].offlimit == 1) {
+              $(this).append('<span class="badge badge-danger" title="' + fil[0].kor_name + ' (전 임직원 컨택 금지)">OFFLIMIT</span>');
+            } else if (fil[0].offlimit == 2) {
+              $(this).append('<span class="badge badge-warning" title="' + fil[0].kor_name + ' (유니코에 의해 채용된 임직원 컨택 금지)">OFFLIMIT</span>');
+            } else if (fil[0].offlimit == 3) {
+              $(this).append('<span class="badge badge-outline badge-warning" title="' + fil[0].kor_name + ' (계약서 내 오프리밋 조항은 없지만 고객사의 요청 등)">[계약서 미표기] OFFLIMIT</span>');
+            }
+
+          }
+        }
+      })
+
+    }
+
+    GetOfflimitData();
+
+
+    function PopMemoList(c_seq, name, gender, age) {
+      //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+      if ($('#CandidateMemoModal').length > 0) {
+        $('#CandidateMemoModal').parent().remove();
+      }
+
+      $('body').append($('<div>').load('/Modal/CandidateMemoModal.html?v0.0.0', function () {
+        $.ajax({
+          url: window.url_candidate_activity_list,
+          data: {
+            c_seq: c_seq,
+            page: 1
+          },
+          dataType: 'html',
+          type: 'post',
+          beforeSend: function () {
+            showLoading();
+          }
+        })
+          .done(function (view) {
+            hideLoading();
+            $("#candidate_memo_modal_title").html(name + ' ' + age + ' (' + gender + ')');
+            $("#CandidateMemoModal .modal-body").html(view)
+            $('#CandidateMemoModal').modal('show');
+
+          })
+          .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            $('#CandidateMemoModal').modal('hide');
+          });
+      }));
+
+    }
+
+    function openCandidateExternalLock(c_seq) {
+      alertify.confirm()
+        .set({
+          'labels': { ok: 'OK', cancel: 'Cancel' },
+          'onok': function (e) {
+
+            if (saveElementOpenLogToServer(window.id_user_seq, c_seq, 'candidate', 'candidate', '', '')) {
+              $.ajax({
+                url: window.url_candidate_single_list,
+                data: {
+                  c_seq: c_seq
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                  showLoading('#cand_list_' + c_seq);
+                },
+                success: function (response) {
+                  $('#cand_list_' + c_seq).html(response);
+                },
+                complete: function () {
+                  hideLoading('#cand_list_' + c_seq);
+                }
+              })
+            }
+            else {
+              return;
+            }
+
+          },
+          'oncancel': function () {
+            return;
+          }
+        })
+        .setHeader('후보자 연락처 확인')
+        .setting({
+          message: "해당 후보자의 연락처를 확인하시겠습니까?<br />확인 시 연락처 확인 기록이 서버에 저장되며, 7일간 별도 확인 없이 조회가 가능합니다."
+        })
+        .show();
+    }
+
+    //검색 초기화
+    $("#btnReset").click(function () {
+      location.href = window.url_candidate_list;
+    });
+
+    $('.sort_link').each(function () {
+      var $arrow = $(this).find('.colSort')
+      if ($arrow.hasClass("fa-sort")) {
+        $(this).addClass("text-secondary")
+      }
+
+      $(this).click(function (e) {
+        e.preventDefault();
+        if ($arrow.hasClass("fa-sort-down")) {
+          $("#search_orderTxt").val($arrow.attr("orderTxt"));
+          $("#search_orderOption").val("ASC");
+        }
+        else {
+          $("#search_orderTxt").val($arrow.attr("orderTxt"));
+          $("#search_orderOption").val("DESC");
+        }
+
+        $("#SearchForm").submit();
+
+      });
+
+    });
+
+
+    //직무, 산업 검색 초기화 버튼 클릭.
+    $(".btn-redo-code").click(function (e) {
+      e.preventDefault();
+
+      $(this).closest(".redo-site").find(".codeBindDiv").empty();
+
+      //var dataField = $(this).closest(".redo-site");
+
+      //$(dataField).find("input").each(function () {
+
+      //    if ($(this).attr("type") == "hidden") {
+      //        $(this).val("0");
+      //    }
+      //    else {
+      //        $(this).val("");
+      //    }
+      //})
+    })
+    //학교검색 input에 Autocomplete 바인딩
+    function BindSchoolAutocomplete($obj) {
+      $obj.autocomplete({
+        source: function (request, response) {
+          $.ajax({
+            type: 'post',
+            url: window.url_find_school_api2,
+            dataType: "json",
+            //request.term = $("#autocomplete").val()
+            data: { schoolName: request.term },
+            success: function (data) {
+              //서버에서 json 데이터 response 후 목록에 뿌려주기 위함
+              response(
+                $.map(data.list, function (item) {
+
+                  var schoolName = "";
+                  if (item.campusName != undefined) {
+                    schoolName = item.school_name + '(' + item.campus_name + ')';
+                  }
+                  else {
+                    schoolName = item.school_name;
+                  }
+
+                  return {
+                    label: schoolName,
+                    value: item.school_name
+                  }
+                })
+              );
+              $(".ui-autocomplete").highlight(request.term);
+            }
+          });
+        },
+        delay: 300,
+        autoFocus: false, //첫번째 값을 자동 focus한다
+        minLength: 2,  //조회를 위한 최소글자수
+        select: function (event, ui) {
+          //console.log($(event.target).closest(".schoolRow").find("[id^=campusName_]"));
+          $(event.target).closest(".schoolRow").find("[id^=campusName_]").val(ui.item.campusName);
+          // 만약 검색리스트에서 선택하였을때 선택한 데이터에 의한 이벤트발생
+          $(event.target).closest("div").next().find("input").focus();
+        },
+        focus: function (event, ui) {
+          //event.target.value = ui.item.label;
+          event.preventDefault();
+        }
+      });
+    }
+    //BindSchoolAutocomplete($('#search_school'));
+
+    //전공검색 input에 Autocomplete 바인딩
+    function BindMajorAutocomplete($obj) {
+      $obj.autocomplete({
+        source: function (request, response) {
+          $.ajax({
+            type: 'post',
+            url: window.url_find_major_api,
+            dataType: "json",
+            //request.term = $("#autocomplete").val()
+            data: { major_name: request.term },
+            success: function (data) {
+              //서버에서 json 데이터 response 후 목록에 뿌려주기 위함
+              response(
+                $.map(data.list, function (item) {
+                  return {
+                    label: item.major_name,
+                    value: item.major_name,
+                    category1_name: item.category1_name
+                  }
+                })
+              );
+              $(".ui-autocomplete").highlight(request.term);
+            }
+          });
+        },
+        delay: 300,
+        autoFocus: false, //첫번째 값을 자동 focus한다
+        minLength: 2,  //조회를 위한 최소글자수
+        select: function (event, ui) {
+          $(event.target).closest("div").next().find("input").focus();
+        },
+        focus: function (event, ui) {
+          //event.target.value = ui.item.label;
+          event.preventDefault();
+        }
+      });
+    }
+    //BindMajorAutocomplete($('#search_major'));
+
+    //회사 찾기
+    function BindCompanyAutocomplete($obj) {
+      $obj.autocomplete({
+        source: function (request, response) {
+          $.ajax({
+            type: 'post',
+            url: window.url_find_company_api,
+            dataType: "json",
+            //request.term = $("#autocomplete").val()
+            data: {
+              companyName: request.term
+            },
+            success: function (data) {
+              //console.log(data)
+              //서버에서 json 데이터 response 후 목록에 뿌려주기 위함
+              response(
+                $.map(data.list, function (item) {
+                  //console.log(item);
+                  return {
+                    label: item.WKPL_NM,
+                    value: item.WKPL_NM,
+                    g_seq: item.G_SEQ,
+                    rgstNo: item.BZOWR_RGST_NO,
+                    busi: item.VLDT_VL_KRN_NM
+                  }
+                })
+              );
+
+              $(".ui-autocomplete").highlight(request.term);
+            }
+          });
+        },
+        autoFocus: false, //첫번째 값을 자동 focus한다
+        minLength: 2,  //조회를 위한 최소글자수
+        select: function (event, ui) {
+          $(event.target).closest("div").find("input[name='g_seq']").val(ui.item.g_seq);
+          // 만약 검색리스트에서 선택하였을때 선택한 데이터에 의한 이벤트발생
+          $(event.target).closest("div").next().find("input").focus();
+        },
+        focus: function (event, ui) {
+          //event.target.value = ui.item.label;
+          event.preventDefault();
+        }
+      }).data("ui-autocomplete")._renderItem = function (ul, item) {
+
+        return $("<li>")
+          .data("ui-menu-item", item)
+          .append("<div class='ui-menu-item-wrapper'><span class='font-size-12'>" + item.label + "</span></div>")
+          .appendTo(ul);
+      };
+    }
+    //BindCompanyAutocomplete($('#search_company'))
+
+    //직무,산업 추가
+    function FindBusiness() {
+      busiCodeArr = [];
+
+      $(".busiRow").each(function () {
+        $(this).find(".badge").each(function () {
+
+          //카테고리 직무에 하위 직무가 더 있다면
+          if ($(this).closest(".busiRow").find(".badge").length > 1) {
+            if ($(this).hasClass("busiCode2badge")) {
+              return;
+            }
+          }
+
+          var busi = {
+            code1: $(this).attr("code1"),
+            code2: $(this).attr("code2")
+          };
+          busiCodeArr.push(busi);
+        });
+      });
+
+      $.ajax({
+        url: window.url_business_multi_api2,
+        data: {
+
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (json) {
+          hideLoading();
+
+          $.fancybox.open({
+            'content': json,
+            'width': '640',
+            'height': 'auto',
+            'autoDimensions': false,
+            'type': 'iframe',
+            'autoSize': false,
+            'title': 'Find Industry',
+            helpers: {
+              title: {
+                type: 'inside',
+                position: 'top'
+              },
+              overlay: {
+                closeClick: false
+              }
+            }
+          });
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+
+    }
+
+    function FindJob() {
+      jobCodeArr = [];
+
+      $(".jobRow").each(function () {
+        $(this).find(".badge").each(function () {
+
+          //카테고리 직무에 하위 직무가 더 있다면
+          if ($(this).closest(".jobRow").find(".badge").length > 1) {
+            if ($(this).hasClass("jobCode2badge")) {
+              return;
+            }
+          }
+
+          var busi = {
+            code1: $(this).attr("code1"),
+            code2: $(this).attr("code2")
+          };
+          jobCodeArr.push(busi);
+        });
+      });
+
+      $.ajax({
+        url: window.url_job_multi_api2,
+        data: {
+
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (json) {
+          hideLoading();
+
+          $.fancybox.open({
+            'content': json,
+            'width': '640',
+            'height': 'auto',
+            'autoDimensions': false,
+            'type': 'iframe',
+            'autoSize': false,
+            'title': 'Find Job',
+            helpers: {
+              title: {
+                type: 'inside',
+                position: 'top'
+              },
+              overlay: {
+                closeClick: false
+              }
+            }
+          });
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+
+    }
+
+
+
+    //Favorite 등록(confirm)
+    function CreateMyListConfirm(obj, c_seq) {
+
+
+      //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+      if ($('#MyCandidateModifyModal').length > 0) {
+        $('#MyCandidateModifyModal').parent().remove();
+      }
+
+      $('body').append($('<div>').load('/Modal/MyCandidateModal.html?v0.0.0', function () {
+        $.ajax({
+          url: window.url_my_candidate_add,
+          data: {
+            c_seq: c_seq
+          },
+          dataType: 'html',
+          type: 'GET',
+          beforeSend: function () {
+            showLoading();
+          }
+        })
+          .done(function (view) {
+            hideLoading();
+
+            $("#MyCandidateModifyModal .modal-body").html(view)
+            $('#MyCandidateModifyModal').modal('show');
+
+          })
+          .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            $('#MyCandidateModifyModal').modal('hide');
+          });
+      }));
+    }
+
+
+    //관심후보 등록을 위한 프로젝트 검색
+    function PopupProject(c_seq) {
+      $.ajax({
+        url: window.url_search_my_project,
+        data: {
+          search: {
+            except_c_seq: c_seq,
+            searchTxt: ""
+          }
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (json) {
+          hideLoading();
+
+          $.fancybox.open({
+            'content': json,
+            'autoDimensions': true,
+            'type': 'iframe',
+            width: 800,
+            scrolling: 'no',
+            'autoSize': false,
+            fitToView: true,
+            'title': 'Add to Project',
+            helpers: {
+              title: {
+                type: 'inside',
+                position: 'top'
+              },
+              overlay: {
+                closeClick: false
+              }
+            }
+          });
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+
+
+
+    //Badge 카테고리 삭제.
+    function DelCategoryBadge(obj) {
+
+      $(obj).closest(".catRow").remove();
+      reindexJobBusiness();
+    }
+
+    function reindexJobBusiness() {
+      var i = 0
+      $('#busiCodeList').find('.busiRow').each(function () {
+        $(this).find('input').each(function () {
+
+          $(this).attr('name', $(this).attr('name').replace(/\[[^\]]*\]/, '[' + (i) + ']'));
+
+        });
+        i++;
+      })
+
+      var i = 0
+      $('#jobCodeList').find('.jobRow').each(function () {
+        $(this).find('input').each(function () {
+
+          $(this).attr('name', $(this).attr('name').replace(/\[[^\]]*\]/, '[' + (i) + ']'));
+
+        });
+        i++;
+      })
+    }
+
+
+  </script>
+
+}

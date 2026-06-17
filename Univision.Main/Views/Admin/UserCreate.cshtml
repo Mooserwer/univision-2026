@@ -1,0 +1,346 @@
+﻿@model Univision.Core.Models.DTO.uv_user
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/dropify/dropify.min599c.css?v4.0.4">
+<style>
+    .v-center {
+        display: flex;
+        align-items: center;
+    }
+</style>
+<div class="page-content">
+    <!--검색 Form -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        @using (Html.BeginForm("UserCreate", "Admin", FormMethod.Post, new { @id = "CreateForm", @autocomplete = "off", @enctype = "multipart/form-data" }))
+        {
+            @Html.HiddenFor(x => x.uv_seq)
+            @Html.HiddenFor(x => x.ua_seq)
+            @Html.HiddenFor(x => x.ud_seq)
+            @Html.HiddenFor(x => x.create_dt)
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fas fa-address-card"></i>
+                    @ViewBag.Title
+                </h3>
+                <div class="panel-actions">
+                    <div class="panel-action">
+                        <button type="submit" class="btn btn-primary" id="btnSave">Submit </button>
+                        <button type="reset" class="btn btn-default btn-outline">Reset</button>
+                        <button type="button" class="btn btn-default btn-outline" onclick="javascript: history.back();">Back</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="panel-body pb-0">
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">아이디 : </label>
+                    <div class="col-md-10">
+                        @if (Model.user_id != null && Model.user_id != "")
+                        {
+
+                            @Html.Label(Model.user_id, new { @class = "col-form-label" })
+                            @Html.HiddenFor(x => x.user_id)
+                        }
+                        else
+                        {
+                            @Html.TextBoxFor(x => x.user_id, new { @class = "form-control", @required = "required", @placeholder = "User ID" });
+                        }
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="col-md-2 col-form-label">비밀번호 : </label>
+                    <div class="col-md form-group">
+
+                        @if (Model.user_id != null && Model.user_id != "")
+                        {
+                            @Html.PasswordFor(x => x.pwd, new { @class = "form-control", @placeholder = "Password" })
+                        }
+                        else
+                        {
+                            @Html.PasswordFor(x => x.pwd, new { @class = "form-control", @required = "required", @placeholder = "Password" })
+                        }
+                    </div>
+                    @if (Model.user_id == null || Model.user_id == "")
+                    {
+                        <label class="col-md-2 col-form-label">비밀번호 확인 : </label>
+                        <div class="col-md form-group">
+
+                            @Html.PasswordFor(x => x.pwd_rp, new { @class = "form-control", @required = "required", @placeholder = "Password retype" })
+
+                        </div>
+                    }
+                </div>
+
+                @*
+        <div class="form-group row">
+            <legend class="col-md-2 col-form-legend">Top: </legend>
+            <div class="col-md-10">
+                <div class="checkbox-custom checkbox-default">
+                    <input type="checkbox" id="data_b_top" name="data.b_top" value="1" @(Model.data.b_top == 1 ? "checked" : "")>
+                    <label for="data_b_top">(When checked, the posts are placed at the top.)</label>
+                </div>
+            </div>
+        </div>
+                *@
+
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">Name : </label>
+                    <div class="col-md-10">
+                        @Html.TextBoxFor(x => x.name, new { @class = "form-control", @required = "required", @placeholder = "Name" })
+                    </div>
+                </div>
+                <div class="row">
+                    <legend class="col-md-2 col-form-legend">Authorization: </legend>
+                    <div class="col-md form-group">
+                        <div class="input-group">
+                            @Html.TextBoxFor(x => x.ua_name, new { @class = "form-control", @required = "required", @placeholder = "Please choose Authorization", @readonly = "readonly" })
+                            <span class="input-group-btn">
+                                <a href="#" class="btn btn-success btn-sm" onclick="FindAuth(this)">
+                                    <i class="icon wb-search" aria-hidden="true"></i>
+                                </a>
+                            </span>
+
+                        </div>
+
+                    </div>
+                    <legend class="col-md-2 col-form-legend">Division: </legend>
+                    <div class="col-md form-group">
+                        <div class="input-group">
+                            @Html.TextBoxFor(x => x.ud_name, new { @class = "form-control", @required = "required", @placeholder = "Please choose Division", @readonly = "readonly" })
+                            <span class="input-group-btn">
+                                <a href="#" class="btn btn-info btn-sm" onclick="FindDivision(this)">
+                                    <i class="icon wb-search" aria-hidden="true"></i>
+                                </a>
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">E-mail : </label>
+                    <div class="col-md-10">
+                        @Html.TextBoxFor(x => x.email, new { @class = "form-control", @required = "required", @placeholder = "E-mail(exam@exam.net)" })
+                    </div>
+                </div>
+
+                <div class="row">
+                    <label class="col-md-2 col-form-label">Tel : </label>
+                    <div class="col-md form-group">
+                        @Html.TextBoxFor(x => x.tel, new { @class = "form-control", @required = "required", @onKeyup = "PhoneAutoHypen(event, this);", @placeholder = "Tel.(00-000-0000)" })
+                    </div>
+                    <label class="col-md-2 col-form-label">Hp : </label>
+                    <div class="col-md form-group">
+                        @Html.TextBoxFor(x => x.hp, new { @class = "form-control", @required = "required", @onKeyup = "MobileAutoHypen(event, this);", @placeholder = "HP(000-0000-0000)" })
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="col-md-2 col-form-label">Entry : </label>
+                    <div class="col-md form-group">
+                        @Html.TextBoxFor(x => x.entry_date, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD" })
+                    </div>
+                    <label class="col-md-2 col-form-label">Retire : </label>
+                    <div class="col-md form-group">
+                        @Html.TextBoxFor(x => x.retire_date, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD" })
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">Image: </label>
+                    <div class="col-md-10">
+                        <input type="file" id="file" name="file" class="dropify" data-plugin="dropify" data-default-file="" data-height="100" data-errors-position="outside" data-allowed-file-extensions='["jpg", "jpeg", "gif", "png"]' />
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+@section scripts{
+    <script src="~/Libs/remark/global/vendor/dropify/dropify.min599c.js?v4.0.4"></script>
+    <script type="text/javascript">
+                BindDatePicker($(".jDatePicker"));
+                $('.back-button').click(function (e) {
+                    history.back();
+                });
+
+                    //폼 유효성 검사
+                $("#CreateForm").formValidation({
+                    framework: "bootstrap4",
+                    button: {
+                        selector: "#btnSave",
+                        disabled: "disabled"
+                    },
+                    submitHandler: function () {
+                        
+                    },
+                    icon: null,
+                    fields: {
+                        user_id: {
+                            validators: {
+                                notEmpty: {
+                                    message: "아이디를 입력해 주십시오."
+                                },
+                                stringLength: {
+                                    min: 3
+                                },
+                                remote: {
+                                    type: 'POST',
+                                    message: 'The ID is already in use.',
+                                    url: '@Url.Action("UserDupCheck", "Admin")',
+                                    async: true
+                                }
+                            }
+                        },
+                        ua_name: {
+                            validators: {
+                                notEmpty: {
+                                    message: "Please choose a value."
+                                }
+                            }
+                        },
+                        ud_name: {
+                            validators: {
+                                notEmpty: {
+                                    message: "Please choose a value."
+                                }
+                            }
+                        },
+                        email: {
+                            validators: {
+                                emailAddress: {
+                                    message: 'The value is not a valid email address'
+                                }
+                            }
+                        },
+                        tel: {
+                            validators: {
+                                regexp: {
+                                    regexp: /^(01[016789]{1}|02|0[3-9]{1}[0-9]{1})-?[0-9]{3,4}-?[0-9]{4}$/,
+                                    message: 'The value is not a valid phone number',
+                                }
+                            }
+                        },
+                        hp: {
+                            validators: {
+                                regexp: {
+                                    regexp: /^(01[016789]{1}|02|0[3-9]{1}[0-9]{1})-?[0-9]{3,4}-?[0-9]{4}$/,
+                                    message: 'The value is not a valid phone number',
+                                }
+                            }
+                        }
+                        
+                    },
+                    /*
+                    plugins: {
+                        excluded: new FormValidation.plugins.Excluded({
+                            excluded: function (field, ele, eles) {
+                                var uv_seq = form.getElementById("uv_seq").value
+                                const selectedCheckbox = form.querySelector('[name="framework"]:checked');
+                                const framework = selectedCheckbox ? selectedCheckbox.value : '';
+                                return (field === 'otherFramework' && framework !== 'other') || (field === 'framework' && framework === 'other');
+                            },
+                        })
+                    }*/
+                    err: {
+                        clazz: "invalid-feedback"
+                    },
+                    control: {
+                        valid: "is-valid",
+                        invalid: "is-invalid"
+                    },
+                    row: {
+                        invalid: "has-danger"
+                    }
+                }).on('success.form.fv', function (e) {
+                    //기본 submit 이벤트 취소.
+                    e.preventDefault();
+
+                    var form = $('#CreateForm')[0];
+                    var formData = new FormData(form);
+
+                    if($("#file")[0].files.length > 0)
+                        formData.append("file", $("#file")[0].files[0]);
+
+                    ConfirmAlert("Save", "Do you want to save the post?",
+                        function () {
+                            var formURL = $("#CreateForm").attr("action");
+                            $.ajax({
+                                url: formURL,
+                                type: "POST",
+                                processData: false,
+                                contentType: false,
+                                dataType: 'json',
+                                data: formData,
+                                success: function (json) {
+                                    if (json.ok) {
+                                        NormalAlert("Save Complete", function () {
+                                            if (json.uv_seq) {
+                                                location.href = "@Url.Action("UserDetail", "Admin")?uv_seq=" + json.uv_seq;
+                                            }
+                                        });
+
+                                    }
+                                    else {
+                                        ErrorAlert("[ERROR] " + json.message);
+                                    }
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                                },
+                                complete: function () {
+                                    $("#btnSave").prop("disabled", "");
+                                    $("#btnSave").removeClass("disabled");
+                                }
+                            });
+                        }, function () {
+                            $("#btnSave").prop("disabled", "");
+                            $("#btnSave").removeClass("disabled");
+                        });
+                });
+
+
+                //권한 선택
+                function FindAuth() {
+                    $.fancybox.open({
+                        href : "@Url.Action("AuthSelectApi", "Admin")",
+                        ajax : {
+                            type:"post"
+                        },
+                        
+                        
+                        autoDimensions:false,
+                        type: 'ajax',
+                        padding: 5,
+                        scrolling : 'auto',
+                        autoSize: true,
+                        helpers: {
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                    }
+            //부서 선택
+            function FindDivision() {
+                    $.fancybox.open({
+                        href : "@Url.Action("DivisionSelectApi", "Admin")",
+                        ajax : {
+                            type:"post"
+                        },
+                        autoDimensions:false,
+                        type: 'ajax',
+                        padding: 5,
+                        scrolling : 'auto',
+                        autoSize: true,
+                        helpers: {
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                 }
+
+
+    </script>
+}

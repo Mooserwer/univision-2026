@@ -1,0 +1,90 @@
+﻿<div class="modal" id="modal_vacation_create" tabindex="-1"
+     role="dialog"
+     aria-labelledby="modal_vacation_create_label"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form id="frm_modal_vacation_create">
+            <input type="hidden" name="dv_id" id="vd_dv_id" value="">
+            <input type="hidden" name="dv_year" id="vd_dv_year" value="">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <span class="font-weight-bold" id="modal_vacation_eu_name"></span> 휴가/외근 신청
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                  <div class="row">
+                    <div class="col-12 col-md-4">
+                      <label for="vd_dv_gubun" class="col-form-label col-form-label-sm font-weight-bold">휴가구분</label>
+                      <select class="form-control form-control-sm " id="vd_dv_gubun" name="dv_gubun" required>
+                        <option value="">==휴가구분선택==</option>
+                        <option value="1">연차</option>
+                        <option value="7">외근(미차감)</option>
+                        <!--<option value="10">재택근무(미차감)</option>-->
+                        <option value="11">Shift자택(미차감)</option>
+                        <!--<option value="12">무급휴가(미차감)</option>-->
+                        <!--<option value="13">장기근속(미차감)</option>-->
+                        <!--<option value="3">유급병가(미차감)</option>-->
+                        <option value="4">경조사(미차감)</option>
+                        <option value="5">예비군(미차감)</option>
+                        <!--<option value="6">기타(미차감)</option>-->
+
+                      </select>
+                    </div>
+                    <div class="col-9 col-md-4 form-group">
+                      <label for="vd_dv_start" class="col-form-label col-form-label-sm font-weight-bold">휴가기간</small></label>
+                      <div class="input-group input-group-sm">
+                        <input type="text" class="form-control input-modal-datepicker" id="vd_dv_start" name="dv_start" placeholder="YYYY-MM-DD" value="" required>
+                        <div class="input-group-prepend ">
+                          <small class="input-group-text">-</small>
+                        </div>
+                        <input type="text" class="form-control input-modal-datepicker" id="vd_dv_end" name="dv_end" placeholder="YYYY-MM-DD" value="" required>
+                      </div>
+                    </div>
+                    <div class="col-3 col-md-4 form-group">
+                      <label for="vd_dn_total_period" class="col-form-label col-form-label-sm font-weight-bold">총 사용일수</label>
+                      <input type="number" name="dn_total_period" class="form-control form-control-sm" id="vd_dn_total_period" placeholder="0" value="" readonly>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-9 col-md-8 text-danger" id="v_type_comment">* 휴가구분을 선택하여 주십시오.</div>
+                    <div class="col-3 col-md-4 form-group d-none" id="v_cur_remain">
+                      <label for="vd_dn_cur_remain" class="col-form-label col-form-label-sm font-weight-bold">사용 시 잔여 연차</label>
+                      <input type="number" name="vd_dn_cur_remain" class="form-control form-control-sm" id="vd_dn_cur_remain" placeholder="0" value="" readonly>
+                    </div>
+                  </div>
+                  <div class="row">
+                    
+                  </div>
+                  <div class="row">
+                    <div class="col form-group">
+                      <label for="vd_dt_comment" class="col-form-label col-form-label-sm font-weight-bold">비고(사유)</label>
+                      <!--
+          <input type="text" name="dt_comment" class="form-control form-control-sm" id="vd_dt_comment" placeholder="사유를 기재해 주세요." required value="">
+      -->
+                      <textarea name="dt_comment" class="form-control form-control-sm" id="vd_dt_comment" placeholder="사유를 기재해 주세요." required></textarea>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col">
+                      <label class="col-form-label col-form-label-sm font-weight-bold">세부일자설정</label>
+                      <div class="row" id="vacation_detail">
+                        <div class="col-12 text-center">
+                          일정 정보가 없습니다.
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn_vacation_modal_submit">저장(Submit)</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기(Close)</button>
+                </div>
+        </form>
+    </div>
+</div>

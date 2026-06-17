@@ -1,0 +1,235 @@
+﻿@model Univision.Core.Models.DTO.Response.Project.WorkSheetListModel
+
+@{
+    Layout = null;
+}
+
+@Html.HiddenFor(x => x.worksheet_orderTxt)
+@Html.HiddenFor(x => x.worksheet_orderOption)
+
+<div class="col-xl-12">
+    <div class="panel custom1">
+        <header class="panel-heading">
+            <h3 class="panel-title py-10">
+                WorkSheet
+            </h3>
+        </header>
+        
+            <div data-role="container" style="padding:0 !important; margin:0 !important;">
+                <div data-role="content" style="padding:0 !important; margin:0 !important;">
+                    <div class="table-responsive">
+                        <table id="default-table" class="table table-hover scrolltable" style="font-size:0.85em;">
+                            <colgroup>
+                                <col style="width:20%;">
+                                <col style="width:10%;">
+                                <col style="width:10%;">
+                                <col>
+                                <col style="width:15%;">
+                                <col>
+                                <col style="width:15%;">
+                                <col>
+                                <col>
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th colspan="3">Project</th>
+                                    <th rowspan="2">
+                                        잠재<br />
+                                        합계
+                                    </th>
+                                    <th colspan="2" title="고객사 추천">Recommend</th>
+                                    <th colspan="2" title="면접진행">Interview</th>
+                                    <th rowspan="2">
+                                        status
+                                        <i class="fas @Utils.ReturnOrderOptionCalss(Model.worksheet_orderTxt, "P.pjt_status", Model.worksheet_orderOption) workSheetColSort" orderTxt="P.pjt_status"></i>
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th>
+                                        <span class="clearfix">
+                                            Client 
+                                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.worksheet_orderTxt, "C.kor_name", Model.worksheet_orderOption) workSheetColSort" orderTxt="C.kor_name"></i>
+                                        </span>
+                                        <span class="clearfix">
+                                            Title
+                                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.worksheet_orderTxt, "P.title", Model.worksheet_orderOption) workSheetColSort" orderTxt="P.title"></i>
+                                        </span>
+                                    </th>
+                                    <th>AM<br />SM</th>
+                                    <th>
+                                        <span class="clearfix">
+                                            Reg.Date
+                                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.worksheet_orderTxt, "P.create_dt", Model.worksheet_orderOption) workSheetColSort" orderTxt="P.create_dt"></i>
+                                        </span>
+                                        <span class="clearfix">
+                                            Update
+                                            <i class="fas @Utils.ReturnOrderOptionCalss(Model.worksheet_orderTxt, "P.modify_dt", Model.worksheet_orderOption) workSheetColSort" orderTxt="P.modify_dt"></i>
+                                        </span>
+                                    </th>
+                                    <th>Candidate</th>
+                                    <th>Cnt</th>
+                                    <th>Candidate</th>
+                                    <th>Cnt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.list.Count > 0)
+                                {
+                                    foreach (var data in Model.list)
+                                    {
+                                        <tr>
+                                            <td class="text-left text-truncate">
+                                                <a class="clearfix" href="@Url.Action("ClientDetail", "Client", new { @c_seq = data.client_seq })" title="@data.client_name">
+                                                    [@Utils.Truncate(data.client_name, 10)]
+                                                </a>
+                                                @if (data.pjt_type == 1)
+                                                {
+                                                    <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })" title="@data.title">
+                                                        @Utils.Truncate(data.title, 20)
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <a href="@Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq })" title="@data.title">
+                                                        @Utils.Truncate(data.title, 20)
+                                                    </a>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="clearfix">
+                                                    @data.am_names
+                                                </span>
+                                                <span class="clearfix">
+                                                    @data.searcher_names
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="clearfix">
+                                                    @Utils.ConvertDateTimeToString(data.create_dt)
+                                                </span>
+                                                <span class="clearfix">
+                                                    <small>[@Utils.ConvertDateTimeToString(data.modify_dt)]</small>
+                                                </span>
+                                            </td>
+                                            
+                                            <td>
+                                                @data.interestCnt
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrWhiteSpace(data.recommandNames) && !string.IsNullOrWhiteSpace(data.recommandDates))
+                                                {
+                                                    var rec_list = data.recommandNames.Split(',');
+                                                    var rec_date_list = data.recommandDates.Split(',');
+                                                    for (var i = 0; i < rec_list.Length; i++)
+                                                    {
+                                                        
+                                                        <span class="clearfix text-truncate">
+                                                            <small>@rec_list[i] 
+                                                                @if (i < rec_date_list.Length) {
+                                                                   <text> - (@rec_date_list[i]) </text>
+                                                                }
+                                                                </small>
+
+
+                                                            </span>
+                                                    }
+                                                                }
+
+
+                                                @*
+                                                @(Html.Raw(string.IsNullOrWhiteSpace(data.recommandNames) ? "" : data.recommandNames.Replace(",", "<br/>")))    
+                                                    @(Html.Raw(string.IsNullOrWhiteSpace(data.recommandDates) ? "" : data.recommandDates.Replace(",", "<br/>")))
+                                                *@
+                                            </td>
+                                            
+                                            <td>
+                                                @data.recommandCnt
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrWhiteSpace(data.interviewNames) && !string.IsNullOrWhiteSpace(data.interviewDates))
+                                                {
+                                                    var rec_list = data.interviewNames.Split(',');
+                                                    var rec_date_list = data.interviewDates.Split(',');
+                                                    for (var i = 0; i < rec_list.Length; i++)
+                                                    {
+                                                        <span class="clearfix text-truncate">
+                                                            <small>@rec_list[i] - (@rec_date_list[i])</small>
+                                                        </span>
+                                                    }
+                                                }
+                                                
+                                                @*<td>
+                                                    @(Html.Raw(string.IsNullOrWhiteSpace(data.interviewNames) ? "" : data.interviewNames.Replace(",", "<br/>")))
+            @(Html.Raw(string.IsNullOrWhiteSpace(data.interviewDates) ? "" : data.interviewDates.Replace(",", "<br/>")))
+        </td>*@
+                                            </td>
+                                            
+                                            <td>
+                                                @data.interviewCnt
+                                            </td>
+                                            <td>
+                                                @Utils.ReturnProjectStatusTxt(data.pjt_status)
+                                            </td>
+                                        </tr>
+                                    }
+
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="11">
+                                            No Data.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                     ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                     x => String.Format("javascript:WorkSheetPageMove({0})", x))
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $(".workSheetColSort").click(function () {
+
+                $(".workSheetColSort").not(this).each(function () {
+
+                    $(this).removeClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $(this).addClass("fa-sort");
+                });
+
+                $(this).removeClass("fa-sort");
+
+                if ($(this).hasClass("fa-sort-up")) {
+                    $(this).addClass("fa-sort-down");
+                    $(this).removeClass("fa-sort-up");
+                    $("#worksheet_orderTxt").val($(this).attr("orderTxt"));
+                    $("#worksheet_orderOption").val("DESC");
+                }
+                else {
+                    $(this).addClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $("#worksheet_orderTxt").val($(this).attr("orderTxt"));
+                    $("#worksheet_orderOption").val("ASC");
+                }
+
+                callWorkSheetList($("#worksheet_orderTxt").val(), $("#worksheet_orderOption").val(), 1)
+
+        });
+
+    });
+
+    function WorkSheetPageMove(page) {
+        callWorkSheetList($("#worksheet_orderTxt").val(), $("#worksheet_orderOption").val(), page)
+    }
+
+</script>

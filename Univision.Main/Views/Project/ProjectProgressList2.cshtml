@@ -1,0 +1,801 @@
+﻿@model Univision.Main.Models.Project.SearchProjectProgressListModel
+@{
+  int cookie_pjt_view_grid = 0;
+
+  if (HttpContext.Current.Request.Cookies.AllKeys.Contains("PJT_VIEW_GRID"))
+  {
+    cookie_pjt_view_grid = Convert.ToInt32(Request.Cookies["PJT_VIEW_GRID"].Value);
+  }
+}
+
+<style>
+  .blinking {
+    -webkit-animation: blink 1.0s ease-in-out infinite alternate;
+    -moz-animation: blink 1.0s ease-in-out infinite alternate;
+    animation: blink 1.0s ease-in-out infinite alternate;
+  }
+
+  .bg-progress-table {
+    position: relative !important;
+    overflow: hidden !important;
+    /*
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    */
+  }
+
+    .bg-progress-table tr, .bg-progress-table td {
+      background: none !important;
+    }
+
+  .bg-progress {
+    position: absolute;
+    left: -100%;
+    width: 100%;
+    height: 0px;
+    z-index: -1;
+    margin-top: -8px;
+    transition: left 1s;
+  }
+
+  .bg-progress-success {
+    background-color: #d6ffe0 !important;
+    border-bottom: 1px solid #11c26d;
+  }
+
+  .bg-progress-primary {
+    background-color: #d5ebef !important;
+    border-bottom: 1px solid #3e8ef7;
+  }
+
+  .bg-progress-info {
+    background-color: #e5fbff !important;
+    border-bottom: 1px solid #0bb2d4;
+  }
+
+  .bg-progress-warning {
+    background-color: #fde9da !important;
+    border-bottom: 2px solid #eb6709;
+  }
+
+  .bg-progress-secondary {
+    background-color: #ddd !important;
+    border-bottom: 2px solid $bbb;
+  }
+
+  @@-webkit-keyframes blink {
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @@-moz-keyframes blink {
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @@keyframes blink {
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .name-span {
+    display: none;
+  }
+
+  @@media (max-width:1500px) {
+    .table.bg-progress-table thead th:nth-of-type(5) {
+      display: none
+    }
+
+    .table.bg-progress-table tbody td:nth-of-type(5) {
+      display: none
+    }
+
+    .table.bg-progress-table thead th:nth-of-type(6) {
+      display: none
+    }
+
+    .table.bg-progress-table tbody td:nth-of-type(6) {
+      display: none
+    }
+  }
+
+  @@media (max-width:898px) {
+    .table.bg-progress-table thead th:nth-of-type(4) {
+      display: none
+    }
+
+    .table.bg-progress-table tbody td:nth-of-type(4) {
+      display: none
+    }
+  }
+
+  @@media (max-width:500px) {
+    .name-span {
+      display: inline;
+    }
+
+    .table.bg-progress-table thead th:nth-of-type(2) {
+      display: none
+    }
+
+    .table.bg-progress-table tbody td:nth-of-type(2) {
+      display: none
+    }
+  }
+</style>
+
+<div class="row">
+  <div class="col mb-10">
+    <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.all ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.all, 1)">전체(@Model.cntData.allCnt)</button>
+
+    @if (Model.cntData.interestCnt > 0)
+    {
+      <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.interest ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.interest,   1)">잠재후보(@Model.cntData.interestCnt)</button>
+    }
+    @if (Model.cntData.recommandCnt > 0)
+    {
+      <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.recommand ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.recommand,  1)">추천(@Model.cntData.recommandCnt)</button>
+    }
+    @if (Model.cntData.paperOkCnt > 0)
+    {
+      <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.paper ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.paper,  1)">서류통과(@Model.cntData.paperOkCnt)</button>
+    }
+    @if (Model.cntData.interviewCnt > 0)
+    {
+      <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.interview ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.interview,  1)">면접(@Model.cntData.interviewCnt)</button>
+    }
+    @if (Model.cntData.interviewOkCnt > 0)
+    {
+      <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.interviewOk ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.interviewOk,  1)">면접통과(@Model.cntData.interviewOkCnt)</button>
+    }
+    @if (Model.cntData.hireCnt > 0)
+    {
+      <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.hireReady ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.hireReady,  1)">협상&amp;검증(@Model.cntData.hireCnt)</button>
+    }
+    @if (Model.cntData.hireOkCnt > 0)
+    {
+      <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.hireOk ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.hireOk,  1)">입사확정(@Model.cntData.hireOkCnt)</button>
+    }
+    @if (Model.cntData.failCnt > 0)
+    {
+      <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.fail ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.fail,  1)">탈락(@Model.cntData.failCnt)</button>
+    }
+    @if (Model.cntData.selfdropCnt > 0)
+    {
+      <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.selfdrop ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.selfdrop, 1)">Self drop(@Model.cntData.selfdropCnt)</button>
+    }
+    @if (Model.cntData.no_intrestCnt > 0)
+    {
+      <button class="btn btn-sm @(Model.state == ProjectHistoryStateCode.no_intrest ? "btn-primary" : "btn-default") mb-5" onclick="callProjectProgress('@Model.p_seq', @ProjectHistoryStateCode.no_intrest, 1)">관심없음(@Model.cntData.no_intrestCnt)</button>
+    }
+    <div class="checkbox-custom checkbox-custom-sm checkbox-primary ml-1" title="GRID 형식으로 보기">
+      <input type="checkbox" name="pjt_view_grid" id="pjt_view_grid" class="form-control-label" onclick="javascript:fSetViewList(this);" @(cookie_pjt_view_grid == 1 ? "checked" : "") />
+      <label for="pjt_view_grid" id="pjt-show-grid">Show grid</label>
+    </div>
+    <span class="float-right">
+      <span class="panel-desc">
+        Sort by : [
+        <small>
+          <a href="javascript:callProjectProgressOrder('A.state', '@Model.orderOption');" class="sort_link">
+            Progress
+            <i class="fas @Utils.ReturnOrderOptionCalss(Model.orderTxt, "A.state", Model.orderOption) colSort" orderTxt="A.state"></i>
+          </a>
+          |
+          <a href="javascript:callProjectProgressOrder('A.modify_dt', '@Model.orderOption');" class="sort_link">
+            Update
+            <i class="fas @Utils.ReturnOrderOptionCalss(Model.orderTxt, "A.modify_dt", Model.orderOption) colSort" orderTxt="A.modify_dt"></i>
+          </a>
+          |
+
+          <a href="javascript:callProjectProgressOrder('C.kor_name', '@Model.orderOption');" class="sort_link">
+            Name
+            <i class="fas @Utils.ReturnOrderOptionCalss(Model.orderTxt, "C.kor_name", Model.orderOption) colSort" orderTxt="C.kor_name"></i>
+          </a>
+          |
+          <a href="javascript:callProjectProgressOrder('C.birth_date', '@Model.orderOption');" class="sort_link">
+            Birth
+            <i class="fas @Utils.ReturnOrderOptionCalss(Model.orderTxt, "C.birth_date", Model.orderOption) colSort" orderTxt="C.birth_date"></i>
+          </a>
+        </small>]
+      </span>
+    </span>
+  </div>
+</div>
+<input type="hidden" id="search_state_for_makeup" value="@Model.state" />
+<input type="hidden" id="progress_orderTxt" value="@Model.orderTxt" />
+<input type="hidden" id="progress_orderOption" value="@Model.orderOption" />
+<input type="hidden" id="search_page_for_makeup" value="@Model.PagingInfo.CurrentPage" />
+<div class="row">
+  <div class="col">
+    <input autocomplete="off" class="form-control form-control-sm" id="progress_search_filter_txt" name="progress_search_filter_txt" placeholder="후보자 검색" type="text" value="">
+  </div>
+</div>
+<div class="table-responsive">
+  <table class="table table- bg-progress-table" style="table-layout:fixed;font-size:1em;">
+    <thead>
+      <tr>
+        <th class="text-center" style="width:30px;">
+          <input type="checkbox" name="check_all_progress" id="check_all_progress" title="Check All" onclick="toggleCheckAll(this)">
+        </th>
+        <th class="text-center" style="width:100px;">NAME</th>
+        <th class="text-center">PROGRESS</th>
+        <th class="text-center" style="width:200px;">EXP. &amp; EDU.</th>
+        <th class="text-center" style="width:120px;">RESUME</th>
+        <th class="text-center" style="width:120px;">MAKEUP</th>
+        <th class="text-center" style="width:100px"><i class='fa fa-cog fa-fw' aria-hidden='true'></i></th>
+      </tr>
+    </thead>
+    <tbody class="progress-table-body">
+      @if (Model.list.Count > 0)
+      {
+        foreach (var data in Model.list)
+        {
+          int progress = 0;
+          string progressBarClass = "";
+          string progressClass = "";
+
+          switch (data.state)
+          {
+            case ProjectHistoryStateCode.interest:
+              progress = 0;
+              progressBarClass = "";
+              progressClass = "grey-600";
+              break;
+            case ProjectHistoryStateCode.fail:
+            case ProjectHistoryStateCode.selfdrop:
+            case ProjectHistoryStateCode.no_intrest:
+              progress = 100;
+              progressBarClass = "bg-progress-secondary";
+              progressClass = "grey-600";
+              break;
+
+            case ProjectHistoryStateCode.recommand:
+            case ProjectHistoryStateCode.paper:
+              progress = 25;
+              progressBarClass = "bg-progress-warning";
+              progressClass = "orange-600";
+              break;
+
+            case ProjectHistoryStateCode.interview:
+            case ProjectHistoryStateCode.interviewOk:
+              progress = 50;
+              progressBarClass = "bg-progress-info";
+              progressClass = "blue-600";
+              break;
+
+            case ProjectHistoryStateCode.hireReady:
+              progress = 75;
+              progressBarClass = "bg-progress-primary";
+              progressClass = "green-300";
+              break;
+
+            case ProjectHistoryStateCode.hireOk:
+              progress = 100;
+              progressBarClass = "bg-progress-success";
+              progressClass = "green-600";
+              break;
+          }
+
+          string hover_title = String.Empty;
+          hover_title = "후보자 상세정보(클릭 시 상세화면으로 이동)<br />";
+          if (Univision.Security.AppIdentity.isExternal != 1)
+          {
+            hover_title += "<br />- " + data.phone + " <br /> - " + data.email;
+          }
+
+          hover_title += "<br /> - " + data.final_school + " / " + data.final_major + " <br /> - " + data.company_name;
+
+          string birth_gender = ("(" + Utils.BirthdayCut(data.birth_date) + (data.gender > 0 ? " / " + Utils.ReturnGenderTxt(data.gender) : "") + ")");
+
+          <tr class="" data-progress="@progress" data-progressclass="@progressBarClass">
+            <td class="text-center pt-0">
+              <div class="bg-progress"></div>
+              <input type="checkbox" class="chk_request_makeup" name="chk_request_makeup" id="request_makeup_@data.pic_seq" value="@data.pic_seq" data-c_seq="@data.c_seq" />
+            </td>
+            <td class="text-center text-truncate">
+              <a href="javascript:openCandidatePop('@data.c_seq')" class="text-dark" title="@data.kor_name @birth_gender">
+                @data.kor_name<br />@birth_gender
+              </a>
+              @if (Univision.Security.AppIdentity.isExternal != 1 && (!String.IsNullOrEmpty(data.phone) || !String.IsNullOrEmpty(data.email)))
+              {
+                <br />
+                if (!String.IsNullOrEmpty(data.phone))
+                {
+                  <a href="#" onclick="openSmsSendModal('@data.phone')" class="text-info" title="SMS : @data.phone">
+                    <i class="fas fa-fw fa-sms"></i>
+                  </a>
+                }
+
+                if (!String.IsNullOrEmpty(data.email))
+                {
+                  <a href="mailto:@(data.email)" class="text-primary" title="E-mail : @data.email">
+                    <i class="fas fa-fw fa-at"></i>
+                  </a>
+                }
+              }
+            </td>
+            <td class="text-left">
+              <i class="icon wb-large-point mr-5 @(progressClass)" aria-hidden="true"></i>
+              <span class="name-span">
+                <a href="javascript:openCandidatePop('@data.c_seq')" class="text-dark" title="@data.kor_name @birth_gender">
+                  @data.kor_name @birth_gender
+                </a>
+                @if (Univision.Security.AppIdentity.isExternal != 1 && (!String.IsNullOrEmpty(data.phone) || !String.IsNullOrEmpty(data.email)))
+                {
+                  if (!String.IsNullOrEmpty(data.phone))
+                  {
+                    <a href="#" onclick="openSmsSendModal('@data.phone')" class="text-info" title="SMS : @data.phone">
+                      <i class="fas fa-fw fa-sms"></i>
+                    </a>
+                  }
+
+                  if (!String.IsNullOrEmpty(data.email))
+                  {
+                    <a href="mailto:@(data.email)" class="text-primary" title="E-mail : @data.email">
+                      <i class="fas fa-fw fa-at"></i>
+                    </a>
+                  }
+                }<br />
+              </span>
+              <span style="color:#1962bf">[@(Utils.ReturnProjectHistoryStateTxt(data.state))]</span> - [@Utils.ConvertDateTimeToString(data.schedule_date)]
+              @if (data.pin_to_top == 1)
+              {
+                <a href="javascript:ProjectSetPin('@data.prc_seq', 0)" title="고정 해제" class="text-warning"><i class="fa fa-fw fa-star"></i></a>
+              }
+              else
+              {
+                <a href="javascript:ProjectSetPin('@data.prc_seq', 1)" title="상단에 고정" class="text-secondary"><i class="fa fa-fw fa-star"></i></a>
+              }
+
+              <br />
+
+              @data.contents
+              @if (data.pa_seq > 0)
+              {
+                if (data.agree_dt != null)
+                {
+                  <span class="badge badge-primary" title="개인정보 수집 및 제공 동의 완료 (@Utils.ConvertDateTimeToString(data.agree_dt))">동의완료 됨</span>
+                }
+                else
+                {
+                  <span class="badge badge-info" title="개인정보 수집 및 제공 동의 요청 발송 (@Utils.ConvertDateTimeToString(data.send_dt))">동의요청 중</span>
+                }
+              }
+
+              @if (!string.IsNullOrWhiteSpace(data.file_directory))
+              {
+                <a href="@data.file_directory" title="첨부파일 다운로드" download>
+                  <i class="fas fa-file"></i>
+                </a>
+              }
+
+            <span class="text-secondary float-right small pr-10">
+              @if (data.create_name != data.modify_name)
+              {
+                <text>
+                  [Updated by @data.modify_name - @Utils.ConvertDateTimeToString(data.modify_dt) / Reg. by @data.create_name]
+                </text>
+              }
+              else
+              {
+                <text>
+                  [Reg/Updated by @data.modify_name - @Utils.ConvertDateTimeToString(data.modify_dt) ]
+                </text>
+              }
+
+            </span>
+            </td>
+            <td class="text-left text-truncate">
+              - <span title="Company : @data.company_name">@data.company_name</span>
+              <br />- <span title="School : @(data.final_school + " / " + data.final_major)">@(data.final_school + " / " + data.final_major)</span>
+            </td>
+            <td class="text-center">
+
+              @if (!string.IsNullOrWhiteSpace(data.final_kor_resume_dir))
+              {
+                <a class="badge badge-outline badge-primary" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_kor_cr_seq, @type = "canResume" })" title="국문원본이력서 : @data.final_kor_resume_name">
+                  <i class="fas fa-file"></i> K (@Utils.ConvertDateTimeToString(data.final_kor_resume_date))
+                </a><br />
+              }
+              @if (!string.IsNullOrWhiteSpace(data.final_eng_resume_dir))
+              {
+                <a class="badge badge-outline badge-info" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_eng_cr_seq, @type = "canResume" })" title="영문원본이력서 : @data.final_eng_resume_name" download>
+                  <i class="fas fa-file"></i> E (@Utils.ConvertDateTimeToString(data.final_eng_resume_date))
+                </a>
+              }
+            </td>
+            <td class="text-center">
+              @if (!string.IsNullOrWhiteSpace(data.final_mkor_resume_dir))
+              {
+                <a class="badge badge-primary" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_mkor_cr_seq, @type = "canResume" })" title="국문Makeup : @data.final_mkor_resume_name">
+                  <i class="fas fa-file"></i> K (@Utils.ConvertDateTimeToString(data.final_mkor_resume_date))
+                </a><br />
+              }
+              @if (!string.IsNullOrWhiteSpace(data.final_meng_resume_dir))
+              {
+                <a class="badge badge-info" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_meng_cr_seq, @type = "canResume" })" title="영문Makeup : @data.final_meng_resume_name" download>
+                  <i class="fas fa-file"></i> E (@Utils.ConvertDateTimeToString(data.final_meng_resume_date))
+                </a>
+              }
+            </td>
+            <td class="text-center">
+
+              <button class="btn btn-outline-primary btn-xs" onclick="ProjectProgressCreate(@data.pic_seq, @data.p_seq, @data.c_seq, '@data.kor_name')" title="진행사항 생성">
+                <i class="fas fa-pen"></i> Add
+              </button>
+
+              @if (data.state == ProjectHistoryStateCode.interest && Univision.Security.AppIdentity.ua_seq == 1)
+              {
+                <br />
+                <button class="btn btn-outline-danger btn-xs" onclick="DeleteProgress('@data.prc_seq')" title="잠재후보 제외">
+                  <i class="fas fa-trash"></i> Remove
+                </button>
+              }
+
+              @if (data.state == ProjectHistoryStateCode.hireOk && data.invoice_cnt == 0 && data.is_no_invoice == 0)
+              {
+                <br />
+                <span class="image blinking">
+                  <button class="btn btn-outline-success btn-xs" onclick="ProjectInvoiceCreate(@data.p_seq, @data.c_seq, '0')" title="인보이스 발행">
+                    <i class="fas fa-file-invoice-dollar red-600"></i>
+                    Invoice
+                  </button>
+                </span>
+              }
+              <br />
+              <button class="btn btn-xs btn-outline-info" onclick="ProjectProgressHistoryList(@data.pic_seq, '@data.kor_name')" title="진행사항 리스트">
+                <i class="fas fa-list-alt"></i> History
+              </button>
+            </td>
+          </tr>
+
+        }
+      }
+    </tbody>
+  </table>
+</div>
+@Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                         ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                         x => String.Format("javascript:callProjectProgress({0}, {1}, {2})", Model.p_seq, Model.state, x))
+
+<script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+<script type="text/javascript">
+
+  $('#progress_search_filter_txt').keyup(function (e) {
+    if ($(this).val() == "") {
+      //$('#memo_list').removeClass('active_list').addClass('active_list');
+      $('.progress-table-body tr').each(function () {
+        $(this).css("display", "");
+      });
+    } else {
+      //$('#memo_list').addClass('active_list').removeClass('active_list');
+      var search_string = $(this).val();
+
+      $('.progress-table-body tr').each(function () {
+        $(this).css("display", "none");
+      });
+
+      $(".progress-table-body tr").filter(function (index) {
+        return $(this).text().indexOf(search_string) > 0;
+      }).css("display", "");
+
+      //replaceText(search_string);
+    }
+  });
+
+    $('[data-toggle="popover"]').popover()
+
+    function toggleCheckAll(source) {
+      checkboxes = document.querySelectorAll('.chk_request_makeup');
+      //console.log(checkboxes)
+      for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = source.checked;
+      }
+
+    }
+
+    $(document).ready(function () {
+
+        $("#btnAddCandi").click(function () {
+
+        });
+
+    });
+
+  var updateProgress = function () {
+    var trs = document.querySelectorAll('.progress-table-body tr');
+
+    for (var i = 0; i < trs.length; i++) {
+      var tr = trs[i];
+      var pr = tr.querySelector('.bg-progress');
+      //var pr_class = tr.querySelector('.bg-progressclass');
+      //console.log(tr.style.top)
+      if (tr.dataset.progressclass) {
+        pr.classList.add(tr.dataset.progressclass);
+      }
+      pr.style.left = (tr.dataset.progress - 100) + '%';
+      pr.style.height = (tr.clientHeight-2) + 'px';
+    }
+  }
+  updateProgress();
+
+  window.addEventListener("resize", updateProgress);
+
+    function fSetViewList(obj){
+        fSetCandCookie('PJT_VIEW_GRID', obj);
+        callProjectProgress('@Model.p_seq', '@Model.state', @Model.PagingInfo.CurrentPage);
+    }
+
+    function callProjectProgressOrder(orderTxt, orderOption) {
+        if (orderTxt) {
+            if (orderTxt == $('#progress_orderTxt').val()) {
+                orderOption = (orderOption == "DESC" ? "ASC" : "DESC");
+            }else {
+                orderOption = "DESC";
+            }
+
+            $('#progress_orderTxt').val(orderTxt);
+            $('#progress_orderOption').val(orderOption);
+        }
+
+        callProjectProgress('@Model.p_seq', '@Model.state', @Model.PagingInfo.CurrentPage);
+    }
+
+    function ProjectProgressHistoryList(pic_seq, kor_name) {
+        $.ajax({
+            url: '@Url.Action("ProjectProgressHistoryList", "Project")',
+            data: {
+                pic_seq: pic_seq
+            },
+            dataType: 'html',
+            type: 'GET',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+
+            $.fancybox.open({
+                'content':json,
+                'width': '800',
+                'height': 'auto',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': kor_name + " 진행이력",
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+
+    function DeleteProgress(prc_seq) {
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+                    ProjectProgressDelete(prc_seq);
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>잠재후보 삭제')
+            .setting({
+                message: "해당 잠재후보를 삭제하시겠습니까?",
+            })
+            .show();
+    }
+
+    function ProjectSetPin(prc_seq, pin) {
+
+        $.ajax({
+           url: '@Url.Action("ProjectSetPin", "Project")',
+           data: {
+             prc_seq: prc_seq,
+             pin_to_top : pin
+            },
+            dataType: 'json',
+            type: 'POST',
+           beforeSend: function ()
+           {
+               showLoading();
+           }
+        })
+        .done(function (json) {
+            hideLoading();
+            if (json.ok) {
+
+                //NormalAlert(json.message);
+                callProjectProgress('@Model.p_seq', '@Model.state', @Model.PagingInfo.CurrentPage);
+
+            } else {
+                ErrorAlert(json.message);
+            }
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+
+    }
+
+    function ProjectProgressDelete(prc_seq) {
+
+        $.ajax({
+           url: '@Url.Action("ProjectProgressDelete", "Project")',
+           data: {
+                prc_seq: prc_seq
+            },
+            dataType: 'json',
+            type: 'POST',
+           beforeSend: function ()
+           {
+               showLoading();
+           }
+        })
+        .done(function (json) {
+            hideLoading();
+            if (json.ok) {
+
+                NormalAlert(json.message);
+                callProjectProgress('@Model.p_seq', '@Model.state', @Model.PagingInfo.CurrentPage);
+
+            } else {
+                ErrorAlert(json.message);
+            }
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+
+    }
+
+    function ProjectProgressCreate(pic_seq, p_seq, c_seq, kor_name) {
+
+        $.ajax({
+            url: '@Url.Action("ProjectProgressCreate", "Project")',
+            data: {
+                pic_seq: pic_seq
+                ,
+                p_seq: p_seq
+                ,
+                c_seq: c_seq
+                ,
+                prc_seq: 0
+                ,
+                kor_name: kor_name
+            },
+            dataType: 'html',
+            type: 'GET',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+
+            $.fancybox.open({
+                'content':json,
+                'width': '530',
+                'height': 'auto',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': kor_name + " 일정확인/추가",
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+
+    function ProjectInvoiceCreate(p_seq, c_seq, pii_seq) {
+      alert("화면 상단의 [인보이스 발행] 버튼을 통해 발행 부탁드립니다.");
+      CreateInvoice(window.model_p_seq)
+      return;
+
+        var valid_msg = ""
+        var focus_target = "";
+        if ($('#ctc_seq').val() == 0 || $('#ctc_seq').val() == "") {
+            valid_msg += (valid_msg != "" ? "<br />" : "") + "세금계산서 담당자 정보가 없습니다. 세금계산서 담당자 정보를 입력 후 진행하여 주시기 바랍니다."
+            focus_target = "#tax_name";
+        }
+        if ($('#cc_seq').val() == 0 || $('#cc_seq').val() == "") {
+            valid_msg += (valid_msg != "" ? "<br />" : "") + "Contact 정보가 없습니다. Contact정보를 입력 후 진행하여 주시기 바랍니다."
+            focus_target = "#contact_name";
+        }
+
+        if (valid_msg != "") {
+            if (focus_target != "") {
+                $(focus_target).focus();
+            }
+            ErrorAlert(valid_msg);
+            return;
+        }
+
+        $.ajax({
+            url: '@Url.Action("ProjectInvoiceCreate", "Project")',
+            data: {
+                p_seq: p_seq
+                ,
+                c_seq: c_seq
+                ,
+                pii_seq: pii_seq
+            },
+            dataType: 'html',
+            type: 'GET',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (view) {
+            hideLoading();
+
+            //모달은 Invoice View 때문에 ProjectDetail.cshtml 페이지에 넣어둠.
+            $("#InvoiceCreateModal .modal-body").html(view)
+            $("#InvoiceCreateModal .modal-body").find('#client_contact_name').val($('#contact_name').val() + " " + $('#contact_position').val());
+            $("#InvoiceCreateModal .modal-body").find('#client_contact_tel').val($('#contact_phone').val());
+            $("#InvoiceCreateModal .modal-body").find('#client_contact_email').val($('#contact_email').val());
+            $("#InvoiceCreateModal .modal-body").find('#client_etax_name').val($('#tax_deposit_manager').val());
+            $("#InvoiceCreateModal .modal-body").find('#client_etax_tel').val($('#tax_phone').val());
+            $("#InvoiceCreateModal .modal-body").find('#client_etax_email').val($('#tax_deposit_email').val());
+            $('#InvoiceCreateModal').modal('toggle');
+
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+
+  var pop_help_title = "Project Progress 변경안내."
+  var pop_help_txt = `Project Progress 기본 레이아웃이 테이블 형식으로 변경되었습니다.
+<br /> 예전 화면으로 보고 싶을 경우 "show grid"를 체크하여 주세요.
+`;
+
+  //popover_help('pjt-grid-view', '#pjt-show-grid', pop_help_title, pop_help_txt);
+</script>

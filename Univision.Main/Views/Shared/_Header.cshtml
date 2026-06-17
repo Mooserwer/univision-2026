@@ -1,0 +1,418 @@
+﻿
+@{
+  Layout = null;
+  string controllerName = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+  string adminUrl = "http://220.117.204.150:9999/admin.asp";
+}
+<nav class="site-navbar navbar navbar-default navbar-fixed-top navbar-mega navbar-expand-md" role="navigation">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggler hamburger hamburger-close navbar-toggler-left hided"
+            data-toggle="menubar">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="hamburger-bar"></span>
+    </button>
+    <button type="button" class="navbar-toggler collapsed" data-target="#site-navbar-collapse"
+            data-toggle="collapse">
+      <i class="icon wb-more-horizontal" aria-hidden="true"></i>
+    </button>
+    <div class="navbar-brand navbar-brand-center site-gridmenu-toggle">
+
+      <a href="@Url.Action("Index", "Dashboard")" style="color:#fff">
+        <img class="navbar-brand-logo" src="~/Libs/remark/base/assets/images/logo.png" title="Univision">
+        <span class="navbar-brand-text hidden-xs-down">
+          Univision.
+        </span>
+      </a>
+    </div>
+    @*<button type="button" class="navbar-toggler collapsed" data-target="#site-navbar-search" data-toggle="collapse">
+          <span class="sr-only">Toggle Search</span>
+          <i class="icon wb-search" aria-hidden="true"></i>
+      </button>*@
+  </div>
+  <div class="navbar-container container-fluid">
+    <!-- Navbar Collapse -->
+    <div class="collapse navbar-collapse navbar-collapse-toolbar" id="site-navbar-collapse">
+      <!-- Navbar Toolbar -->
+      <ul class="nav navbar-toolbar">
+        <li class="nav-item hidden-float" id="toggleMenubar">
+          <a class="nav-link" data-toggle="menubar" href="#" role="button">
+            <i class="icon hamburger hamburger-bar">
+              <span class="sr-only">Toggle menubar</span>
+              <span class="hamburger-bar"></span>
+            </i>
+          </a>
+        </li>
+      </ul>
+      <!-- End Navbar Toolbar -->
+      <!-- Navbar Toolbar Right -->
+      <ul class="nav navbar-toolbar navbar-right navbar-toolbar-right">
+        @if(Univision.Security.AppIdentity.isExternal != 1 && Univision.Security.AppIdentity.user_seq != 14) { 
+        <li class="nav-item" id="li_attend_result">
+          <a href="@Url.Action("UserAttend", "MyList")" class="nav-link text-dark" title="">
+            <span id="attend_result" title="출근 지문등록 여부를 확인하셔서 만약 출근 미등록 시 출근등록을 꼭 해주세요. 지문등록 후 데이터 반영에 최대 5분의 시간이 소요 됩니다."></span>
+          </a>
+        </li>
+        }
+        <li class="nav-item dropdown">
+          <a class="nav-link navbar-avatar" data-toggle="dropdown" href="#" aria-expanded="false"
+             data-animation="scale-up" role="button">
+            <span class="avatar">
+              <img src="~/Content/images/user.png" alt="...">
+              <span class="badge badge-pill badge-danger up alertCnt2"></span>
+            </span>
+
+          </a>
+          <div class="dropdown-menu" role="menu">
+            <a class="dropdown-item" href="@Url.Action("ReceiptList", "MyList")" role="menuitem">
+              <i class="fas fa-fw fa-file-invoice" aria-hidden="true"></i> 제경비 제출(Receipt)
+              <span class="badge badge-pill badge-danger alertCnt2"></span>
+            </a>
+            <a class="dropdown-item" href="@Url.Action("AlarmHistoryList", "MyList")" role="menuitem">
+              <i class="fas fa-fw fa-bell" aria-hidden="true"></i> 알림 내역
+            </a>
+            <a class="dropdown-item" href="@Url.Action("SMSHistoryList", "MyList")" role="menuitem">
+              <i class="fas fa-fw fa-sms" aria-hidden="true"></i> SMS History
+            </a>
+            <a class="dropdown-item" href="@Url.Action("MyVacationList", "MyList")" role="menuitem">
+              <i class="fas fa-fw fa-plane" aria-hidden="true"></i> Vacation
+            </a>
+            <a class="dropdown-item" href="@Url.Action("UserAttend", "MyList")" role="menuitem">
+              <i class="fas fa-fw fa-clock" aria-hidden="true"></i> 출근기록
+            </a>
+            <a class="dropdown-item" href="javascript:void(0)" role="menuitem" onclick="callPersonalModal()">
+              <i class="fas fa-fw fa-user" aria-hidden="true"></i> 비밀번호 변경
+            </a>
+
+            @*
+        <a class="dropdown-item" href="javascript:void(0)" role="menuitem">
+            <i class="fas fa-file" aria-hidden="true"></i> Clock In Time
+        </a>
+
+        <a class="dropdown-item" href="javascript:void(0)" role="menuitem">
+            <i class="fas fa-bell" aria-hidden="true"></i> Alram
+        </a>
+
+        <a class="dropdown-item" href="javascript:void(0)" role="menuitem">
+            <i class="fas fa-archive" aria-hidden="true"></i> Login Log
+        </a>
+
+        <a class="dropdown-item" href="javascript:void(0)" role="menuitem">
+            <i class="fas fa-id-card" aria-hidden="true"></i> Profile
+        </a>*@
+
+            <div class="dropdown-divider" role="presentation"></div>
+            <a class="dropdown-item" href="@Url.Action("LogOut","Account")" role="menuitem"><i class="icon wb-power" aria-hidden="true"></i> Logout</a>
+          </div>
+        </li>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link" data-toggle="dropdown" href="javascript:void(0)" title=""
+             aria-expanded="false" data-animation="scale-up" role="button">
+            <i class="icon wb-bell" aria-hidden="true"></i>
+            <!-- 알림 메세지 갯수-->
+            <span class="badge badge-pill badge-danger up alertCnt"></span>
+          </a>
+          <div class="dropdown-menu dropdown-menu-right dropdown-menu-media" role="menu">
+
+            <!--알림 UI-->
+            <div class="dropdown-menu-header">
+              <h5>NOTIFICATIONS</h5>
+              <span class="badge badge-round badge-danger">New <span class="alertCnt"></span></span>
+            </div>
+
+            <div class="list-group">
+              <div data-role="container">
+                <!-- 알림 본문 -->
+                <div id="alarm_content" data-role="content">
+
+                </div>
+              </div>
+            </div>
+            <div class="dropdown-menu-footer">
+
+              <a class="dropdown-item" href="@Url.Action("AlarmHistoryList", "MyList")" role="menuitem">
+                All notifications
+              </a>
+            </div>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a href="javascript:void(0)" onclick="openMakeupRequestModal()" class="nav-link" title="메이크업 신청 대기열">
+            <i class="fas fa-fw fa-list-alt"></i> MAKEUP 대기열
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="javascript:void(0)" onclick="openSmsSendModal('')" class="nav-link">
+            <i class="fas fa-mobile-alt"></i> SMS
+          </a>
+        </li>
+        @if (Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0 && Univision.Security.AppIdentity.isExternal != 1)
+        {
+          <li class="nav-item">
+            <a class="nav-link" href="@adminUrl?c_seq=@Univision.Security.AppIdentity.user_seq" title="Admin" target="_b">
+              <i class="wb-briefcase"></i> ADMIN
+            </a>
+          </li>
+        }
+      </ul>
+      <!-- End Navbar Toolbar Right -->
+    </div>
+    <!-- End Navbar Collapse -->
+    <!-- Site Navbar Seach -->
+    <div class="collapse navbar-search-overlap" id="site-navbar-search">
+      <form role="search">
+        <div class="form-group">
+          <div class="input-search">
+            <i class="input-search-icon wb-search" aria-hidden="true"></i>
+            <input type="text" class="form-control" name="site-search" placeholder="Search...">
+            <button type="button" class="input-search-close icon wb-close" data-target="#site-navbar-search" data-toggle="collapse" aria-label="Close"></button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- End Site Navbar Seach -->
+  </div>
+</nav>
+
+<script type="text/javascript">
+    //Header 에서 사용 시작
+    $(document).ready(function () {
+            //chkAlertBadge();
+      chkReceiptAlert();
+      getAttendResult();
+    });
+  function getAttendResult() {
+    if ($("#attend_result").length > 0) {
+      $.ajax({
+        url: '@Url.Action("GetAttendResult", "Partial")',
+        data: {
+        },
+        dataType: 'json',
+        type: 'POST',
+      }).done(function (json) {
+        $("#attend_result").empty();
+        if (json.ok) {
+
+          if (json.attend >= 1) {
+            $("#attend_result").removeClass("text-danger").removeClass("text-success").addClass("text-success");
+            $("#attend_result").html("<i class='fas fa-check'></i> 출근 확인 완료")
+          } else {
+            $("#attend_result").removeClass("text-danger").removeClass("text-success").addClass("text-danger");
+            $("#attend_result").html("<i class='fas fa-clock'></i> 출근 미확인")
+            setTimeout(getAttendResult, 60000)
+          }
+
+        }
+      })
+    }
+  }
+    function chkReceiptAlert() {
+
+        $.ajax({
+               url: '@Url.Action("GetReceiptStatus", "Partial")',
+               data: {
+               },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+
+               }
+        })
+          .done(function (json) {
+            $(".alertCnt2").empty();
+            if (json.ok) {
+
+                if (json.list.length > 0) {
+                  $(".alertCnt2").html("!");
+                  if ($("#ReceiptReady").length > 0) {
+
+                    $("#receiptReadyList").empty();
+                    var list_str = ""
+                    for (var i = 0; i < json.list.length; i++) {
+                      if (list_str != "") {
+                        list_str += ", ";
+                      }
+                      list_str += json.list[i].r_type_name // + '(' + json.list[i].r_start + '~' + json.list[i].r_end + ')';
+                    }
+                    $("#receiptReadyList").html('(' + list_str + ')');
+                    $("#ReceiptReady").removeClass("d-none");
+                  }
+
+
+
+                }
+            }
+        })
+        .fail(function (e) {
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+
+    }
+
+    function chkAlertBadge() {
+
+        $.ajax({
+               url: '@Url.Action("GetNewAlram", "Partial")',
+               data: {
+               },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+
+               }
+        })
+        .done(function (json) {
+
+            if (json.ok) {
+
+                if (json.list.length > 0) {
+
+                    var sb = new StringBuilder();
+
+                    for (var i = 0; i < json.list.length; i++) {
+
+                        var data = json.list[i];
+
+                        var now = moment();
+                        var msgTime = moment(data.create_dt);
+
+                        var diff = moment.duration(now.diff(msgTime)).days();
+
+                        var minTxt = "";
+                        if (diff > 0) {
+                            minTxt = diff + " 일 전"
+                        }
+                        else {
+
+                            diff = moment.duration(now.diff(msgTime)).hours();
+
+                            if (diff > 0) {
+                                minTxt = diff + " 시간 전"
+                            }
+                            else {
+                                diff = moment.duration(now.diff(msgTime)).minutes();
+                                minTxt = diff + " 분 전"
+                            }
+                        }
+
+                        sb.append("<a class='list-group-item dropdown-item cur_hand' href='javascript:void(0)' role='menuitem' onclick='AlarmConfirm(&#39;" + data.am_seq + "&#39;)'>");
+                        sb.append("<div class='media'>");
+                        sb.append("<div class='pr-10'>");
+                        sb.append("<i class='icon wb-order bg-red-600 white icon-circle' aria-hidden='true'></i>");
+                        sb.append("</div>");
+                        sb.append("<div class='media-body'>");
+                        sb.append("<h6 class='media-heading' title='" + data.message + "'>" + data.message + "</h6>");
+                        sb.append("<time class='media-meta' datetime='" + data.create_dt + "'>" + minTxt + "</time>");
+                        sb.append("</div>");
+                        sb.append("</div>");
+                        sb.append("</a>");
+                    }
+                    //debugger;
+                    $("#alarm_content").empty();
+                    $("#alarm_content").append(sb.toString());
+
+                    $(".alertCnt").html(json.list.length);
+
+                }
+            } else {
+                $("#alarm_content").empty();
+                $("#alarm_content").append(errorItem);
+            }
+        })
+        .fail(function (e) {
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+
+    }
+
+    function AlarmConfirm(am_seq) {
+
+        $.ajax({
+            url: '@Url.Action("AlarmConfirm", "Partial")',
+            data: {
+                am_seq: am_seq
+            },
+             dataType: 'json',
+             type: 'POST',
+            beforeSend: function ()
+            {
+
+            }
+        })
+        .done(function (json) {
+
+            if (json.ok) {
+                var url = decodeURIComponent(json.url);
+                location.href = url;
+
+            } else {
+                ErrorAlert(json.message);
+            }
+
+            return true;
+        })
+        .fail(function (e) {
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+
+    function callPersonalModal() {
+        $.ajax({
+            url: '@Url.Action("PersonalModify", "Partial")',
+            data: {
+
+            },
+            dataType: 'html',
+            type: 'GET',
+            beforeSend: function ()
+            {
+                $(".page").isLoading({
+                    text: "Loading",
+                    position: "overlay"
+                });
+            }
+        })
+        .done(function (view) {
+            $(".page").isLoading("hide");
+
+            $('#personalModal .modal-body').html(view)
+            $('#personalModal').modal('toggle');
+        })
+        .fail(function (e) {
+            $(".page").isLoading( "hide" );
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+  }
+
+  function callKpiModal() {
+        $.ajax({
+            url: '@Url.Action("kpiModal", "Partial")',
+            data: {
+
+            },
+            dataType: 'html',
+            type: 'GET',
+            beforeSend: function ()
+            {
+                $(".page").isLoading({
+                    text: "Loading",
+                    position: "overlay"
+                });
+            }
+        })
+        .done(function (view) {
+            $(".page").isLoading("hide");
+
+            $('#kpiModal .modal-body').html(view)
+            $('#kpiModal').modal('toggle');
+        })
+        .fail(function (e) {
+            $(".page").isLoading( "hide" );
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+    //Header에서 사용 끝.
+
+</script>

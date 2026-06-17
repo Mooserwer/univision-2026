@@ -1,0 +1,111 @@
+﻿@using Univision.Core.Models;
+@using Univision.Core.Models.DTO;
+@model Univision.Core.Models.DTO.Response.Admin.UserListModel
+@{
+    //ViewBag.Title = "NoticeList";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/tablesaw/tablesaw.min599c.css?v4.0.4">
+<div class="page-content">
+    <!--검색 Form -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <!-- 검색 패널 시작 -->
+        @using (Html.BeginForm("UserList", "Admin", FormMethod.Get, new { @id = "searchForm", @autocomplete="off" }))
+        {
+            <div class="panel-heading">
+                <div class="panel-title">
+                    <i class="fas fa-info-circle"></i>
+                    @ViewBag.Title
+                </div>
+                <div class="panel-actions">
+                    <div class="panel-action input-search">
+                        <div class="checkbox-custom checkbox-primary" title="퇴사자 포함 검색">
+                            <input type="checkbox" id="isRetire" name="isRetire" value="1" @(ViewBag.isRetire == 1 ? "checked" : "") />
+                            <label for="isRetire">Includes Retired</label>
+                        </div>
+                    </div>
+                    <div class="w-100 d-md-none"></div>                    
+                    <div class="panel-action input-search">
+                        <button type="submit" class="input-search-btn">
+                            <i class="icon wb-search" aria-hidden="true"></i>
+                            &nbsp;&nbsp;
+                        </button>
+                        <input type="text" class="form-control" name="SearchString" id="SearchString" placeholder="이름,아이디 또는 이메일" title="이름,아이디 또는 이메일" value="@ViewBag.searchString">
+                    </div>
+                </div>
+            </div>
+            <!-- 검색 패널 끝 -->
+        }
+        <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-striped tablesaw-columntoggle" data-tablesaw-mode="columntoggle">
+                    <thead>
+                        <tr>
+                            <th data-tablesaw-priority="persist" class="text-center">ID</th>
+                            <th data-tablesaw-priority="persist" class="text-center">Name</th>
+                            <th data-tablesaw-priority="1" class="tablesaw-priority-1 text-center">Div.</th>
+                            <th data-tablesaw-priority="2" class="tablesaw-priority-2 text-center">Email</th>
+                            <th data-tablesaw-priority="3" class="tablesaw-priority-3 text-center">Tel.</th>
+                            <th data-tablesaw-priority="5" class="tablesaw-priority-5 text-center">Auth</th>
+                            <th data-tablesaw-priority="6" class="tablesaw-priority-6 text-center">Entry</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        @if (Model != null && Model.UserList.Count > 0)
+                        {
+                            int i = (int)Model.PagingInfo.TotalItems;
+                            foreach (uv_user user in Model.UserList)
+                            {
+
+                                <tr class="@(user.retire_date != null ? "bg-grey-300" : "")">
+                                    <td class="text-center"><a href="@Url.Action("UserDetail", "Admin", new { uv_seq = user.uv_seq})" data-rel="external">@user.user_id</a></td>
+                                    <td class="text-center">
+                                        <a href="@Url.Action("UserDetail", "Admin", new { uv_seq = user.uv_seq})" data-rel="external">
+                                            @(user.retire_date != null ? " [Retired]" : "")
+                                            @user.name
+                                        </a>
+                                    </td>
+                                    <td class="tablesaw-priority-1 text-center">@user.ud_name</td>
+                                    <td class="tablesaw-priority-2 text-left">@user.email</td>
+                                    <td class="tablesaw-priority-3 text-left">@user.tel</td>
+                                    <td class="tablesaw-priority-5 text-center">@user.ua_name</td>
+                                    <td class="tablesaw-priority-6 text-center">@(user.entry_date != null ? ((DateTime)user.entry_date).ToString("yyyy-MM-dd") : "")</td>
+
+                                </tr>
+                                i--;
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align:center;height:200px;vertical-align:middle;"><b>No Data.</b></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (Model != null && Model.UserList.Count > 0)
+                {
+
+                    @Html.PageAjaxLinks(Model.PagingInfo,
+                     ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                     x => Url.Action("UserList", new
+                     {
+                         page = x
+                     }))
+
+                }
+            </div>
+
+        </div>
+    </div>
+    <button type="button" onclick="location.href='@Url.Action("UserCreate", "Admin")';" class="site-action btn-raised btn btn-primary btn-floating" title="Add User"><i class="icon wb-user-add" aria-hidden="true"></i></button>
+</div>
+
+@section scripts{
+    <script src="~/Libs/remark/global/vendor/tablesaw/tablesaw.jquery599c.js?v4.0.4"></script>
+    <script src="~/Libs/remark/global/vendor/tablesaw/tablesaw-init599c.js?v4.0.4"></script>
+
+    <script src="~/Libs/remark/global/js/Plugin/tablesaw.min599c.js?v4.0.4"></script>
+}

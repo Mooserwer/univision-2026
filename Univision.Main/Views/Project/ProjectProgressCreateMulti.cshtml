@@ -1,0 +1,228 @@
+﻿@model Univision.Main.Models.Project.ProjectRecandidateMultiCreateModel
+
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/dropify/dropify.min599c.css?v4.0.4">
+<style>
+    .custom_tooltip{
+        background: #3e8ef7 !important;
+        opacity: 100 !important;
+        border: 0px!important;
+        -webkit-box-shadow: 0 0 0px #aaa !important;
+        box-shadow: 0 0 0px #aaa !important;
+    }
+
+</style>
+
+@using (Html.BeginForm("ProjectProgressMultiCreateProc", "Project", FormMethod.Post, new { @id = "ProgressCreateForm" }))
+{
+    @Html.HiddenFor(x => x.p_seq)
+<div class="row no-side-space ">
+    <div class="col-12 text-danger">※ 일괄 상태 변경은 추천/면접/탈락 만 가능합니다.</div>
+
+    <div class="form-group col-12">
+        <label class="form-control-label">후보자명</label>
+        @{
+            string kor_names = String.Empty;
+            if (Model.list.Count > 0)
+            {
+                foreach (var prh in Model.list)
+                {
+
+                    kor_names += (!String.IsNullOrEmpty(kor_names) ? ", " : "") + prh.kor_name;
+                    <input type="hidden" class="pic_seqs" name="pic_seqs" value="@prh.pic_seq" data-c-seq="@prh.c_seq" />
+                }
+
+            }
+        }        
+        @Html.TextBox("kor_name", kor_names, new { @class = "form-control", @readonly = "readonly" })
+
+    </div>
+    <div class="form-group col-md-6">
+        <label class="form-control-label">진행선택</label>
+        <select class="form-control" id="state" name="state" onchange="javascript:setDateName();">
+          <option value="">[선택]</option>
+          <option value="20">잠재후보</option>
+          <option value="30">추천</option>
+          <option value="40">서류통과</option>
+          <option value="50">면접</option>
+          <option value="60">면접통과</option>
+          <option value="10">탈락(Drop)</option>
+        </select>
+    </div>
+    <div class="form-group col-md-6">
+        <label class="form-control-label"><span id="pjt_rec_date_info"></span>일자</label>
+        <div class="input-group">
+            @{
+                string date = Utils.NowKorea().ToString("yyyy-MM-dd");
+            }
+            @Html.TextBox("schedule_date", date, new { @class = "form-control" })
+            <div class="input-group-addon">
+                <i class="fas fa-calendar" style="cursor:pointer"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="row no-side-space ">
+        <div class="form-group col-md-12">
+            <label class="form-control-label">내용</label>
+            @Html.TextArea("contents", "", new { @class = "form-control", @rows = 2 })
+        </div>
+    </div>
+    <div class="row no-side-space">
+        <div class="col-md-12 mb-5 form-inline">
+            <div class="checkbox-custom checkbox-primary border-primary chk_schedule">
+                <input type="checkbox" id="is_schedule" name="is_schedule" value="1">
+                <label for="is_schedule" style="">스케줄 등록</label>
+            </div>
+            <label for="is_schedule" style="">
+                <i class="fas fa-question-circle" title="면접준비, 채용확정은 자동 등록 됩니다."></i>
+                @*<span style="font-size:11px"><span style="color:red">면접준비, 채용확정</span>은 자동 등록 됩니다.</span>*@
+            </label>
+        </div>
+    </div>
+
+    <div class="text-right">
+        <button type="submit" class="btn btn-sm btn-primary" id="btnPopSave">등록</button>
+    </div>
+}
+
+<script src="~/Libs/remark/global/vendor/dropify/dropify.min599c.js?v4.0.4"></script>
+<script type="text/javascript">
+    function setDateName() {
+        if ($('#state :selected').val() != "") {
+            var text = $('#state :selected').text()
+            if (text == "입사확정") {
+                text = "출근"
+            }
+            $('#pjt_rec_date_info').text(text);
+        } else {
+            $('#pjt_rec_date_info').text("");
+        }
+        
+    }
+
+
+    $(document).ready(function () {
+        StopEnterSubmit();
+        BindDatePicker($("#schedule_date"));
+        BindDatePicker($("#guarantee_dt"));
+
+        $(".fa-question-circle").tooltip({
+            tooltipClass: "custom_tooltip"
+        });
+
+
+        $("#state").change(function () {
+            setDateName();
+            if ($(this).val() == "@ProjectHistoryStateCode.interview") {
+                $('.chk_schedule').removeClass('d-none').addClass('d-none');
+            } else {
+                $('.chk_schedule').removeClass('d-none');
+            }
+        });
+
+        //유효성 검사 및 폼 전송
+        $("#ProgressCreateForm").formValidation({
+            framework: "bootstrap4",
+            button: {
+                selector: "#btnPopSave",
+                disabled: "disabled"
+            },
+            submitHandler: function () {
+
+            },
+            icon: null,
+            fields: {
+                
+                state: {
+                    validators: {
+                        notEmpty: {
+                            message: "상태 필수 입력 항목입니다."
+                        }
+                    }
+                },
+                schedule_date: {
+                    validators: {
+                        notEmpty: {
+                            message: "일자는 필수 입력 항목입니다."
+                        }
+                    }
+                },
+                contents: {
+                    validators: {
+                        notEmpty: {
+                            message: "내용은 필수 입력 항목입니다."
+                        }
+                    }
+                }
+            },
+            err: {
+                clazz: "invalid-feedback"
+            },
+            control: {
+                valid: "is-valid",
+                invalid: "is-invalid"
+            },
+            row: {
+                invalid: "has-danger"
+            }
+        }).on('success.form.fv', function (e) {
+                //기본 submit 이벤트 취소.
+                e.preventDefault();
+                var currentData = {
+                    data: []
+                };
+
+                $form = $('#ProgressCreateForm');
+                var is_schedule = $form.find('#is_schedule').prop("checked");
+                //AM List
+                $(".pic_seqs").each(function () {
+                    var pic = {
+                        pic_seq: $(this).val(),
+                        c_seq: $(this).attr('data-c-seq'),
+                        p_seq: $form.find('#p_seq').val(),
+                        state: $form.find('#state').val(),
+                        schedule_date: $form.find('#schedule_date').val(),
+                        is_schedule: (is_schedule ? 1 : 0),
+                        contents:$form.find('#contents').val()
+                    };
+
+                    currentData.data.push(pic);
+                });
+
+                var formURL = $("#ProgressCreateForm").attr("action");
+                $.ajax({
+                    url: formURL,
+                    type: "POST",
+                    dataType: 'json',
+                    data: currentData,
+                    beforeSend: function () {
+                        showLoading();
+                    },
+                    success: function (json) {
+                        hideLoading();
+                        if (json.ok) {
+                            if (json.is_complete_ok) {
+                                location.href = "@Url.Action("ProjectDetail", "Project", new { p_seq = Model.p_seq })";
+                            } else {
+                                callProjectProgress(@Model.p_seq, 0, 1);
+                                $.fancybox.close();
+                            }
+                    
+                        }
+                        else {
+                            alert(json.message)
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        hideLoading();
+                        ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                    }
+                });
+            });
+    });
+
+    setDateName();
+
+</script>

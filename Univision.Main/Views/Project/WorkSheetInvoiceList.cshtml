@@ -1,0 +1,162 @@
+﻿@model Univision.Core.Models.DTO.Response.Project.WorkSheetInvoiceListModel
+
+@{
+    Layout = null;
+}
+
+@Html.Hidden("invoice_orderTxt", Model.invoice_orderTxt)
+@Html.Hidden("invoice_orderOption", Model.invoice_orderOption)
+
+<div class="col-xl-12">
+    <div class="panel custom1">
+        <header class="panel-heading">
+            <h3 class="panel-title py-10">
+                Invoice 발행현황
+            </h3>
+        </header>
+        <div class="panel-body">
+            <div data-role="container" style="padding:0 !important; margin:0 !important;">
+                <div data-role="content" style="padding:0 !important; margin:0 !important;">
+                    <div class="table-responsive">
+                        <table id="default-table" class="table table-hover scrolltable" style="font-size:0.85em;">
+                            <colgroup>
+                                <col style="">
+                                <col style="width:18%;">
+                                <col style="">
+                                <col style="">
+                                <col style="">
+                                <col style="">
+                                <col style="">
+                                <col style="">
+                                <col style="">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <td>
+                                        Client
+                                        <i class="fas @Utils.ReturnOrderOptionCalss(Model.invoice_orderTxt, "C.kor_name", Model.invoice_orderOption) invoiceColSort" orderTxt="C.kor_name"></i>
+                                    </td>
+                                    <td>
+                                        Project
+                                        <i class="fas @Utils.ReturnOrderOptionCalss(Model.invoice_orderTxt, "title", Model.invoice_orderOption) invoiceColSort" orderTxt="title"></i>
+                                    </td>
+                                    <td>
+                                        AM
+                                        <i class="fas @Utils.ReturnOrderOptionCalss(Model.invoice_orderTxt, "am_name", Model.invoice_orderOption) invoiceColSort" orderTxt="am_name"></i>
+                                    </td>
+                                    <td>SM</td>
+                                    <td>
+                                        Bill(dt)
+                                        <i class="fas @Utils.ReturnOrderOptionCalss(Model.invoice_orderTxt, "billing_dt", Model.invoice_orderOption) invoiceColSort" orderTxt="billing_dt"></i>
+                                    </td>
+                                    <td>Candidate</td>
+                                    <td>Position</td>
+                                    <td>Join(dt)</td>
+                                    <td>Fee</td>
+                                </tr>
+
+                            </thead>
+                            <tbody>
+
+                                @if (Model.list.Count > 0)
+                                {
+                                    foreach (var data in Model.list)
+                                    {
+                                        <tr>
+                                            <td class="text-left text-truncate">
+                                                <a href="@Url.Action("ClientDetail", "Client", new { @c_seq = data.client_seq })" title="@data.client_name">
+                                                    @data.client_name
+                                                </a>
+                                            </td>
+                                            <td class="text-left text-truncate" title="@data.title">
+                                                <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })">
+                                                    @Utils.Truncate(data.title, 45)
+                                                </a>
+                                            </td>
+                                            <td title="@data.am_name">
+                                                @Utils.Truncate(data.am_name, 20)
+                                            </td>
+                                            <td title="@data.searcher_name">
+                                                @Utils.Truncate(data.searcher_name, 20)
+                                            </td>
+                                            <td>
+                                                @Utils.ConvertDateTimeToString(data.billing_dt)
+                                            </td>
+                                            <td>
+                                                <a href="@Url.Action("CandidateDetail", "Candidate", new { @c_seq = data.candidate_seq })">
+                                                    @data.candidate_name
+                                                </a>
+                                            </td>
+                                            <td>
+                                                @data.position_name
+                                            </td>
+                                            <td>
+                                                @Utils.ConvertDateTimeToString(data.schedule_date)
+                                            </td>
+                                            <td>
+                                                @Utils.ConvertMoneyToString(data.billing_money)
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="9">발행된 인보이스 내역이 없습니다.</td>
+                                    </tr>
+                                }
+
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-footer">
+            @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                         ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                         x => String.Format("javascript:InvoicePageMove({0})", x))
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $(".invoiceColSort").click(function () {
+
+            $(".invoiceColSort").not(this).each(function () {
+
+                $(this).removeClass("fa-sort-up");
+                $(this).removeClass("fa-sort-down");
+                $(this).addClass("fa-sort");
+            });
+
+            $(this).removeClass("fa-sort");
+
+            if ($(this).hasClass("fa-sort-up")) {
+                $(this).addClass("fa-sort-down");
+                $(this).removeClass("fa-sort-up");
+                $("#invoice_orderTxt").val($(this).attr("orderTxt"));
+                $("#invoice_orderOption").val("DESC");
+            }
+            else {
+                $(this).addClass("fa-sort-up");
+                $(this).removeClass("fa-sort-down");
+                $("#invoice_orderTxt").val($(this).attr("orderTxt"));
+                $("#invoice_orderOption").val("ASC");
+            }
+
+            callInvoiceList($("#invoice_orderTxt").val(), $("#invoice_orderOption").val(), 1)
+        });
+
+
+    });
+
+    function InvoicePageMove(page) {
+        callInvoiceList($("#invoice_orderTxt").val(), $("#invoice_orderOption").val(), page)
+    }
+
+</script>

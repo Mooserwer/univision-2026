@@ -1,0 +1,363 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientTaxList
+@using Univision.Security
+@if (Model.taxList.Count > 0)
+{
+  <div style="text-align:right;">
+    @*PMS 오픈 관련 등록기능 제한*@
+    @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+    {
+
+
+      <button type="button" id="taxBtn" class="btn btn-xs btn-primary w-150" title="세금계산서 담당자 추가">
+        <i class="icon wb-user-add"></i>
+        Add E-Tax Info.
+      </button>}
+    }
+    @*
+      <a href="javascript:void(0)" id="btnHisotry" class="btn btn-sm btn-default" onclick="openListClientTaxLog(@Model.c_seq)">  <i class="fas fa-list"></i>&nbsp; Update History</a>
+    *@
+  </div>
+
+  <div class="mt-15">
+    <table class="block_table table table-striped table-hover" style="table-layout:fixed;">
+      <thead class="text-center">
+        <tr>
+          <th class="text-truncate tbw20" title="이름">Name</th>
+          <th class="text-truncate hidden-sm-down" title="부서">Dept.</th>
+          <th class="text-truncate tbw40" title="연락처">Phone</th>
+          <th class="text-truncate hidden-sm-down">Email</th>
+          <th class="text-truncate hidden-sm-down" title="세금계산서 발행용 이름">Name for Tax</th>
+          <th class="text-truncate tbw40" title="세금계산서 발행용 이메일">E-mail for Tax</th>
+          <th class="text-truncate hidden-sm-down" title="등록일">Reg.Date</th>
+          <th class="text-truncate hidden-sm-down"><i class="fa fa-cog"></i></th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        @{
+          int num = (Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage + 1;
+          foreach (var data in Model.taxList)
+          {
+            <tr>
+              <td class="text-truncate" title="@data.name">
+                @if (Model.is_external_lock == 1)
+                {
+                  <a href="javascript:openClientTaxContactExternalLockToHref('@Model.c_seq', '@data.ctc_seq');">@data.name</a>
+                }
+                else
+                {
+                  <a href="javascript:TaxDetail('@data.ctc_seq');">@data.name</a>
+                }
+
+              </td>
+              <td class="text-truncate hidden-sm-down" title="@data.division">
+                @data.division
+              </td>
+              <td class="text-truncate" title="@data.phone / @data.cell_phone">
+                @if (Model.is_external_lock == 1)
+                {
+                  <span class="text-secondary" title="개인정보를 확인 하시려면 상단의 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                    @data.phone / @data.cell_phone
+                  </span>
+                }
+                else
+                {
+                  @(data.phone)
+                  if (!string.IsNullOrWhiteSpace(data.phone))
+                  {
+                    <br />
+                  }
+                  @(data.cell_phone)
+                }
+
+              </td>
+              <td class="text-truncate hidden-sm-down">
+                @if (Model.is_external_lock == 1)
+                {
+                  <span class="text-secondary" title="개인정보를 확인 하시려면 상단의 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                    <a href="mailto:@data.email">@data.email</a>
+                  </span>
+                }
+                else
+                {
+                  <a href="mailto:@data.email">@data.email</a>
+                }
+              </td>
+              <td class="text-truncate hidden-sm-down" title="@data.deposit_manager">
+                @data.deposit_manager
+              </td>
+              <td class="text-truncate ">
+                <span class="text-truncate s2" title="@data.deposit_email">
+                  @if (Model.is_external_lock == 1)
+                  {
+                    <span class="text-secondary" title="개인정보를 확인 하시려면 상단의 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                      <a href="mailto:@data.deposit_email">@data.deposit_email</a>
+                    </span>
+                  }
+                  else
+                  {
+                    <a href="mailto:@data.deposit_email">@data.deposit_email</a>
+                  }
+                </span>
+              </td>
+
+              <td class="text-truncate hidden-sm-down" title="@Utils.ConvertDateTimeToString(data.create_dt)">
+                @Utils.ConvertDateTimeToString(data.create_dt)
+              </td>
+              <td class="hidden-sm-down">
+                @*PMS 오픈 관련 등록기능 제한*@
+                @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+                {
+                  if (Model.is_external_lock == 1)
+                  {
+                    <button class="btn btn-xs btn-outline-info" value="@data.ctc_seq" onclick="javascript:openClientTaxContactExternalLockToHref('@Model.c_seq', '@data.ctc_seq');"><i class="icon wb-edit"></i> Modify </button>
+                    <button class="btn btn-xs btn-outline-warning deleteTaxBtn" value="@data.ctc_seq"><i class="icon wb-trash"></i> Remove </button>
+                  }
+                  else
+                  {
+                    <button class="btn btn-xs btn-outline-info" onclick="javascript:TaxDetail('@data.ctc_seq');" value="@data.ctc_seq"><i class="icon wb-edit"></i> Modify </button>
+                    <button class="btn btn-xs btn-outline-warning deleteTaxBtn" value="@data.ctc_seq"><i class="icon wb-trash"></i> Remove </button>
+                  }
+                }
+                @if (data.log_cnt > 0)
+                {
+                  <a href="javascript:void(0)" id="btnHisotry" class="btn btn-xs btn-default" onclick="openListClientTaxLog(@Model.c_seq, @data.ctc_seq)">Log</a>
+                }
+              </td>
+            </tr>
+          }
+        }
+
+      </tbody>
+    </table>
+  </div>
+  @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                       ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                       x => String.Format("javascript:callTaxList({0}, {1})", Model.c_seq, x))
+}
+else
+{
+
+  <div class="card">
+    <div class="card-block text-center">
+      <h4 class="card-title">세금계산서 담당자 정보가 없습니다.<small>[No E-Tax information]</small></h4>
+      @*PMS 오픈 관련 등록기능 제한*@
+      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      {
+        <p class="card-text">
+          "Add E-Tax info" 버튼을 눌러 세금계산서 담당자를 추가 하실 수 있습니다.
+        </p>
+        <button type="button" id="taxBtn" class="btn btn-sm btn-primary" title="세금계산서 담당자 추가">
+          <i class="icon wb-user-add"></i>
+          세금계산서 담당자 추가 <small>[Add E-Tax info.]</small>
+        </button>
+      }
+
+      </div>
+  </div>
+
+}
+<script>
+    $(document).ready(function () {
+        $("#taxBtn").click(function (e) {
+
+            //debugger;
+
+            var ctc_seq = e.target.value;
+
+            $.ajax({
+                url: '@Url.Action("PopTax", "Client")',
+                data: { ctc_seq: ctc_seq },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    showLoading('#taxBody');
+                }
+            })
+            .done(function (json) {
+                hideLoading('#taxBody');
+
+                var height = "220";
+                if ($(window).width() <= 750) {
+                    height = "85%";
+                }
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '840',
+                    'height': height,
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': 'E-Tax 담당자 추가',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading('#taxBody');
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+        });
+
+
+        $('.deleteTaxBtn').click(function (e) {
+            var ctc_seq = e.target.value;
+            var c_seq = $("#c_seq").val();
+
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            $.ajax({
+                                url: '@Url.Action("ClientTaxDelete", "Client")',
+                                data: { ctc_seq: ctc_seq },
+                                dataType: 'json',
+                                type: 'POST',
+                                beforeSend: function () {
+                                    showLoading('#taxBody');
+                                }
+                            })
+                            .done(function (json) {
+                                hideLoading('#taxBody');
+                                if (json.ok) {
+                                    location.href = "/Client/ClientDetail?c_seq=" + c_seq;
+                                }
+                                else {
+                                    ErrorAlert('오류입니다.');
+                                }
+                            });
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>담당자 삭제')
+                    .setting({
+                        message: "담당자를 삭제 하시겠습니까?",
+                    })
+                .show();
+
+        });
+    });
+
+    function openClientTaxContactExternalLockToHref(c_seq, ctc_seq) {
+        alertify.confirm()
+        .set({
+            'labels': { ok: 'OK', cancel: 'Cancel' },
+            'onok': function (e) {
+
+                if (saveElementOpenLogToServer('@Univision.Security.AppIdentity.user_seq', c_seq, 'client', 'client', '', '')) {
+                    TaxDetail(ctc_seq);
+                    callTaxList(c_seq, 1);
+                }
+                else {
+                    return;
+                }
+
+            },
+            'oncancel': function () {
+                return;
+            }
+        })
+        .setHeader('E-Tax 담당자 수정화면 열람 안내')
+        .setting({
+          message: "해당 고객사의 E-Tax 담당자 수정 화면을 열람하시겠습니까?<br />확인 시 개인정보 확인 기록이 서버에 저장되며, 24시간 이내 동일정보는 별도 확인 없이 조회가 가능합니다."
+        })
+        .show();
+    }
+
+    function TaxDetail(ctc_seq) {
+        $.ajax({
+            url: '@Url.Action("PopTax", "Client")',
+            data: { ctc_seq: ctc_seq },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function ()
+            {
+                showLoading('#taxBody');
+            }
+        })
+        .done(function (json) {
+            hideLoading('#taxBody');
+
+            $.fancybox.open({
+                'content':json,
+                'width': '620',
+                'height': '320',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': '활동내역 추가',
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading('#taxBody');
+
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+
+    function openListClientTaxLog(c_seq, ctc_seq) {
+        try {
+                $.ajax({
+                    url: '@Url.Action("ListClientTaxLog", "Log")',
+                    data: { c_seq: c_seq, ctc_seq: ctc_seq },
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (html) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':html,
+                        'width': '850',
+                        'height': '600',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': 'E-Tax History',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.A');
+                });
+
+            } catch (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.A');
+        }
+    }
+
+</script>

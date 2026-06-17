@@ -1,0 +1,171 @@
+﻿@model Univision.Core.Models.DTO.receipt_user
+@{
+  Layout = null;
+}
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/dropify/dropify.min599c.css?v4.0.4">
+<style>
+  .dropify-wrapper {
+    padding: 0px 15px 0px 15px;
+    box-sizing: border-box;
+  }
+</style>
+@using (Html.BeginForm("CreateMobileReceipt", "MyList", FormMethod.Post, new { @id = "ReceiptCreateForm", @class = "form-horizontal" }))
+{
+  @Html.HiddenFor(x => x.r_seq)
+  @Html.HiddenFor(x => x.ra_seq)
+  <div class="form-group row">
+    <label class="col-md-3 form-control-label">제경비 구분: </label>
+    <div class="col-md-9">
+      <input type="text" class="form-control form-control-plaintext border-0" value="@Model.r_type_name" autocomplete="off">
+    </div>
+  </div>
+  <div class="form-group row">
+    <label class="col-md-3 form-control-label">사용월: </label>
+    <div class="col-md-9">
+      <input type="text" class="form-control form-control-plaintext border-0" value="@Model.r_month" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="form-group row">
+    <label class="col-md-3 form-control-label">소속: </label>
+    <div class="col-md-9">
+      <input type="text" class="form-control form-control-plaintext border-0" value="@Model.ud_name" autocomplete="off">
+    </div>
+  </div>
+  <div class="form-group row">
+    <label class="col-md-3 form-control-label">이름: </label>
+    <div class="col-md-9">
+      <input type="text" class="form-control form-control-plaintext border-0" value="@Model.uv_name" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="form-group row">
+    <label class="col-md-3 form-control-label"> <b class="red-600">*</b> 통신비: </label>
+    <div class="col-md-9">
+      <input type="text" id="money01" name="money01" class="form-control text-right" value="" autocomplete="off">
+    </div>
+  </div>
+  <div class="form-group row">
+    <label class="col-md-3 form-control-label">회사청구액(자동계산): </label>
+    <div class="col-md-9">
+      <input type="text" id="money02" name="money02" class="form-control form-control-plaintext border-0 text-right readonly" readonly="readonly" value="0" autocomplete="off">
+    </div>
+  </div>
+  <div class="form-group row">
+    <label class="col-md-3  form-control-label"><b class="red-600">*</b> 영수증 업로드 : </label>
+    <div class="col-md-9">
+      <input type="file" id="files" name="files" class="dropify" data-plugin="dropify" data-default-file="" data-height="100" data-errors-position="outside" />
+    </div>
+    <div class="col-md-12" style="text-align:right;">
+      <button type="button" id="BtnReceiptSave" class="btn btn-primary">제출하기</button>
+    </div>
+  </div>
+}
+
+<script src="~/Libs/remark/global/vendor/dropify/dropify.min599c.js?v4.0.4"></script>
+<script src="~/Libs/easy_ns/easy-number-separator.js"></script>
+<script type="text/javascript">
+  easyNumberSeparator({
+    selector: '#money01',
+    separator: ',',
+  })
+
+  $('#money01').change(function () {
+    var money01 = uncomma($(this).val()).valueOf();
+    var money02 = 0;
+    if (!isNaN(money01)) {
+      if (money01 > 50000) {
+        money02 = 50000;
+      } else {
+        money02 = money01;
+      }
+    }
+    $('#money02').attr("readonly", "");
+    $('#money02').val(comma(money02));
+    $('#money02').attr("readonly", "readonly");
+  })
+
+  $(document).ready(function () {
+    StopEnterSubmit();
+
+
+
+    $('.dropify').dropify({
+      messages: {
+        'default': 'Drag and drop a file here or click',
+        'replace': 'Drag and drop or click to replace',
+        'remove': 'Remove',
+        'error': '오류가 발생 했습니다. 다시 시도해주세요.'
+      }
+    });
+
+    $("#BtnReceiptSave").click(function () {
+
+
+
+      var money01 = uncomma($('#money01').val()).valueOf();
+      var money02 = 0;
+      if (money01 <= 100  || isNaN(money01)) {
+        ErrorAlert("정확한 통신비 금액을 입력해주세요.");
+        return false;
+      }
+      if (money01 > 50000) {
+        money02 = 50000;
+      } else {
+        money02 = money01;
+      }
+
+      if ($("#files")[0].files.length == 0) {
+        ErrorAlert("파일을 등록하세요.");
+        return false;
+      }
+
+
+
+      alertify.confirm()
+        .set({
+          'labels': { ok: '확인', cancel: '취소' },
+          'onok': function () {
+            $('#money01').val(uncomma($('#money01').val()).valueOf());
+            $('#money02').val(uncomma($('#money02').val()).valueOf());
+            $("#ReceiptCreateForm").submit();
+          },
+          'oncancel': function () {
+
+            return;
+          },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>' + "@Model.r_type_name 제출하기")
+        .setting({
+          message: "@Model.r_type_name (@Model.r_month)를 제출 하시겠습니까?",
+        })
+        .show();
+    });
+
+    $("#ReceiptCreateForm").ajaxForm({
+      dataType: 'json',
+      beforeSubmit: function () {
+
+        showLoading('#ReceiptCreateForm');
+      },
+      success: function (json) {
+        hideLoading('#ReceiptCreateForm');
+        if (json.ok) {
+          alertify.alert("제출완료", json.message, function () {
+            location.href = "/MyList/ReceiptList";
+          });          
+        }
+        else {
+          ErrorAlert(json.message);
+          //$('#money01').val();
+          //$('#money02').val();
+        }
+      },
+      error: function () {
+        hideLoading('#ReceiptCreateForm');
+      }
+    });
+
+  });
+
+</script>

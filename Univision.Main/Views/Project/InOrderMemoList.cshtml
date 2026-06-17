@@ -1,0 +1,209 @@
+﻿@model Univision.Main.Models.Project.InOrderMemoListModel
+@using Univision.Security
+
+<style>
+    .file_rst > div:nth-child(1n+3),
+    .timeline > li:nth-child(1n+3),
+    .memo_list > li:nth-child(1n+11) {
+        display: none;
+    }
+
+    .file_rst > div:nth-child(1n+4).btn-more, .file_rst.more > div:nth-child(1n+4).btn-collapse,
+    .timeline > li:nth-child(1n+4).btn-li-more, .timeline.more > li:nth-child(1n+4).btn-li-collapse,
+    .memo_list > div:nth-child(1n+12).btn-memo-more, .memo_list.more > div:nth-child(1n+12).btn-memo-collapse {
+        cursor: pointer;
+        display: block;
+    }
+
+    .file_rst > div:nth-child(1n+4).btn-collapse, .file_rst.more > div:nth-child(1n+4).btn-more,
+    .timeline > li:nth-child(1n+4).btn-li-collapse, .timeline.more > li:nth-child(1n+4).btn-li-more,
+    .memo_list > div:nth-child(1n+12).btn-memo-collapse, .memo_list.more > div:nth-child(1n+12).btn-memo-more {
+        display: none;
+    }
+
+    .file_rst.more > div.file_div,
+    .timeline.more > li.timeline-item,
+    .memo_list.more > li.can_activities {
+        display: block !important;
+    }
+
+    .file_rst > div.btn-more, .file_rst > div.btn-collapse,
+    .timeline > li.btn-li-more, .timeline > li.btn-li-collapse,
+    .memo_list > div.btn-memo-more, .memo_list > div.btn-memo-collapse {
+        display: none;
+    }
+</style>
+
+<ul class="list-group memo_list">
+    @if (Model.list.Count > 0)
+    {
+        int num = (Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage + 1;
+        foreach (var data in Model.list)
+        {
+            <li class="list-group-item can_activities">
+                <div class="media">
+                    <div class="media-body">
+                        <h5 class="mt-0 mb-5">
+                            @data.create_name
+                            <small>- @Utils.ConvertDateTimeToString(data.create_dt)</small>
+ 
+                            @if (data.create_user == AppIdentity.user_seq)
+                            {
+                                <span class="float-right modify-btns">
+                                    <a class="mr-5 modifyBtn" href="javascript:void(0);" onclick="memoModify('@data.im_seq', '@HttpUtility.UrlEncode(data.memo)', this)" title="메모 수정">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                    <a class="mr-5" href="javascript:void(0);" onclick="memoDeleteConfirm('@data.im_seq', '@data.i_seq')" title="메모 삭제">
+                                        <i class="fas fa-trash red-600"></i>
+                                    </a>
+                                </span>
+                            }
+
+                        </h5>
+                
+                        <div class="profile-brief">
+                            @Html.Raw(data.memo.Replace("\r\n", "\n").Replace("\n", "<br />"))
+                        </div>
+                    </div>
+                </div>
+            </li>
+        }
+
+    }
+    <div class="py-0 btn-memo-more col-12 text-center">
+        <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(Model.list.Count - 10))</span>
+    </div>
+    <div class="py-0 btn-memo-collapse col-12 text-center">
+        <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse
+    </div>
+</ul>
+<script type="text/javascript">
+    $('.btn-memo-more').click(function () {
+        $(this).closest('.memo_list').addClass('more');
+    })
+
+    $('.btn-memo-collapse').click(function () {
+        $(this).closest('.memo_list').removeClass('more');
+    })
+
+    function memoModify(im_seq, memo, obj) {
+
+        var memoDiv = $(obj).closest(".media-body").find(".profile-brief");
+
+        var appendHtml = "<textarea name='inorderMemo' class='form-control inorderMemo' rows=4 im_seq='" + im_seq + "'>" + memoDiv.html().replace(/\<br\>/g, "\r\n").trim() + "</textarea>";
+        appendHtml += "<span class='origintxt d-none'>" + memoDiv.html().trim() + "</span>";
+        appendHtml += "<div class='text-right mt-5'>";
+        appendHtml += "<button type='button' class='btn btn-sm btn-primary' onclick='memoModifyConfirm(this)'>수정</button>";
+        appendHtml += "<button type='button' class='btn btn-sm btn-danger ml-5' onclick='memoModifyCancel(this)'>취소</button>";
+
+        appendHtml += "</div>";
+
+        memoDiv.html(appendHtml.toString());
+
+        $(obj).css("display", "none");
+
+    }
+
+    function memoModifyCancel(obj) {
+        //var memoObj = $(obj).closest(".profile-brief").find(".candidateMemo");
+        var memoObj = $(obj).closest(".profile-brief").find(".origintxt");
+        $(obj).closest(".profile-brief").html($(memoObj).html());
+    }
+
+    function memoModifyConfirm(obj) {
+
+        var memoObj = $(obj).closest(".profile-brief").find(".inorderMemo");
+        debugger;
+        var im_seq = memoObj.attr("im_seq");
+        var memo = encodeURIComponent($(memoObj).val());
+
+        alertify.confirm()
+                .set({
+                    'labels': { ok: '확인', cancel: '취소' },
+                    'onok': function () {
+
+                        $.ajax({
+                            url: '@Url.Action("ModifyInOrderMemo", "Project")',
+                            type: "POST",
+                            dataType: 'json',
+                            data: {
+                                im_seq: im_seq,
+                                memo: memo
+                            },
+                            beforeSend: function () {
+                                showLoading('#memoBody');
+                            },
+                            success: function (json) {
+                                hideLoading('#memoBody');
+                                if (json.ok) {
+                                    NormalAlert(json.message);
+                                    
+                                    $(obj).closest(".media-body").find(".modifyBtn").css("display", "inline");
+                                    //메모를 되돌림.
+                                    $(obj).closest(".profile-brief").html($(memoObj).val().replace(/(?:\r\n|\r|\n)/g, '<br>'));
+                                    
+                                }
+                                else {
+                                    ErrorAlert(json.message);
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                hideLoading('#memoBody');
+                                ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                            }
+                        });
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>메모 수정')
+                .setting({
+                    message: "메모를 수정하시겠습니까?"
+                }).show();
+
+    }
+
+    function memoDeleteConfirm(im_seq, i_seq) {
+        alertify.confirm()
+                .set({
+                    'labels': { ok: '확인', cancel: '취소' },
+                    'onok': function () {
+
+                        $.ajax({
+                            url: '@Url.Action("DeleteInOrderMemo", "Project")',
+                            type: "POST",
+                            dataType: 'json',
+                            data: {
+                                im_seq: im_seq
+                            },
+                            beforeSend: function () {
+                                showLoading('#memoBody');
+                            },
+                            success: function (json) {
+                                hideLoading('#memoBody');
+                                if (json.ok) {
+                                    NormalAlert(json.message);
+                                    callMemoList(i_seq, 1)
+                                }
+                                else {
+                                    ErrorAlert(json.message);
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                hideLoading('#memoBody');
+                                ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                            }
+                        });
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>메모 삭제')
+                .setting({
+                    message: "메모를 삭제하시겠습니까?"
+                }).show();
+    }
+
+</script>

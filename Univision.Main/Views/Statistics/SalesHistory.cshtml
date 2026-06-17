@@ -1,0 +1,610 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.SalesHistoryViewModel
+@using Univision.Security
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="../Libs/remark/base/assets/examples/css/charts/chartjs.min599c.css?v4.0.4">
+
+<div class="page-content container-fluid">
+
+    @using (Html.BeginForm("SalesHistory", "Statistics", FormMethod.Get, new { @id = "SearchForm" }))
+    {
+        <!-- row -->
+        <div class="row">
+            <!-- block -->
+            <div class="col-xl-5">
+                <div class="form-group custom5">
+                    <div class="col-xl-6 p-0">
+                        @{
+                            var deptList = new SelectList(Model.deptList, "ud_seq", "ud_name").ToList();
+                            deptList.Insert(0, new SelectListItem { Value = "0", Text = "팀 전체" });
+                        }
+                        @Html.DropDownListFor(x => x.search.ud_seq, deptList, new { @class = "form-control" })
+                    </div>
+                    <div class="col-xl-6 p-0 ml-5">
+                        @{
+                            var userList = new SelectList(Model.userList, "uv_seq", "name").ToList();
+                            userList.Insert(0, new SelectListItem { Value = "0", Text = "팀원 전체" });
+                        }
+                        @Html.DropDownListFor(x => x.search.uv_seq, userList, new { @class = "form-control" })
+                    </div>
+                </div>
+            </div>
+            <!-- // block -->
+            <div class="col-xl-5 custom4 " style="text-align:right">
+                <div class="form-group custom5">
+                    <div class=" p-0 " style="text-align:right;width:30%;">
+                        <h5>등록일 :</h5>
+                    </div>
+                    <div class=" p-0 ml-5">
+                        <div class="input-group">
+                            @Html.TextBoxFor(x => x.search.startDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                            <span class="input-group-addon">
+                                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                            </span>
+                            &nbsp;~&nbsp;
+                            @Html.TextBoxFor(x => x.search.endDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                            <span class="input-group-addon">
+                                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-2">
+                <div class="form-group custom4 sts50">
+                    <div class="col-xl-6 p-0">
+                        <button type="submit" id="btnSearch" class="btn btn-raised btn-primary btn-block">검색</button>
+                    </div>
+                    <div class="col-xl-6 p-0 ml-3">
+                        <button type="button" id="btnReset" class="btn btn-raised btn-default btn-block">초기화</button>
+                    </div>
+                </div>
+            </div>
+            <!-- block -->
+        </div>
+        <!-- //row -->
+    }
+
+
+    <!-- row 직급, 수수료율 PieChart -->
+    <div class="row">
+        <!-- block -->
+        <div class="col-xl-6">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        직급별 매출추이
+                    </h3>
+                </header>
+                <div class="panel-body row expad">
+
+                    <div class="col-xl-6 text-center exchart centerfl">
+                        <canvas id="positionPieChart" width="100"></canvas>
+                    </div>
+
+                    <div class="col-xl-6 text-center exboard centerfl">
+                        <table id="default-table" class="table table-hover ">
+                            <colgroup>
+                                <col style="width:30%;">
+                                <col style="width:25%;">
+                                <col style="width:25%;">
+                                <col style="">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>직급</th>
+                                    <th>건수</th>
+                                    <th>금액</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.positionList.Count > 0)
+                                {
+                                    foreach (var data in Model.positionList)
+                                    {
+                                        <tr>
+                                            <td>@data.title</td>
+                                            <td>@data.allCnt</td>
+                                            <td>@Utils.ConvertMoneyToString(data.billing_money)</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3">직급별 매출 데이터가 없습니다.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+        <!-- block -->
+        <div class="col-xl-6">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        수수료율별 매출추이
+                    </h3>
+                </header>
+                <div class="panel-body row expad">
+
+                    <div class="col-xl-6 text-center exchart centerfl">
+                        <canvas id="feeRatePieChart" width="100"></canvas>
+                    </div>
+
+                    <div class="col-xl-6 text-center exboard centerfl">
+                        <table id="default-table" class="table table-hover">
+                            <colgroup>
+                                <col style="width:30%;">
+                                <col style="width:25%;">
+                                <col style="width:25%;">
+                                <col style="">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>직군</th>
+                                    <th>건수</th>
+                                    <th>금액</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.feeRateList.Count > 0)
+                                {
+                                    foreach (var data in Model.feeRateList)
+                                    {
+                                        <tr>
+                                            <td>@data.title</td>
+                                            <td>@data.allCnt</td>
+                                            <td>@Utils.ConvertMoneyToString(data.billing_money)</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3">수수료율별 매출 데이터가 없습니다.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+    </div>
+    <!-- // row 직급, 수수료율 PieChart -->
+    <!-- row 산업, 직무별 PieChart -->
+    <div class="row">
+        <!-- block -->
+        <div class="col-xl-6">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        산업별 매출추이
+                    </h3>
+                </header>
+                <div class="panel-body row expad">
+
+                    <div class="col-xl-6 text-center exchart centerfl">
+                        <canvas id="businessPieChart" width="100"></canvas>
+                    </div>
+
+                    <div class="col-xl-6 text-center exboard centerfl">
+                        <table id="default-table" class="table table-hover">
+                            <colgroup>
+                                <col style="width:30%;">
+                                <col style="width:25%;">
+                                <col style="width:25%;">
+                                <col style="">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>직군</th>
+                                    <th>건수</th>
+                                    <th>금액</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.businessList.Count > 0)
+                                {
+                                    foreach (var data in Model.businessList)
+                                    {
+                                        <tr>
+                                            <td>@data.title</td>
+                                            <td>@data.allCnt</td>
+                                            <td>@Utils.ConvertMoneyToString(data.billing_money)</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3">산업별 매출 데이터가 없습니다.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+        <!-- block -->
+        <div class="col-xl-6">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        직무별 매출추이
+                    </h3>
+                </header>
+                <div class="panel-body row expad">
+
+                    <div class="col-xl-6 text-center exchart centerfl">
+                        <canvas id="jobPieChart" width="100"></canvas>
+                    </div>
+
+                    <div class="col-xl-6 text-center exboard centerfl">
+                        <table id="default-table" class="table table-hover">
+                            <colgroup>
+                                <col style="width:30%;">
+                                <col style="width:25%;">
+                                <col style="width:25%;">
+                                <col style="">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>직군</th>
+                                    <th>건수</th>
+                                    <th>금액</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.businessList.Count > 0)
+                                {
+                                    foreach (var data in Model.businessList)
+                                    {
+                                        <tr>
+                                            <td>@data.title</td>
+                                            <td>@data.allCnt</td>
+                                            <td>@Utils.ConvertMoneyToString(data.billing_money)</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3">직무별 매출 데이터가 없습니다.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+    </div>
+    <!-- // row -->
+    <!-- row -->
+    <div class="row" id="salesList">
+
+    </div>
+    <!-- // row -->
+
+
+</div>
+
+@section scripts {
+    <!-- charts -->
+    <script src="../Libs/remark/global/vendor/chart-js/Chart.min599c.js?v4.0.4"></script>
+
+
+    <script type="text/javascript">
+
+    $(document).ready(function () {
+
+        BindDatePicker($(".jDatePicker"));
+
+        RenderPositionPieChart();
+        RenderFeeRatePieChart();
+        RenderBusinessPieChart();
+        RenderJobPieChart();
+        callSalesHistoryList(1);
+
+        AuthControll(@AppIdentity.ua_seq);
+
+        $("#btnReset").click(function () {
+
+            //부서 select 0번 선택
+            $("#search_ud_seq ").find("option:eq(0)").prop("selected", true);
+
+            //팀원 select 초기화.
+            InitDivisionUserList();
+
+            $("#search_startDt").val("");
+            $("#search_endDt").val("");
+
+            $("#btnSearch").click();
+        });
+
+        //부서 변경 시,
+        $("#search_ud_seq").change(function () {
+
+            //부서에 속한 팀원 select 초기화.
+            if ($("#search_ud_seq").val() == "0") {
+
+                InitDivisionUserList();
+
+                return false;
+            }
+
+            $.ajax({
+                url: '@Url.Action("FindDivisionUserList", "Account")',
+                data: {
+                    ud_seq: $("#search_ud_seq").val()
+                },
+                dataType: 'json',
+                type: 'POST',
+                beforeSend: function () {
+
+                }
+            })
+            .done(function (json) {
+
+                if (json.ok) {
+
+                    if (json.list.length > 0) {
+
+                        $('#search_uv_seq').empty();
+
+                        var appendHtml = "<option value='0'>팀원 전체</option>";
+                        for (var i = 0; i < json.list.length; i++) {
+                            appendHtml += "<option value='" + json.list[i].uv_seq + "'>" + json.list[i].name + "</option>";
+                        }
+
+                        $('#search_uv_seq').append(appendHtml.toString());
+                    }
+                    else {
+                        $('#search_uv_seq').empty();
+                        var option = $("<option value='0'>해당 부서에 속한 팀원이 없습니다.</option>");
+                        $('#search_uv_seq').append(option);
+                    }
+                }
+                else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .always(function () {
+
+            });
+        });
+    });
+
+    //권한별 부서, User select 제어
+    function AuthControll(ua_seq) {
+        var divisionDisabled = "";
+        var userDisabled = "";
+
+        switch (ua_seq)
+        {
+            case 1:
+            case 2:
+                divisionDisabled = "";
+                userDisabled = "";
+                break;
+            case 3:
+                divisionDisabled = "";
+                userDisabled = "";
+                break;
+            case 4:
+                divisionDisabled = "disabled";
+                userDisabled = "";
+                break;
+            case 5:
+                divisionDisabled = "disabled";
+                userDisabled = "disabled";
+                break;
+        }
+
+        if (divisionDisabled != "")
+            $("#search_ud_seq").attr("disabled", divisionDisabled);
+
+        if (userDisabled != "")
+            $("#search_uv_seq").attr("disabled", userDisabled);
+    };
+
+    //부서 팀원 select 초기화.
+    function InitDivisionUserList() {
+        $('#search_uv_seq').empty();
+        var option = $("<option value='0'>팀원 전체</option>");
+        $('#search_uv_seq').append(option);
+    }
+
+     // 직급별 매출추이
+    function RenderPositionPieChart() {
+        var positionList = @Html.Raw(Json.Encode(Model.positionList));
+        var ctx3 = document.getElementById('positionPieChart').getContext('2d');
+        var positionPieChart = new Chart(ctx3, {
+            type: 'doughnut',
+
+            data: {
+                datasets: [{
+                    data: positionList.map(function (e) { return e.billing_money }),
+                    backgroundColor: [
+                        'rgba(148,99,247,0.7)','rgba(255,102,107,0.7)','rgba(73,222,148,0.7)','rgba(62,142,247,0.5)'
+                    ],
+                }],
+                labels: positionList.map(function (e) { return e.title }),
+            },
+            options: {
+                legend: {
+                    //display: false
+                },
+                responsive: true,
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var value = data.datasets[0].data[tooltipItem.index];
+                            if(parseInt(value) >= 1000){
+                                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                } else {
+                                return value + '원';
+                                }
+                        }
+                    } // end callbacks:
+                }
+            }
+        });
+    };
+
+    // 수수료율별 매출추이
+    function RenderFeeRatePieChart() {
+        var feeRateList = @Html.Raw(Json.Encode(Model.feeRateList));
+        var ctx4 = document.getElementById('feeRatePieChart').getContext('2d');
+        var feeRatePieChart = new Chart(ctx4, {
+            type: 'doughnut',
+
+            data: {
+                datasets: [{
+                    data: feeRateList.map(function (e) { return e.billing_money }),
+                    backgroundColor: [
+                        'rgba(255,205,85,0.7)','rgba(2,181,278,0.7)','rgba(68,87,114,0.7)','rgba(62,142,247,0.5)'
+                    ],
+                }],
+                labels: feeRateList.map(function (e) { return e.title }),
+            },
+            options: {
+                legend: {
+                    //display: false
+                },
+                responsive: true,
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var value = data.datasets[0].data[tooltipItem.index];
+                            if(parseInt(value) >= 1000){
+                                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                } else {
+                                return value + '원';
+                                }
+                        }
+                    } // end callbacks:
+                }
+            }
+        });
+    }
+
+    //산업별 매출추이
+    function RenderBusinessPieChart() {
+        var businessList = @Html.Raw(Json.Encode(Model.businessList));
+        var ctx4 = document.getElementById('businessPieChart').getContext('2d');
+        var feeRatePieChart = new Chart(ctx4, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: businessList.map(function (e) { return e.billing_money }),
+                    backgroundColor: [
+                        'rgba(148,99,247,0.7)','rgba(255,102,107,0.7)','rgba(73,222,148,0.7)','rgba(62,142,247,0.5)'
+                    ],
+                }],
+                labels: businessList.map(function (e) { return e.title }),
+            },
+            options: {
+                legend: {
+                    //display: false
+                },
+                responsive: true,
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var value = data.datasets[0].data[tooltipItem.index];
+                            if(parseInt(value) >= 1000){
+                                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                } else {
+                                return value + '원';
+                                }
+                        }
+                    } // end callbacks:
+                }
+            }
+        });
+    };
+
+    //직무별 매출추이
+    function RenderJobPieChart() {
+        var jobList = @Html.Raw(Json.Encode(Model.jobList));
+        var ctx4 = document.getElementById('jobPieChart').getContext('2d');
+        var feeRatePieChart = new Chart(ctx4, {
+            type: 'doughnut',
+
+            data: {
+                datasets: [{
+                    data: jobList.map(function (e) { return e.billing_money }),
+                    backgroundColor: [
+                        'rgba(255,205,85,0.7)','rgba(2,181,278,0.7)','rgba(68,87,114,0.7)','rgba(62,142,247,0.5)'
+                    ],
+                }],
+                labels: jobList.map(function (e) { return e.title }),
+            },
+            options: {
+                legend: {
+                    //display: false
+                },
+                responsive: true,
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var value = data.datasets[0].data[tooltipItem.index];
+                            if(parseInt(value) >= 1000){
+                                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                } else {
+                                return value + '원';
+                                }
+                        }
+                    } // end callbacks:
+                }
+            }
+        });
+    };
+
+    function callSalesHistoryList(page) {
+        $.ajax({
+            url: '@Url.Action("SalesHistoryList", "Statistics")',
+            data: {
+                "search.ud_seq": $("#search_ud_seq").val(),
+                "search.uv_seq": $("#search_uv_seq").val(),
+                "search.startDt": $("#search_startDt").val(),
+                "search.endDt":   $("#search_endDt").val(),
+                page: page
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function () {
+                showLoading('#salesList');
+            }
+        })
+        .done(function (view) {
+            hideLoading('#salesList');
+            $('#salesList').html(view);
+
+        })
+        .always(function () {
+            hideLoading('#salesList');
+        });
+    };
+
+
+    </script>
+}

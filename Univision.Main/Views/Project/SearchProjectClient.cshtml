@@ -1,0 +1,258 @@
+﻿@model Univision.Main.Models.Project.SearchProjectClientModel
+@using Univision.Security
+
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+
+    @@media (max-width:500px) {
+        .paginationDiv {
+            justify-content: flex-start !important;
+        }
+    }
+</style>
+
+<div class="form-inline mb-10">
+    <div class="input-group col-md-12 no-side-space">
+        @Html.TextBoxFor(x => x.searchTxt, new { @class = "form-control", @placeholder = "고객사 이름" })
+        <button type="button" id="popSearchButton" class="btn btn-primary" onclick="FancyBoxSearchAndPageMove(1);"><i class="fas fa-search" aria-hidden="true"></i></button>
+    </div>
+</div>
+<div class="panel" style="margin-bottom:0px !important;">
+    <div class="panel-body" style="padding: 5px 10px 5px 10px;">
+        <div class="table-responsive">
+            <table class="block_table table table-striped tablesaw-columntoggle mb-0" style="table-layout:fixed">
+                <colgroup>
+                    <col />
+                    <col />
+                    <col />
+                    <col />
+                </colgroup>
+                <thead class="text-center">
+                    <tr>
+                        <th class="tbw60">고객사명</th>
+                        <th class="hidden-sm-down">사업자번호</th>
+                        <th class="tbw40">AM</th>
+                        <th class="hidden-sm-down">산업</th>
+                    </tr>
+                </thead>
+                <tbody class="text-center" style="vertical-align:middle;" id="clientSearchBody">
+                    @if (Model.list.Count > 0)
+                    {
+                        foreach (var data in Model.list)
+                        {
+                            <tr>
+                                <td class="text-truncate text-left" title="@data.kor_name @data.eng_name" style="cursor:pointer" onclick="selectCompany('@data.c_seq', '@data.kor_name', '@data.eng_name', '@data.am_seq', '@data.am_name', '@data.fix_title', '@data.biz_industry_code1', '@data.biz_industry_code2', '@data.business_name2', '@data.cc_seq', '@data.fee_type', '@data.fix_fee_rate');">
+                                    <span class="text-truncate s2">
+                                        @data.kor_name
+                                        @if (!String.IsNullOrEmpty(data.eng_name))
+                                        {
+                                            <text>(</text>@data.eng_name<text>)</text>
+                                        }
+                                    </span>
+                                </td>
+                                <td class="text-center hidden-sm-down">
+                                    @Utils.ConvertBusinessLicenseFormat(data.biz_code)
+                                </td>
+                                <td title="@data.am_name">
+                                    @data.am_name
+                                </td>
+                                <td class="hidden-sm-down" title="@data.business_name2">
+                                    @data.business_name2
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5">데이터가 없습니다.</td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="sts04">
+        @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                         ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                         x => String.Format("javascript:FancyBoxSearchAndPageMove({0})", x))
+    </div>
+    <div class="panel-footer pb-5">
+
+        <a href="@Url.Action("ClientCreate", "Client")">
+            <span style="color:red">
+                * 찾는 고객사가 없을 시, 여기를 눌러 등록해주세요.
+            </span>
+        </a>
+
+    </div>
+
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("#searchTxt").keydown(function (e) {
+
+            if (e.keyCode == 13)
+                $("#popSearchButton").click();
+            else
+                return;
+        });
+    });
+
+
+
+    function selectCompany(c_seq, kor_name, eng_name, am_seq, am_name, fix_title, biz_industry_code1, biz_industry_code2, business_name2, cc_seq, fee_type, fix_fee_rate) {
+
+        $("#c_seq").val(c_seq);
+
+        var company_name = kor_name;
+        if (company_name == "")
+            company_name = eng_name;
+
+        $("#company_name").val(company_name);
+
+        if (fix_title != "") {
+            var fix_title = "[" + fix_title.replace(/\[/gi, "").replace(/\]/gi, "").trim() + "]";
+        }
+
+        $("#tmp_fix_title").val(fix_title);
+        
+
+        if ($("#title").val().substring(0,1) != "[") {
+            $("#title").val(fix_title + $("#title").val());
+        }
+        if ($("#business_code1").val() == "") {
+            $("#business_code1").val(biz_industry_code1);
+            $("#business_code2").val(biz_industry_code2);
+            $("#business_name2").val(business_name2);
+        }
+
+
+        feeType = fee_type;
+        //고정수수료의 경우 바로 바인딩.
+        if (fee_type == "@ContractFeeType.fix") {
+            $("#fee_rate").val(fix_fee_rate);
+        }
+        if ($("#AMDiv").html().trim() == "") {
+
+            var sb = new StringBuilder();
+            sb.append("<span class='category mr-5'>");
+            sb.append(" <span class='badge badge-outline badge-default bg-white cur_hand badge-lg'  am_seq='" + am_seq +"'>");
+            sb.append(          am_name);
+            sb.append("     <i class='far fa-times-circle' onclick='removeBadge(this)'></i>");
+            sb.append(" </span>");
+            sb.append("</span>");
+            $("#AMDiv").html(sb.toString());
+
+
+            $.ajax({
+                url: '@Url.Action("FindClientInfo", "Client")',
+                data: {
+                    c_seq: c_seq
+                   ,cc_seq: cc_seq
+                   ,fee_type: fee_type
+                },
+                dataType: 'json',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                }
+            })
+            .done(function (json) {
+
+                if (json.ok) {
+
+                    var sb = new StringBuilder();
+/*
+                    for (var i = 0; i < json.list.length; i++) {
+                        //AM 바인딩
+                        var data = json.list[i];
+
+                        //sb.append("<span class='category mr-5'>");
+                        sb.append("<span class='badge badge-outline badge-default bg-white cur_hand badge-lg'  am_seq='" + data.uv_seq +"'>");
+                        //sb.append("[" + data.ud_name + "] " + data.am_name);
+                        sb.append(data.am_name);
+                        sb.append("<i class='far fa-times-circle' onclick='removeBadge(this)'></i>");
+                        sb.append("</span>");
+                        //sb.append("</span>");
+                    }
+
+                    $("#AMDiv").html(sb.toString());
+*/
+                    feeRateList = json.feeRateList
+
+                    //유효성 검사 다시.
+                }
+                else {
+                    alert(json.message);
+                }
+
+            })
+            .fail(function (e) {
+
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+        $('#CreateForm').formValidation('revalidateField', 'c_seq');
+        $('#CreateForm').formValidation('revalidateField', 'company_name');
+        $('#CreateForm').formValidation('revalidateField', 'title');
+        $('#CreateForm').formValidation('revalidateField', 'AMDiv');
+        $('#CreateForm').formValidation('revalidateField', 'business_name2');
+        $.fancybox.close();
+    }
+
+    //FancyBox 팝업 내의 페이지 이동.
+    function FancyBoxSearchAndPageMove(page) {
+        if (page == null || page == undefined)
+            page = 1;
+
+        $.ajax({
+            url: '@Url.Action("SearchProjectClient", "Project")',
+            data: {
+                searchTxt: $("#searchTxt").val()
+                , page: page
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function () {
+
+            }
+        })
+        .done(function (view) {
+
+            $.fancybox({
+                'content': view,
+                'width': $(".fancybox-outer").width(),
+                'height': $(".fancybox-outer").height(),
+                'autoDimensions': false,
+                'type': 'iframe',
+                'autoSize': false,
+                'title': $(".fancybox-title").text(),
+                helpers: {
+                    title: {
+                        type: 'inside',
+                        position: 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+
+        })
+        .always(function () {
+
+        });
+    }
+
+</script>

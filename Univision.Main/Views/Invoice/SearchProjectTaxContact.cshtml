@@ -1,0 +1,82 @@
+﻿@model Univision.Main.Models.Project.ProjectTaxContactListModel
+@using Univision.Security
+<p>
+  <div class="table-responsive" style="min-width:400px;">
+    <table class="table table-bordered table-colored table-primary">
+      <thead>
+        <tr>
+          <th class="wd-10p">#</th>
+          <th class="wd-20p">이름</th>
+          <th class="wd-70p">발행 연락처</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (Model.list.Count > 0)
+        {
+          int idx = 1;
+          foreach (var data in Model.list)
+          {
+            <tr style="cursor:pointer" onclick="selectTaxContact(this, '@data.ctc_seq', '@data.deposit_manager', '@data.deposit_email', '@data.phone', '@data.cell_phone')">
+              <td scope="row">@(idx++)</td>
+              <td>
+                @data.deposit_manager
+              </td>
+              <td>
+                @data.deposit_email
+                <br />
+                @data.cell_phone
+              </td>
+            </tr>
+          }
+        }
+        else
+        {
+          <tr>
+            <td colspan="4">
+              데이터가 없습니다.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="row ">
+    <div class="col-12 tx-right pd-t-10">
+      <button id="btn_new_etax_contract_pop" type="button" class="btn btn-primary">신규 계산서 담당자 입력 (New tax manager)</button>
+    </div>
+
+  </div>
+</p>
+
+<script type="text/javascript">
+
+  $(document).ready(function () {
+
+    $("#btn_new_etax_contract_pop").click(function () {
+      btnNewTaxContract();
+      //BindProjectContactValidation();
+      //$("#btnContactSave").css("display", "none");
+      //$("#btnContact").css("display", "none");
+
+      $(this).closest(".modal").find(".close").click();
+    });
+  });
+
+  function selectTaxContact(obj, ctc_seq, name, email, phone, cell_phone) {
+    $("#ctc_seq").val(ctc_seq);
+    $("#client_etax_name").val(name);
+    $("#client_etax_email").val(email);
+    $("#client_etax_tel").val(phone);
+    $("#client_etax_tel2").val(cell_phone);
+    
+    validator_step4.element("#ctc_seq");
+    validator_step4.element("#client_etax_name");
+    validator_step4.element("#client_etax_email");
+    validator_step4.element("#client_etax_tel2");
+
+    $(obj).closest(".modal").find(".close").click();
+
+    //$('#btnContactSave').click();
+  }
+
+</script>

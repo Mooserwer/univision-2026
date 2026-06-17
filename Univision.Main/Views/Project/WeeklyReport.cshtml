@@ -1,0 +1,460 @@
+﻿@model Univision.Core.Models.DTO.Response.Project.WeeklyReportListModel
+@using Univision.Security
+
+@{
+  ViewBag.Title = "Weekly Report";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-content container-fluid">
+  <div class="panel shadow">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        Weekly Report
+      </h3>
+    </div>
+    <div class="panel-body p-10">
+      <!-- row -->
+      @using (Html.BeginForm("WeeklyReport", "Project", FormMethod.Get, new { @id = "SearchForm" }))
+      {
+        <div class="row">
+          <!-- block -->
+          <div class="col-md-4 form-group ">
+            <div class="input-group input-group-sm">
+              @Html.DropDownListFor(x => x.search.ud_seq, new SelectList(Model.deptList, "ud_seq", "ud_name"), new { @class = "form-control form-control-sm" })
+              @if (Model.search.ud_seq != AppIdentity.ud_seq)
+              {
+                <span class="input-group-btn">
+                  <a href="#" class="btn btn-secondary" id="btn-my-team" data="@AppIdentity.ud_seq" title="내 부서 바로 조회">Go my team</a>
+                </span>
+              }
+            </div>
+          </div>
+          <!-- // block -->
+          <div class="form-group col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-addon">
+                기간 :
+              </span>
+              @Html.TextBoxFor(x => x.search.startDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+              <span class="input-group-addon">
+                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+              </span>
+              <sapn class="input-group-addon bg-transparent border-0"> ~ </sapn>
+              @Html.TextBoxFor(x => x.search.endDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+              <span class="input-group-addon">
+                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+              </span>
+            </div>
+
+
+          </div>
+
+          <div class="col-md-2 form-group custom4">
+            <button type="submit" id="btnSearch" class="btn btn-sm btn-raised btn-primary btn-block">검색</button>
+          </div>
+          <!-- block -->
+        </div>
+        if (Model.search.ud_seq > 0 && AppIdentity.ua_seq <= 3)
+        {
+          <div class="row">
+            <div class="col">
+              <div class="checkbox-custom checkbox-default">
+                <input type="checkbox" id="search_include_ended" name="search.include_ended" value="1" @(Model.search.include_ended == 1 ? "checked" : "") autocomplete="off" />
+                <label for="search_include_ended">종료/취소/보류 프로젝트 포함</label>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+    <!-- //row -->
+  </div>
+  <div class="panel shadow">
+    <!-- row -->
+    <div class="panel-body p-10">
+
+      <div class="table-responsive">
+        <table id="default-table" class="table table-bordered table-hover" style="font-size:0.85em;table-layout:fixed;">
+          <colgroup>
+            <col style="width:5%;">
+            <col style="width:15%;">
+            <col style="width:30%;">
+            <col style="width:10%;">
+            <col>
+            <col>
+            <col>
+            <col>
+            <col style="width:10%;">
+          </colgroup>
+          <thead>
+            <tr>
+              <th rowspan="2" class="text-center">Point<br />(@(Math.Round(Model.sum_point.Value, 1)))</th>
+              <th colspan="2" class="text-center">Action Plan</th>
+              <th colspan="5" class="text-center">Performance & Process</th>
+              <th rowspan="2" class="text-center" style="width:7%;">Status</th>
+              <th rowspan="2" class="text-center" style="width:7%;">비고</th>
+            </tr>
+            <tr>
+
+              <th class="text-center">Client</th>
+              <th class="text-center">Position</th>
+              <th class="text-center">Candidate</th>
+              <th class="text-center">잠재</th>
+              <th class="text-center">추천</th>
+              <th class="text-center">면접</th>
+              <th class="text-center">협상</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (Model.successList.Count > 0)
+            {
+              <tr>
+                <th class="text-left font-weight-bolder bg-blue-100" colspan="10">Invoice Completion [<span class="text-success">Success : (@Model.successList.Count)</span>]</th>
+              </tr>
+              foreach (var data in Model.successList)
+              {
+                <tr>
+                  <td>
+                    @if (data.is_no_invoice == 1)
+                    {
+                      <span class="text-danger" title="REPLACE 건">R</span>
+                    }
+                    else if (data.is_no_invoice > 1)
+                    {
+                      <span class="text-danger">0</span>
+                    }
+                    else
+                    {
+                      @(Math.Round(data.point.HasValue ? data.point.Value : 0, 1))
+                    }
+
+                  </td>
+                  <td class="text-left text-truncate" title="@data.client_name">
+                    <a href="@Url.Action("ClientDetail", "Client", new { @c_seq = data.client_seq })">
+                      @Utils.Truncate(data.client_name, 20)
+                    </a>
+                  </td>
+                  <td class="text-left text-truncate" title="@data.title">
+                    @if (data.pjt_type == 1)
+                    {
+                      <a class="clearfix" href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })">
+                        @data.title
+                      </a>
+                    }
+                    else
+                    {
+                      <a class="clearfix" href="@Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq })">
+                        @data.title
+                      </a>
+                    }
+                    <div class="float-left">
+                      <span class="text-secondary">(code: @data.p_seq) (빌링일 : @Utils.ConvertDateTimeToString(data.billing_dt))</span>
+                    </div>
+                    <div class="float-right">
+                      (
+                      @data.am_name
+                      @if (!string.IsNullOrEmpty(data.searcher_name))
+                      {
+                        <text>, </text> @data.searcher_name
+                      }
+                      )
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    @if (data.invoice_type.HasValue && data.invoice_type >= 1)
+                    {
+                      <span class="clearfix">
+                        @if (data.invoice_type == 1)
+                        {
+                          <span class="badge badge-primary badge-outline">선수금</span>
+                        }
+                        else if (data.invoice_type == 2)
+                        {
+                          <span class="badge badge-primary badge-outline">잔금(선수금제외)</span>
+                        }
+                        else if (data.invoice_type == 4)
+                        {
+                          <span class="badge badge-warning badge-outline">환불</span>
+                        }
+                        else if (data.invoice_type == 5)
+                        {
+                          <span class="badge badge-warning badge-outline">취소</span>
+                        }
+                        else
+                        {
+                          <span class="badge badge-primary badge-outline">기타컨설팅</span>
+                        }
+                      </span>
+                      
+                      <small class="clearfix">(@Utils.ConvertDateTimeToString(data.billing_dt))</small>
+                      
+                    }
+                    else
+                    {
+                      <a class="clearfix" href="@Url.Action("CandidateDetail", "Candidate", new { @c_seq = data.hire_candidate_seq })">
+                        @data.hire_candidate_name
+                      </a>
+                      <small class="">(@Utils.ConvertDateTimeToString(data.hire_candidate_date))</small>
+                    }
+                  </td>
+                  <td class="text-right">
+                    @data.interestCnt
+                  </td>
+                  <td class="text-right">
+                    @data.recommandCnt
+                  </td>
+                  <td class="text-right">
+                    @data.afterInterviewCnt
+                  </td>
+                  <td class="text-right">
+                    @data.negoCnt
+                  </td>
+                  <td class="text-center">
+                    <span class="badge badge-success">@Utils.ReturnProjectStatusTxt(data.pjt_status)</span>
+                  </td>
+                  <td class="text-center">
+                    @if (data.is_posting.HasValue && data.is_posting == 1)
+                    {
+                      <span class="text-info">Web </span>
+                    }
+
+                    @if (data.is_no_invoice == 1)
+                    {
+                      <span class="badge badge-warning badge-outline">REPLACE</span>
+                    }
+                    else if (data.is_no_invoice > 1)
+                    {
+                      <span class="badge badge-warning badge-outline">인보이스 미발행</span>
+                    }
+                  </td>
+                </tr>
+              }
+            }
+            @if (Model.completeList.Count > 0)
+            {
+              <tr>
+                <th class="text-left font-weight-bolder bg-blue-100" colspan="10">Offer Completion [<span class="text-info">Complete : (@Model.completeList.Count)]</span></th>
+              </tr>
+              foreach (var data in Model.completeList)
+              {
+                <tr>
+                  <td>
+                    @if (data.is_no_invoice == 1)
+                    {
+                      <span class="text-danger" title="REPLACE 건">R</span>
+                    }
+                    else if (data.is_no_invoice > 1)
+                    {
+                      <span class="text-danger">0</span>
+                    }
+                    else
+                    {
+                      @(Math.Round(data.point.HasValue ? data.point.Value : 0, 1))
+                    }
+                  </td>
+                  <td class="text-left text-truncate" title="@data.client_name">
+                    <a href="@Url.Action("ClientDetail", "Client", new { @c_seq = data.client_seq })">
+                      @Utils.Truncate(data.client_name, 20)
+                    </a>
+                  </td>
+                  <td class="text-left text-truncate" title="@data.title">
+                    @if (data.pjt_type == 1)
+                    {
+                      <a class="clearfix" href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })">
+                        @data.title
+                      </a>
+                    }
+                    else
+                    {
+                      <a class="clearfix" href="@Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq })">
+                        @data.title
+                      </a>
+                    }
+                    <div class="float-left">
+                      <span class="text-secondary">(code: @data.p_seq) (완료일 : @Utils.ConvertDateTimeToString(data.close_dt))</span>
+                    </div>
+                    <div class="float-right">
+
+                      (
+                      @data.am_name
+                      @if (!string.IsNullOrEmpty(data.searcher_name))
+                      {
+                        <text>, </text> @data.searcher_name
+                      }
+                      )
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    @if (!String.IsNullOrEmpty(data.hire_candidate_name))
+                    {
+                      <a class="clearfix" href="@Url.Action("CandidateDetail", "Candidate", new { @c_seq = data.hire_candidate_seq })">
+                        @data.hire_candidate_name
+                      </a>
+                      <small class="">(@Utils.ConvertDateTimeToString(data.hire_candidate_date))</small>
+                    }
+                  </td>
+                  <td class="text-right">
+                    @data.interestCnt
+                  </td>
+                  <td class="text-right">
+                    @data.recommandCnt
+                  </td>
+                  <td class="text-right">
+                    @data.afterInterviewCnt
+                  </td>
+                  <td class="text-right">
+                    @data.negoCnt
+                  </td>
+                  <td class="text-center">
+                    <span class="badge badge-info">@Utils.ReturnProjectStatusTxt(data.pjt_status)</span>
+                  </td>
+                  <td class="text-center">
+                    @if (data.is_posting.HasValue && data.is_posting == 1)
+                    {
+                      <span class="clearfix text-info">Web </span>
+                    }
+                    @if (data.is_no_invoice > 0)
+                    {
+                      <span class="clearfix">
+                        @if (data.is_no_invoice == 1)
+                        {
+                          <span class="badge badge-warning badge-outline">REPLACE</span>
+                        }
+                        else if (data.is_no_invoice > 1)
+                        {
+                          <span class="badge badge-warning badge-outline">인보이스 미발행</span>
+                        }
+                      </span>
+                    }
+
+                  </td>
+                </tr>
+              }
+            }
+            @if (Model.search.ud_seq != 0)
+            {
+              if (Model.list.Count > 0)
+              {
+                string beforeName = "";
+                foreach (var data in Model.list)
+                {
+                  if (beforeName != data.name)
+                  {
+                    <tr>
+                      <td class="text-left  bg-blue-100 font-weight-bold" colspan="10">
+                        Order Processing [<span class="text-primary">@(data.name)</span>]
+                        @if (!String.IsNullOrEmpty(data.expertise))
+                        {
+                          <span class="text-primary"> : @data.expertise  </span>
+                        }
+                      </td>
+                    </tr>
+                    beforeName = data.name;
+                  }
+                  <tr>
+                    <td>
+                      @(Math.Round(data.point.HasValue ? data.point.Value : 0, 1))
+                    </td>
+                    <td class="text-left text-truncate" title="@data.client_name">
+                      <a href="@Url.Action("ClientDetail", "Client", new { @c_seq = data.client_seq })">
+                        @Utils.Truncate(data.client_name, 10)
+                      </a>
+
+                    </td>
+                    <td class="text-left text-truncate" title="@data.title" colspan="2">
+                      @if (data.pjt_type == 1)
+                      {
+                        <a class="clearfix" href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })">
+                          @data.title
+                        </a>
+                      }
+                      else
+                      {
+                        <a class="clearfix" href="@Url.Action("ProjectRepDetail", "Project", new { @p_seq = data.p_seq })">
+                          @data.title
+                        </a>
+                      }
+                      <small class="float-left">
+                        (@data.am_name
+                        @if (!string.IsNullOrEmpty(data.searcher_name))
+                        {
+                          <text>,</text> @data.searcher_name
+                        })
+                      </small>
+                      <small class="float-right">
+                        (code: @data.p_seq) [Reg: @Utils.ConvertDateTimeToString(data.create_dt)] / [Upd.:@Utils.ConvertDateTimeToString(data.modify_dt)]
+                      </small>
+                    </td>
+                    <td class="text-right">
+                      @data.interestCnt
+                    </td>
+                    <td class="text-right">
+                      @data.recommandCnt
+                    </td>
+                    <td class="text-right">
+                      @data.afterInterviewCnt
+                    </td>
+                    <td class="text-right">
+                      @data.negoCnt
+                    </td>
+                    <td class="text-center">
+                      @if (data.pjt_status == 1)
+                      {
+                        <span class="badge badge-primary">@Utils.ReturnProjectStatusTxt(data.pjt_status)</span>
+                      }
+                      else
+                      {
+                        <span class="badge badge-danger">@Utils.ReturnProjectStatusTxt(data.pjt_status)</span>
+
+                      }
+
+                    </td>
+                    <td class="text-center">
+                      @if (data.is_posting.HasValue && data.is_posting == 1)
+                      {
+                        <span class="text-info">Web</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              }
+              else
+              {
+                <tr>
+                  <td colspan="9">
+                    No Data.
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+  <!-- // row -->
+</div>
+
+@section scripts {
+
+  <script type="text/javascript">
+
+    $(document).ready(function () {
+
+      BindDatePicker($(".jDatePicker"));
+
+    });
+
+    $('#btn-my-team').click(function (event) {
+      event.preventDefault();
+      var ud_seq = $(this).attr("data");
+      $('#search_ud_seq').val(ud_seq)
+      $('#SearchForm').submit();
+
+    })
+
+  </script>
+
+}

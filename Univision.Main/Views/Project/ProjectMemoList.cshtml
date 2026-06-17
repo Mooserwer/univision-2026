@@ -1,0 +1,189 @@
+﻿@model Univision.Main.Models.Project.ProjectMemoListModel
+
+<div class="col-md-12 row no-space mb-10">
+    <div class="form-group vertical-align col-md-11 no-space text-center">
+        <div class="vertical-align-middle col-md-12">
+            <textarea class="form-control" id="memo" rows="3"></textarea>
+        </div>
+    </div>
+    <div class="form-group vertical-align col-md-1 no-space text-center">
+        <div class="vertical-align-middle w-p100 h-p100">
+            <button type="button" id="btnCreatePjtMemo" class="btn btn-primary w-p100 h-p100">등록</button>
+        </div>
+    </div>
+</div>
+<div class="mt-15">
+    <table class="block_table table table-borderless mobile_auto_table" style="table-layout:fixed;">
+        <thead class="text-center">
+            <tr>
+                <th class="hidden-sm-down">No.</th>
+                <th class="tbw70" style="width:480px;">내용</th>
+                <th class="tbw30">작성자</th>
+                <th class="hidden-sm-down">등록일</th>
+                <th class="hidden-sm-down">비고</th>
+            </tr>
+        </thead>
+        <tbody class="text-center">
+            @if (Model.list.Count > 0)
+            {
+                int num = (Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage + 1;
+                foreach (var data in Model.list)
+                {
+                    <tr>
+                        <td class="hidden-sm-down">
+                            @(num++)
+                        </td>
+                        <td class="text-left" title="@data.memo">
+                          @*@Html.Raw(HttpUtility.HtmlEncode(data.memo).Replace("\r\n", "<br/>"))*@
+
+                          @Html.Raw(data.memo.Replace("\r\n", "<br/>"))
+                        </td>
+                        <td>
+                            @data.create_user_name
+                        </td>
+                        <td class="hidden-sm-down">
+                            @Utils.ConvertDateTimeToString(data.create_dt)
+                        </td>
+                        <td class="hidden-sm-down">
+                            <button type="button" id="btnDelCM" class="btn btn-sm btn-warning" onclick="ConfirmDeleteMemo('메모 삭제', '프로젝트 메모를 삭제 하시겠습니까?', '@data.pm_seq')">삭제</button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5">
+                        메모가 없습니다.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+@Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                     ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                     x => String.Format("javascript:callMemoList({0}, {1})", Model.p_seq, x))
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        BindDatePicker("#memo_dt");
+
+        $("#btnCreatePjtMemo").click(function () {
+    
+            if ($("#memo").val() == "") {
+                ErrorAlert("메모 내용을 작성 하세요.");
+                return false;
+            }
+
+            ConfirmCreateMemo("메모 등록", "프로젝트 메모를 등록 하시겠습니까?")
+        });
+
+    });
+
+    function ConfirmCreateMemo(title, msg) {
+
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+                    CreateMemo();
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>' + title)
+            .setting({
+                message: msg,
+            })
+            .show();
+    }
+
+    function CreateMemo() {
+        $.ajax({
+               url: '@Url.Action("CreateProjectMemo", "Project")',
+               data: {
+                   p_seq: '@Model.p_seq'
+                  ,memo: $("#memo").val()
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+
+                    NormalAlert(json.message);
+                    callMemoList('@Model.p_seq', 1);
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+
+    function ConfirmDeleteMemo(title, msg, cm_seq) {
+
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+                    DeleteMemo(cm_seq);
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>' + title)
+            .setting({
+                message: msg,
+            })
+            .show();
+    }
+
+    function DeleteMemo(pm_seq) {
+        $.ajax({
+               url: '@Url.Action("DeleteProjectMemo", "Project")',
+               data: {
+                   pm_seq: pm_seq
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+
+                    NormalAlert(json.message);
+                    callMemoList('@Model.p_seq', 1);
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+
+</script>

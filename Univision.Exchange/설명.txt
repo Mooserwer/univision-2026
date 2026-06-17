@@ -1,0 +1,3 @@
+﻿환율 API용 (https://www.koreaexim.go.kr/site/program/openapi/openApiView?menuid=001003002002001&apino=2&viewtype=C)
+API 키 : OZv3IR9MrcycxhElDj4am7DDfbZ3ABJY
+사용 주소 : https://www.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey=OZv3IR9MrcycxhElDj4am7DDfbZ3ABJY&data=AP01&searchdate=2020-08-24

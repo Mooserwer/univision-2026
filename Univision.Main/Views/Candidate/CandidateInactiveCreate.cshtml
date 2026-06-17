@@ -1,0 +1,97 @@
+﻿@model Univision.Core.Models.DTO.candidate
+
+@{
+  Layout = null;
+}
+
+@using (Html.BeginForm("UpdateCandidateInactive", "Candidate", FormMethod.Post, new { @id = "CreateInactiveForm", @autocomplete = "off" }))
+{
+  @Html.HiddenFor(x => x.c_seq, new { @id = "inactive_c_seq" })
+  <div class="row"><div class="col text-danger">* 유니비전에서 DB를 파기하여야 하나 히스토리 관리의 목적으로 파기하지 못하고 보유한 경우로 절대 컨택 불가한 후보자</div></div>
+  <div class="row">
+    <div class="col-8 form-group">
+      @Html.LabelFor(x => x.is_inactive, "Inactive 여부", new { @class = "form-control-label" })
+      <div class="input-group input-group-sm">
+        <div class="checkbox-custom checkbox-custom-sm checkbox-primary mb-0 pr-10">
+          <input type="checkbox" id="is_inactive" name="is_inactive" value="1" @(Model.is_inactive == 1 ? "checked" : "") />
+          <label for="is_inactive" title="Inactive">Inactive</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mb-10 row_inactive_remark @((Model.is_inactive ?? 0)== 0 ? "d-none" : "")">
+    <div class="col-12 col-md-12 form-group">
+      @Html.LabelFor(x => x.inactive_remark, "내용 <Details>", new { @class = "form-control-label" })
+      @Html.TextAreaFor(x => x.inactive_remark, new { @class = "form-control", @placeholder = "상세내용을 입력해 주십시오.", @rows = 5 })
+    </div>
+    <div class="col-12 form-group text-right">
+      Lastest Update : @Utils.ConvertDateTimeToString(Model.inactive_date) [ @Model.inactive_name ]
+    </div>
+  </div>
+  <div class="row">
+    <div class="col text-right">
+      <button type="button" class="btn btn-sm btn-primary w-150" id="btnInactiveSave" title="등록"><i class="icon wb-check"></i> SUBMIT</button>
+    </div>
+  </div>
+
+}
+
+<script type="text/javascript">
+
+  var candidate_inactive_validate_opt = {
+    rules: {
+      inactive_remark: {
+        required: '#is_inactive:checked'
+      }
+    },
+    messages: {
+      inactive_remark: {
+        required: "사유를 입력해 주십시오."
+      }
+    },
+    submitHandler: function (form) {
+      var request_data = {
+        c_seq: $("#inactive_c_seq").val(),
+        is_inactive: $("input[name='is_inactive']:checked").val() ? 1 : 0,
+        inactive_remark: $("#inactive_remark").val()
+      }
+      ConfirmAlert('Inactive 설정 ', '해당 후보자의 Inactive 정보를 저장하시겠습니까?', function () {
+        ajxCall({
+          type: 'POST',
+          url: $("#CreateInactiveForm").attr("action"),
+          data: request_data,
+          dataType: 'json',
+          loading: true,
+          loading_target: '#CreateInactiveForm',
+          suc: function (json) {
+            NormalAlert(json.message, function () {
+              location.href = location.href;
+            });
+          },
+          err: function (e) {
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.\n' + e.message);
+          }
+        })
+      });
+    }
+  }
+
+  var valid_inactive_option = $.extend({}, valid_option, candidate_inactive_validate_opt);
+
+  var validator_inactive = $("#CreateInactiveForm").validate(valid_inactive_option);
+
+  $('#is_inactive').click(function () {
+    if ($(this).prop("checked")) {
+      $(".row_inactive_remark").removeClass("d-none");
+    } else {
+      $(".row_inactive_remark").removeClass("d-none").addClass("d-none");
+      $('#inactive_remark').val("");
+    }
+    validator_inactive.element('#inactive_remark');
+  });
+  StopEnterSubmit();
+  $("#btnInactiveSave").click(function () {
+    $('#CreateInactiveForm').submit();
+  });
+
+</script>

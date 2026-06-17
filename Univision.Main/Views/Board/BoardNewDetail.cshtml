@@ -1,0 +1,164 @@
+﻿@using Univision.Security;
+@model Univision.Core.Models.DTO.Response.Board.BoardDetailViewModel
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  string pageTag = ViewBag.pageTag;
+}
+<style>
+  .note-content b {
+    font-weight: bold;
+  }
+</style>
+<div class="page-content">
+  <!--검색 Form -->
+  @using (Html.BeginForm(pageTag + "Detail", "Board", FormMethod.Post, new { @id = "DetailForm", @autocomplete = "off" }))
+  {
+    @Html.HiddenFor(x => x.data.b_seq)
+    @Html.HiddenFor(x => x.data.b_type)
+    @Html.HiddenFor(x => x.data.b_type_sub1)
+    @Html.HiddenFor(x => x.data.b_type_sub2)
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <i class="fas fa-address-card"></i>
+          @ViewBag.Title
+        </h3>
+        <div class="panel-actions text-right">
+          <div class="panel-action">
+            @if (AppIdentity.ua_seq <= 3 || AppIdentity.user_seq == Model.data.create_user)
+            {
+              <button type="button" class="btn btn-primary" id="btnModify">Modify </button>
+              <button type="button" class="btn btn-warning" id="btnRemove">Remove </button>
+            }
+            <button type="button" class="btn btn-default btn-outline" id="btnList">List</button>
+          </div>
+        </div>
+
+
+      </div>
+      <div class="panel-body">
+
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-label" title="게시물 제목">Title : </label>
+          <label class="col-sm-10 col-form-label font-weight-600">@(Model.data.title)</label>
+        </div>
+        <hr />
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-legend" title="작성자/작성(수정)일">Writer: </label>
+          <label class="col-sm-10 col-form-legend">
+            Registered : @Model.data.create_dt / Updated : @Model.data.modify_dt
+            <br />최종수정자 : @Model.data.user_name
+
+          </label>
+        </div>
+        <hr />
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-legend" title="조회 수 / 마지막으로 읽은 날짜">Read: </label>
+          <label class="col-sm-10 col-form-legend">@(Model.data.read_cnt) - (Lastest Read : @(Model.data.last_read_date.HasValue ? Model.data.last_read_date.ToString() : "Now") )</label>
+        </div>
+        <hr />
+        @if (Model.data.b_type_sub_name != "")
+        {
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-legend" title="문서 구분">Category: </label>
+            <label class="col-sm-10 col-form-legend">@(Model.data.b_type_sub_name)</label>
+          </div>
+          <hr />
+        }
+        @if (Model.boardFileList.Count > 0)
+        {
+          <div class="form-group row">
+            <label class="col-md-2 col-form-label" title="첨부파일">Files: </label>
+            <div class="col-md-10">
+              <ul class="list-group list-group-full mb-0">
+
+                @foreach (var data in Model.boardFileList)
+                {
+                  <li class="list-group-item p-1">
+                    <a href="javascript:void(0)" onclick="DownloadFile(@data.bf_seq, 'board')">
+                      <i class="fas @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                      @data.file_path
+                    </a>
+                  </li>
+                }
+              </ul>
+            </div>
+          </div>
+          <hr />
+        }
+
+        <div class="form-group row">
+          <label class="col-md-2 col-form-label" title="내용">Description: </label>
+
+          <div class="col-md-10 col-form-label note-content">
+            @{
+              string b_contents = Model.data.contents;
+              if (!String.IsNullOrEmpty(b_contents))
+              {
+                b_contents = b_contents.Replace("&lt;", "<").Replace("&gt;", ">");
+              }
+            }
+            @Html.TextArea("contents", b_contents, new { @id = "contents" })
+          </div>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>
+@section scripts{
+
+  <script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+  <script src="~/Libs/summernote/summernote.min.js"></script>
+  <script src="~/Libs/summernote/summernote-file.js"></script>
+  <script src="~/Libs/summernote/lang/summernote-ko-KR.min.js"></script>
+  <script src="~/Libs/bootstrap-toggle/js/bootstrap-toggle.min.js"></script>
+  <script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
+  <script type="text/javascript">
+
+    $('#contents').summernote({
+      airMode: true
+    });
+    
+        $("#btnModify").click(function () {
+            location.href = "@Url.Action(pageTag+"Create", "Board", new { b_seq = Model.data.b_seq })";
+        })
+
+        $("#btnRemove").click(function () {
+            ConfirmAlert("Remove", "Are you sure want to remove the Post?", function () {
+                $.ajax({
+                    url: '@Url.Action("BoardRemove", "Board")',
+                    data: {
+                        b_seq: "@Model.data.b_seq"
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                    beforeSend: function () {
+                        showLoading();
+                    }
+                })
+                    .done(function (data) {
+                        hideLoading();
+                        if (data.ok) {
+                            NormalAlert(data.message
+                                , function () {
+                                    location.href = "@Url.Action(pageTag + "List", "Board")";
+                                }
+                            );
+
+                        } else {
+                            ErrorAlert("[ERROR]" + data.message);
+                        }
+
+                    })
+            });
+        })
+
+        $("#btnList").click(function () {
+            location.href = "@Url.Action(pageTag + "List", "Board")";//, new { b_seq = Model.b_seq })";
+        })
+
+
+
+  </script>
+}

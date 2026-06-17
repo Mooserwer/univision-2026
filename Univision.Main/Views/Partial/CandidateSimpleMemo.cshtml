@@ -1,0 +1,112 @@
+﻿<style>
+
+    .pop-panel {
+        margin-bottom: 0px;
+    }
+
+        .pop-panel .panel-title {
+            padding: 5px 5px 5px 5px !important;
+        }
+
+        .pop-panel .panel-body {
+            padding: 5px 5px 5px 5px !important;
+
+            
+        }
+        .pop-panel .list-group {
+            margin-bottom:0px;
+        }
+
+            .pop-panel .panel-body span {
+                cursor: pointer;
+            }
+
+        .pop-panel .panel-footer {
+            padding: 5px 5px 5px 5px !important;
+        }
+</style>
+
+<div id="" class="pop-panel panel panel-bordered">
+    <div class="panel-body">
+        <div class="col-md-12 row mb-10 mt-5">
+            <div class="col-md-3  vertical-align">
+                <div class="vertical-align-middle" style="font-weight:bold">
+                    후보자명
+                </div>
+            </div>
+            <div class="col-md-3 vertical-align">
+                <div class="vertical-align-middle">
+                    홍길동
+                </div>
+                
+            </div>
+            <div class="col-md-3 vertical-align">
+                <div class="vertical-align-middle" style="font-weight:bold">
+                    진행선택
+                </div>
+                
+            </div>
+            <div class="col-md-3 vertical-align">
+                <div class="vertical-align-middle">
+                    <select class="form-control">
+                        <option value="">선택</option>
+                        <option value="">채용결정</option>
+                        <option value="">추천</option>
+                        <option value="">등록</option>
+                    </select>
+                </div>
+                
+            </div>
+        </div>
+        <div class="col-md-12 row mb-10">
+            <div class="col-md-3 vertical-align">
+                <div class="vertical-align-middle" style="font-weight:bold">
+                    일자
+                </div>
+            </div>
+            <div class="col-md-9 vertical-align">
+                <div class="vertical-align-middle">
+                    <div class="input-group">
+                        <input type="text" id="date" class="form-control">
+                        <span class="input-group-addon">
+                            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        <div class="col-md-12 row mb-10">
+            <div class="col-md-3 vertical-align">
+                <div class="vertical-align-middle" style="font-weight:bold">
+                    내용
+                </div>
+            </div>
+            <div class="col-md-9 vertical-align">
+                <div class="vertical-align-middle col-md-12 no-side-space">
+                    <input type="text" class="form-control" />
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <div class="panel-footer" style="border-top:1px solid #e4eaec;">
+        <div class="row col-md-12 no-side-space">
+            <div class="col-md-4"></div>
+            <div class="col-md-8 text-right">
+                <button id="btnCancel" type="button" class="btn btn-sm btn-danger" onclick="javascript:$.fancybox.close();">취소</button>
+                <button id="btnSave" type="button" class="btn btn-sm btn-primary">저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+    
+    $(document).ready(function () {
+        BindDatePicker("#date");
+    })
+    
+</script>

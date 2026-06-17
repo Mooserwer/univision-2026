@@ -1,0 +1,253 @@
+﻿@model Univision.Main.Models.Project.MyProjectListModel
+
+@{
+    ViewBag.Title = "MyProjectList";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/apps/work.min599c.css?v4.0.4">
+
+<style>
+
+    .panel-info li {
+        cursor: pointer;
+    }
+
+    #kpiTable th, td {
+        text-align: center
+    }
+
+    #kpiTable tr:last-of-type td {
+        font-weight: bold;
+    }
+
+    table th {
+        text-align: center;
+    }
+
+       
+    @@media (max-width:1300px) {
+        .table.table-project thead th:nth-of-type(6) {
+            display: none
+        }
+        .table.table-project tbody td:nth-of-type(6) {
+            display: none
+        }        
+    }
+    @@media (max-width:1100px) {
+        .table.table-project thead th:nth-of-type(5) {
+            display: none
+        }
+        .table.table-project tbody td:nth-of-type(5) {
+            display: none
+        }     
+    }
+    @@media (max-width:900px) {
+        .table.table-project thead th:nth-of-type(1) {
+            display: none
+        }
+        .table.table-project tbody td:nth-of-type(1) {
+            display: none
+        }     
+    }
+    @@media (max-width:500px) {
+        .table.table-project thead th:nth-of-type(2) {
+            display: none
+        }
+        .table.table-project tbody td:nth-of-type(2) {
+            display: none
+        }   
+    }
+</style>
+
+<div class="page-content app-work">
+
+    <div class="panel" id="myProject">
+
+    </div>
+    @*
+        <div class="panel">
+            <div class="panel-heading pt-5 pb-5">
+                <h3 class="panel-title pt-10 pb-10">3개월 KPI</h3>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table id="kpiTable" class="table table-bordered scrolltable">
+                        <thead>
+                            <tr>
+                                <th class="text-center" rowspan="2" style="vertical-align:middle">
+                                    월
+                                </th>
+                                <th class="text-center" colspan="6">프로젝트</th>
+                                <th class="text-center" colspan="2">고객사</th>
+                                <th class="text-center" colspan="5">후보자</th>
+                            </tr>
+                            <tr>
+                                <th>등록</th>
+                                <th>진행</th>
+                                <th>보류</th>
+                                <th>실패</th>
+                                <th>완료</th>
+                                <th>성공</th>
+                                <th>등록</th>
+                                <th>활동</th>
+                                <th>DB등록</th>
+                                <th>관심</th>
+                                <th>추천</th>
+                                <th>면접</th>
+                                <th>면접채용</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.kpiData.Count > 0)
+                            {
+                                foreach (var kpi in Model.kpiData)
+                                {
+                                    <tr>
+                                        <td>@kpi.month_name</td>
+                                        <td>@kpi.pjt_cnt</td>
+                                        <td>@kpi.pjt_ing</td>
+                                        <td>@kpi.pjt_hold</td>
+                                        <td>@kpi.pjt_fail</td>
+                                        <td>@kpi.pjt_comp</td>
+                                        <td>@kpi.pjt_succ</td>
+                                        <td>@kpi.client_cnt</td>
+                                        <td>@kpi.activity_cnt</td>
+                                        <td>@kpi.mem_cnt</td>
+                                        <td>@kpi.inter_cnt</td>
+                                        <td>@kpi.push_cnt</td>
+                                        <td>@kpi.interview_cnt</td>
+                                        <td>@kpi.hire_cnt</td>
+
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="13">데이터가 없습니다.</td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+
+
+            </div>
+        </div>
+    *@
+</div>
+
+@section scripts {
+
+    <script type="text/javascript">
+        window.multi_api_hidden_pretext = "search."
+        var callShareBtn;
+
+        
+    function MyProjectExcelDown(searchTxt, state, orderTxt, orderOption) {
+        $.ajax({
+            url: '@Url.Action("MyProjectListExcelDown", "Project")',
+            data: {
+                'search.searchTxt': searchTxt
+                , 'search.state': state
+                , 'search.orderTxt': orderTxt
+                , 'search.orderOption': orderOption
+            },
+            dataType: 'json',
+            type: 'POST',
+            async: false,
+            beforeSend: function () {
+
+            }
+        })
+        .done(function (json) {
+
+        })
+        .always(function () {
+
+        });
+    }
+    function call_MyProjectList() {
+
+        showLoading('#myProject');
+        $.ajax({
+            url: '@Url.Action("MyProjectList", "Project")',
+            data: $('#SearchForm').formSerialize(),
+            dataType: 'html',
+            type: 'POST',
+            async: false,
+            beforeSend: function () {
+                
+            }
+        })
+        .done(function (view) {
+            hideLoading('#myProject');
+            $('#myProject').html(view);
+            
+        })
+        .fail(function (xhr, textStatus, errorThrown) {
+        
+            //JSErrorHandler(xhr);
+            hideLoading('#myProject');
+            ErrorAlert('Error' + errorThrown);
+        })
+        .always(function () {
+            hideLoading('#myProject');
+        });
+        
+    }
+    function callMyProjectList(excelDown, page) {
+        $('#page').val(page ? page : 1);
+        $('#search_excelDown').val(excelDown ? excelDown : false);
+        call_MyProjectList()
+    }
+
+    function callMyProjectList_nouse(pjt_type, searchTxt, startDt, endDt, state, orderTxt, orderOption, excelDown, page) {
+        showLoading('#myProject');
+        
+        $.ajax({
+            url: '@Url.Action("MyProjectList", "Project")',
+            data: {
+                 'search.pjt_type': pjt_type
+                , 'search.searchTxt': searchTxt
+                , 'search.startDt': startDt
+                , 'search.endDt': endDt
+                , 'search.state': state
+                , 'search.orderTxt': orderTxt
+                , 'search.orderOption': orderOption
+                , 'search.excelDown': excelDown
+                , page : page
+            },
+            dataType: 'html',
+            type: 'POST',
+            async: false,
+            beforeSend: function () {
+                
+            }
+        })
+        .done(function (view) {
+            hideLoading('#myProject');
+            $('#myProject').html(view);
+            
+        })
+        .fail(function (xhr, textStatus, errorThrown) {
+        
+            //JSErrorHandler(xhr);
+            hideLoading('#myProject');
+            ErrorAlert('Error' + errorThrown);
+        })
+        .always(function () {
+            hideLoading('#myProject');
+        });
+        
+    }
+
+    call_MyProjectList()
+    //callMyProjectList(0, '', '@Utils.ConvertDateTimeToString(Utils.NowKorea().AddDays(-365))', '@Utils.ConvertDateTimeToString(Utils.NowKorea().AddDays(1))', 1, 'P.create_dt', 'DESC', false, 1)
+    //callMyProjectRepList('', '@Utils.ConvertDateTimeToString(Utils.NowKorea().AddDays(-365))', '@Utils.ConvertDateTimeToString(Utils.NowKorea().AddDays(1))', 1, 'P.create_dt', 'DESC', false, 1)
+
+    </script>
+
+}

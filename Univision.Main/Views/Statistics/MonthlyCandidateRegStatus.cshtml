@@ -1,0 +1,279 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.CandidateRegStatusModel
+@using Univision.Security
+
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
+
+<div class="page-content container-fluid">
+
+  <!-- row -->
+  @using (Html.BeginForm("MonthlyCandidateRegStatus", "Statistics", FormMethod.Get, new { @id = "SearchForm" }))
+  {
+    <div class="row">
+      <div class="col">
+        <div class="panel custom1">
+          <!-- // block -->
+          <div class="panel-body p-10">
+            <div class="row">
+              <div class="col-md-8 form-group">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-addon">
+                    <h5>기간 :</h5>
+                  </span>
+                  @Html.TextBoxFor(x => x.search.startDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                  <span class="input-group-addon">
+                    <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  </span>
+                  <sapn class="input-group-addon bg-transparent border-0"> ~ </sapn>
+                  @Html.TextBoxFor(x => x.search.endDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                  <span class="input-group-addon">
+                    <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                  </span>
+                  <span class="input-group-btn">
+                    <button type="button" class="btn btn-secondary" onclick="fSetDate('day');">오늘</button>
+                    <button type="button" class="btn btn-secondary" onclick="fSetDate('week');">1주일</button>
+                    <button type="button" class="btn btn-secondary" onclick="fSetDate('month');">1개월</button>
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-1 offset-2">
+                <button type="button" class="btn btn-sm btn-raised btn-success btn-block" id="user-download-xlsx">Excel</button>
+              </div>
+              <div class="col-md-1">
+                <button type="button" class="btn btn-sm btn-raised btn-primary btn-block" id="table-setdata">검색</button>
+              </div>
+            </div>
+            <!-- block -->
+          </div>
+
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- //row -->
+  <!-- row -->
+  <div class="row" id="univision_activity_body">
+    <div class="col-md-6 col-lg-4">
+      <div class="panel custom1">
+        <div class="panel-heading">
+          <div class="panel-title">
+            월간 이력서 등록 통계 (사용자별)
+          </div>
+          <div class="panel-actions w-md-100">
+            <div class="panel-action text-right w-full">
+              <!--<button type="button" class="btn btn-sm btn-raised btn-primary btn-block" id="user-download-xlsx">Excel</button>-->
+            </div>
+          </div>
+        </div>
+        <div class="panel-body p-10">
+          <div id="candidate_reg_user" data-role="container">
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <div class="panel custom1">
+        <div class="panel-heading">
+          <div class="panel-title">
+            월간 이력서 등록 통계 (산업별)
+          </div>
+          <div class="panel-actions w-md-100">
+            <div class="panel-action text-right w-full">
+              <!--<button type="button" class="btn btn-sm btn-raised btn-primary btn-block" id="busi-download-xlsx">Excel</button>-->
+            </div>
+          </div>
+        </div>
+        <div class="panel-body p-10">
+          <div id="candidate_reg_busi" data-role="container">
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <div class="panel custom1">
+        <div class="panel-heading">
+          <div class="panel-title">
+            월간 이력서 등록 통계 (직무별)
+          </div>
+          <div class="panel-actions w-md-100">
+            <div class="panel-action text-right w-full">
+              <!--<button type="button" class="btn btn-sm btn-raised btn-primary btn-block" id="job-download-xlsx">Excel</button>-->
+            </div>
+          </div>
+        </div>
+        <div class="panel-body p-10">
+          <div id="candidate_reg_job" data-role="container">
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- // row -->
+
+
+</div>
+
+@section scripts {
+  <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+  <script type="text/javascript">
+        $(document).ready(function () {
+            BindDatePicker($(".jDatePicker"));
+        });
+
+    function fSetDate(type) {
+      var today = new Date();
+      var today_str = getDateStr(today)
+      $('#search_endDt').val(today_str);
+      if (type == "day") {
+        $('#search_startDt').val(today_str)
+
+      } else if (type == "week") {
+        $('#search_startDt').val(dateAdd(today_str, -7, "d"))
+      } else if (type == "month") {
+        $('#search_startDt').val(dateAdd(today_str, -1, "m"))
+      }
+    }
+
+    function getDateStr(date) {
+      // GET YYYY, MM AND DD FROM THE DATE OBJECT
+      var yyyy = date.getFullYear().toString();
+      var mm = (date.getMonth() + 1).toString();
+      var dd = date.getDate().toString();
+
+      // CONVERT mm AND dd INTO chars
+      var mmChars = mm.split('');
+      var ddChars = dd.split('');
+
+      // CONCAT THE STRINGS IN YYYY-MM-DD FORMAT
+      return yyyy + '-' + (mmChars[1] ? mm : "0" + mmChars[0]) + '-' + (ddChars[1] ? dd : "0" + ddChars[0]);
+
+    }
+
+    function dateAdd(sDate, v, t) {
+      var yy = parseInt(sDate.substr(0, 4), 10);
+      var mm = parseInt(sDate.substr(5, 2), 10);
+      var dd = parseInt(sDate.substr(8), 10);
+
+      if (t == "d") {
+        d = new Date(yy, mm - 1, dd + v);
+      } else if (t == "m") {
+        d = new Date(yy, mm - 1 + v, dd);
+      } else if (t == "y") {
+        d = new Date(yy + v, mm - 1, dd);
+      } else {
+        d = new Date(yy, mm - 1, dd + v);
+      }
+
+      yy = d.getFullYear();
+      mm = d.getMonth() + 1; mm = (mm < 10) ? '0' + mm : mm;
+      dd = d.getDate(); dd = (dd < 10) ? '0' + dd : dd;
+
+      return '' + yy + '-' + mm + '-' + dd;
+    }
+
+
+    var table_user = new Tabulator("#candidate_reg_user", {
+      height: "500px",
+      frozenRows: 0,
+      columns: [
+        { title: "이름", field: "reg_name", sorter: "string", hozAlign: "right", editor: false, frozen: true  },
+        { title: "건 수", field: "reg_count", sorter: "number", hozAlign: "center", width: 100},
+      ],
+
+      ajaxURL: "@Url.Action("MonthlyCandidateRegUserAjx", "Statistics")",
+      ajaxConfig: "POST",
+      ajaxContentType: "json",
+      ajaxParams: function () {
+        return { startDt: document.getElementById('search_startDt').value, endDt: document.getElementById('search_endDt').value } //ajax parameters
+      },
+      ajaxResponse: function (url, params, response) {
+        return response.list; //return the tableData property of a response json object
+      },
+
+    });
+
+     var table_busi = new Tabulator("#candidate_reg_busi", {
+      height: "500px",
+      frozenRows: 0,
+      columns: [
+        { title: "대분류명", field: "code1_name", sorter: "string", hozAlign: "left", editor: false, frozen: true },
+        { title: "소분류명", field: "code2_name", sorter: "string", hozAlign: "left" },
+        { title: "등록 건수", field: "reg_count", sorter: "number", hozAlign: "right" },
+      ],
+
+      ajaxURL: "@Url.Action("MonthlyCandidateRegBusiAjx", "Statistics")",
+      ajaxConfig: "POST",
+      ajaxContentType: "json",
+      ajaxParams: function () {
+        return { startDt: document.getElementById('search_startDt').value, endDt: document.getElementById('search_endDt').value } //ajax parameters
+      },
+      ajaxResponse: function (url, params, response) {
+        return response.list; //return the tableData property of a response json object
+      }
+     });
+
+    var table_job = new Tabulator("#candidate_reg_job", {
+      height: "500px",
+      frozenRows: 0,
+      columns: [
+        { title: "대분류명", field: "code1_name", sorter: "string", hozAlign: "left", editor: false, frozen: true },
+        { title: "소분류명", field: "code2_name", sorter: "string", hozAlign: "left" },
+        { title: "등록 건수", field: "reg_count", sorter: "number", hozAlign: "right" },
+      ],
+      ajaxURL: "@Url.Action("MonthlyCandidateRegJobAjx", "Statistics")",
+      ajaxConfig: "POST",
+      ajaxContentType: "json",
+      ajaxParams: function () {
+        return { startDt: document.getElementById('search_startDt').value, endDt: document.getElementById('search_endDt').value } //ajax parameters
+      },
+      ajaxResponse: function (url, params, response) {
+        return response.list; //return the tableData property of a response json object
+      },
+
+
+    });
+
+    document.getElementById("table-setdata").addEventListener("click", function () {
+      table_user.setData("@Url.Action("MonthlyCandidateRegUserAjx", "Statistics")");
+      table_busi.setData("@Url.Action("MonthlyCandidateRegBusiAjx", "Statistics")");
+      table_job.setData("@Url.Action("MonthlyCandidateRegJobAjx", "Statistics")");
+    });
+
+    document.getElementById("user-download-xlsx").addEventListener("click", function () {
+      var range = document.getElementById('search_startDt').value.replace(/\-/gi, "") + "_" + document.getElementById('search_endDt').value.replace(/\-/gi, "")
+      var sheet_reg = {
+        "사용자별": true, //first tab with table set using a query selector
+        "산업별": table_busi, //second tab, generated from this table
+        "직무별": table_job, //third tab with table set to DOM Node
+      };
+
+      table_user.download("xlsx", "이력서등록통계_" + range + ".xlsx", { sheets: sheet_reg }); //download a Xlsx file that has a tab for each table
+      //table_user.download("xlsx", "이력서등록통계(사용자)_" + range+".xlsx", { sheetName: "사용자별" });
+    });
+    /*
+    document.getElementById("busi-download-xlsx").addEventListener("click", function () {
+      var range = document.getElementById('search_startDt').value.replace(/\-/gi, "") + "_" + document.getElementById('search_endDt').value.replace(/\-/gi, "")
+      table_busi.download("xlsx", "이력서등록통계(산업별)_" + range + ".xlsx", { sheetName: "산업별" });
+    });
+
+    document.getElementById("job-download-xlsx").addEventListener("click", function () {
+      var range = document.getElementById('search_startDt').value.replace(/\-/gi, "") + "_" + document.getElementById('search_endDt').value.replace(/\-/gi, "")
+      table_job.download("xlsx", "이력서등록통계(직무별)_" + range + ".xlsx", { sheetName: "직무별" });
+    });
+    */
+
+
+  </script>
+
+}

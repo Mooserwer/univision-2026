@@ -1,0 +1,134 @@
+﻿@using Univision.Core.Models;
+@using Univision.Core.Models.DTO;
+@model Univision.Core.Models.DTO.Response.Board.BoardListModel
+@{
+  //ViewBag.Title = "NoticeList";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@*<link rel="stylesheet" href="~/Libs/remark/global/vendor/tablesaw/tablesaw.min599c.css?v4.0.4">*@
+<link rel="stylesheet" href="~/Libs/tablesaw/tablesaw.css?v4.0.4">
+<div class="page-content">
+  <!--검색 Form -->
+
+
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <!-- 검색 패널 시작 -->
+    @using (Html.BeginForm("ShareCandidateList", "Candidate", FormMethod.Get, new { @id = "searchForm" }))
+    {
+      <div class="panel-heading">
+        <div class="panel-title">
+          <i class="fas fa-info-circle"></i>
+          후보 추천드려요
+        </div>
+        <div class="panel-actions" style="display:flex">
+          <div class="panel-action input-search ">
+            <select name="SelectOption" id="SelectOption" class="form-control form-control-m">
+              <option value="title" @(ViewBag.searchOption == "title" ? "selected" : "")>Title</option>
+              <option value="contents" @(ViewBag.searchOption == "contents" ? "selected" : "")>Contents</option>
+              <option value="writer" @(ViewBag.searchOption == "writer" ? "selected" : "")>Writer</option>
+            </select>
+          </div>
+          <div class="panel-action input-search ">
+            <button type="submit" class="input-search-btn">
+              <i class="icon wb-search" aria-hidden="true"></i>
+              &nbsp;&nbsp;
+            </button>
+            <input type="text" class="form-control" name="SearchString" id="SearchString" placeholder="" value="@ViewBag.searchString">
+          </div>
+        </div>
+      </div>
+      <!-- 검색 패널 끝 -->
+    }
+
+
+
+    <div class="panel-body pt-5">
+      <div class="row">
+        <div class="col text-right">
+          <a href="@Url.Action("ShareCandidateCreate", "Candidate")" class="btn btn-sm btn-primary">
+            <i class="fas fa-plus"></i>
+            Write
+          </a>
+        </div>
+      </div>
+      <div class="mt-15">
+
+        <table class="block_table table table-striped table-hover" data-tablesaw-mode="columntoggle" data-tablesaw-minimap>
+          <thead>
+            <tr>
+              <th data-tablesaw-priority="4" class="tablesaw-priority-4 text-center hidden-sm-down" style="width: 10%">No.</th>
+              <th data-tablesaw-priority="persist" class="text-center tbw70" style="min-width: 40%">Title</th>
+              <th data-tablesaw-priority="3" class="tablesaw-priority-3 text-center hidden-sm-down">Read</th>
+              <th data-tablesaw-priority="2" class="tablesaw-priority-2 text-center hidden-sm-down">Writer</th>
+              <th data-tablesaw-priority="1" class="tablesaw-priority-1 text-center tbw30">Date</th>
+            </tr>
+            @if (Model != null && Model.TopBoardList.Count > 0)
+            {
+              foreach (board bd in Model.TopBoardList)
+              {
+                <tr class="table-primary">
+                  <th class="tablesaw-priority-4 text-center font-italic hidden-sm-down">N</th>
+                  <th><a href="@Url.Action("ShareCandidateDetail", "Candidate", new { b_seq = bd.b_seq})" data-rel="external" class="font-italic">@bd.title</a></th>
+                  <th class="tablesaw-priority-3 text-center font-weight-bold hidden-sm-down">@bd.read_cnt</th>
+                  <th class="tablesaw-priority-2 text-center font-weight-bold">@bd.user_name</th>
+                  <th class="tablesaw-priority-1 text-center font-weight-bold hidden-sm-down">@(((DateTime)bd.modify_dt).ToString("yyyy-MM-dd"))</th>
+
+                </tr>
+              }
+            }
+          </thead>
+          <tbody>
+
+            @if (Model != null && Model.BoardList.Count > 0)
+            {
+              int i = (int)Model.PagingInfo.TotalItems - (Model.PagingInfo.ItemsPerPage * (Model.PagingInfo.CurrentPage - 1));
+              foreach (board bd in Model.BoardList)
+              {
+                <tr>
+                  <th class="tablesaw-priority-4 text-center hidden-sm-down">@i</th>
+                  <td><a href="@Url.Action("ShareCandidateDetail", "Candidate", new { b_seq = bd.b_seq})" data-rel="external">@bd.title</a></td>
+                  <td class="tablesaw-priority-3 text-center hidden-sm-down">@bd.read_cnt</td>
+                  <td class="tablesaw-priority-2 text-center hidden-sm-down">@bd.user_name</td>
+                  <td class="tablesaw-priority-1 text-center">@(((DateTime)bd.modify_dt).ToString("yyyy-MM-dd"))</td>
+
+                </tr>
+                i--;
+              }
+            }
+            else
+            {
+              <tr>
+                <td colspan="5" style="text-align:center;height:200px;vertical-align:middle;"><b>No Data.</b></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (Model != null && Model.BoardList.Count > 0)
+        {
+
+          @Html.PageAjaxLinks(Model.PagingInfo,
+           ViewContext.HttpContext.Request.Url.AbsoluteUri,
+           x => Url.Action("ShareCandidateList", new
+           {
+               page = x
+           }))
+
+        }
+      </div>
+
+    </div>
+  </div>
+
+</div>
+@section scripts{
+  @*
+        <script src="~/Libs/remark/global/vendor/tablesaw/tablesaw.jquery599c.js?v4.0.4"></script>
+        <script src="~/Libs/remark/global/vendor/tablesaw/tablesaw-init599c.js?v4.0.4"></script>
+        <script src="~/Libs/remark/global/js/Plugin/tablesaw.min599c.js?v4.0.4"></script>
+
+    <script src="~/Libs/tablesaw/tablesaw.jquery.js"></script>
+    <script src="~/Libs/tablesaw/tablesaw-init.js"></script>
+    <script src="~/Libs/tablesaw/tablesaw.js"></script>
+  *@
+
+}

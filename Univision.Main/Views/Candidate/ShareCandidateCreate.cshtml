@@ -1,0 +1,362 @@
+﻿@model Univision.Core.Models.DTO.Response.Board.BoardDetailViewModel
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_cus.css?v=1533562669">
+<style>
+  .v-center {
+    display: flex;
+    align-items: center;
+  }
+</style>
+<div class="page-content">
+  <!--검색 Form -->
+
+
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    @using (Html.BeginForm("ShareCandidateCreate", "Candidate", FormMethod.Post, new { @id = "CreateForm", @autocomplete = "off" }))
+    {
+      @Html.HiddenFor(x => x.data.b_seq)
+      @Html.HiddenFor(x => x.data.b_type)
+      @Html.HiddenFor(x => x.data.b_type_sub1)
+      @Html.HiddenFor(x => x.data.b_type_sub2)
+      @Html.HiddenFor(x => x.data.create_dt)
+      @Html.HiddenFor(x => x.data.create_user)
+      @Html.Hidden("uploadFolder")
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <i class="fas fa-address-card"></i>
+          후보 추천드려요
+        </h3>
+        <div class="panel-actions">
+          <div class="panel-action">
+            <button type="submit" class="btn btn-primary" id="btnSave">Submit </button>
+            <button type="reset" class="btn btn-default btn-outline">Reset</button>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="panel-body pb-0">
+
+        <div class="form-group row">
+          <label class="col-md-2 col-form-label">Title : </label>
+          <div class="col-md-10">
+            @Html.TextBoxFor(x => x.data.title, new { @class = "form-control", @required = "required", @placeholder = "Title" })
+          </div>
+        </div>
+        <div class="form-group row">
+          <legend class="col-md-2 col-form-legend">Top: </legend>
+          <div class="col-md-10">
+            <div class="checkbox-custom checkbox-default">
+              <input type="checkbox" id="data_b_top" name="data.b_top" value="1" @(Model.data.b_top == 1 ? "checked" : "")>
+              <label for="data_b_top">(When checked, the posts are placed at the top.)</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <legend class="col-md-2 col-form-legend">Alert: </legend>
+          <div class="col-md-10">
+            <div class="checkbox-custom checkbox-default">
+              <input type="checkbox" id="do_alert" name="do_alert" value="1" @(Model.data.b_seq == 1 ? "checked" : "")>
+
+              <label for="do_alert">(When checked, Send Alert/Mail to Unico Users.)</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 col-form-label">Description: </label>
+          <div class="col-md-10">
+            @{
+              string b_contents = Model.data.contents;
+              if (!String.IsNullOrEmpty(b_contents))
+              {
+                b_contents = b_contents.Replace("&lt;", "<").Replace("&gt;", ">");
+              }
+            }
+            @Html.TextArea("contents", b_contents, new { @id = "contents", @class = "form-control", @required = "required" })
+            @Html.HiddenFor(x => x.data.contents)
+          </div>
+        </div>
+
+        <div class="col-md-12 row no-space">
+          <label class="col-md-2 col-form-label">Uploaded Files: </label>
+          <div class="col-md-10" id="upload_file_list">
+            @Html.Partial("ShareCandidateCreateFileList", Model)
+          </div>
+        </div>
+      </div>
+    }
+    <div class="panel-body pt-0">
+      <div id="board_files" class="dropzone">
+
+      </div>
+    </div>
+  </div>
+</div>
+@section scripts{
+  <script src="~/Libs/summernote/summernote.min.js"></script>
+  <script src="~/Libs/summernote/summernote-file.js"></script>
+  <script src="~/Libs/summernote/lang/summernote-ko-KR.min.js"></script>
+  <script src="~/Libs/bootstrap-toggle/js/bootstrap-toggle.min.js"></script>
+
+  <script type="text/javascript">    
+    $('#contents').summernote({
+      
+      placeholder: '내용을 여기에 등록',
+      tabsize: 1,
+      height: 300,
+
+      callbacks: {	//여기 부분이 이미지를 첨부하는 부분
+        onImageUpload: function (files) {
+          uploadSummernoteImageFile(files[0], this);
+        },
+        onFileUpload: function (files) {
+          uploadSummernoteImageFile(files[0], this);
+        },
+        onPaste: function (e) {
+          var clipboardData = e.originalEvent.clipboardData;
+          if (clipboardData && clipboardData.items && clipboardData.items.length) {
+            var item = clipboardData.items[0];
+            if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
+              e.preventDefault();
+            }
+          }
+        }
+      }
+
+    });
+
+    function uploadSummernoteImageFile(file, editor) {
+      data = new FormData();
+      data.append("file", file);
+      $.ajax({
+        data: data,
+        type: "POST",
+        url: "@Url.Action("UploadSummerNoteAttach", "Board")",
+        contentType: false,
+        processData: false,
+        success: function (rst) {
+          //항상 업로드된 파일의 url이 있어야 한다.
+          console.log(rst)
+          if (rst.ok) {
+            let listMimeImg = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg'];
+            let listMimeAudio = ['audio/mpeg', 'audio/ogg'];
+            let listMimeVideo = ['video/mpeg', 'video/mp4', 'video/webm'];
+            let elem;
+
+            if (listMimeImg.indexOf(file.type) > -1) {
+              $(editor).summernote('insertImage', "/" + rst.file_path);
+            } else if (listMimeAudio.indexOf(file.type) > -1) {
+              elem = document.createElement("audio");
+              elem.setAttribute("src", "/" + rst.file_path);
+              elem.setAttribute("controls", "controls");
+              elem.setAttribute("preload", "metadata");
+              $(editor).summernote('insertNode', elem);
+
+            } else if (listMimeVideo.indexOf(file.type) > -1) {
+              elem = document.createElement("video");
+              elem.setAttribute("src", "/" + rst.file_path);
+              elem.setAttribute("controls", "controls");
+              elem.setAttribute("preload", "metadata");
+              $(editor).summernote('insertNode', elem);
+            } else {
+              elem = document.createElement("a");
+              let linkText = document.createTextNode(rst.file_name);
+              elem.appendChild(linkText);
+              elem.title = rst.file_name;
+              elem.href = "/" + rst.file_path;
+              $(editor).summernote('insertNode', elem);
+            }
+          } else {
+            ErrorAlert(rst.message);
+          }
+
+        }
+      });
+    }
+  </script>
+            <script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
+  <script type="text/javascript">
+
+                StopEnterSubmit();
+
+                function RemoveFile(file_seq) {
+                    var postData = $('#CreateForm').serialize();
+                    console.log(postData);
+                    $.ajax({
+                        url: "@Url.Action("ShareCandidateRemoveFileList", "Candidate")",
+                        type: "POST",
+                        data: postData + "&file_seq=" + file_seq,
+                        beforeSend: function () {
+                            showLoading();
+                        },
+                        complete: function (data) {
+                            hideLoading();
+                            $('#upload_file_list').html("");
+                            $('#upload_file_list').html(data.responseText);
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            hideLoading();
+                            ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                        }
+                    });
+
+                }
+                $('.back-button').click(function (e) {
+                    history.back();
+                });
+
+                //파일업로드
+                var dropzone_files = new Array();
+                var myDropzone = new Dropzone("div#board_files", {
+                    url: "@Url.Action("CreateTempShareCandidateFile", "Candidate")",
+                    method: "post",
+                    params: { 'b_seq': '@Model.data.b_seq', "uploadFolder": "@ViewBag.uploadFolder" }
+                });
+                myDropzone.on("success", function (file, response) {
+                    if (response.ok) {
+                        dropzone_files.push(response.result);
+                    } else {
+                        ErrorAlert("[ERROR]" + response.message);
+                    }
+
+                });
+                myDropzone.on("complete", function (file) {
+
+                    if (this.getUploadingFiles().length === 0 && this.getQueuedFiles().length === 0) {
+                        console.log(dropzone_files);
+
+                        var postData = $('#CreateForm').serialize();
+                        var i = 0;
+                        dropzone_files.forEach(function (file) {
+                            var obj = {};
+                            $.each(file, function(index, value){
+                                obj["files[" + i + "]." + index] = value;
+                            });
+                            postData += "&" + $.param(obj);
+                            i++;
+                        });
+                        console.log(postData);
+                        $.ajax({
+                            url: "@Url.Action("ShareCandidateCreateFileList", "Candidate")",
+                            type: "POST",
+                            data: postData,
+                            complete: function (data) {
+                                console.log(data);
+                                $('#upload_file_list').html(data.responseText);
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                            }
+                        });
+
+
+                        this.removeAllFiles();
+                        dropzone_files = new Array();
+                    }
+                });
+
+                    //폼 유효성 검사
+                $("#CreateForm").formValidation({
+                    framework: "bootstrap4",
+                    button: {
+                        selector: "#btnSave",
+                        disabled: "disabled"
+                    },
+                    submitHandler: function () {
+                        alert("")
+                    },
+                    icon: null,
+                    fields: {
+                        title: {
+                            validators: {
+                                notEmpty: {
+                                    message: "Title is required."
+                                }
+                            }
+                        },
+                        contents: {
+                            validators: {
+                                notEmpty: {
+                                    message: "Contents is required."
+                                }
+                            }
+                        },
+                        "data.b_type_sub_name": {
+                            validators: {
+                                notEmpty: {
+                                    message: "Please choose a value."
+                                }
+                            }
+                        }
+
+
+                    },
+                    err: {
+                        clazz: "invalid-feedback"
+                    },
+                    control: {
+                        valid: "is-valid",
+                        invalid: "is-invalid"
+                    },
+                    row: {
+                        invalid: "has-danger"
+                    }
+                }).on('success.form.fv', function (e) {
+                    //기본 submit 이벤트 취소.
+                  e.preventDefault();
+
+                  if ($('#contents').summernote('isEmpty')) {
+                      alert('내용을 입력해 주십시오.');
+                      return;
+                  }
+                  $('#data_contents').val($('#contents').summernote('code').replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+
+                  
+
+                    ConfirmAlert("Save", "저장 하시겠습니까??",
+                      function () {
+                        
+                            var formURL = $("#CreateForm").attr("action");
+                            $.ajax({
+                                url: formURL,
+                                type: "POST",
+                                dataType: 'json',
+                                data: $("#CreateForm").serialize(),
+                                beforeSend: function () {
+                                    showLoading();
+                                },
+                                success: function (json) {
+                                    hideLoading();
+                                    if (json.ok) {
+                                        NormalAlert("Save Complete", function () {
+                                            if (json.b_seq) {
+                                                location.href = "@Url.Action("ShareCandidateDetail", "Candidate")?b_seq=" + json.b_seq;
+                                            }
+                                        });
+
+                                    }
+                                    else {
+                                        ErrorAlert("[ERROR] " + json.message);
+                                    }
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    hideLoading();
+                                    ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                                },
+                                complete: function () {
+                                    hideLoading();
+                                    $("#btnSave").prop("disabled", "");
+                                    $("#btnSave").removeClass("disabled");
+                                }
+                            });
+                        }, function () {
+                            $("#btnSave").prop("disabled", "");
+                            $("#btnSave").removeClass("disabled");
+                        });
+                });
+
+
+  </script>
+}

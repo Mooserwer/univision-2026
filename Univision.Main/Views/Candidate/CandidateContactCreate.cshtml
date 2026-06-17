@@ -1,0 +1,191 @@
+﻿@model Univision.Core.Models.DTO.candidate
+
+@{
+  Layout = null;
+}
+
+@using (Html.BeginForm("UpdateCandidateContact", "Candidate", FormMethod.Post, new { @id = "CreateContactForm", @autocomplete = "off" }))
+{
+  @Html.HiddenFor(x => x.c_seq, new { @id = "contact_c_seq" })
+<div class="row mb-10">
+  <div class="col-12 col-md-6 form-group">
+    @Html.LabelFor(x => x.cell_phone, "Phone1", new { @class = "form-control-label" })
+    <span class="label-reqired">*</span>
+    <div class="input-group input-group-sm">
+      @Html.TextBoxFor(x => x.cell_phone, new { @class = "form-control phone-group", @placeholder = "010-0000-0000" })
+      <div class="input-group-append pl-3">
+        <div class="checkbox-custom checkbox-custom-sm checkbox-primary mb-0">
+          <input type="checkbox" id="wrong_phone2" name="wrong_phone2" value="1" @(Model.wrong_phone2 == 1 ? "checked" : "") />
+          <label for="wrong_phone2" title="Wrong number">(X)</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 form-group">
+    @Html.LabelFor(x => x.phone, " Phone2", new { @class = "form-control-label" })
+    <div class="input-group input-group-sm">
+      @Html.TextBoxFor(x => x.phone, new { @class = "form-control phone-group", @valid_error_target = "#cell_phone", @placeholder = "010-0000-0000" })
+      <div class="input-group-append pl-3">
+        <div class="checkbox-custom checkbox-custom-sm checkbox-primary mb-0">
+          <input type="checkbox" id="wrong_phone" name="wrong_phone" value="1" @(Model.wrong_phone == 1 ? "checked" : "") />
+          <label for="wrong_phone" title="Wrong number">(X)</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row mb-10">
+  <div class="col-12 col-md-6 form-group">
+    @Html.LabelFor(x => x.email1, "E-mail1", new { @class = "form-control-label" })
+    <span class="label-reqired">*</span>
+    <div class="input-group input-group-sm">
+      @Html.TextBoxFor(x => x.email1, new { @class = "form-control", @placeholder = "email@email.com", @required = "true" })
+      
+    </div>
+  </div>
+  <div class="col-12 col-md-6 form-group">
+    @Html.LabelFor(x => x.email2, "E-mail2", new { @class = "form-control-label" })
+    <div class="input-group input-group-sm">
+      @Html.TextBoxFor(x => x.email2, new { @class = "form-control", @valid_error_target = "#email1", @placeholder = "email2@email2.com" })
+    </div>
+  </div>
+</div>
+  <div class="row">
+    <div class="col text-right">
+      <button type="button" class="btn btn-sm btn-primary w-150" id="btnCanContactSave" title="저장"><i class="icon wb-check"></i> 저장</button>
+    </div>
+  </div>
+
+}
+
+<script type="text/javascript">
+
+  function get_phone_remote(id) {
+        
+            return {
+                url: '@Url.Action("PhoneDuplicateCheck2", "Candidate")',
+                type: "post",
+              data: {
+                    except_c: $("#contact_c_seq").val(),
+                    phone: function () {
+                        return $(id).val();
+                    }
+                }
+            }
+        
+    }
+
+    function get_email_remote(id) {
+        
+            return {
+                url: '@Url.Action("EmailDuplicateCheck2", "Candidate")',
+                type: "post",
+                data: {
+                    except_c: $("#contact_c_seq").val(),
+                    email: function () {
+                        return $(id).val();
+                    }
+                }
+            }
+        
+    }
+
+    function get_email_phone_check() {
+        if ($('#c_seq').val() != "0") {
+            return "";
+        } else {
+            if (($('#cell_phone').val() == "" || $('#cell_phone').val() == "000-0000-0000") && ($('#email1').val() == "" || $('#email1').val() == "no@email.address")) {
+                return false;
+            } else {
+                return true;
+            }
+
+        }
+    }
+
+  var candidate_validate_opt = {
+    rules: {
+      cell_phone: {
+        require_from_group: [1, ".phone-group"],
+      },
+      phone: {
+        require_from_group: [1, ".phone-group"],
+      },
+      email1: {
+        email: true,
+        required: true,
+      },
+      email2: {
+        email: true,
+      }
+    },
+    messages: {
+      cell_phone: {
+
+      },
+      phone: {
+
+      },
+      email1: {
+        required: ""
+      },
+      email2: {
+
+      }
+    },
+    submitHandler: function (form) {
+      var request_data = {
+        c_seq: $("#contact_c_seq").val(),
+        phone: $("#phone").val().trim(),
+        wrong_phone: $("input[name='wrong_phone']:checked").val(), //
+        cell_phone: $("#cell_phone").val().trim(),
+        wrong_phone2: $("input[name='wrong_phone2']:checked").val(), //
+        email1: $("#email1").val().trim(),
+        email2: $("#email2").val().trim(),
+      };
+      ConfirmAlert('연락처 업데이트 ', '해당 후보자의 연락처를 업데이트하시겠습니까?', function () {
+        ajxCall({
+          type: 'POST',
+          url: $("#CreateContactForm").attr("action"),
+          data: request_data,
+          dataType: 'json',
+          loading: true,
+          loading_target: '#CreateContactForm',
+          suc: function (json) {
+            NormalAlert(json.message, function () {
+              location.href = location.href;
+            });
+          },
+          err: function (e) {
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.\n' + e.message);
+          }
+        })
+      });
+    }
+  }
+
+  var remote_option = {}
+
+  candidate_validate_opt.rules.cell_phone.remote = get_phone_remote('#cell_phone');
+  candidate_validate_opt.rules.phone.remote = get_phone_remote('#phone');
+  candidate_validate_opt.rules.email1.remote = get_email_remote('#email1');
+  candidate_validate_opt.rules.email2.remote = get_email_remote('#email2');
+  candidate_validate_opt.rules.email2.remote = get_email_remote('#email2');
+  candidate_validate_opt.messages.cell_phone.remote = "[이미 등록된 전화번호 입니다.(Phone1)]";
+  candidate_validate_opt.messages.phone.remote = "[이미 등록된 전화번호 입니다.(Phone2)]";
+  candidate_validate_opt.messages.email1.remote = "[이미 등록된 메일주소 입니다.(Email1)]"
+  candidate_validate_opt.messages.email2.remote = "[이미 등록된 메일주소 입니다.(Email2)]"
+
+
+
+  var valid_option_contact = $.extend({}, valid_option, candidate_validate_opt);
+
+  var validator_contact = $("#CreateContactForm").validate(valid_option_contact);
+
+  StopEnterSubmit();
+
+  $("#btnCanContactSave").click(function () {
+   $('#CreateContactForm').submit();    
+  });
+
+</script>

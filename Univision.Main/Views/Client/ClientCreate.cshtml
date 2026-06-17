@@ -1,0 +1,1414 @@
+﻿@model Univision.Main.Models.Client.ClientCreateModel
+@{
+  ViewBag.Title = "고객사 등록 및 수정";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+  #btnSpan_Dup {
+    display: none;
+  }
+
+  .has-success > .input-group > #btnSpan_Dup {
+    display: inline !important;
+  }
+</style>
+
+<div class="page-content">
+  @using (Html.BeginForm("ClientCreate", "Client", FormMethod.Post, new { @id = "CreateForm" }))
+  {
+    @Html.HiddenFor(x => x.c_seq)
+    @Html.HiddenFor(x => x.i_seq)
+    @*@Html.HiddenFor(x => x.checkValue)*@
+    <input type="hidden" name="checkValue" id="checkValue" value="0" />
+    <input type="hidden" name="old_kor" id="old_kor" value="@Model.kor_name" />
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <i class="fas fa-newspaper"></i>
+          Client Info
+        </h3>
+        <div class="panel-actions">
+          <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+        </div>
+      </div>
+      <div id="projectInfo" class="panel-body">
+        <div class="row">
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="kor_name" title="고객사명(국문)">Client Name(Kr) <span class="label-reqired">*</span></label>
+            <div class="input-group input-group-sm">
+              <input type="hidden" id="g_seq" name="g_seq">
+              <input type="hidden" id="cc_seq" name="cc_seq">
+              @*@Html.TextBoxFor(x => x.kor_name, new { @class = "form-control col-md-10", @autocomplete = "off", onkeydown = "FindCompany(this)" })
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-primary" id="btnClientSearch"><i class="icon wb-search" aria-hidden="true"></i></button>
+                </span>*@
+              @*@Html.TextBoxFor(x => x.kor_name, new { @class = "form-control col-md-10", @readonly = "readonly" })*@
+
+              @*@Html.TextBoxFor(x => x.checkValue, new { @class = "form-control col-md-10"})*@
+              @*<span class="input-group-btn">
+                    <button type="button" class="btn btn-primary" id="btnClientSearch"><i class="icon wb-search" aria-hidden="true"></i></button>
+                </span>*@
+              @Html.TextBoxFor(x => x.kor_name, new { @class = "form-control", @autocomplete = "off", @placeholder = "회사명(국문)" })
+              <span class="input-group-btn" id="btnSpan_Dup">
+                <button type="button" @*id="doubleCheck"*@ onclick="javascript:NewClientSearch();" class="btn btn-primary" title="연금보험 납입 사업자 조회">불러오기</button>
+              </span>
+            </div>
+          </div>
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="eng_name" title="고객사명(영문)">Client Name(En) <span class="label-reqired">*</span></label>
+            @Html.TextBoxFor(x => x.eng_name, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "회사명(영문)" })
+          </div>
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="ceo" title="대표자명">C.E.O</label><span class="label-reqired">&nbsp;</span>
+            @Html.TextBoxFor(x => x.ceo, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "대표자명" })
+          </div>
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="biz_code" title="사업자등록번호(ex:123-12-12345)">Business No.</label><span class="label-reqired">&nbsp;</span>
+            @Html.TextBoxFor(x => x.biz_code, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "000-00-00000", @maxlength = "12" })
+          </div>
+          <div class="form-group col-12">
+            <label class="form-control-label small" for="offlimit_keyword">회사명 동의어 <small class="text-primary">&nbsp;* 쉼표(,) 로 구분</small> <i class="fa fa-info-circle text-info" title="회사이름 영문표기 국문표기 줄임말 등 입력 시 검색, offlimit 및 중복체크에 활용 됩니다."></i></label>
+            @Html.TextBoxFor(x => x.offlimit_keyword, new { @class = "form-control form-control-sm", @data_plugin = "tokenfieldX", @placeholder = "회사명 동의어 (검색 및 Offlimit 확인용)" })
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="form-group col-md-9">
+            <label class="form-control-label small" for="addr1" title="고객사 소재지(주소)">Invoice Address</label>
+            <div class="input-group input-group-sm">
+              @Html.TextBoxFor(x => x.addr1, new { @class = "form-control form-control-sm w-p100", @autocomplete = "off", @placeholder = "고객사 소재지" })
+              <div class="input-group-append">
+                <div class="checkbox-custom checkbox-custom-sm checkbox-primary checkbox-inline">
+                  <input type="checkbox" id="foreignYes" name="is_foreign" value="1" @(Model.is_foreign == 1 ? "checked" : "")>
+                  <label for="foreignYes" title="고객사 주소가 해외일 경우 체크해주세요">Foreign Address</label>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label small" for="country_name" title="본사 주소가 해외에 있을 경우 본사가 위치한 국가(선택)">HQ Country</label>
+            <div class="input-group input-group-sm">
+              @*@Html.TextBoxFor(x => x.country_name, new { @class = "form-control col-md-9", @autocomplete = "off", onkeydown = "FindNationality(this)" })*@
+              @Html.TextBoxFor(x => x.country_name, new { @class = "form-control", @readonly = "readonly", @placeholder = "고객사 국적" })
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-primary" id="btnNationalitySearch"><i class="icon wb-search" aria-hidden="true"></i></button>
+              </span>
+            </div>
+            @Html.HiddenFor(x => x.foreign_code)
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="form-group col-7 col-md-3">
+            <label class="form-control-label small" for="title">Foreign / Domestic <span class="label-reqired">*</span></label>
+            <div class="">
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                <input type="radio" id="investYes" name="is_foreign_invest" value="1" @(Model.is_foreign_invest == 1 ? "checked" : "")>
+                <label for="investYes">Foreign</label>
+              </div>
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                <input type="radio" id="investNo" name="is_foreign_invest" value="0" @(Model.is_foreign_invest == 0 ? "checked" : "")>
+                <label for="investNo">Domestic</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group col-5 col-md-3">
+            <label class="form-control-label small" for="title">Contract <span class="label-reqired">*</span></label>
+            <div class="">
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                <input type="radio" id="contractYes" name="is_contract" value="1" @(Model.is_contract == 1 ? "checked" : "")>
+                <label for="contractYes">Yes</label>
+              </div>
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                <input type="radio" id="contractNo" name="is_contract" value="0" @(Model.is_contract == 0 ? "checked" : "")>
+                <label for="contractNo">No</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="title">Inorder / BD <span class="label-reqired">*</span></label>
+            <div class="">
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                <input type="radio" id="is_inorder_y" name="is_inorder" value="1" @(Model.is_inorder == 1 ? "checked" : "")>
+                <label for="is_inorder_y">Inorder<small>(회사오더)</small></label>
+              </div>
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                <input type="radio" id="is_inorder_n" name="is_inorder" value="0" @(Model.is_inorder == 0 ? "checked" : "")>
+                <label for="is_inorder_n">BD</label>
+              </div>
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                <input type="radio" id="is_inorder_bdm" name="is_inorder" value="3" @(Model.is_inorder == 3 ? "checked" : "")>
+                <label for="is_inorder_bdm">BD Manager</label>
+              </div>
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                <input type="radio" id="is_inorder_a" name="is_inorder" value="2" @(Model.is_inorder == 2 ? "checked" : "")>
+                <label for="is_inorder_a">All-in-One<small>(리멤버)</small></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="title" title="고객사 임직원 컨택 금지 조항">Offlimit<span class="label-reqired">*</span></label>
+            <div class="" id="client-offlimit-label">
+              <div class="radio-custom radio-custom-sm radio-danger radio-inline mr-20">
+                <input type="radio" id="offlimit_y" name="offlimit" value="1" @(Model.offlimit == 1 ? "checked" : "")>
+                <label for="offlimit_y" title="계약서 상 전 임직원 컨택금지 조항">[계약서 표기] 전 임직원</label>
+              </div>
+              <div class="radio-custom radio-custom-sm radio-warning radio-inline ml-0 mr-20">
+                <input type="radio" id="offlimit_2" name="offlimit" value="2" @(Model.offlimit == 2 ? "checked" : "")>
+                <label for="offlimit_2" title="계약서 상 유니코에 의한 채용자 컨택금지 조항">[계약서 표기] 유니코채용직원</label>
+              </div>
+              <div class="radio-custom radio-custom-sm radio-info radio-inline ml-0 mr-20">
+                <input type="radio" id="offlimit_3" name="offlimit" value="3" @(Model.offlimit == 3 ? "checked" : "")>
+                <label for="offlimit_3" title="계약서 내 오프리밋 조항은 없지만 고객사의 요청 등">[계약서 미표기] OFFLIMIT</label>
+              </div>
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline ml-0 mr-20">
+                <input type="radio" id="offlimit_n" name="offlimit" value="0" @(Model.offlimit == 0 ? "checked" : "")>
+                <label for="offlimit_n">No</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group col-6 col-md-9">
+            <label class="form-control-label small" for="title">AM <i class="fa fa-info-circle text-info" title="프로젝트 수주 시 AM으로 등록합니다. 기존 AM(AM1)이 휴면 상태(Dormant)인 경우, 삭제할 수 있습니다"></i> <span class="label-reqired">*</span></label>
+            <div class="input-group input-group-sm">
+              <div class="form-control" id="AMDiv" name="AMDiv">
+                @if (Model.amList.Count > 0)
+                {
+                  foreach (var am in Model.amList)
+                  {
+                    <span class="category small mr-5">
+                      <span class="badge badge-outline badge-default bg-white cur_hand badge-lg font-size-14" am_seq="@am.uv_seq">
+                        @am.am_name
+                        <i class="far fa-times-circle" onclick="removeBadge(this)"></i>
+                      </span>
+                    </span>
+                  }
+                }
+              </div>
+              <div class="input-group-btn">
+                <button type="button" id="btnAm" class="btn btn-sm btn-success"><i class="fas fa-plus" aria-hidden="true"></i></button>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="title">PE Portfolio사 <span class="label-reqired">*</span></label>
+            <div class="">
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                <input type="radio" id="is_portfolio_y" name="is_portfolio" value="1" @(Model.is_portfolio == 1 ? "checked" : "")>
+                <label for="is_portfolio_y">Yes</label>
+              </div>
+              <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                <input type="radio" id="is_portfolio_n" name="is_portfolio" value="0" @(Model.is_portfolio == 0 ? "checked" : "")>
+                <label for="is_portfolio_n">No</label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="row">
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="biz_type">Business Type</label>
+            @Html.TextBoxFor(x => x.biz_type, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "업태" })
+          </div>
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="biz_category">Business Item</label>
+            @Html.TextBoxFor(x => x.biz_category, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "종목" })
+          </div>
+          <div class="form-group col-md-6">
+            <label class="form-control-label small" for="company_name">Industry <span class="label-reqired">*</span> <i class="fa fa-info-circle text-info" title="해당 고객사에 등록된 산업이 프로젝트 작성 시 산업 항목에 자동으로 입력 됩니다."></i></label>
+            @*<div class="input-group">
+                  <div id="businessCodeDiv" name="businessCodeDiv" class="form-control col-md-10" style="background-color:white"></div>
+                  <span class="input-group-btn">
+                      <button type="button" class="btn btn-primary" id="btnBusiness"><i class="icon wb-search" aria-hidden="true"></i></button>
+                  </span>
+              </div>*@
+            <div class="input-group input-group-sm redo-site" id="businessDiv">
+              @Html.HiddenFor(x => x.busiCode1, new { @class = "busiCode1" })
+              @Html.HiddenFor(x => x.busiCode2, new { @class = "busiCode2" })
+              @{
+                string business_str = String.Empty;
+                if (!String.IsNullOrEmpty(Model.business_name2))
+                {
+                  business_str = "[" + Model.business_name1 + " > " + Model.business_name2 + "]";
+                }
+              }
+              @Html.TextBox("business_name2", business_str, new { @class = "form-control bg-white busiTargetText form-control-sm", @readonly = "readonly", @placeholder = "산업" })
+              <div class="input-group-btn">
+                <button type="button" class="btn btn-primary" onclick="FindBusinessSingle('businessDiv')">
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          @*<div class="form-group col-md-3">
+                <label class="form-control-label small" for="title">고정타이틀(Biz_Title)</label>
+                @Html.TextBoxFor(x => x.fix_title, new { @class = "form-control col-md-11", @autocomplete = "off" })
+            </div>*@
+        </div>
+
+        <div class="row">
+          <div class="form-group col-md-3">
+            <label class="form-control-label small" for="fix_title" title="프로젝트 고정 타이틀 : ex:[외국계 IT회사]">
+              Project Title Heading
+              <i class="fa fa-info-circle text-info" title="해당 고객사에 등록된 고정 타이틀이 프로젝트 작성 시 산업항목에 구인제목에 자동으로 입력 됩니다."></i>
+            </label>
+            @Html.TextBoxFor(x => x.fix_title, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "예시 - [국내 대기업]" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label small" for="homepage" title="홈페이지 주소">Homepage</label>
+            @Html.TextBoxFor(x => x.homepage, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "http://exam.net" })
+          </div>
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="employee_number">Number of Employees</label>
+            @Html.TextBoxFor(x => x.employee_number, new { @type = "number", @class = "form-control form-control-sm", @placeholder = "사원 수", @autocomplete = "off", style = "text-align:right;" })
+          </div>
+          <div class="form-group col-6 col-md-3">
+            <label class="form-control-label small" for="sales_amount">Sales Amount <span class="d-md-inline-block d-none">(100 million won)</span></label>
+            @Html.TextBoxFor(x => x.sales_amount, new { @type = "number", @class = "form-control form-control-sm", @placeholder = "연간 매출액(억원)", @autocomplete = "off", style = "text-align:right;" })
+          </div>
+        </div>
+
+        <div class="row">
+
+        </div>
+
+      </div>
+    </div>
+    if (Model.c_seq == null || Model.c_seq == 0)
+    {
+      <!-- Contact 시작 -->
+      <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="fas fa-user-tie"></i>
+            Contact Info (인보이스 담당자)
+          </h3>
+          <div class="panel-actions">
+            <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+          </div>
+        </div>
+        <div id="projectTax" class="panel-body">
+          <div class="row">
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="name">Contact Name <span class="label-reqired">*</span></label>
+              @Html.HiddenFor(x => x.contact_seq)
+              @Html.TextBoxFor(x => x.name, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "고객사 담당자 명" })
+
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="name">Gender <span class="label-reqired">*</span></label>
+              <div class="">
+                <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                  <input type="radio" id="male" name="gender" value="1" @(Model.gender == 1 ? "checked" : "")>
+                  <label for="male">Male</label>
+                </div>
+                <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+                  <input type="radio" id="female" name="gender" value="2" @(Model.gender == 2 ? "checked" : "")>
+                  <label for="female">Female</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="contact_position">Position <span class="label-reqired">*</span></label>
+              @Html.TextBoxFor(x => x.position, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "직급" })
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="contact_division">Department <span class="label-reqired">*</span></label>
+              @Html.TextBoxFor(x => x.division, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "부서" })
+            </div>
+          </div>
+          <div class="row">
+            <div class="form-group col-md-3">
+              <label class="form-control-label small" for="email">E-mail</label> <span class="label-reqired">*</span>
+              @Html.TextBoxFor(x => x.email, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "exam@exam.net" })
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="phone">Phone</label><span class="label-reqired">*</span>
+              @Html.TextBoxFor(x => x.phone, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "00-0000-0000" })
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="cell_phone">Mobile</label><span class="label-reqired">&nbsp;</span>
+              @Html.TextBoxFor(x => x.cell_phone, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "000-0000-0000" })
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Contact 끝 -->
+
+      <!-- 전자세금계산서 담당자 시작 -->
+      <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="fas fa-wallet"></i>
+            E-Tax Manager (세금계산서 담당자)
+          </h3>
+          <div class="panel-actions">
+            <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+          </div>
+        </div>
+        <div id="projectTax" class="panel-body">
+          <div class="row">
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="tax_name">Name</label>
+              @Html.HiddenFor(x => x.tax_seq)
+              @Html.TextBoxFor(x => x.tax_name, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "담당자명 + 직급" })
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="tax_division">Department</label>
+              @Html.TextBoxFor(x => x.tax_division, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "담당부서" })
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="tax_division">E-mail</label>
+              @Html.TextBoxFor(x => x.tax_email, new { @class = "form-control form-control-sm email", @autocomplete = "off", @placeholder = "exam@exam.net" })
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="tax_division">Mobile</label>
+              @Html.TextBoxFor(x => x.tax_cell_phone, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "000-0000-0000" })
+            </div>
+          </div>
+          <div class="row">
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="tax_phone" title="계산서 발행용 이름">Name for Tax</label>
+              @Html.TextBoxFor(x => x.tax_deposit_manager, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "발행용 담당자명(직급)" })
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <div class="">
+                <label class="form-control-label small" for="">&nbsp;</label>
+                <div class="">
+                  <div class="checkbox-custom checkbox-custom-sm checkbox-primary checkbox-inline">
+                    <input type="checkbox" id="same_tax">
+                    <label for="same_tax" title="계산서 담당자명, 이메일이 발행용 항목과 동일 할 경우 체크해 주세요.">Same Name / E-mail</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="tax_email" title="계산서 발행용 이메일">E-mail for Tax</label>
+              @Html.TextBoxFor(x => x.tax_deposit_email, new { @class = "form-control form-control-sm email", @autocomplete = "off", @placeholder = "발행용 이메일 - exam@exam.net" })
+            </div>
+            <div class="form-group col-6 col-md-3">
+              <label class="form-control-label small" for="tax_email" title="계산서 발행용 연락처">Phone for Tax</label>
+              @Html.TextBoxFor(x => x.tax_phone, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "00-0000-0000" })
+            </div>
+
+          </div>
+        </div>
+      </div>
+    }
+    <!-- 전자세금계산서 담당자 끝 -->
+
+    <div class="text-right">
+      @*PMS 오픈 관련 등록기능 제한*@
+      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      {
+        <button type="submit" id="btnSave" class="btn btn-sm btn-primary w-100" title="저장하기"><i class="icon wb-check"></i> Submit</button>
+      }
+    </div>
+  }
+</div>
+
+
+@section scripts{
+
+  <script src="~/Libs/remark/global/vendor/bootstrap-tokenfield/og-bootstrap-tokenfield.js"></script>
+
+  <script type="text/javascript">
+    $('#offlimit_keyword').tokenfield();
+
+
+    $('#offlimit_keyword').on('tokenfield:createtoken', function (event) {
+      var existingTokens = $(this).tokenfield('getTokens');
+      $.each(existingTokens, function (index, token) {
+        if (token.value === event.attrs.value)
+
+          event.preventDefault();
+      });
+    });
+
+    $('#same_tax').click(function () {
+      if ($(this).prop("checked")) {
+        $('#tax_deposit_manager').val($('#tax_name').val());
+        $('#tax_deposit_email').val($('#tax_email').val());
+      }
+    });
+
+    var callJobObj;
+    var callBusiObj;
+    var callRankObj;
+    var code2Arr = []; //placePopup 에서 사용하는 전역변수.
+    var AM_Arr = [];
+
+    var jobCodeArr = []; //jobbusinessApi 에서 사용
+    var busiCodeArr = []; //jobbusinessApi 에서 사용
+
+
+    var amValidator = {
+      selector: '#AMDiv',
+      validators: {
+        callback: {
+          message: '최소 한명의 AM은 선택해야 합니다.',
+          callback: function (input) {
+
+            var fv = $("#CreateForm").data("formValidation");
+
+            var len = $("#AMDiv").find("span").length;
+
+            let isEmpty = true;
+
+            if (len > 0) {
+              isEmpty = false;
+            }
+
+            if (!isEmpty) {
+              // Update the status of callback validator for all fields
+              fv.updateStatus('AMDiv', 'Valid', 'callback');
+              return true;
+            }
+            return false;
+          }
+        }
+      }
+    }
+
+
+        @*function doubleCheck() {
+            alert("ok");
+            var cClient = $("#kor_name").val();
+            $.ajax({
+                url: '@Url.Action("ClientSearchUni", "Client")',
+                type: 'POST',
+                data: { kor_name: cClient },
+                success: function (json) {
+                    if (json.ok) {
+                        $("#checkClient").html("유니비젼에 등록되어진 업체입니다.");
+                    }
+                    else {
+                        $("#checkClient").html("검색버튼으로 자세히 확인하세요.");
+                    }
+                },
+                error: function () {
+                    alert("에러가 발생하였습니다.");
+                }
+            });
+        };*@
+
+
+
+
+        //var korNameValidator = {
+        //    validators: {
+        //        selector: "kor_name",
+        //        callback: {
+        //            message: "중복체크와 업체검색을 진행하세요.",
+        //            callback: function (input) {
+        //                debugger;
+        //                var fv = $("#ContactCreateForm").data("formValidation");
+
+        //                let isEmpty = true;
+
+        //                if ($("#c_seq").val() > 0) {
+        //                    if ($("#old_kor").val() != $("#kor_name").val() && $("#checkValue").val() == 9) {
+        //                        isEmpty = false;
+        //                        //alert("1");
+        //                    }
+        //                    else if ($("#old_kor").val() != $("#kor_name").val() && $("#checkValue").val() == 0) {
+        //                        isEmpty = false;
+        //                        //alert("2");
+        //                    }
+        //                    else if ($("#old_kor").val() != $("#kor_name").val() && $("#checkValue").val() == 1) {
+        //                        isEmpty = false;
+        //                        //alert("3");
+        //                    }
+        //                }
+        //                else {
+        //                    if ($("#checkValue").val() == 0) {
+        //                        isEmpty = false;
+        //                        //alert("4");
+        //                    }
+        //                    else if ($("#checkValue").val() == 9) {
+        //                        isEmpty = false;
+        //                        //alert("5");
+        //                    }
+        //                    else if ($("#checkValue").val() == 1) {
+        //                        isEmpty = false;
+        //                        //alert("6");
+        //                    }
+        //                }
+
+        //                //if ($("#phone").val() != "" || $("#cell_phone").val() != "") {
+        //                //    isEmpty = false;
+        //                //}
+
+        //                if (!isEmpty) {
+        //                    // Update the status of callback validator for all fields
+        //                    //fv.updateStatus('kor_name', 'Valid', 'callback');
+        //                    //fv.updateStatus('cell_phone', 'Valid', 'callback');
+        //                    return true;
+        //                }
+
+        //                return false;
+        //            }
+        //        }
+        //    }
+        //};
+
+
+
+        $(document).ready(function () {
+
+          StopEnterSubmit();
+
+            $(function () {
+
+                $('#biz_code').keydown(function (event) {
+                    var key = event.charCode || event.keyCode || 0;
+                    $text = $(this);
+                    if (key !== 8 && key !== 9) {
+                        if ($text.val().length === 3) {
+                            $text.val($text.val() + '-');
+                        }
+                        if ($text.val().length === 6) {
+                            $text.val($text.val() + '-');
+                        }
+                    }
+
+                    return (key == 8 || key == 9 || key == 46 || (key >= 48 && key <= 57) || (key >= 96 && key <= 105));
+                    // Key 8번 백스페이스, Key 9번 탭, Key 46번 Delete 부터 0 ~ 9까지, Key 96 ~ 105까지 넘버패트
+                    // 한마디로 JQuery 0 ~~~ 9 숫자 백스페이스, 탭, Delete 키 넘버패드외에는 입력못함
+                })
+            });
+            //$('#sameBtn').click(function () {
+
+            //    if ($(this).is(":checked")) {
+            //        $("#tax_name").val($("#name").val());
+            //        $("#tax_division").val($("#division").val());
+            //        $("#tax_email").val($("#email").val());
+            //        $("#tax_phone").val($("#phone").val());
+            //        $("#tax_cell_phone").val($("#cell_phone").val());
+            //        $("#tax_deposit_manager").val($("#name").val());
+            //        $("#tax_deposit_email").val($("#email").val());
+            //    }
+            //    else {
+            //        $("#tax_name").val("");
+            //        $("#tax_division").val("");
+            //        $("#tax_email").val("");
+            //        $("#tax_phone").val("");
+            //        $("#tax_cell_phone").val("");
+            //        $("#tax_deposit_manager").val("");
+            //        $("#tax_deposit_email").val("");
+            //    }
+            //});
+
+
+
+            $("#doubleCheck").click(function () {
+                //미사용
+                var cClient = $("#kor_name").val();
+
+                if (cClient == null || cClient == "") {
+                    $("#checkClient").html("업체명을 입력하세요.");
+                    return false;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("ClientSearchUni", "Client")',
+                    type: 'POST',
+                    data: { kor_name: cClient },
+                    beforeSend: function () {
+                        showLoading();
+                    },
+                    success: function (json) {
+                        hideLoading();
+                        if (json.ok) {
+                            if (json.data == 0) {
+                                $("#checkClient").html("신규업체입니다.");
+                                $("#checkValue").val(1);
+                                $('#btnSave').attr('disabled', false);
+                                $("#btnSave").removeClass("disabled");
+                                NewClientSearch();
+                            }
+                            else {
+                                $("#checkClient").html("이미 등록되어진 업체입니다.");
+                                $('#btnSave').attr('disabled', true);
+                                $("#checkValue").val(9);
+                                $("#btnSave").removeClass("disabled");
+                            }
+                        }
+                        else {
+                            ErrorAlert("에러가 발생하였습니다.");
+                        }
+                    },
+                    error: function () {
+                        hideLoading();
+                        ErrorAlert("에러가 발생하였습니다.");
+                    }
+                });
+            });
+
+            //폼 유효성 검사
+          $("#CreateForm").formValidation({
+
+            framework: "bootstrap4",
+            button: {
+              selector: "#btnSave",
+              disabled: "disabled"
+            },
+            submitHandler: function () {
+            },
+            icon: null,
+            fields: {
+              //kor_name: korNameValidator,
+              kor_name: {
+                validators: {
+                  notEmpty: true,
+                  stringLength: {
+                    min: 2
+                  },
+                  remote: {
+                    url: '@Url.Action("ClientSearchUni", "Client")',
+                    // Send { email: 'its value', username: 'its value' } to the back-end
+                    data: {
+                      c_seq: $("#c_seq").val(),
+                      kor_name: $("#kor_name").val()
+                    },
+                    message: 'Client name is duplicated.',
+                    type: 'POST'
+                  }
+                }
+              },
+              eng_name: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+              is_foreign_invest: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+              is_inorder: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+              is_portfolio: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+              offlimit: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+
+              is_contract: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+              biz_code: {
+                validators: {
+                  //notEmpty: {
+                  //    message: "사업자번호 10자리를 입력하세요."
+                  //},
+                  //stringLength: {
+                  //    min: 12,
+                  //    max: 12,
+                  //    message: "사업자번호는 10자리입니다."
+                  //},
+                  remote: {
+                    url: '@Url.Action("BizCheck", "Client")',
+                    // Send { email: 'its value', username: 'its value' } to the back-end
+                    data: { biz_code: $("#biz_code").val() },
+                    message: 'Please check business number.',
+                    type: 'POST'
+                  }
+                }
+              },
+              name: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+
+              gender: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+              email: {
+                validators: {
+                  notEmpty: true,
+                  email: true
+                }
+              },
+              phone: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+              division: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+              position: {
+                validators: {
+                  notEmpty: true
+                }
+              },
+              business_name2 :{
+              validators: {
+                notEmpty: true
+              }
+          }
+
+                },
+                err: {
+                    clazz: "invalid-feedback"
+                },
+                control: {
+                    valid: "is-valid",
+                    invalid: "is-invalid"
+                },
+                row: {
+                    invalid: "has-danger"
+                }
+            })
+                //validation 성공시, ajax submit.
+                //ajax submit 사용하지 않을 경우, on 부분은 삭제해도 됨.
+                .on('success.form.fv', function (e) {
+                    //기본 submit 이벤트 취소.
+                    e.preventDefault();
+
+                    //debugger;
+                    //form 전송을 위한 데이터 생성.
+                    //기본정보
+                    var currentData = {
+                        c_seq: $("#c_seq").val(),
+                        kor_name: $("#kor_name").val(),
+                        eng_name: $("#eng_name").val(),
+                        ceo: $("#ceo").val(),
+                        is_foreign_invest: $("input[name='is_foreign_invest']:checked").val(),
+                      is_inorder: $("input[name='is_inorder']:checked").val(),
+                      is_portfolio: $("input[name='is_portfolio']:checked").val(),
+                      offlimit: $("input[name='offlimit']:checked").val(),
+                      offlimit_keyword: $("#offlimit_keyword").val(),
+
+                        addr1: $("#addr1").val(),
+                        addr2: $("#addr2").val(),
+                        is_contract: $("input[name='is_contract']:checked").val(),
+                        is_foreign: $("input[name='is_foreign']:checked").val(),
+                        foreign_code: $("#foreign_code").val(),
+                        country_name: $("#country_name").val(),
+                        biz_code: $("#biz_code").val(),
+                        biz_type: $("#biz_type").val(),
+                        biz_category: $("#biz_category").val(),
+                        //biz_industry: $("#business").val(),
+                        //busiCode1: $("#busiCode1").val(),
+                        //busiCode2: $("#busiCode2").val(),
+                        //biz_industry_code: $("#busiCode2").val(),
+                        biz_industry_code1: $("#busiCode1").val(),
+                        biz_industry_code2: $("#busiCode2").val(),
+                        busiList: [],
+                        fix_title: $("#fix_title").val(),
+                        homepage: $("#homepage").val(),
+                        employee_number: $("#employee_number").val(),
+                        sales_amount: $("#sales_amount").val(),
+                        contact_seq: $("#contact_seq").val(),
+                        name: $("#name").val(),
+                        gender: $("input[name='gender']:checked").val(),
+                        email: $("#email").val(),
+                        phone: $("#phone").val(),
+                        cell_phone: $("#cell_phone").val(),
+                        division: $("#division").val(),
+                        position: $("#position").val(),
+                        tax_seq: $("#tax_seq").val(),
+                        tax_division: $("#tax_division").val(),
+                        tax_name: $("#tax_name").val(),
+                        tax_email: $("#tax_email").val(),
+                        tax_phone: $("#tax_phone").val(),
+                        tax_cell_phone: $("#tax_cell_phone").val(),
+                        tax_deposit_manager: $("#tax_deposit_manager").val(),
+                        tax_deposit_email: $("#tax_deposit_email").val(),
+                        //offlimit: $("#offlimit").val(),
+                        i_seq: $("#i_seq").val(),
+                        amList: []
+                    };
+
+                    $("#AMDiv").find(".badge").each(function () {
+                        var amData = {
+                            uv_seq: $(this).attr("am_seq")
+                        };
+
+                        currentData.amList.push(amData);
+                    });
+
+                    //산업 리스트
+                    $(".busiCode").each(function () {
+
+                        var busiData = {
+                            code1: $(this).attr("code1"),
+                            code2: $(this).attr("code2"),
+                            code3: $(this).attr("code3")
+                        };
+
+                        currentData.busiList.push(busiData);
+                    });
+
+                var formURL = $("#CreateForm").attr("action");
+                $.ajax({
+                    url: formURL,
+                    type: "POST",
+                    dataType: 'json',
+                    data: {
+                        data: currentData
+                    },
+                    beforeSend: function () {
+                        showLoading();
+                    },
+                    success: function (json) {
+                        hideLoading();
+                        if (json.ok) {
+                            NormalAlert("Registration is completed.");
+                            location.href = "/Client/ClientDetail?c_seq=" + json.c_seq;
+                        }
+                        else {
+                            ErrorAlert("Error Occurred - " +json.message);
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        hideLoading();
+                        ErrorAlert("SYSTEM ERROR");
+                    }
+                });
+            });
+        });
+
+
+        function FindCompany(obj) {
+
+            $(obj).autocomplete({
+                source: function (request, response) {
+                    $.ajax({
+                        type: 'post',
+                        url: '@Url.Action("FindCompanyApi", "Partial")',
+                        dataType: "json",
+                        //request.term = $("#autocomplete").val()
+                        data: {
+                            companyName: request.term
+                        },
+                        success: function(data) {
+                            //서버에서 json 데이터 response 후 목록에 뿌려주기 위함
+                            response(
+                                $.map(data.list, function (item) {
+                                    return {
+                                        //label: item.wkplNm,
+                                        //value: item.wkplNm,
+                                        //ac_seq: item.ac_seq,
+                                        //rgstNo: item.bzowrRgstNo,
+                                        //busi: item.vldtVlKrnNm,
+                                        //jnngpCnt: item.jnngpCnt
+                                        label: item.WKPL_NM,
+                                        value: item.WKPL_NM,
+                                        g_seq: item.G_SEQ,
+                                        rgstNo: item.BZOWR_RGST_NO,
+                                        busi: item.VLDT_VL_KRN_NM
+                                    }
+                                })
+                            );
+
+                            $(".ui-autocomplete").highlight(request.term);
+                        }
+                    });
+                },
+                autoFocus:true, //첫번째 값을 자동 focus한다
+                minLength: 2,  //조회를 위한 최소글자수
+                select: function (event, ui) {
+
+
+                    $(event.target).closest("div").find("input[name='ac_seq']").val(ui.item.ac_seq);
+                    $(event.target).parents("div").find("input[name='biz_code']").val(ui.item.rgstNo);
+                    $(event.target).parents("div").find("input[name='biz_code']").val(ui.item.rgstNo);
+                    // 만약 검색리스트에서 선택하였을때 선택한 데이터에 의한 이벤트발생
+
+                    //$(event.target).closest("div").next().find("input").focus();
+                    //$(event.target).parents("div").find("input[name='biz_code']").focus();
+                }
+            }).data("ui-autocomplete")._renderItem = function (ul, item) {
+
+                return $("<li>")
+                    .data("ui-menu-item", item)
+                    .append("<div class='ui-menu-item-wrapper'><span class='font-size-16'>" + item.label + "</span><br><span class='font-size-12'>" + item.busi + "</span></div>")
+                    .appendTo(ul);
+            };
+        }
+
+
+        function FindNationality(obj) {
+            $(obj).autocomplete({
+                source: function (request, response) {
+
+                    $.ajax({
+                        type: 'post',
+                        url: '@Url.Action("FindCountryApi", "Partial")',
+                        dataType: "json",
+                        data: {
+                            country_name: request.term
+                        },
+                        success: function(data) {
+                            response(
+                                $.map(data.list, function (item) {
+                                    return {
+                                        //label: item.wkplNm,
+                                        //value: item.wkplNm,
+                                        //ac_seq: item.ac_seq,
+                                        //rgstNo: item.bzowrRgstNo,
+                                        //busi: item.vldtVlKrnNm,
+                                        //jnngpCnt: item.jnngpCnt
+                                        label: item.Kr_Country_Name,
+                                        value: item.Kr_Country_Name,
+                                        naCode: item.Nationality_Code,
+                                        label2: item.En_Country_Name
+                                    }
+                                })
+                            );
+
+                            $(".ui-autocomplete").highlight(request.term);
+                        }
+                    });
+                },
+                autoFocus:true, //첫번째 값을 자동 focus한다
+                minLength: 2,  //조회를 위한 최소글자수
+                select: function (event, ui) {
+
+                    debugger;
+                    $(event.target).parents("div").find("input[name='foreign_code']").val(ui.item.naCode);
+                    // 만약 검색리스트에서 선택하였을때 선택한 데이터에 의한 이벤트발생
+
+                    //$(event.target).closest("div").next().find("input").focus();
+                    //$(event.target).parents("div").find("input[name='biz_code']").focus();
+                }
+            }).data("ui-autocomplete")._renderItem = function (ul, item) {
+
+                return $("<li>")
+                    .data("ui-menu-item", item)
+                    .append("<div class='ui-menu-item-wrapper'><span class='font-size-16'>" + item.label + "(" + item.label2 + ")</span></div>")
+                    .appendTo(ul);
+            };
+        }
+
+        @*function FindBusinessSingle(obj) {
+
+            callBusiObj = $("#business_name2");
+
+            $.ajax({
+                url: '@Url.Action("BusinessSingleApi", "Partial")',
+                data: {
+                    code1: $("#busiCode1").val(),
+                    code2: $("#busiCode2").val()
+                    //code1: "",
+                    //code2: ""
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    $(".page").isLoading({
+                        text: "Loading",
+                        position: "overlay"
+                    });
+                }
+            })
+            .done(function (json) {
+                $(".page").isLoading( "hide" );
+                $.fancybox.open({
+                    'content':json,
+                    'width': '440',
+                    'height': '440',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': 'Find industry',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                //$(".page").isLoading("hide");
+                ErrorAlert('SYSTEM ERROR');
+            });
+
+        }*@
+
+        function NewClientSearch() {
+            $.ajax({
+                url: '@Url.Action("ClientSearch", "Client")',
+                data: {
+                    searchTxt: $("#kor_name").val()
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    $(".page").isLoading({
+                        text: "Loading",
+                        position: "overlay"
+                    });
+                }
+            })
+            .done(function (json) {
+                $(".page").isLoading("hide");
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '800',
+                    'height': '385',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': '연금보험 납입 사업장 검색',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                $(".page").isLoading( "hide" );
+                ErrorAlert('SYSTEM ERROR');
+            });
+        }
+    window.url_search_client_manager = "@Url.Action("SearchClientManager", "Candidate")";
+    function FindManager(e) {
+      $.fancybox.open({
+        href: window.url_search_client_manager,
+        ajax: {
+          type: "post",
+        },
+        autoDimensions: false,
+        type: 'ajax',
+        padding: 5,
+        scrolling: 'auto',
+        autoSize: true,
+        helpers: {
+          overlay: {
+            closeClick: false
+          }
+        }
+      });
+    }
+
+
+
+        $("#btnClientSearch").click(function(){
+
+            $.ajax({
+                url: '@Url.Action("ClientSearch", "Client")',
+                data: {
+                    searchTxt: $("#kor_name").val()
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    $(".page").isLoading({
+                        text: "Loading",
+                        position: "overlay"
+                    });
+                }
+            })
+            .done(function (json) {
+                $(".page").isLoading("hide");
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '800',
+                    'height': '385',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': '업체검색',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                $(".page").isLoading( "hide" );
+                ErrorAlert('SYSTEM ERROR');
+            });
+        });
+
+
+        $("#btnNationalitySearch").click(function(){
+
+            $.ajax({
+                url: '@Url.Action("NationalcodeSearch", "Client")',
+                data: {
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    $(".page").isLoading({
+                        text: "Loading",
+                        position: "overlay"
+                    });
+                }
+            })
+            .done(function (json) {
+                $(".page").isLoading("hide");
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '500',
+                    'height': '385',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': 'Find Country',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                $(".page").isLoading( "hide" );
+                ErrorAlert('SYSTEM ERROR');
+            });
+        });
+
+
+        $("#btnAm").click(function () {
+
+                //if ($("#company_name").val() == "" || $("#c_seq").val() == 0) {
+                //    NormalAlert("고객사 명을 검색 하세요.")
+                //    return false;
+                //}
+
+                AM_Arr = [];
+                $("#AMDiv").find("span").each(function(){
+                    AM_Arr.push($(this).attr("am_seq"));
+                });
+
+                $.ajax({
+                    url: '@Url.Action("SearchProjectAM", "Project")',
+                    data: {
+                    },
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                        $(".page").isLoading({
+                            text: "Loading",
+                            position: "overlay"
+                        });
+                    }
+                })
+                .done(function (json) {
+                    $(".page").isLoading("hide");
+
+                    $.fancybox.open({
+                        'content':json,
+                        'width': '500',
+                        'height': '385',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': 'AM 목록',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    $(".page").isLoading( "hide" );
+                    ErrorAlert('SYSTEM ERROR');
+                });
+
+            });
+
+
+        //산업
+        $("#btnBusiness").click(function () {
+            //debugger;
+            callBusiObj = $("#businessCodeDiv");
+            var businessCodeList = [];
+
+            var i = 0;
+            $("#businessCodeDiv").find(".busiCode").each(function () {
+
+                var data = {
+                    code1: $(this).attr("code1"),
+                    code2: $(this).attr("code2"),
+                    code3: $(this).attr("code3")
+                };
+
+                businessCodeList.push(data);
+
+                i++;
+            });
+
+            $.ajax({
+                url: '@Url.Action("BusinessApi", "Partial")',
+                data: {
+                    data: businessCodeList
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    $(".page").isLoading({
+                        text: "Loading",
+                        position: "overlay"
+                    });
+                }
+            })
+            .done(function (json) {
+                $(".page").isLoading( "hide" );
+                $.fancybox.open({
+                    'content':json,
+                    'width': '640',
+                    'height': '500',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': '산업 키워드',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                $(".page").isLoading( "hide" );
+                ErrorAlert('SYSTEM ERROR');
+            });
+
+        });
+
+        function removeBadge(obj) {
+
+            $(obj).closest(".category").remove();
+            $('#CreateForm').formValidation('revalidateField', 'AMDiv');
+            $('#CreateForm').formValidation('revalidateField', 'Searcher');
+    }
+
+    function BindClientDupAutocomplete($obj, type) {
+      if (!type) {
+        type = "kor";
+      }
+      $obj.autocomplete({
+        source: function (request, response) {
+          $.ajax({
+            type: 'post',
+            url: '@Url.Action("FindClientApi", "Partial")',
+            dataType: "json",
+            //request.term = $("#autocomplete").val()
+            data: { client_name: request.term, c_seq: $('#c_seq').val(), type : type },
+            success: function (data) {
+              //서버에서 json 데이터 response 후 목록에 뿌려주기 위함
+              response(
+                $.map(data.list, function (item) {
+
+                  var client = "";
+                  if (item.eng_name != undefined) {
+                    client = item.kor_name + '(' + item.eng_name + ')';
+                  }
+                  else {
+                    client = item.school_name;
+                  }
+
+                  return {
+                    label: item.kor_name,
+                    eng: item.eng_name,
+                    value: item.kor_name
+                  }
+                })
+              );
+              $(".ui-autocomplete").highlight(request.term);
+            }
+          });
+        },
+        select: function (event, ui) {
+          //console.log(event);
+          $(event.target).val(ui.item.label);
+          //console.log($(event.target).val());
+          $('#CreateForm').formValidation('revalidateField', 'kor_name');
+          //console.log($(event.target).val());
+        },
+        html: true,
+        delay: 300,
+        autoFocus: false, //첫번째 값을 자동 focus한다
+        minLength: 2,  //조회를 위한 최소글자수
+        focus: function (event, ui) {
+          //event.target.value = ui.item.label;
+          event.preventDefault();
+        },
+        create: function () {
+          $(this).data('ui-autocomplete')._renderItem = function (ul, item) {
+            var path = 'basepath' + item.value;
+
+            return $('<li>')
+                   .data("ui-menu-item", item)
+                   .append('<li><div class="btn btn-sm btn-outline-secondary"> <span class="badge badge-waring">[이미 등록된 고객사]</span> ' + item.label + (item.eng ? '  <small>(' + item.eng + ')</small>' : '') + '</div></li>')
+                    .appendTo(ul); // customize your HTML
+                };
+              }
+            })
+        }
+    BindClientDupAutocomplete($('#kor_name'), "kor");
+    BindClientDupAutocomplete($('#eng_name'), "eng");
+
+      var pop_help_title = "Off-limit 관리항목 항목."
+      var pop_help_txt = `고객사 Off-limit 여부를 설정하는 항목이 추가되었습니다.
+  <br/>계약서 상 "고객사 임직원 컨택 금지 조항"이 포함된 경우 설정하여 주세요.
+  <br/>- 고객사 전 임직원 컨택 금지 시 : <span class="badge badge-danger">전 임직원</span>
+  <br/>- 유니코에 의해 채용된 임직원 컨택 금지 시 : <span class="badge badge-warning">유니코채용직원</span>
+  <br/><span class="text-danger">더불어 해당고객사에 재직중인 임직원은 컨택하지 않도록 주의해야합니다.</span> `;
+
+      //popover_help('client-create-offlimit2', '#client-offlimit-label', pop_help_title, pop_help_txt);
+  </script>
+}

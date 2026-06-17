@@ -1,0 +1,99 @@
+﻿<div id='school_row_{0}' class='panel border border-primary schoolRow pb-5 mb-10 no-school-selected'>
+    <div class='panel-body pt-10 pb-5'>
+        <div class='drag_handle position-absolute' style='top:5px;left:10px;cursor:cell;'><i class='fa fa-arrows-alt-v' aria-hidden='true'></i></div>
+        <a class='panel-action fas fa-times position-absolute' style='top:5px;right:5px;' aria-hidden='true' href='javascript:void(0);' onclick='DeleteRow(this)'></a>
+        <div class='row'>
+            <div class='form-group col-md-8'>
+                <input type='hidden' id='ds_seq_{0}' name='ds_seq' value=''>
+                <input type='hidden' id='sc_seq_{0}' name='sc_seq' value=''>
+                <div class='input-group input-group-sm input-school-gubun'>
+                  <select id='gubun_{0}' name='gubun' class='form-control form-control-sm w-sm-full w-md-p25' onchange='ChangeSchoolGubun(this)'>
+                    <option value='' gubun_str='' sch1=''>[SELECT]</option>
+                    <option value='1' gubun_str='high_list' sch1=''>고등학교</option>
+                    <option value='2' gubun_str='univ_list' sch1='100322'>전문대</option>
+                    <option value='3' gubun_str='univ_list' sch1='100323'>대학교(학사)</option>
+                    <option value='4' gubun_str='univ_list' sch1='100323'>대학원(석사)</option>
+                    <option value='5' gubun_str='univ_list' sch1='100323'>대학원(박사)</option>
+                    <option value='6' gubun_str='univ_list' sch1='100323'>Post Doc</option>
+                    <option value='9' gubun_str='univ_list' sch1='100322'>기타</option>
+                  </select>
+                    <div class='input-group input-group-sm w-sm-full w-md-p75 shared-field'>
+                        <input type='hidden' id='campusName_{0}' name='campusName' value='' />
+                        <input type='text' id='schoolName_{0}' name='schoolName' value='' class='form-control find_school_autocomplete mr-5' placeholder='학교명'>
+                        <div class='checkbox-custom checkbox-custom-sm checkbox-default mt-5'>
+                            <input type='checkbox' id='is_foreign_school_{0}' name='is_foreign_school' value='1' />
+                            <label for='is_foreign_school_{0}' class="small" title='해외학교'>Overseas</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class='form-group col-md-4 univ_resize shared-field'>
+                <div class='input-group input-group-sm'>
+                    <input type='text' id='admission_year_{0}' name='admission_year' value='' class='form-control univ-field' placeholder='입학년월(YYYYMM)' valid-error-target="#graduate_year_{0}" onkeydown='return MonthFormat(event, this)' maxlength='7'>
+                    <div class='input-group-text px-3 univ-field'>
+                        ~
+                    </div>
+                    <input type='text' id='graduate_year_{0}' name='graduate_year' value='' class='form-control' placeholder='졸업년월(YYYYMM)' onkeydown='return MonthFormat(event, this)' maxlength='7'>
+                </div>
+            </div>
+            <div class='form-group col-md-8 univ-field'>
+                <div class='form-inline'>
+                    <select id='category1_name_{0}' name='category1_name' class='form-control form-control-sm w-sm-full w-md-p25'>
+                        <option value=''>[전공계열]</option>
+                        <option value='인문계열'>인문계열</option>
+                        <option value='사회계열'>사회계열</option>
+                        <option value='공학계열'>공학계열</option>
+                        <option value='자연계열'>자연계열</option>
+                        <option value='교육계열'>교육계열</option>
+                        <option value='의약계열'>의약계열</option>
+                        <option value='예체능계열'>예체능계열</option>
+                    </select>
+                    <input type='text' id='major_name_{0}' name='major_name' value='' class='form-control form-control-sm find_major_autocomplete w-sm-full w-md-p75' placeholder='전공명'>
+                </div>
+            </div>
+            <div class='form-group col-4 col-md-2 shared-field'>
+                <select id='graduate_status_{0}' name='graduate_status' class='form-control form-control-sm'>
+                    <option value='0'>졸업</option>
+                    <option value='1'>졸업예정</option>
+                    <option value='2'>재학중</option>
+                    <option value='3'>중퇴</option>
+                    <option value='4'>수료</option>
+                    <option value='5'>휴학</option>
+                </select>
+            </div>
+            <div class="form-group col-4 col-md-2 univ-field">
+                <div class='checkbox-custom checkbox-default mt-3'>
+                    <input type='checkbox' id='is_transfer_{0}' name='is_transfer' value='1' />
+                    <label for='is_transfer_{0}' class="small" title='편입'>편입</label>
+                </div>
+            </div>
+        </div>
+        <div class="row univ-field more_educomp_info">
+            <div class="form-group col-md-8">
+                <div class='form-inline'>
+                    <select id='sub_category1_name_{0}' name='sub_category1_name' class='form-control form-control-sm w-sm-full w-md-p25'>
+                        <option value=''>[전공계열(부전공/복수전공)]</option>
+                        <option value='인문계열'>인문계열</option>
+                        <option value='사회계열'>사회계열</option>
+                        <option value='공학계열'>공학계열</option>
+                        <option value='자연계열'>자연계열</option>
+                        <option value='교육계열'>교육계열</option>
+                        <option value='의약계열'>의약계열</option>
+                        <option value='예체능계열'>예체능계열</option>
+                    </select>
+                    <input type='text' id='sub_major_name_{0}' name='sub_major_name' value='' class='form-control form-control-sm find_major_autocomplete w-sm-full w-md-p75' placeholder='부전공/복수전공'>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <div class="text-right univ-field">
+        <span class='text-secondary small btn_educomp_more cur_hand pr-10' title="show addtional Information">
+            <i class="fa fa-plus-square"></i> 부전공/복수전공 입력
+        </span>
+
+        <span class='text-secondary small btn_educomp_collapse cur_hand pr-10' title="hide addtional Information">
+            <i class="fa fa-minus-square"></i> 부전공/복수전공 숨김
+        </span>
+    </div>
+</div>

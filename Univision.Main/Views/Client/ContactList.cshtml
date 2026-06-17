@@ -1,0 +1,576 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ContactListViewModel
+@{
+    ViewBag.Title = "ContactLIst";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+
+    .extend-box {
+        position: absolute !important;
+        top: 1.9em;
+        right: 1em;
+    }
+
+    .panel-body .input-search .form-control {
+        border-radius: 2px;
+    }
+
+    .panel-body .form-control-label {
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+    }
+
+    .panel-body .form-group {
+        margin-bottom: 3px;
+    }
+
+    .panel {
+        margin-bottom: 1rem;
+    }
+
+    .table thead th {
+        font-weight: bold;
+    }
+
+    /*.innertable {
+        border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;
+    }*/
+
+    .innertable tr {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        /*border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;*/
+    }
+
+        .innertable tr td {
+            width: 100%;
+            border: 0px;
+            border-color: white;
+            background-color: white;
+            empty-cells: show;
+            border-collapse: inherit;
+            padding: initial;
+        }
+</style>
+
+<link href="~/Libs/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/user.min599c.css?v4.0.4">
+
+<div class="page-user">
+    <div class="page-content">
+        @using (Html.BeginForm("ContactList", "Client", FormMethod.Get, new { @id = "SearchForm" }))
+        {
+            @Html.HiddenFor(x => x.search.orderTxt)
+            @Html.HiddenFor(x => x.search.orderOption)
+
+            <!-- 검색 패널 시작 -->
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <div class="panel-title">
+                        <i class="fas fa-search"></i>
+                        Contact 통합검색
+                    </div>
+                    <a class="panel-action icon wb-minus extend-box" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true">
+                    </a>
+                </div>
+
+
+                <div class="panel-body bg-blue-grey-200">
+                    <hr class="d-md-none d-block" />
+                    <!-- 검색조건 첫째줄 시작 -->
+                    <div class="row">
+                        <div class="col-6 col-md-4 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.contact_name, "Contact Name", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.contact_name, new { @class = "form-control form-control-sm", @placeholder = "Contact명" })
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.contact_email, "Contact Email", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.contact_email, new { @class = "form-control form-control-sm", @placeholder = "Contact 이메일" })
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.kor_name, "Client Name(Kr or En)", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.kor_name, new { @class = "form-control form-control-sm", @placeholder = "고객사명 검색(국문 또는 영문)" })
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.contact_division, "Contact Division", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.contact_division, new { @class = "form-control form-control-sm", @placeholder = "Contact 부서" })
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.contact_position, "직위(Contact Position)", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.contact_position, new { @class = "form-control form-control-sm" })
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.contact_phone, "연락처(Phone or CellPhone)", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.contact_phone, new { @class = "form-control form-control-sm" })
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.am_name, "담당자명(AM Name)", new { @class = "form-control-label small" })
+                            @Html.TextBoxFor(x => x.search.am_name, new { @class = "form-control form-control-sm" })
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-4 col-xxl-3">
+                            <label class="form-control-label small">&nbsp;</label>
+                            <div class="checkbox-custom checkbox-custom-sm checkbox-primary" title="내가 등록한 Contact만 보기">
+                                @Html.CheckBoxFor(x => x.search.is_my_contact, new { @disabled = true })
+                                <label for="search_is_my_history">My contact only</label>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- 검색조건 둘째줄 끝 -->
+                    <!-- 검색조건 세째줄 시작 -->
+                    <div class="row pt-2">
+                        <div class="col">
+                            <div class="form-group text-right">
+                                <div class="btn-group">
+                                    <button type="submit" id="btnSearch" class="btn btn-sm btn-primary w-200" title="검색">
+                                        <i class="fas fa-search"></i>
+                                        Search
+                                    </button>
+                                    <button type="button" id="btnReset" class="btn btn-sm btn-danger" title="검색조건 초기화">
+                                        <i class="fas fa-redo"></i>
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 검색조건 세째줄 끝 -->
+                </div>
+
+            </div>
+        }
+
+        <div class="panel">
+            @using (Html.BeginForm("ContactListExcelDown", "Client", FormMethod.Get, new { @id = "ExcelForm" }))
+            {
+                @Html.Hidden("korName", Model.search.kor_name)
+                @Html.Hidden("engName", Model.search.eng_name)
+                @Html.Hidden("contactName", Model.search.contact_name)
+                @Html.Hidden("contactDivision", Model.search.contact_division)
+                @Html.Hidden("contactPosition", Model.search.contact_position)
+                @Html.Hidden("contactEmail", Model.search.contact_email)
+                @Html.Hidden("amName", Model.search.am_name)
+                @Html.Hidden("contactPhone", Model.search.contact_phone)
+                @Html.Hidden("orderOption", Model.search.orderOption)
+                @Html.Hidden("orderTxt", Model.search.orderTxt)
+                @Html.Hidden("is_my_contact", Model.search.is_my_contact)
+            }
+            <div class="panel-body">
+                <!--
+                   <div class="text-right" style="padding-bottom:5px;">
+                    <button class="btn btn-sm btn-success" id="btnExcel">엑셀 다운로드</button>
+                </div>
+                -->
+                <div class="tablesaw-bar tablesaw-mode-columntoggle"></div>
+                <table class="block_table table table-striped table-hover" data-tablesaw-mode="columntoggle" data-tablesaw-minimap="" id="tablesaw-1256" >
+                    <thead>
+                        <tr>
+                            <th data-tablesaw-priority="5" class="tablesaw-priority-5 hidden-sm-down" style="min-width:30px;">No</th>
+
+                            <th data-tablesaw-priority="3" class="tablesaw-priority-3">
+                                Kor_Name
+                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "kor_name", Model.search.orderOption) colSort" orderTxt="kor_name"></i>
+                                <br />
+                                [Eng_Name]
+                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "eng_name", Model.search.orderOption) colSort" orderTxt="eng_name"></i>
+                            </th>
+
+                            <th data-tablesaw-priority="persist">
+                                Contact Name
+                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "name", Model.search.orderOption) colSort" orderTxt="name"></i>
+                                <br />
+                                [Division/Position]
+                            </th>
+
+                            <th data-tablesaw-priority="1" class="tablesaw-priority-1 hidden-sm-down">
+                                Phone / CellPhone / Email
+                            </th>
+                            <th data-tablesaw-priority="4" class="tablesaw-priority-4 hidden-sm-down">
+                                AM
+                            </th>
+
+                            <th data-tablesaw-priority="5" class="tablesaw-priority-5 hidden-sm-down">
+                                Regist Date
+                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "create_dt", Model.search.orderOption) colSort" orderTxt="create_dt"></i>
+                            </th>
+
+                            <th data-tablesaw-priority="2" class="tablesaw-priority-2 hidden-sm-down">
+                                Remark
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.list.Count > 0)
+                        {
+                            int num = 1;
+                            foreach (var data in Model.list)
+                            {
+                                <tr id="contactList_@(data.c_seq)">
+                                    <th class="tablesaw-priority-5 hidden-sm-down">@(num)</th>
+                                    <td class="tablesaw-priority-3 " title="@data.kor_name @data.eng_name">
+                                        <a href="@Url.Action("ClientDetail", "Client", new { c_seq = data.c_seq })">@data.kor_name</a>
+                                        @if (!string.IsNullOrEmpty(data.eng_name))
+                                        {
+                                            <br />
+                                            <text>[</text>@data.eng_name<text>]</text>
+                                        }
+                                    </td>
+
+                                    <td class="">
+                                        @data.name<br />
+                                        [@data.division / @data.position]
+                                    </td>
+                                    <td class="tablesaw-priority-1  hidden-sm-down">
+                                        @if (data.is_external_lock == 1)
+                                        {
+                                            <span class="text-secondary" title="개인정보를 확인 하시려면 해당 고객사의 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                                                @data.phone
+                                                @if (!string.IsNullOrEmpty(data.cell_phone))
+                                                {
+                                                    <br />
+                                                    <text>[</text>@(data.cell_phone)<text>]</text>
+                                                }
+                                                @if (!string.IsNullOrEmpty(data.email))
+                                                {
+                                                    <br />
+                                                    <text>[</text><a href="mailto:@data.email">@data.email</a><text>]</text>
+                                                }
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            @data.phone
+                                            if (!string.IsNullOrEmpty(data.cell_phone))
+                                            {
+                                                <br />
+                                                <text>[</text>@(data.cell_phone)<text>]</text>
+                                            }
+                                            if (!string.IsNullOrEmpty(data.email))
+                                            {
+                                                <br />
+                                                <text>[</text><a href="mailto:@data.email">@data.email</a><text>]</text>
+                                            }
+                                        }
+
+                                    </td>
+
+                                    <td class="tablesaw-priority-4  text-center hidden-sm-down">
+                                        @data.am_name
+                                    </td>
+                                    <td class="tablesaw-priority-5 text-center hidden-sm-down">@(((DateTime)data.create_dt).ToString("yyyy-MM-dd"))</td>
+                                    <td class="tablesaw-priority-2 text-center hidden-sm-down">
+                                        @if (data.is_external_lock == 1)
+                                        {
+                                            <a class="btn btn-sm badge badge-primary" href="javascript:openClientExternalLock('@data.c_seq', '@data.cc_seq', '@num');" title="Unlock private information">
+                                                <i class="fas fa-unlock-alt"></i> 개인정보 확인
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-xs btn-danger" onclick="DeleteContactConfirm(this, '@data.cc_seq')">삭제</button>
+                                        }
+                                    </td>
+                                </tr>
+                                num++;
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="15" style="text-align:center;height:200px;vertical-align:middle;"><b>No Data.</b></td>
+                            </tr>
+                        }
+
+                    </tbody>
+                </table>
+                <br />
+                @Html.PageAjaxLinks(Model.PagingInfo,
+                      ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                      x => Url.Action("ContactList", new
+                      {
+                          page = x
+                      }))
+            </div>
+        </div>
+
+
+
+    </div>
+</div>
+
+@section scripts{
+
+    <script type="text/javascript">
+            $(document).ready(function () {
+
+                $("#btnExcel").click(function () {
+
+                    //$("#korName").val($("#search_kor_name").val());
+                    //$("#searchTxt").val($("#search_searchTxt").val());
+                    //$("#orderOption").val($("#search_orderOption").val());
+                    //$("#orderTxt").val($("#search_orderTxt").val());
+
+                    $("#ExcelForm").submit();
+                });
+
+                $(".colSort").click(function () {
+
+                    $(".colSort").not(this).each(function () {
+
+                        $(this).removeClass("fa-sort-up");
+                        $(this).removeClass("fa-sort-down");
+                        $(this).addClass("fa-sort");
+                    })
+
+                    $(this).removeClass("fa-sort");
+
+                    if ($(this).hasClass("fa-sort-up")) {
+                        $(this).addClass("fa-sort-down");
+                        $(this).removeClass("fa-sort-up");
+                        $("#search_orderTxt").val($(this).attr("orderTxt"));
+                        $("#search_orderOption").val("DESC");
+                    }
+                    else {
+                        $(this).addClass("fa-sort-up");
+                        $(this).removeClass("fa-sort-down");
+                        $("#search_orderTxt").val($(this).attr("orderTxt"));
+                        $("#search_orderOption").val("ASC");
+                    }
+
+                    $("#SearchForm").submit();
+
+                });
+            });
+
+            $("#btnReset").click(function () {
+                $("#search_searchNum").val("10");
+                $("#search_SelectOption").val("");
+                $("#search_SearchString").val("");
+                $("#search_phone").val("");
+                $("#search_email").val("");
+                $("#search_createStart").val("");
+                $("#search_createEnd").val("");
+
+                $("#SearchForm").submit();
+            });
+
+
+            $("#contactBtn").click(function () {
+            $.ajax({
+                url: '@Url.Action("PopContact", "Client")',
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (json) {
+                hideLoading();
+                $.fancybox.open({
+                    'content':json,
+                    'width': '640',
+                    'height': '320',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': 'Contact 추가',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+        });
+
+        function openClientExternalLock(c_seq, cc_seq, num) {
+            alertify.confirm()
+            .set({
+                'labels': { ok: 'OK', cancel: 'Cancel' },
+                'onok': function (e) {
+
+                    if (saveElementOpenLogToServer('@Univision.Security.AppIdentity.user_seq', c_seq, 'client', 'client', '', '')) {
+                        $.ajax({
+                            url: '@Url.Action("ContactSingleList", "Client")',
+                            data: {
+                                c_seq: c_seq,
+                                cc_seq: cc_seq,
+                                num: num
+                            },
+                            dataType: 'html',
+                            type: 'POST',
+                            beforeSend: function () {
+                                showLoading('#contactList_' + c_seq);
+                            },
+                            success: function (response) {
+                                $('#contactList_' + c_seq).html(response);
+                            },
+                            complete: function () {
+                                hideLoading('#contactList_' + c_seq);
+                            }
+                        });
+                    }
+                    else {
+                        return;
+                    }
+
+                },
+                'oncancel': function () {
+                    return;
+                }
+            })
+            .setHeader('고객사 개인정보 확인')
+            .setting({
+              message: "해당 고객사의 개인정보를 확인하시겠습니까?<br />확인 시 개인정보 확인 기록이 서버에 저장되며, 24시간 이내 동일정보는 별도 확인 없이 조회가 가능합니다."
+            })
+            .show();
+        }
+
+        function DeleteContactConfirm(obj, cc_seq) {
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            DeleteContact(obj, cc_seq)
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>Contact 삭제')
+                    .setting({
+                        message: "Contact를 삭제 하시겠습니까?",
+                    })
+                    .show();
+
+        }
+
+
+        function DeleteContact(obj, cc_seq, c_seq) {
+
+            $.ajax({
+               url: '@Url.Action("DeleteContact", "Client")',
+               data: {
+                   cc_seq: cc_seq
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+
+                    location.reload();
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+
+        function ContactDetail(cc_seq) {
+        $.ajax({
+            url: '@Url.Action("PopContact", "Client")',
+            data: { cc_seq: cc_seq },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+            $.fancybox.open({
+                'content':json,
+                'width': '640',
+                'height': '320',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': 'Contact 정보',
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+
+        function ContactDetail(cc_seq) {
+        $.ajax({
+            url: '@Url.Action("PopContact", "Client")',
+            data: { cc_seq: cc_seq },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+            $.fancybox.open({
+                'content':json,
+                'width': '640',
+                'height': '320',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': 'Contact 정보',
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+    }
+    </script>
+}

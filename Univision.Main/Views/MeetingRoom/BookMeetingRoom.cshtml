@@ -1,0 +1,436 @@
+﻿@using Univision.Security;
+@model Univision.Core.Models.DTO.meeting_room_schedule
+<link rel='stylesheet' href='~/Libs/selectize/css/selectize.bootstrap3.css' />
+<link rel='stylesheet' href='~/Content/jquery.timepicker.min.css' />
+<script src='~/Libs/selectize/js/standalone/selectize.js'></script>
+<script src='~/Scripts/jquery.timepicker.min.js'></script>
+<div class="modal fade" id="book_modal" aria-hidden="true" aria-labelledby="book_modal" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    예약하기 <small>[Reservation]</small>
+                    - <span class="modal_room_name">@Model.resourceName</span>
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @using (Html.BeginForm("BookMeetingRoom", "MeetingRoom", FormMethod.Post, new { @id = "CreateBookMeetingForm" }))
+                {
+                    <input type="hidden" name="is_room_usable" id="is_room_usable" value="0">
+                    @Html.HiddenFor(x => x.id, new { @id = "modal_event_id" })
+                    @Html.HiddenFor(x => x.dd_start, new { @id = "modal_dd_start" })
+                    @Html.HiddenFor(x => x.dd_end, new { @id = "modal_dd_end" })
+                    if (!String.IsNullOrWhiteSpace(Model.room_notice))
+                    {
+                        <div class="row">
+                            <label for="modal_room" class="col-md-3 col-form-label col-form-label font-weight-bold">회의실공지<br /><small>[Notice of Room]</small></label>
+                            <label for="" class="col col-form-label col-form-label text-info" id="modal_room_notice">
+                                @Html.Raw(Model.room_notice.Replace(System.Environment.NewLine, "<br />"))
+                            </label>
+                        </div>
+                        <hr />
+                    }
+
+                    <div class="row">
+                        <label for="modal_room" class="col-md-3 col-form-label col-form-label font-weight-bold">장소 <small>[Place]</small><span class="text-danger">*</span></label>
+                        <div class="col-md-4">
+                            @Html.DropDownListFor(x => x.resourceId, new SelectList(ViewBag.roomList, "id", "title"), new { @id = "modal_resourceId", @class = "form-control form-control-sm room_check" })
+                            @Html.HiddenFor(x => x.resourceName)
+                        </div>
+                        <label for="" class="col-md-3 col-form-label col-form-label font-weight-bold">신청자 <small>[Request]</small></label>
+                        <div class="col-md-2">
+
+
+                            @if (ViewBag.is_meetingroom_admin)
+                            {
+                                @Html.DropDownListFor(x => x.req_user_seq, new SelectList(ViewBag.userList, "uv_seq", "name"), new { @id = "modal_req_user_seq", @class = "form-control form-control-sm" });
+                            }
+                            else
+                            {
+                                <input type="hidden" name="req_user_seq" id="book_req_user_seq" value="@Model.req_user_seq">
+                                <label for="" class="form-control-label font-weight-bold">@Model.req_user_name</label>
+                            }
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <label for="contact_dv_contact_name" class="col-md-3 col-form-label col-form-label font-weight-bold">참석자<small>[invite]</small></label>
+                        <div class="col-md-6">
+                            <input type="text" name="attend_user" id="modal_attend_user" placeholder="참석자 입력 (신청자는 자동으로 포함됩니다.)" value="" data-value="@Model.attend_user">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="checkbox-custom checkbox-default mb-0">
+                                <input type="checkbox" id="is_mail_send" name="is_mail_send" value="1" @((Model.id == 0 && Model.resourceId != "f99_l0" )? "checked" : "") />
+                                <label class="" for="is_mail_send">메일발송 <small>[Send mail]</small></label>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <label for="contact_dv_contact_name" class="col-md-3 col-form-label col-form-label font-weight-bold">사용일 <small>[Date]</small><span class="text-danger">*</span></label>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control form-control-sm text-center room_check" name="date_str" id="modal_date_str" placeholder="YYYY-MM-DD" value="@Model.date_str" maxlength="10" required>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <label for="contact_dv_contact_name" class="col-md-3 col-form-label col-form-label font-weight-bold">사용시간 <small>[Time]</small><span class="text-danger">*</span></label>
+                        <div class="col-md-9">
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-sm text-center timepicker room_check" data-time-format="H:i" name="start_time" id="modal_start_time" value="@Utils.ConvertHourToString(Model.dd_start)" required>
+                                <div class="input-group-text pl-5 pr-5">~</div>
+                                <input type="text" class="form-control form-control-sm text-center timepicker room_check" data-time-format="H:i" name="end_time" id="modal_end_time" value="@Utils.ConvertHourToString(Model.dd_end)" required>
+                            </div>
+                        </div>
+                        <label for="" class="col col-form-label col-form-label text-center font-weight-bold" id="room_check_result"></label>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <label for="" class="col-md-3 col-form-label col-form-label font-weight-bold">노트북 <small>[Laptop]</small></label>
+                        <div class="col">
+                            <div class="checkbox-custom checkbox-default mb-0">
+                                <input type="checkbox" id="modal_laptop" name="laptop" value="1" @(Model.laptop == 1 ? "checked" : "") disabled/>
+                                <label class="" for="modal_laptop">사용요청 <small>[Request]</small></label>
+                            </div>
+                            <span class="text-danger">
+                              ※ 노트북은 [17층 : Conference, #1, #2], [25층 : Conference] 에 배치되어 있습니다.
+                            </span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <label for="" class="col-md-3 col-form-label col-form-label font-weight-bold">용도 <small>[Usage]</small><span class="text-danger">*</span></label>
+                        <div class="col">
+                            <div class="form-check form-inline">
+                                <div class="radio-custom radio-primary pr-3">
+                                    @Html.RadioButtonFor(x => x.usage_cd, "client", new { @id = "usage_cd_client", @class = "form-control" })
+                                    <label for="usage_cd_client">고객사미팅 <small>[Client]</small></label>
+                                </div>
+                                <div class="radio-custom radio-primary pr-3">
+                                    @Html.RadioButtonFor(x => x.usage_cd, "cand", new { @id = "usage_cd_cand", @class = "form-control" })
+                                    <label for="usage_cd_cand">후보자미팅 <small>[Candidate]</small></label>
+                                </div>
+                                <div class="radio-custom radio-primary pr-3">
+                                    @Html.RadioButtonFor(x => x.usage_cd, "team", new { @id = "usage_cd_team", @class = "form-control" })
+                                    <label for="usage_cd_team">팀회의 <small>[Team]</small></label>
+                                </div>
+                                <div class="radio-custom radio-primary pr-3">
+                                    @Html.RadioButtonFor(x => x.usage_cd, "edu", new { @id = "usage_cd_edu", @class = "form-control" })
+                                    <label  for="usage_cd_edu">교육 <small>[Training]</small></label>
+                                </div>
+                                <div class="radio-custom radio-primary pr-3">
+                                    @Html.RadioButtonFor(x => x.usage_cd, "oth", new { @id = "usage_cd_oth", @class = "form-control" })
+                                    <label for="usage_cd_oth">기타 <small>[Other]</small></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <label for="contact_dv_contact_name" class="col-3 col-form-label col-form-label font-weight-bold">내용 <small>[Comment]</small></label>
+                        <div class="col">
+                            @Html.TextArea("comment", Model.comment, new { @id="modal_comment", @class="form-control small", @placeholder="내용(Comment) - 미팅대상, 참석자 등을 입력해주세요.", @rows=5 })
+                            @*<textarea class="form-control form-control-sm" name="comment" id="modal_comment" placeholder="내용(Comment) - 미팅대상, 참석자 등을 입력해주세요." rows="5">
+                                @Model.comment
+                            </textarea>*@
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <div class="checkbox-custom checkbox-primary border-primary">
+                                <input type="checkbox" id="is_schedule" name="is_schedule" value="1" @(Model.is_schedule == 1 ? "checked" : "")>
+                                <label for="is_schedule" style="">
+                                    스케줄 등록
+                                </label>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                }
+            </div>
+            <div class="modal-footer">
+
+                @if (Model.id != 0 && (ViewBag.is_meetingroom_admin || Model.req_user_seq == AppIdentity.user_seq))
+                {
+                    <button type="button" class="btn btn-primary" id="reservation_submit">일정수정 <small>[Modify]</small></button>
+                    <button type="button" class="btn btn-danger" id="reservation_remove">일정삭제<small>[Delete]</small></button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary" id="reservation_submit">일정등록 <small>[Submit]</small></button>
+                }
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">취소<small>[Cancel]</small></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var $selectize = $('#modal_attend_user').selectize({
+        plugins: ['remove_button', 'drag_drop'],
+            delimiter: ',',
+            preload: true,
+            persist: false,
+            valueField: 'user_id',
+            labelField: 'name',
+            searchField: ['name', 'email'],
+            //options : data,
+            create: function(input) {
+                return {
+                    value: input,
+                    text: input
+                }
+            },
+            onDelete: function() {
+                this.clearOptions();        // clear the data
+                this.renderCache = { };      // clear the html template cacheA
+            },
+            load: function(q, callBack) {
+                //if (!q.length) return callback();
+                var url = '@Url.Action("FindUserEmail", "Partial")?q=' + escape(q);
+                console.log(url);
+                $.ajax({
+                type: 'POST',
+                    url: url,
+                    error: function() {
+                        callBack();
+                    },
+                    success: function(data) {
+                        callBack(data);
+                    }
+                });
+            },
+            render:
+            {
+                option: function(item, escape) {
+                    var label = item.name || item.email;
+                    var caption = item.name ? ' [' + item.email + ']' : null;
+                    return '<div>' +
+                        '<span class="label">' + escape(label) + '</span>' +
+                        (caption ? '<span class="caption">' + escape(caption) + '</span>' : '') +
+                        '</div>';
+                }
+            }
+
+        });
+    var selectize = $selectize[0].selectize;
+    
+    //회의실 등록 /수정
+    function resv_submit() {
+
+        if($('#is_room_usable').val() != 1){
+            ErrorAlert("예약이 불가능한 상태입니다. 장소, 시간을 다시 확인해주세요.");
+            return;
+        }
+        if(!$("input:radio[name='usage_cd']").is(":checked")) {
+            ErrorAlert("용도를 선택해주세요.");
+            return;
+        }
+
+        if($("#modal_start_time").val() > $("#modal_end_time").val()) {
+            ErrorAlert("종료시간이 시작시간 보다 빠를수 없습니다..");
+            return;
+        }
+        
+        alertify.confirm()
+        .set({
+            'labels': { ok: '확인', cancel: '취소' },
+            'onok': function () {
+                $.ajax({
+                    type: 'POST',
+                    url: "@Url.Action("SubmitSchedule", "MeetingRoom")",
+                    data: $('#CreateBookMeetingForm').serialize(),
+                    beforeSend: function () {
+                        showLoading('#CreateBookMeetingForm');
+                    },
+                    success: function (json) {
+                        hideLoading('#CreateBookMeetingForm');
+                        if (json.ok) {
+                            NormalAlert(json.message);
+                            $('#book_modal').modal('hide');
+                            $('#calendar').fullCalendar('unselect');
+                            $('#calendar').fullCalendar('refetchEvents');
+                        } else {
+                            ErrorAlert(json.message);
+                        }
+
+                    },
+                    error: function () {
+                        hideLoading('#CreateBookMeetingForm');
+                        ErrorAlert("알 수 없는 오류가 발생했습니다.");
+                    }
+                });
+            },
+            'oncancel': function () {
+                return;
+            },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>예약 진행')
+        .setting({
+            message: "예약 진행을 하시겠습니까?"
+        })
+        .show();
+    }
+
+    function roomRemove() {
+        alertify.confirm()
+        .set({
+            'labels': { ok: '확인', cancel: '취소' },
+            'onok': function () {
+                $.ajax({
+                    type: 'POST',
+                    url: "@Url.Action("RemoveSchedule", "MeetingRoom")",
+                    data: "event_id=" + escape($('#modal_event_id').val()),
+                    beforeSend: function () {
+                        showLoading('#CreateBookMeetingForm');
+                    },
+                    success: function (json) {
+                        hideLoading('#CreateBookMeetingForm');
+                        if (json.ok) {
+                            $('#book_modal').modal('hide');
+                            NormalAlert(json.message);
+                            $('#calendar').fullCalendar('refetchEvents');
+                        } else {
+                            ErrorAlert(json.message);
+                        }
+                        //if (data != 'OK'){
+                        //    ErrorAlert(data);
+                        //    return;
+                        //}
+                        //$('#book_modal').modal('hide');
+                        //NormalAlert("일정 삭제가 완료 되었습니다.");
+                        //$('#calendar').fullCalendar('refetchEvents');
+                    },
+                    error: function () {
+                        hideLoading('#CreateBookMeetingForm');
+                        ErrorAlert("알 수 없는 오류가 발생했습니다.");
+                    }
+                });
+            },
+            'oncancel': function () {
+                return;
+            },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>예약 삭제')
+        .setting({
+            message: "회의실 예약을 삭제 하시겠습니까?"
+        })
+        .show();
+    }
+
+
+    function getUserEmail(val) {
+        
+        selectize.clear(true);
+        if(val && val != '') {
+            var url = '@Url.Action("FindUserEmail", "Partial")?ids='+escape(val);
+            $.ajax({
+                type: 'POST',
+                url: url,
+                success: function (data) {
+                    
+                    for (i = 0; i < data.length; i++){
+                        selectize.addOption({name:data[i].name, email:data[i].email, user_id:data[i].user_id});
+                        selectize.addItem(data[i].user_id, false);
+                    }
+                }
+            });
+        }
+    }
+
+    function roomCheck(){
+        var evt_id   = $('#modal_event_id').val();
+        var room_id    = $('#modal_resourceId').val();
+        var resv_date  = $('#modal_date_str').val()
+        var resv_start = moment(resv_date + ' ' + $('#modal_start_time').val()).add(1, 'm').format('YYYY-MM-DD HH:mm');
+        var resv_end = moment(resv_date + ' ' + $('#modal_end_time').val()).add(-1, 'm').format('YYYY-MM-DD HH:mm');
+        
+        $('#modal_dd_start').val(moment(resv_date + ' ' + $('#modal_start_time').val()).format('YYYY-MM-DD HH:mm')); // 저장을 위한 완전한 datetime 값
+        $('#modal_dd_end').val(moment(resv_date + ' ' + $('#modal_end_time').val()).format('YYYY-MM-DD HH:mm')); // 저장을 위한 완전한 datetime 값
+
+        if (room_id != "" && resv_date != "" &&  $('#modal_start_time').val() != "" &&  $('#modal_end_time').val() != "") {
+            var data_obj = {
+                event_id: evt_id,
+                resource_id: room_id,
+                start_dt : resv_start,
+                end_dt : resv_end
+            }
+            
+            $.ajax({
+            type: 'POST',
+            url: '@Url.Action("RoomCheck", "MeetingRoom")',
+            data : data_obj,
+            success: function (data) {
+                if (data.is_usable) {
+                    $('#is_room_usable').val(1);
+                    $('#room_check_result').text("사용가능");
+                    $('#room_check_result').addClass("text-success").removeClass("text-danger");
+                } else {
+                    $('#is_room_usable').val(0);
+                    $('#room_check_result').text("사용불가");
+                    $('#room_check_result').addClass("text-danger").removeClass("text-success");
+                }
+            },
+            error: function() {
+                $('#is_room_usable').val(0);
+                $('#room_check_result').text("사용불가");
+                $('#room_check_result').addClass("text-danger").removeClass("text-success");
+            }
+            });
+        } else {
+            $('#is_room_usable').val(0);
+            $('#room_check_result').text("사용불가");
+            $('#room_check_result').addClass("text-danger").removeClass("text-success");
+        }
+    }
+
+    @if (Model.id != 0 && !ViewBag.is_meetingroom_admin && Model.req_user_seq != AppIdentity.user_seq)
+    {
+        <text>
+        //조회 시 권한 없으면 수정 불가
+        $('#book_modal').find('.modal-footer').hide();
+        $('#modal_comment').prop('disabled', true);
+        $('#CreateBookMeetingForm').find('input').each(function () {
+            $(this).prop('disabled', true);
+        });
+        </text>
+    }
+    else
+    {
+        <text>
+        roomCheck();
+        </text>
+    }
+
+    //주요 변경사항(회의실, 날짜 , 시간 변경 시 회의실 사용 가능여부 다시 체크)
+    $('.room_check').each(function(){
+        $(this).change(function () {
+            $('.modal_room_name').text($('#modal_resourceId :selected').text());
+            roomCheck();
+        });
+    });
+    $('#reservation_submit').click(function(){
+        resv_submit();
+    });
+
+    $('#reservation_remove').click(function(){
+        roomRemove();
+    });
+
+    BindDatePicker('#modal_date_str');
+    //$('#modal_date_str').datepicker({dateFormat: "yy-mm-dd"}); //모달창 날짜 달력
+    $('.timepicker').timepicker({ show2400: true }); //시간선택 설정
+    
+    //getUserEmail($('#modal_attend_user').val()); // selectize 기본값 초기화
+
+    //공유자가 있는 경우. selectize 기본값 초기화
+        if ("@Model.attend_user" != "") {
+            getUserEmail('@Model.attend_user');
+        }
+
+</script>

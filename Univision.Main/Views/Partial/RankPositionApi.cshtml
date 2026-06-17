@@ -1,0 +1,170 @@
+﻿@model Univision.Main.Models.Api.RankPositionModel
+
+<style>
+
+    #rpPanel {
+        margin-bottom: 0px;
+    }
+
+        #rpPanel .panel-title {
+            padding: 5px 5px 5px 5px !important;
+        }
+
+        #rpPanel .panel-body {
+            padding: 5px 5px 5px 5px !important;
+        }
+
+            #rpPanel .panel-body span {
+                cursor: pointer;
+            }
+
+        #rpPanel .panel-footer {
+            padding: 5px 5px 5px 5px !important;
+        }
+</style>
+
+<div id="rpPanel" class="panel panel-bordered">
+    <div class="panel-heading form-inline">
+        <div class="col-md-6 no-side-space">
+            <h5 class="panel-title">직급</h5>
+        </div>
+        <div class="col-md-6 no-side-space" style="border-left:1px solid #e4eaec;">
+            <h5 class="panel-title">직책</h5>
+        </div>
+    </div>
+    <div class="panel-body form-inline">
+        <div class="col-md-6 no-side-space row" id="rank">
+            @if (Model.rankList.Count() > 0)
+            {
+                var i = 1;
+                foreach (var data in Model.rankList)
+                {
+                    if (data.r_code == 99)
+                    {
+                        continue;
+                    }
+
+                    if (i == 1 || i == Model.rankList.Count / 2 + 1)
+                    {
+                        @Html.Raw("<div class='col-md-6 no-side-space row'>")
+                    }
+                    <div class="col-md-12">
+                        <span class="badge @(Model.r_code == data.r_code ? "badge-primary" : "badge-default")" type="rank" code="@data.r_code">@data.r_name</span>
+                    </div>
+                    if (i == Model.rankList.Count / 2 || i == Model.rankList.Count - 1)
+                    {
+                        @Html.Raw("</div>")
+                    }
+
+                    i++;
+                }
+            }
+        </div>
+        <div class="col-md-6 no-side-space row" style="border-left:1px solid #e4eaec;" id="position">
+            @if (Model.rankList.Count() > 0)
+            {
+                var i = 1;
+                foreach (var data in Model.positionList)
+                {
+
+                    if (i == 1 || i == Model.positionList.Count() / 2 + 1)
+                    {
+                        @Html.Raw("<div class='col-md-6 no-side-space row'>")
+                    }
+                    <div class="col-md-12">
+                        <span class="badge @(Model.p_code == data.p_code ? "badge-primary" : "badge-default")" type="position" code="@data.p_code">@data.p_name</span>
+                    </div>
+                    if (i == Model.positionList.Count / 2 || i == Model.positionList.Count)
+                    {
+                        @Html.Raw("</div>")
+                    }
+
+                    i++;
+                }
+            }
+        </div>
+    </div>
+    <div class="panel-footer" style="border-top:1px solid #e4eaec;">
+        <div class="row col-md-12 no-side-space">
+            <div class="col-md-4">
+                <span class="badge @(Model.r_code == 99 ? "badge-primary" : "badge-default") border" type="freelancer" code="99" style="font-size:14px;">프리랜서</span>
+            </div>
+            <div class="col-md-8 text-right">
+                <button id="btnPopCancel" type="button" class="btn btn-sm btn-danger" onclick="javascript:$.fancybox.close();">취소</button>
+                <button id="btnPopSave" type="button" class="btn btn-sm btn-primary">확인</button>
+            </div>
+        </div>
+
+
+
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        //직급 직책 선택시,
+        $(".badge").click(function () {
+
+            //이미 선택된 Badge라면.
+            if ($(this).hasClass("badge-primary")) {
+                return;
+            }
+
+            $(this).removeClass("badge-default");
+            $(this).addClass("badge-primary");
+
+
+            //현재 선택한 badge가 어떤 타입인지. rank or position
+            var badgeType = $(this).attr("type");
+
+            //프리랜서 선택하면 직급과 직책 선택한 항목 초기화.
+            if (badgeType == "freelancer") {
+                $(".panel-body").find(".badge").removeClass("badge-primary");
+                $(".panel-body").find(".badge").addClass("badge-default");
+
+                return;
+            } else { //다른 항목 선택시, 프리랜서 항목 선택 초기화.
+                $(".panel-footer").find(".badge").removeClass("badge-primary");
+                $(".panel-footer").find(".badge").addClass("badge-default");
+            }
+
+            //현재 선택한 요소 외의 모든 badge 클래스 초기화.
+            $("#" + badgeType).find(".badge").not(this).removeClass("badge-primary");
+            $("#" + badgeType).find(".badge").not(this).addClass("badge-default");
+
+        });
+
+        //확인 버튼 클릭시,
+        $("#btnPopSave").click(function () {
+            var txt = "";
+            $(".badge.badge-primary").each(function () {
+
+                if (txt != "") {
+                    txt += " / "
+                }
+
+                txt += $(this).text();
+            })
+
+            var addDiv = $(callRankObj).closest(".rpCodeDiv");
+            
+            //프리랜서 선택일 경우,
+            if ($(".panel-footer").find(".badge").hasClass("badge-primary")) {
+                $(addDiv).find("input[name='r_code']").val($(".panel-footer").find(".badge").attr("code"));
+                $(addDiv).find("input[name='p_code']").val(0);
+            }
+            else {
+                $(addDiv).find("input[name='r_code']").val($("#rank").find(".badge-primary").attr("code"));
+                $(addDiv).find("input[name='p_code']").val($("#position").find(".badge-primary").attr("code"));
+            }
+            
+            $(addDiv).find("input[name='rankposition']").val(txt);
+
+            $.fancybox.close();
+        });
+
+    });
+
+</script>

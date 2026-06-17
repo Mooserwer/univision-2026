@@ -1,0 +1,410 @@
+﻿@model Univision.Main.Models.Api.JobBusinessModel
+
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .pop-padding {
+        padding: 2px !important;
+    }
+
+    .no-right-margin {
+        margin-right: 0px;
+    }
+
+    .no-right-padding {
+        padding-right: 0px;
+    }
+
+    .list-group {
+        max-height: 300px;
+        overflow: auto
+    }
+
+    .item-empty {
+        height: 300px;
+    }
+
+    .no-margin {
+        margin: 0px;
+    }
+
+    .no-padding {
+        padding: 0px;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+
+    .ajs-modal {
+        z-index: 999999999999;
+    }
+
+    #popBottom .badge {
+        font-weight: 100;
+    }
+
+    #popBottom .badge-lg {
+        font-size: 15px;
+    }
+
+    .catRow {
+        margin-top: 3px;
+    }
+</style>
+
+
+<div style="overflow-x:hidden"> 
+    <div>
+        @Html.TextBox("search", "", new { @class = "form-control col-md-12", @placeholder = "찾고자 하는 직무 및 키워드 입력" })
+    </div>
+
+    <!-- 산업 탭 시작 -->
+    <div class="tab-pane" id="jobTab" role="tabpanel">
+        @*<div class="row">
+            <div class="col-md-6 pop-padding">
+                <h5>대분류 선택</h5>
+            </div>
+            <div class="col-md-6 pop-padding">
+                <h5>중분류 선택</h5>
+            </div>
+        </div>*@
+        <div class="row col-md-12 no-side-space">
+
+            <!-- 직무 1단계-->
+            <div class="col-md-5 pop-padding">
+                <div>
+                    <h5>대분류 선택</h5>
+                </div>
+                <div class="list-group list-group-bordered jobCode1Group">
+                    @if (Model.jobList1.Count > 0)
+                    {
+                        foreach (var data in Model.jobList1)
+                        {
+                            <a href="javascript:void(0)" class="list-group-item flex-column align-items-start jobCode1" id="@data.code1" code-name="@data.code_name1" onclick="code1Click(this)">
+                                <p class="mb-0">@data.code_name1</p>
+                            </a>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- 직무 2단계-->
+            <div class="col-md-7 pop-padding jobCode2Group">
+                <div>
+                    <h5>소분류 선택</h5>
+                </div>
+                <div class="list-group list-group-bordered">
+                    <a href="javascript:void(0)" class="list-group-item bg-inherit bg-grey-100 jobCode2 item-empty">
+                        <p class="mb-0">← 직무를 선택하세요.</p>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- 산업 탭 끝 -->
+</div>
+<!-- 탭 끝-->
+<!-- 하단 영역 시작 -->
+<div id="popBottom" class="row col-md-12 no-side-space" style="padding-bottom:5px;">
+    <div class="col-md-10 no-side-space form-inline">
+        <!-- 직무 badge 시작 -->
+        <div class="col-md-12 no-side-space form-inline" style="margin-top:10px;">
+            <div class="col-md-2 no-side-space">
+                <label class="blue-500 font-weight-bold"> 선택된 직무</label>
+            </div>
+            <div id="jobCodeBind" class="col-md-10 no-side-space form-inline">
+            </div>
+        </div>
+        <!-- 직무 badge 시작 -->
+    </div>
+
+    <div class="col-md-2 text-right float-right no-margin no-padding" style="border-left:1px solid #e4eaec">
+        <button id="btnReset_job" type="button" class="btn btn-sm bg-grey-100">
+            <i class="wb-reload">초기화</i>
+        </button>
+        <button id="btnPopSave" type="button" class="btn btn-sm btn-primary">확인</button>
+    </div>
+</div>
+<!-- 하단 영역 끝 -->
+
+
+<script type="text/javascript">
+
+    //직무,산업 단계별로 선택 안했을 때, 사용함.
+     var errorItem = "<a href='javascript:void(0)' class='list-group-item bg-inherit bg-grey-100 item-empty'><p class='mb-0'>직무 정보를 가져올 수 없습니다.</p></a>"
+
+    $(document).ready(function () {
+
+        //초기 시작.
+        Initialize();
+
+        //초기화 버튼
+      $("#btnReset_job").click(function () {
+            reset();
+        });
+
+        //직무 및 산업 키워드 검색
+        $("#search").autocomplete({
+            source : function( request, response ) {
+                $.ajax({
+                    type: 'post',
+                    url: '@Url.Action("SearchJobKeywordApi2", "Partial")',
+                    dataType: "json",
+                    //request.term = $("#autocomplete").val()
+                    data: {
+                        searchValue : request.term
+                    },
+                    success: function(data) {
+                        //서버에서 json 데이터 response 후 목록에 뿌려주기 위함
+                        response(
+                            $.map(data.list, function (item) {
+                                return {
+                                    label: item.code_name1 + " > " + item.code_name2,
+                                    //type: item.type,
+                                    code1: item.code1,
+                                    code2: item.code2
+                                }
+                            })
+                        );
+
+                        $(".ui-autocomplete").highlight(request.term);
+                    }
+                });
+            },
+            autoFocus:true, //첫번째 값을 자동 focus한다
+          minLength: 2,  //조회를 위한 최소글자수
+          search: function (event, ui) {
+            var is_select = $(this).attr('is_select');
+            is_select = (typeof is_select === "undefined") ? 0 : is_select;
+            //console.log(is_select);
+            if (is_select == 1) {
+              return false;
+            }
+          },
+            select: function(event, ui) {
+                // 검색리스트에서 선택 했을 때 이벤트 발생
+
+
+                var data = ui.item;
+
+                $("#job").click();
+                //console.log(data)
+                //1단계 active class 부여.
+                code1Click($(".jobCode1Group").find("#" + data.code1));
+
+                //2단계 checkbox 선택
+                var code2Obj = $(".jobCode2Group").find("#" + data.code2);
+                $(code2Obj).prop("checked", true);
+                code2Click($(code2Obj));
+
+          },
+          focus: function (event, ui) {
+            //console.log("xx", $(this).attr('is_select'))
+            $(this).attr('is_select', 1);
+            setTimeout(function (obj) {
+              $(obj).attr('is_select', 0);
+              //console.log("reset");
+            }, 500, this);
+
+            event.preventDefault();
+          },
+            change:function(event){
+                //$("#search").val("");
+                return false;
+            }
+        });
+
+        $("#btnPopSave").click(function () {
+
+            $("#jobCodeList").html($("#popBottom").find("#jobCodeBind").html())
+            if (reindexJobBusiness) {
+                reindexJobBusiness();
+            }
+            $.fancybox.close();
+        });
+    });
+
+    //페이지 시작.
+    function Initialize() {
+        //호출 페이지에 전역변수로 선언된 jobCodeArr에 담긴 항목이 있다면
+        if (jobCodeArr.length > 0) {
+
+            for (var i = 0; i < jobCodeArr.length; i++) {
+
+                code1Click($(".jobCode1Group").find("#" + jobCodeArr[i].code1));
+
+                //2단계 checkbox 선택
+                var code2Obj = $(".jobCode2Group").find("#" + jobCodeArr[i].code2+".jobCode2");
+                $(code2Obj).prop("checked", true);
+                code2Click($(code2Obj));
+            }
+        }
+    }
+
+    //초기화
+    function reset() {
+
+        //1단계 active 삭제
+        $(".jobCode1").removeClass("active");
+
+        //2단계 체크 해제
+        $(".jobCode2Group").find(".item-empty").closest(".list-group").css("display", "block");
+        $(".jobCode2Group").find(".list-group").not($(".jobCode2Group").find(".item-empty").closest(".list-group")).remove();
+
+        //하단 뱃지 삭제.
+        $("#jobCodeBind").empty();
+    }
+
+    //직무,산업 1단계 클릭 이벤트
+    function code1Click(obj) {
+        var isOk = true;
+
+        //현재 선택한 직무 단계에 a 태그 active 클래스 부여.
+        $(obj).addClass("active");
+
+        //코드2 그룹에서 체크가 하나도 되지 않은 단계가 있는지 찾음.
+        $(".jobCode2Group").find(".list-group").each(function () {
+
+            var chkLen = $(this).find(".jobCode2:checked").length;
+            if (chkLen == 0) {
+                $(".jobCode1Group").find("#" + $(this).attr("id")).not(obj).removeClass("active");
+            }
+        });
+
+        //현재 선택한 1단계 항목에 대한 list가 2단계에 그려져 있는지 찾음.
+        var nowSelect = $(".jobCode2Group").find("div#" + $(obj).attr("id"));
+
+        //현재 선택한 1단계 항목에 대한 list가 2단계에 그려져 있다면.
+        if (nowSelect.length > 0) {
+            //2단계 row 디스플레이 변경.
+            $(nowSelect).css("display", "block");
+            $(".jobCode2Group").find(".list-group").not(nowSelect).css("display", "none");
+            return false;
+        }
+
+        //직무 2단계 리스트 불러옴.
+//        console.log($(obj).attr("id"), obj)
+        selectCode2List($(obj).attr("id"), $(obj).attr("code-name"));
+    }
+
+    //직무,산업 2단계 클릭 이벤트.
+    function code2Click(obj) {
+
+        var now;
+        var isOk = false;
+
+        //체크하면 하단 바인딩 부분에 카테고리 생성.
+        if ($(obj).is(":checked")) {
+            CreateCategoryBadge($(obj).attr("code1"), $(obj).attr("id"), $(obj).attr("name"));
+        } else {
+            DelCategoryBadge($("#jobCodeBind").find("#job" + $(obj).attr("id")));
+        }
+
+        if (!isOk) {
+            return false;
+        }
+
+    }
+
+    //하단 바인딩 부분에 카테고리 생성.
+    function CreateCategoryBadge(code1, code2, code2Name) {
+        var idx = $("#jobCodeBind").find(".jobRow").length;
+        if ($("#jobCodeBind").find("#job" + code2).length > 0) {
+            return false;
+        }
+
+        var appendHtml = "";
+        appendHtml += "<div id='job" + code2 + "' code2='" + code2 + "' class='jobRow catRow no-side-space'>";
+        appendHtml += "<span class='category'>";
+        appendHtml += "<span class='badge badge-outline badge-default bg-white cur_hand badge-lg jobCode2badge' code1='" + code1 + "' code2='" + code2 + "' code2name='" + code2Name + "' onclick='DelCategoryBadge(this)'>" + code2Name + "<i class='far fa-times-circle'></i></span>";
+        if (window.multi_api_hidden_pretext) {
+            appendHtml += "<input type='hidden' name='" + window.multi_api_hidden_pretext + "job["+idx+"].code1' value='" + code1 + "' />";
+            appendHtml += "<input type='hidden' name='" + window.multi_api_hidden_pretext + "job["+idx+"].code2' value='" + code2 + "' />";
+            appendHtml += "<input type='hidden' name='" + window.multi_api_hidden_pretext + "job["+idx+"].code_name2' value='" + code2Name + "' />";
+        }
+        appendHtml += "</span>";
+        appendHtml += "</div>";
+
+        $("#jobCodeBind").append(appendHtml.toString());
+    }
+
+
+    //Badge 카테고리 삭제.
+    function DelCategoryBadge(obj) {
+        //상단 리스트에서 체크박스 해제.
+        $(".jobCode2Group").find("#" + $(obj).attr("code2")).prop("checked", false);
+
+        $(obj).closest(".catRow").remove();
+
+        if (reindexJobBusiness) {
+            reindexJobBusiness();
+        }
+    }
+
+    //직무 2단계 목록 조회.
+    function selectCode2List(code1, name1, selectVal) {
+
+        var url = '@Url.Action("jobApi2", "Partial")'
+
+        $.ajax({
+            url: url,
+            async: false,
+            data: {
+                code1: code1
+             },
+             dataType: 'json',
+             type: 'POST',
+            beforeSend: function ()
+            {
+            }
+        })
+        .done(function (json) {
+
+            if (json.ok) {
+
+                if (json.list.length > 0) {
+
+                    var sb = new StringBuilder();
+
+                    sb.append("<div class='list-group list-group-bordered' id='" + json.list[0].code1 + "'>");
+
+                    sb.append("<ul class='list-group-item flex-column align-items-start'>");
+                    sb.append(" <div class='checkbox-custom checkbox-primary no-margin' id='jobCode2_div_" + code1 + "'>");
+                    sb.append("     <input type='checkbox' class='jobCode2' code1='" + code1 + "' id='" + code1 + "' name='" + name1 + " 전체' onclick='code2Click(this)'>");
+                    sb.append("     <label class='font-weight-900'>[" + name1 + " 전체]</label>");
+                    sb.append(" </div>");
+                    sb.append("</ul>");
+
+                    for (var i = 0; i < json.list.length; i++) {
+
+                        var data = json.list[i];
+
+                        sb.append("<ul class='list-group-item flex-column align-items-start'>");
+                        sb.append(" <div class='checkbox-custom checkbox-primary no-margin' id='jobCode2_div_" + data.code2 + "'>");
+                        sb.append("     <input type='checkbox' class='jobCode2' code1='" + data.code1 + "' id='" + data.code2 + "' name='" + data.code_name2 + "' onclick='code2Click(this)'>");
+                        sb.append("     <label>" + data.code_name2 + "</label>");
+                        sb.append(" </div>");
+                        sb.append("</ul>");
+
+                    }
+                    sb.append("</div>");
+
+                    $(".jobCode2Group").find(".list-group").not("div#" + json.list[0].code1).css("display", "none");
+                    $(".jobCode2Group").append(sb.toString());
+                }
+            } else {
+                //$("." + type + "Code2Group").empty();
+                $(".jobCode2Group").append(errorItem[type]);
+            }
+        })
+        .fail(function (e) {
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+
+
+</script>

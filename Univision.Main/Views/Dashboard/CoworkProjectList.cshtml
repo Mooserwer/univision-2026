@@ -1,0 +1,56 @@
+﻿@model Univision.Main.Models.Project.MyProjectListModel
+@{
+    Layout = null;
+}
+
+<div class="table-responsive">
+    <table id="default-table" class="table table-striped table-hover mobile_auto_table" style="table-layout:fixed;">
+        <colgroup>
+            <col>
+            <col style="width:35%;">
+            <col style="width:10%;">
+            <col>
+            <col>
+            <col style="width:12%;">
+            <col style="width:8%;">
+        </colgroup>
+        <thead>
+            <tr>
+                <th class="tbw20" title="고객사">Client</th>
+                <th class="tbw60" title="구인제목">Title</th>
+                <th class="tbw20 sts19">AM</th>
+                <th class="hidden-sm-down" title="산업">Industry</th>
+                <th class="hidden-sm-down" title="직무">Job func.</th>
+                <th class="hidden-sm-down" title="공유시작일" style="word-break:keep-all">Shared Date</th>
+                <th class="hidden-sm-down" title="조회 수">read</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.list.Count > 0)
+            {
+                foreach (var data in Model.list)
+                {
+                    <tr>
+                        <td style="text-align:left;" class="text-truncate" title="@data.company_name">
+                            <span class="text-truncate s2">@data.company_name</span>
+                        </td>
+                        <td class="ali_l text-truncate">
+                            <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })" class="text-truncate s2" title="@data.title">@data.title </a>
+                        </td>
+                        <td title="@data.am_names"><span class="text-truncate s2">@data.am_names</span></td>
+                        <td class="text-truncate hidden-sm-down" title="@data.business_names2">@data.business_names2</td>
+                        <td class="text-truncate hidden-sm-down" title="@data.job_names2">@data.job_names2</td>
+                        <td class="hidden-sm-down">@Utils.ConvertDateTimeToString(data.cowork_dt)</td>
+                        <td class="text-right hidden-sm-down">@data.read_cnt</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7">No Co-Work project.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

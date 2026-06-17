@@ -1,0 +1,479 @@
+﻿@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_ai.css?v=1533562669">
+<style>
+  .loader {
+    width: 32px;
+    height: 32px;
+    border: 5px solid #FFF;
+    border-bottom-color: #FF3D00;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+  }
+
+  @@keyframes rotation {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+<div class="page-content" style="position:relative;height:90vh;">
+
+  <div class="panel" id="candidatePanel">
+    <div class="panel-body mainPanel pb-10">
+
+      <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+          <h3 class="panel-title py-10">
+            <i class="fas fa-upload"></i>
+            이력서 신규등록 (AI)
+          </h3>
+          <div class="panel-actions">
+            <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+          </div>
+        </div>
+
+        <div id="resumeInfo" class="panel-body  pb-10">
+          <div class="row">
+            <div class="col-8 offset-2 pb-10">
+
+              <form id="create-ai-resume" class="dropzone h-full text-left">
+
+                <div class="row py-2">
+                  <div class="col">
+                    <div class="dz-message">
+                      AI 이력서 등록 Beta<br />
+                      <small>[Drop files here or click to upload]</small>
+                    </div>
+                  </div>
+                </div>
+              </form>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal fade" id="modal_summary_resume" tabindex="-1" role="dialog" aria-labelledby="modal_summary_resumeLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-title">
+          <h3 class="pl-20"><span id="ai_modal_title">ChatGPT가 파일을 분석 중 입니다..</span></h3>
+        </div>
+        <div class="modal-body">
+
+          <div class="row">
+            <div class="col-12">
+              @Html.Label("진행상태", new { @class = "form-control-label text-primary" })
+              <div style="border: 1px solid #e4eaec; border-radius:2px;" class="p-3 text-left">
+                <span id="progress_message" readonly="true"></span>
+                <span id="summary_loader" class="loader"></span>
+              </div>
+            </div>
+          </div>
+
+
+          <span id="modal_summary_result">
+          </span>
+          <form id="ai_resume_form" method="post" action="@Url.Action("CandidateAiCreate", "Candidate")" target="_blank">
+            <input type="hidden" required name="file_dir" id="file_dir" value="" />
+            <input type="hidden" required name="file_origin_path" id="file_origin_path" value="" />
+            <input type="hidden" required name="file_path" id="file_path" value="" />
+            <input type="hidden" required name="uploadFolder" id="uploadFolder" value="" />
+            <input type="hidden" required name="candidate_model" id="candidate_model" value="" />
+            <input type="hidden" required name="ai_summary_json" id="ai_summary_json" value="" />
+
+            <div class="row">
+              <div class="col-12 d-none" id="duplicate_info">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary btn-block btn_ai_create d-none" disabled id="btn_ai_create1">중복 후보자 무시하고 등록하기</button>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary btn-block btn_ai_create" disabled id="btn_ai_create2">등록하기</button>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12 pt-10">
+                <button type="button" class="btn btn-light btn-xs btn-block btn_reset_upload" id="btn_reset1" disabled> 새로운 이력서 등록하기</button>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                @Html.Label("분석데이터 (테스트용)", new { @class = "form-control-label" })
+                <textarea class="form-control" rows="5" name="ai_summary_text" id="ai_summary_text" readonly="true"></textarea>
+              </div>
+            </div>
+
+          </form>
+
+        </div>
+        <div class="modal-footer">
+          <span style="float:right">
+            <button type="button" class="btn btn-danger d-none btn_reset_upload" style="min-width:200px;" id="btn_reset2" >닫기</button>
+          </span>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+
+</div>
+
+@section scripts{
+  <script type="text/javascript">
+    window.url_create_ai_resume_file = "@Url.Action("CreateAiResumeUpload", "Candidate")";
+    window.url_candidate_ai_recognize = "@Url.Action("CandidateAiRecognizing", "Candidate")";
+    window.url_candidate_ai_create = "@Url.Action("CandidateAiCreate", "Candidate")";
+    window.url_find_duplicate_candidate = "@Url.Action("FindDuplicateCandidate", "Candidate")";
+  </script>
+  <script type="text/javascript">
+    Dropzone.autoDiscover = false;
+
+    $('.btn_reset_upload').click(function (e) {
+      e.preventDefault();
+      alertify.confirm()
+        .set({
+          'labels': { ok: 'OK', cancel: 'Cancel' },
+          'onok': function () {
+            location.reload();
+          },
+          'oncancel': function () {
+            return;
+          },
+        })
+        .setting({
+          message: "업로드 화면을 초기화 하시겠습니까?",
+        })
+        .show();
+      
+    });
+
+
+    var myDropzone = new Dropzone("#create-ai-resume", {
+      uploadMultiple: false,
+      maxFiles: 1,
+      url: window.url_create_ai_resume_file,
+      method: "post",
+    });
+
+    myDropzone.on("success", function (file, response) {
+      if (response.ok) {
+        SetFileInfo(response);
+        ProgressModal();
+
+        FetchToAiRecognizing(response);
+
+
+        //SubmitToAiCreate(response);
+      } else {
+        this.removeFile(file);
+        ErrorAlert("[ERROR]" + response.message);
+      }
+
+    });
+
+    function ProgressModal() {
+      $('#modal_summary_resume').modal({
+        backdrop: 'static',
+        keyboard: false
+      });
+      ///document.getElementById('progress_message').value += "[" + new Date().toISOString() + "] 파일 업로드 완료";
+      document.getElementById('progress_message').innerHTML += "<div class='text-primary'><span class='text-dark'>[" + new Date().toISOString() + "]</span> 파일을 분석합니다. [" + $('#file_path').val() + "]</div>";
+
+      $('.modal-backdrop').appendTo('.page-content');
+      $('#modal_summary_resume').css("position", "absolute");
+      $('#modal_summary_resume').css("padding-left", "13px");
+      $('#modal_summary_resume').css("padding-top", "60px");
+      $('#modal_summary_resume').css("z-index", "1400");
+      $('.modal-backdrop').css("position", "absolute");
+      $('.modal-backdrop').css("z-index", "1300");
+      $('body').removeClass("modal-open");
+      $('body').css("padding-right", "");
+    }
+    function FetchToAiRecognizing(response) {
+      fetch(window.url_candidate_ai_recognize, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          can_file_info: response.result,
+          uploadFolder: response.temp_folder,
+        }),
+      }).then((response) => response.json())
+        .then((data) => {
+          console.log(data)
+          $('#summary_loader').hide();
+          //$('#modal_summary_result').text(data.summary);
+          $('#ai_summary_text').val(data.summary)
+          SetCandidateCreateModel(data.summary);
+
+
+        })
+        .catch((error) => {
+          document.getElementById('progress_message').innerHTML += "<div class='text-danger'><span class='text-dark'>[" + new Date().toISOString() + "]</span> 파일 분석 중 오류 발생 - " + error + "</div>";
+          $('#btn_reset1').attr("disabled", false);
+          $('#btn_reset2').removeClass("d-none");
+          console.log(error)
+        });
+    }
+    function SetFileInfo(response) {
+      try {
+        $('#file_dir').val(response.result.file_dir)
+        $('#file_origin_path').val(response.result.file_origin_path)
+        $('#file_path').val(response.result.file_path)
+        $('#file_extension').val(response.result.file_extension)
+
+        $('#uploadFolder').val(response.temp_folder)
+        document.getElementById('progress_message').innerHTML += "<div class='text-primary'><span class='text-dark'>[" + new Date().toISOString() + "]</span> 파일 업로드 완료</div>";
+        return true;
+      } catch {
+        document.getElementById('progress_message').innerHTML += "<div class='text-danger'><span class='text-dark'>[" + new Date().toISOString() + "]</span> 파일 업로드 중 오류 발생</div>";
+        $('#btn_reset1').attr("disabled", false);
+        $('#btn_reset2').removeClass("d-none");
+        return false;
+      }
+    }
+
+    function FetchFindDuplicate(phone, email) {
+      if (phone == '' && email == '') {
+        document.getElementById('progress_message').innerHTML += "<div class='text-success' style='font-size:1.2em;'><span class='text-dark'>[" + new Date().toISOString() + "]</span> 내용 정리 완료 <br/> 등록하기 버튼을 눌러주세요.</div>";
+        $('#btn_ai_create2').attr("disabled", false);
+        $('#btn_reset1').attr("disabled", false);
+        
+        return;
+      }
+
+      document.getElementById('progress_message').innerHTML += "<div class='text-primary'><span class='text-dark'>[" + new Date().toISOString() + "]</span> 중복 후보자 확인 중 : [" + phone + ", " + email + "]</div>";
+      var result = false;
+      fetch(window.url_find_duplicate_candidate, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: phone,
+          email: email,
+          except_c: 0,
+        }),
+      }).then((response) => response.json())
+        .then((data) => {
+          if (data.ok == true) {
+            console.log(data)
+            if (data.candidate?.c_seq > 0) {
+              var dup_html = `
+              <div class="card border border-warning">
+                <div class="card-header card-header-transparent card-header-bordered">
+                  중복후보자 정보
+                </div>
+                <div class="card-block">
+                  <h4 class="card-title">${data.candidate?.kor_name} (${new Date(data.candidate?.birth_date).getFullYear}년생)</h4>
+                  <p class="card-text">
+                    - ${data.candidate?.cell_phone}<br/>
+                    - ${data.candidate?.email1}
+                  </p>
+                  <a href="/Candidate/CandidateDetail?c_seq=${data.candidate.c_seq}" class="btn btn-primary" target="_blank">상세페이지</a>
+                </div>
+              </div>`;
+
+
+
+              $('#duplicate_info').html(dup_html);
+              $('#duplicate_info').removeClass("d-none");
+
+
+
+              document.getElementById('progress_message').innerHTML += "<div class='text-warning'><span class='text-dark'>[" + new Date().toISOString() + "]</span>중복 후보자 가 있습니다 아래 내용을 확인해주세요.</div>";
+              $('#btn_ai_create1').attr("disabled", false);
+              $('#btn_ai_create1').removeClass("d-none");
+              $('#btn_ai_create2').addClass("d-none");
+
+            } else {
+              document.getElementById('progress_message').innerHTML += "<div class='text-success' style='font-size:1.2em;'><span class='text-dark'>[" + new Date().toISOString() + "]</span> 내용 정리 완료 <br/> 등록하기 버튼을 눌러주세요.</div>";
+
+              $('#btn_ai_create2').attr("disabled", false);
+            }
+            $('#btn_reset1').attr("disabled", false);
+          } else {
+            document.getElementById('progress_message').innerHTML += "<div class='text-danger'><span class='text-dark'>[" + new Date().toISOString() + "]</span>중복 후보자 확인 중 오류 발생 - " + data.message + "</div>";
+            $('#btn_reset1').attr("disabled", false);
+            $('#btn_reset2').removeClass("d-none");
+            console.log(data.message)
+          }
+        })
+        .catch((error) => {
+          document.getElementById('progress_message').innerHTML += "<div class='text-danger'><span class='text-dark'>[" + new Date().toISOString() + "]</span>중복 후보자 확인 중 오류 발생 - " + error + "</div>";
+          $('#btn_reset1').attr("disabled", false);
+          $('#btn_reset2').removeClass("d-none");
+          console.log(error)
+        });
+
+      return result;
+    }
+
+    function SetCandidateCreateModel(data1) {
+      document.getElementById('progress_message').innerHTML += "<div class='text-primary'><span class='text-dark'>[" + new Date().toISOString() + "]</span> 분석된 내용을 정리합니다.</div>";
+      try {
+
+        if (data1) {
+          //var data = Object.assign({}, data1);
+          var data = JSON.parse(data1);
+        } else {
+          var data = JSON.parse($('#ai_summary_text').val());
+        }
+        //console.log(data);
+
+
+
+        if (data.name) {
+          $('#ai_modal_title').html(data.name + '님의 ' + (data.type == 'K' ? '국문' : '영문') + '이력서 분석 완료');
+        }
+
+        if (data?.birth != "") {
+          var birth = data.birth;
+          if (birth.substring(5) == "00-00") {
+            birth = birth.substring(0, 5) + "01-01";
+          }
+        }
+
+        var currentData = {
+          c_seq: 0,
+          kor_name: data?.name ?? '',
+          eng_name: data?.eng_name ?? '',
+          birth_date: birth ?? '',
+          gender: data?.gender ?? 0,
+          //ex_birthdate: data?.birthdate ?? 1,
+          country_code: data?.country_cd ?? 'KR',
+          country_name: data?.country ?? '한국',
+          addr1: data?.addr ?? '',
+          cell_phone: data?.phone ?? '',
+          email1: data?.email ?? '',
+          sns_link1: data?.linkedin ?? '',
+          //keyword: data?.keyword,
+          hope_salary: data?.hope1,
+          hope_salary2: data?.hope2,
+          schoolList: [],
+          companyList: [],
+          //placeList: [],
+          //jobList: [],
+          //busiList: [],
+          //foreignList: [],
+          resumeList: []
+        };
+
+        if (data.edu?.length >= 1) {
+
+          for (var edu_i = 0; edu_i < data.edu.length; edu_i++) {
+            var school = {};
+
+            if (data.edu[edu_i]?.type == "고등학교")
+              continue;
+
+            if (data.edu[edu_i]?.type == "석사")
+              school.gubun = "4";
+            else if (data.edu[edu_i]?.type == "박사")
+              school.gubun = "5";
+            else if (data.edu[edu_i]?.type == "전문대")
+              school.gubun = "2";
+            else
+              school.gubun = "3";
+
+            if (data.edu[edu_i]?.school != "" && data.edu[edu_i]?.school != null) {
+              school.schoolName = data.edu[edu_i].school
+            }
+            if (data.edu[edu_i]?.major != "" && data.edu[edu_i]?.major != null) {
+              school.major_name = data.edu[edu_i].major
+            }
+            if (data.edu[edu_i]?.start != "" && data.edu[edu_i]?.start != null) {
+              var edu_st = data.edu[edu_i].start;
+              if (edu_st.substring(5) == "00") {
+                edu_st = edu_st.substring(0, 5) + "01";
+              }
+              school.admission_year = edu_st
+            }
+
+            if (data.edu[edu_i]?.end != "" && data.edu[edu_i]?.end != null) {
+              var edu_ed = data.edu[edu_i].end;
+              if (edu_ed.substring(5) == "00") {
+                edu_ed = edu_ed.substring(0, 5) + "01";
+              }
+
+              school.graduate_year = edu_ed
+            }
+
+            currentData.schoolList.push(school);
+          }
+        }
+
+
+        if (data.exp?.length >= 1) {
+
+          for (var exp_i = 0; exp_i < data.exp.length; exp_i++) {
+            var company = {};
+            if (data.exp[exp_i]?.company != "") {
+              company.company_name = data.exp[exp_i].company
+            }
+
+            if (data.exp[exp_i]?.position != "") {
+              company.division_name = data.exp[exp_i].position
+            }
+
+            if (data.exp[exp_i]?.start != "") {
+              var exp_st = data.exp[exp_i].start;
+              if (exp_st.substring(5) == "00") {
+                exp_st = exp_st.substring(0, 5) + "01";
+              }
+              company.join_dt = exp_st
+            }
+
+            if (data.exp[exp_i]?.end != "") {
+              var exp_ed = data.exp[exp_i].end;
+              if (exp_ed.substring(5) == "00") {
+                exp_ed = exp_ed.substring(0, 5) + "01";
+              }
+
+              company.leave_dt = exp_ed
+            }
+
+            currentData.companyList.push(company);
+          }
+        }
+        var resume = {
+          file_type: data?.type ?? 'K',
+          file_dir: $('#file_dir').val(),
+          file_origin_path: $('#file_dir').val(),
+          file_path: $('#file_path').val(),
+          file_extension: $('#file_extension').val(),
+        }
+
+        currentData.resumeList.push(resume);
+        $('#candidate_model').val(JSON.stringify(currentData));
+
+        FetchFindDuplicate(data?.phone, data?.email);
+
+        //$('#btn_ai_create').click();
+      } catch (err) {
+        document.getElementById('progress_message').innerHTML += "<div class='text-danger'><span class='text-dark'>[" + new Date().toISOString() + "]</span> 분석된 내용 정리 중 오류 발생" + err + "</div>";
+        $('#btn_reset1').attr("disabled", false);
+        $('#btn_reset2').removeClass("d-none");
+      }
+    }
+
+  </script>
+}

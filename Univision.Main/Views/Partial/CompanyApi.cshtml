@@ -1,0 +1,49 @@
+﻿@model List<Univision.Main.Models.Api.ResponseCompany>
+
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <td>No</td>
+            <td>업체명</td>
+            <td>사업자번호</td>
+            <td>주소</td>
+            <td>선택</td>
+        </tr>
+    </thead>
+    <tbody id="tBody">
+        @if (Model.Count() > 0)
+        {
+            int i = 1;
+            foreach (var data in Model)
+            {
+                <tr>
+                    <td>@(i++)</td>
+                    <td>
+                        @data.wkplNm
+                    </td>
+                    <td>
+                        @data.bzowrRgstNo
+                    </td>
+                    <td>
+                        @data.wkplRoadNmDtlAddr
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-success btn-outline-success">선택</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+
+
+
+@section scripts {
+
+    <script type="text/javascript">
+
+
+
+    </script>
+}

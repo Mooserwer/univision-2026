@@ -1,0 +1,45 @@
+﻿@model Univision.Core.Models.DTO.Response.Board.BoardDetailViewModel
+@{
+  int i = 0;
+}
+<ul class="list-group list-group-dividered list-group-full">
+
+  @if (Model != null && Model.boardFileList.Count > 0)
+  {
+
+    foreach (var data in Model.boardFileList)
+    {
+
+
+
+  <li class="list-group-item file-list">
+    <input type="hidden" name="boardFileList[@i].b_seq" value="@data.b_seq" class="boardFileList_b_seq" />
+    <input type="hidden" name="boardFileList[@i].bf_seq" value="@data.bf_seq" class="boardFileList_bf_seq" />
+    <input type="hidden" name="boardFileList[@i].file_extension" value="@data.file_extension" class="boardFileList_file_extension" />
+    <input type="hidden" name="boardFileList[@i].file_path" value="@data.file_path" class="boardFileList_file_path" />
+    <input type="hidden" name="boardFileList[@i].file_origin_path" value="@data.file_origin_path" class="boardFileList_file_origin_path" />
+    <input type="hidden" name="boardFileList[@i].create_dt" value="@data.create_dt" class="boardFileList_create_dt" />
+    <input type="hidden" name="boardFileList[@i].create_user" value="@data.create_user" class="boardFileList_create_user" />
+    <input type="hidden" name="boardFileList[@i].file_dir" value="@data.file_dir" class="boardFileList_file_dir" />    
+    <a href="@(data.file_dir)">
+      <i class="fas @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+      @data.file_path
+    </a>
+    <i class="fas fa-times cur_hand delete-file" onclick="javascript:RemoveFile('@i');">
+    </i>
+  </li>
+
+
+      i++;
+    }
+  }
+
+  else
+  {
+    <li class="list-group-item" id="board_no_file">
+      <i class="fas fa-file"></i>
+      No files
+    </li>
+  }
+</ul>
+

@@ -1,0 +1,202 @@
+﻿@model Univision.Main.Models.Invoice.InvoiceCreateModel
+<style>
+  .container__mark {
+    background: rgb(253 224 71);
+  }
+</style>
+@using (Html.BeginForm("", "", FormMethod.Post, new { @id = "frmInvoiceStep6" }))
+{
+  @Html.HiddenFor(x => x.pjt_position_str)
+  <div class="card mg-t-10 mg-x-10 bd bd-indigo no_print">
+    <div class="card-header bg-dark tx-white tx-medium tx-bold bd-0 top-head">
+      마지막 : 인보이스 내용 설정 및 검토
+    </div>
+    <div class="card-body part_show_inv_step6" style="display:none;">
+      <div class="row" style="@((Model.invoice_type == 4 || Model.invoice_type == 5) ? "display:none;" : "")">
+        <div class="col-12 col-md-12">
+          <div class="form-group">
+            <label class="form-control-label">PO 요구 여부: <span class="tx-danger">*</span></label>
+            <div class="form-inline">
+              <label class="rdiobox pd-r-10">
+                <input type="radio" id="is_po_yes" name="is_po_no" value="1" @(Model.is_po_no == 1 ? "checked" : "") class="">
+                <span>필요 (Required)</span>
+              </label>
+              <label class="rdiobox">
+                <input type="radio" id="is_po_no_no" name="is_po_no" value="0" @(Model.is_po_no == 0 ? "checked" : "") class="">
+                <span>불필요 (Not Required)</span>
+              </label>
+            </div>
+          </div>
+          @if (Model.pre_invoice != null)
+          {
+            string po_str = "불필요";
+
+            if (@Model.pre_invoice.is_po_no == 1)
+            {
+              po_str = "필요";
+            }
+            <div class="alert alert-info pd-5">
+              <i class="fa fa-info-circle"></i>
+              직전 인보이스 PO No 필요 여부 : <b>[@po_str]</b>
+            </div>
+          }
+        </div>
+
+        <div class="col-6" style="@((Model.invoice_type == 0 || Model.invoice_type == 2) ? "" : "display:none;")">
+          <div class="form-group">
+            <label class="form-control-label">후보자명 표시: <span class="tx-danger">*</span></label>
+            <div class="form-inline">
+              <label class="rdiobox pd-r-10">
+                <input type="radio" id="is_open_name_yes" name="is_open_name" value="1" @(Model.is_open_name == 1 ? "checked" : "") class="">
+                <span>표시</span>
+              </label>
+              <label class="rdiobox">
+                <input type="radio" id="is_open_name_no" name="is_open_name" value="0" @(Model.is_open_name == 0 ? "checked" : "") class="">
+                <span>미표시</span>
+              </label>
+            </div>
+          </div>
+          @if (Model.pre_invoice != null)
+          {
+            string open_name_str = "미표시";
+
+            if (@Model.pre_invoice.is_open_name == 1)
+            {
+              open_name_str = "표시";
+            }
+            <div class="alert alert-info pd-5">
+              <i class="fa fa-info-circle"></i>
+              직전 인보이스 후보자 이름 표시 여부 : <b>[@open_name_str]</b>
+            </div>
+          }
+        </div>
+        <div class="col-6" style="@((Model.invoice_type == 0 || Model.invoice_type == 2) ? "" : "display:none;")">
+          <div class="form-group">
+            <label class="form-control-label">후보자연봉/수수료율 표시: <span class="tx-danger">*</span></label>
+            <div class="form-inline">
+              <label class="rdiobox pd-r-10">
+                <input type="radio" id="is_open_annual_income_yes" name="is_open_annual_income" value="1" @(Model.is_open_annual_income == 1 ? "checked" : "") class="">
+                <span>표시</span>
+              </label>
+              <label class="rdiobox">
+                <input type="radio" id="is_open_annual_income_no" name="is_open_annual_income" value="0" @(Model.is_open_annual_income == 0 ? "checked" : "") class="">
+                <span>미표시</span>
+              </label>
+            </div>
+          </div>
+          @if (Model.pre_invoice != null)
+          {
+            string open_income_str = "미표시";
+
+            if (@Model.pre_invoice.is_open_annual_income == 1)
+            {
+              open_income_str = "표시";
+            }
+            <div class="alert alert-info pd-5">
+              <i class="fa fa-info-circle"></i>
+              직전 인보이스 후보자 연봉/수수료 표시여부 : <b>[@open_income_str]</b>
+            </div>
+          }
+        </div>
+      </div>
+      <hr style="@((Model.invoice_type == 4 || Model.invoice_type == 5) ? "display:none;" : "")"/>
+      <div class="row" style="@((Model.invoice_type == 4 || Model.invoice_type == 5) ? "display:none;" : "")">
+        <div class="col-12 col-md-12" >
+          <div class="form-group mg-b-0">
+            <label class="form-control-label">제목: <span class="tx-danger">*</span></label>
+            @Html.TextBox("invoice_title", "인재추천 서비스 수수료 청구", new { @readonly="readonly", @class = "form-control", @autocomplete = "off", @placeholder = "인보이스 제목" })
+          </div>
+          <div class="form-group">
+            <button type="button" class="btn btn-sm btn-info mg-r-10" id="btn_set_invoice_title" onclick="setInvoiceTitleDefault();">기본 제목으로 설정</button>
+            <label class="ckbox">
+              <input type="checkbox" name="is_custom_title" id="is_custom_title"><span>원하는 제목으로 수정하려면 체크해주세요</span>
+            </label>
+          </div>
+        </div>
+        <div class="col-12 col-md-12">
+          <div class="form-group mg-b-0">
+            <label class="form-control-label">본문: <span class="tx-danger">*</span></label>
+            @Html.TextArea("invoice_contents", "귀사의 발전을 진심으로 기원합니다.\n인재추천에 관한 서비스 용역수수료를 청구하오니 하기 예금계좌로 지급하여 주시면 감사하겠습니다.", new { @readonly = "readonly", @class = "form-control bg-blue-gray", @autocomplete = "off", @rows = "5", @placeholder = "인보이스 내용" })
+          </div>
+          <div class="form-group">
+            <button type="button" class="btn btn-sm btn-info mg-r-10" id="btn_set_invoice_contents" onclick="setInvoiceContentDefault();">기본 내용으로 설정</button>
+            <label class="ckbox">
+              <input type="checkbox" name="is_custom_contents" id="is_custom_contents"><span>원하는 내용으로 수정하려면 체크해주세요</span>
+            </label>
+          </div>
+        </div>
+
+
+        <div class="col-12">
+          <div class="form-group">
+            <label class="form-control-label">입금은행 :</label>
+            <select name="deposit_bank" id="deposit_bank" class="form-control form-control-lg">
+              <option value="389801-01-140852">국민은행</option>
+              <option value="100-008-022740">신한은행</option>
+              <option value="305-047998-13-001">우리은행</option>
+              <option value="249-890003-35004">하나은행</option>
+              <option value="317-0025-5995-61">농협</option>
+              <option value="389868-11-010539">국민은행(외화전용)</option>
+            </select>
+          </div>
+          @if (Model.pre_invoice != null)
+          {
+            string bank_str = Model.pre_invoice.deposit_bank_name;
+            if (!String.IsNullOrEmpty(bank_str))
+            {
+              <div class="alert alert-info pd-5">
+                <i class="fa fa-info-circle"></i>
+                직전 인보이스 입금은행 : <b>[@bank_str]</b>
+              </div>
+            }
+          }
+        </div>
+      </div>
+      <hr style="@((Model.invoice_type == 4 || Model.invoice_type == 5) ? "display:none;" : "")"/>
+
+      <div class="row">
+
+        <div class="col-12 col-md-12">
+          <div class="form-group">
+            <label class="form-control-label">발행 시 요청사항:</label>
+            @if (Model.invoice_type == 4 || Model.invoice_type == 5)
+            {
+            <div class="alert alert-warning pd-5">
+              <i class="fa fa-info-circle"></i>
+              고객사에서 요청하는 별도 입금일이 있을 경우 기재해주세요. <br>
+                                              <i class="fa fa-info-circle"></i> 고객사 통장사본이 필요합니다.(김나래 부장, 이예진 매니저에게 메일로 전달 요망)
+            </div>
+            }
+            @Html.TextArea("invoice_remark", "", new { @class = "form-control", @autocomplete = "off", @rows = 6, @placeholder = "발행 시 필요하신 사항이 있으면 남겨주세요." })
+          </div>
+          @if (Model.pre_invoice != null)
+          {
+            if (!String.IsNullOrEmpty(Model.pre_invoice.remarks))
+            {
+              <div class="alert alert-info pd-5">
+                <i class="fa fa-info-circle"></i>
+                직전 인보이스 요청사항 : <br /><b>[@Html.Raw(Model.pre_invoice.remarks.Replace("\n", "<br>"))]</b>
+              </div>
+            }
+          }
+        </div>
+      </div>
+      <div class="row" style="@(Model.invoice_type == 1 || Model.invoice_type == 4  || Model.invoice_type == 5  ? "display:none;" : "")">
+        <div class="col-12">
+          <label class="ckbox">
+            <input type="checkbox" value="1" name="opt_is_success" id="opt_is_success" @(Model.opt_is_success == 1 ? "checked" : "")><span>발행요청 후 프로젝트 성공 상태로 변경하기</span>
+          </label>
+        </div>
+      </div>
+      <div class="row">
+
+        <div class="col-12 tx-right">
+          <button type="button" class="btn btn btn-secondary" onclick="InvoicePreview();" style="@((Model.invoice_type == 4 || Model.invoice_type == 5) ? "display:none;" : "")">미리보기</button>
+          <button type="button" class="btn btn btn-indigo" onclick="InvoiceSubmit();">발행요청</button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+}

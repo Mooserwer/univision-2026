@@ -1,0 +1,646 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientContractDetailModel
+@using Univision.Security
+@{
+  Layout = null;
+}
+<script>
+    function SaveContract() {
+        var mode = $('input[name=contract_edit_mode]:checked').val() ? $('input[name=contract_edit_mode]:checked').val() : "";
+
+        var model = {
+            edit_mode: mode,
+            data: {},
+            fee_step : []
+        }
+
+        var contract = {
+            cc_seq: mode == "A" ? $('#data_cc_seq').val() : 0, //수정일때 필수
+            c_seq: $('#c_seq').val(), //필수
+            contract_date: $('#data_contract_date').val(), //필수
+            fee_type: $('input[name=data\\.fee_type]:checked').val() ? $('input[name=data\\.fee_type]:checked').val() : "",
+            is_construct_debut: $('#data_is_construct_debut]').val(),
+            construct_debut_per: ($('#data_is_construct_debut]').val() == "Y" ? $('#construct_debut_per').val() : ""),
+            vat_type: $('#vat_type').val(),
+            deposit_gubun1: $('#data_deposit_gubun1').val(),
+            deposit_gubun2: $('#data_deposit_gubun1').val() != "" ? $('#data_deposit_gubun2').val() : "",
+            deposit_period: $('#data_deposit_gubun1').val() != "" ? $('#data_deposit_period').val() : "",
+            grt_type: $('#data_grt_type').val(),
+            grt_period: $('#data_grt_type').val() != "" ? $('#data_grt_period').val() : "",
+            grt_gubun: $('#data_grt_type').val() != "" ? $('#data_grt_gubun').val() : "",
+            fix_fee_rate: $('input[name=data\\.fee_type]:checked').val() == "C" ? $('#data_fix_fee_rate').val() : "",
+            contract_comment: $('#contract_comment').val(),
+            currency_cd: $('#contract_currency_name').val(),
+        }
+
+        model.data = contract;
+        if (model.data.fee_type == "A") {
+            $('#contract_fee_type_a tbody tr').each(function () {
+                model.fee_step.push({
+                    start_income : $(this).find('input[name=fee_step_s]').val(),
+                    end_income : $(this).find('input[name=fee_step_e]').val(),
+                    percentage : $(this).find('input[name=fee_rate_per]').val()
+                })
+
+            })
+        } else if (model.data.fee_type == "B") {
+            $('#contract_fee_type_b tbody tr').each(function () {
+                model.fee_step.push({
+                    start_income : $(this).find('select[name=fee_step_s]').val(),
+                    end_income : $(this).find('select[name=fee_step_e]').val(),
+                    percentage : $(this).find('input[name=fee_rate_per]').val()
+                })
+
+            })
+        }
+
+        $.ajax({
+            url: '@Url.Action("PopContractCreate", "Client")',
+            type: "POST",
+            dataType: 'json',
+            data: model,
+            beforeSend: function () {
+                showLoading("#client_contract_pop");
+            },
+            success: function (json) {
+                hideLoading("#client_contract_pop");
+                if (json.ok) {
+
+                    callContractDetail($('#c_seq').val());
+
+                    $.fancybox.close()
+
+                }
+                else {
+                    ErrorAlert(json.message);
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                hideLoading("#client_contract_pop");
+                ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요1.");
+            }
+        });
+
+        //console.log(model);
+
+    }
+</script>
+<div class="pt-5" id="client_contract_pop">
+  @if (Model.data.cc_seq > 0)
+  {
+    <div class="row">
+      <div class="input-group input-group-sm">
+        <div class="">
+          <div class="radio-custom radio-primary radio-inline ml-10">
+            <input type="radio" id="contract_edit_mode_a" name="contract_edit_mode" value="A">
+            <label for="contract_edit_mode_a">기존 계약 정보수정</label>
+          </div>
+          <div class="radio-custom radio-primary radio-inline ml-10">
+            <input type="radio" id="contract_edit_mode_b" name="contract_edit_mode" checked value="B">
+            <label for="contract_edit_mode_b">갱신(새로운 계약으로 생성됩니다.)</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  <div class="row">
+    @Html.HiddenFor(x => x.data.cc_seq)
+    <div class="form-group col-md-6">
+      <div class="row">
+        <div class="col-6 col-md-12">
+          <label class="form-control-label form-control-label-sm text-secondary">계약일</label>
+          @Html.TextBoxFor(x => x.data.contract_date, new { @class = "form-control form-control-sm jDatePicker", @size = "10", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+        </div>
+        <div class="col-4 col-md-8">
+          <label class="form-control-label form-control-label-sm text-secondary">기초조사비 공제 여부</label>
+          
+            <select name="data.is_construct_debut" id="data_is_construct_debut" class="form-control">
+              <option @(Model.data.is_construct_debut == "Y" ? "selected" : "") value="Y">Yes</option>
+              <option @(Model.data.is_construct_debut != "Y" ? "selected" : "") value="N">No</option>
+            </select>
+          
+        </div>
+        <div class="col-2 col-md-4 debut_field">
+          <label class="form-control-label form-control-label-sm text-secondary">공제 비율(%)</label>
+          
+            @Html.TextBoxFor(x => x.data.construct_debut_per, new { @type = "number", @class = "form-control text-right", @placeholder = "0", @autocomplete = "off" })
+
+        </div>
+        <div class="col-6 col-md-12">
+          <label class="form-control-label form-control-label-sm text-secondary">VAT 구분 <!--(인보이스 발행 시 기본설정)--></label>
+          <div class="input-group input-group-sm">
+            <select name="vat_type" id="vat_type" class="form-control form-control-sm fee_change">
+              <option value="3" @(Model.data.vat_type == 3 ? "selected" : "")>면세</option>
+              <option value="1" @(Model.data.vat_type == 1 ? "selected" : "")>VAT별도</option>
+              <option value="0" @(Model.data.vat_type == 0 ? "selected" : "")>VAT포함</option>
+              <option value="2" @(Model.data.vat_type == 2 ? "selected" : "")>영세율(0%)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group col-md-6">
+      <div class="row">
+        <div class="col-6 col-md-12">
+          <label class="form-control-label form-control-label-sm text-secondary">입금일 지정</label>
+          <div class="input-group input-group-sm">
+            <select name="data.deposit_gubun1" id="data_deposit_gubun1" class="w-p50 form-control">
+              <option value="">[입금일 지정정보 없음]</option>
+              <option @(Model.data.deposit_gubun1 == "계산서를 수령한 날로부터" ? "selected" : "") value="계산서를 수령한 날로부터">계산서를 수령한 날로부터</option>
+              <option @(Model.data.deposit_gubun1 == "세금계산서를 수령한 날로부터" ? "selected" : "") value="세금계산서를 수령한 날로부터">세금계산서를 수령한 날로부터</option>
+              <option @(Model.data.deposit_gubun1 == "입사일로 부터" ? "selected" : "") value="입사일로 부터">입사일로 부터</option>
+            </select>
+            @Html.TextBoxFor(x => x.data.deposit_period, new { @type = "number", @class = "w-p25 form-control deposit_field", @placeholder = "0", @autocomplete = "off" })
+            <select name="data.deposit_gubun2" id="data_deposit_gubun2" class="w-p25 form-control deposit_field">
+              <option @(Model.data.deposit_gubun2 == "주" ? "selected" : "") value="주">주 이내</option>
+              <option @(Model.data.deposit_gubun2 == "개월" ? "selected" : "") value="개월">개월 이내</option>
+              <option @(Model.data.deposit_gubun2 == "일" ? "selected" : "") value="일">일 이내</option>
+            </select>
+          </div>
+
+        </div>
+        <div class="col-6 col-md-12">
+          <label class="form-control-label form-control-label-sm text-secondary">후보자 보증기간</label>
+
+
+          <div class="input-group input-group-sm">
+            <select name="data.grt_type" id="data_grt_type" class="w-p50 form-control">
+              <option @(String.IsNullOrEmpty(Model.data.grt_type) ? "selected" : "") value="">[보증기간 없음]</option>
+              <option @(!String.IsNullOrEmpty(Model.data.grt_type) ? "selected" : "") value="입사일로 부터">입사일로 부터</option>
+            </select>
+            @Html.TextBoxFor(x => x.data.grt_period, new { @type = "number", @class = "w-p25 form-control grt_field", @placeholder = "0", @autocomplete = "off" })
+            <select name="data.grt_gubun" id="data_grt_gubun" class="w-p25 form-control grt_field">
+              <option @(Model.data.grt_gubun == "일" ? "selected" : "") value="일">일</option>
+              <option @(Model.data.grt_gubun == "개월" ? "selected" : "") value="개월">개월</option>
+            </select>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+
+  </div>
+  <div class="row">
+    <div class="form-group col-6">
+      <label class="form-control-label form-control-label-sm text-secondary">수수료율 반영 구분</label>
+      <div class="input-group input-group-sm">
+        <div class="">
+          <div class="radio-custom radio-custom-sm radio-primary radio-inline">
+            <input type="radio" id="data_fee_type_A" name="data.fee_type" class="radio_contract_fee_type" value="A" @(Model.data.fee_type == "A" ? "checked" : "")>
+            <label for="data_fee_type_A">연봉 기준</label>
+          </div>
+          <div class="radio-custom radio-custom-sm radio-primary radio-inline ml-10">
+            <input type="radio" id="data_fee_type_B" name="data.fee_type" class="radio_contract_fee_type" value="B" @(Model.data.fee_type == "B" ? "checked" : "")>
+            <label for="data_fee_type_B">직급 기준</label>
+          </div>
+          <div class="radio-custom radio-custom-sm radio-primary radio-inline ml-10">
+            <input type="radio" id="data_fee_type_C" name="data.fee_type" class="radio_contract_fee_type" value="C" @(Model.data.fee_type == "C" ? "checked" : "")>
+            <label for="data_fee_type_C">Flat(단일요율)</label>
+          </div>
+        </div>
+        @*
+
+        *@
+      </div>
+      <p class="text-right">
+        <div class="input-group input-group-sm w-p50 @(Model.data.fee_type == "C"?"":"d-none")" id="contract_fee_type_c">
+          <span class="input-group-text small pt-3">단일요율 입력 : </span>
+          @Html.TextBoxFor(x => x.data.fix_fee_rate, new { @type = "number", @class = "w-30 form-control text-right ml-10", @placeholder = "%", @autocomplete = "off" })
+          <span class="input-group-text small pt-3">%</span>
+        </div>
+        <table class="table table-sm table-bordered small @(Model.data.fee_type == "A"?"":"d-none")" id="contract_fee_type_a">
+          <thead>
+            <tr>
+              <th class="text-center">
+
+                연봉 구간
+                <select name="contract_currency_name" id="contract_currency_name" class="form-control form-control-sm mt-2">
+                  <option value="">[금액단위 선택]</option>
+                  <option value="KRW" @((Model.data.currency_cd == "KRW" || String.IsNullOrEmpty(Model.data.currency_cd)) ? "selected" : "")>KRW(원)</option>
+                  <option value="USD" @(Model.data.currency_cd == "USD" ? "selected" : "")>USD(미국달러)</option>
+                  <option value="HKD" @(Model.data.currency_cd == "HKD" ? "selected" : "")>HKD(홍콩달러)</option>
+                  <option value="YEN" @(Model.data.currency_cd == "YEN" ? "selected" : "")>YEN(엔화)</option>
+                  <option value="GBP" @(Model.data.currency_cd == "GBP" ? "selected" : "")>GBP(파운드)</option>
+                  <option value="DEM" @(Model.data.currency_cd == "DEM" ? "selected" : "")>DEM(마르크)</option>
+                  <option value="FRF" @(Model.data.currency_cd == "FRF" ? "selected" : "")>FRF(프랑스 프랑)</option>
+                  <option value="CHF" @(Model.data.currency_cd == "CHF" ? "selected" : "")>CHF(스위스 프랑)</option>
+                  <option value="EUR" @(Model.data.currency_cd == "EUR" ? "selected" : "")>EUR(유로)</option>
+                  <option value="CNY" @(Model.data.currency_cd == "CNY" ? "selected" : "")>CNY(위안)</option>
+                  <option value="AUD" @(Model.data.currency_cd == "AUD" ? "selected" : "")>AUD(호주달러)</option>
+                  <option value="NZD" @(Model.data.currency_cd == "NZD" ? "selected" : "")>NZD(뉴질랜드달러)</option>
+                  <option value="CAD" @(Model.data.currency_cd == "CAD" ? "selected" : "")>CAD(캐나다달러)</option>
+                </select>
+
+              </th>
+              <th class="w-p25 text-center">수수료율</th>
+              <th class="w-p15 text-center">
+                <button type="button" class="btn btn-xs btn-success" onclick="AddRowFee('a');"><i class="fa fa-plus"></i></button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (Model.feeList.Count() > 0 && Model.data.fee_type == "A")
+            {
+              foreach (var fee in Model.feeList)
+              {
+                <tr>
+                  <td class="text-center">
+                    <div class="input-group input-group-sm w-p100">
+                      <input type="text" name="fee_step_s" value="@fee.start_income" class="form-control text-right" />
+                      <span class="input-group-text small">이상&nbsp;&nbsp;</span>
+                      <input type="text" name="fee_step_e" value="@fee.end_income" class="form-control text-right" />
+                      <span class="input-group-text small">미만</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <input type="text" name="fee_rate_per" value="@fee.percentage" class="form-control text-right form-control-sm" placeholder="%" />
+                  </td>
+                  <td class="text-center">
+                    <button type="button" onclick="RemoveRowFee(this);" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></button>
+                  </td>
+                </tr>
+              }
+            }
+            else
+            {
+              <tr>
+                <td class="text-center">
+                  <div class="input-group input-group-sm w-p100">
+                    <input type="text" name="fee_step_s" value="" class="form-control text-right" />
+                    <span class="input-group-text small">이상&nbsp;&nbsp;</span>
+                    <input type="text" name="fee_step_e" value="50000000" class="form-control text-right" />
+                    <span class="input-group-text small">미만</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <input type="text" name="fee_rate_per" value="20" class="form-control text-right form-control-sm" placeholder="%" />
+                </td>
+                <td class="text-center">
+                  <button type="button" onclick="RemoveRowFee(this);" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <div class="input-group input-group-sm w-p100">
+                    <input type="text" name="fee_step_s" value="50000000" class="form-control text-right" />
+                    <span class="input-group-text small">이상&nbsp;&nbsp;</span>
+                    <input type="text" name="fee_step_e" value="100000000" class="form-control text-right" />
+                    <span class="input-group-text small">미만</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <input type="text" name="fee_rate_per" value="25" class="form-control text-right form-control-sm" placeholder="%" />
+                </td>
+                <td class="text-center">
+                  <button type="button" onclick="RemoveRowFee(this);" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <div class="input-group input-group-sm w-p100">
+                    <input type="text" name="fee_step_s" value="100000000" class="form-control text-right" />
+                    <span class="input-group-text small">이상&nbsp;&nbsp;</span>
+                    <input type="text" name="fee_step_e" value="" class="form-control text-right" />
+                    <span class="input-group-text small">미만</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <input type="text" name="fee_rate_per" value="30" class="form-control text-right form-control-sm" placeholder="%" />
+                </td>
+                <td class="text-center">
+                  <button type="button" onclick="RemoveRowFee(this);" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <table class="table table-sm table-bordered small @(Model.data.fee_type == "B"?"":"d-none")" id="contract_fee_type_b">
+          <thead>
+            <tr>
+              <th class="text-center">직급 구간</th>
+              <th class="w-p25 text-center">수수료율(%)</th>
+              <th class="w-p15 text-center">
+                <button type="button" class="btn btn-xs btn-success" onclick="AddRowFee('b');"><i class="fa fa-plus"></i></button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (Model.feeList.Count() > 0 && Model.data.fee_type == "B")
+            {
+              foreach (var fee in Model.feeList)
+              {
+                <tr>
+                  <td class="text-center">
+                    <div class="input-group input-group-sm w-p100">
+                      <select name="fee_step_s" class="form-control">
+                        <option value="">없음</option>
+                        <option value="100" @(fee.start_income == 100 ? "selected" : "")>신입사원급</option>
+                        <option value="90" @(fee.start_income == 90 ? "selected" : "")>경력사원급</option>
+                        <option value="80" @(fee.start_income == 80 ? "selected" : "")>대리급</option>
+                        <option value="70" @(fee.start_income == 70 ? "selected" : "")>과장급</option>
+                        <option value="60" @(fee.start_income == 60 ? "selected" : "")>차장급</option>
+                        <option value="50" @(fee.start_income == 50 ? "selected" : "")>부장급</option>
+                        <option value="40" @(fee.start_income == 40 ? "selected" : "")>본부장/지사장</option>
+                        <option value="30" @(fee.start_income == 30 ? "selected" : "")>임원급</option>
+                        <option value="20" @(fee.start_income == 20 ? "selected" : "")>최고재무경영자</option>
+                        <option value="10" @(fee.start_income == 10 ? "selected" : "")>최고 경영자</option>
+                      </select>
+                      <span class="input-group-text small">이상&nbsp;&nbsp;</span>
+                      <select name="fee_step_e" class="form-control">
+                        <option value="">없음</option>
+                        <option value="100" @(fee.end_income == 100 ? "selected" : "")>신입사원급</option>
+                        <option value="90" @(fee.end_income == 90 ? "selected" : "")>경력사원급</option>
+                        <option value="80" @(fee.end_income == 80 ? "selected" : "")>대리급</option>
+                        <option value="70" @(fee.end_income == 70 ? "selected" : "")>과장급</option>
+                        <option value="60" @(fee.end_income == 60 ? "selected" : "")>차장급</option>
+                        <option value="50" @(fee.end_income == 50 ? "selected" : "")>부장급</option>
+                        <option value="40" @(fee.end_income == 40 ? "selected" : "")>본부장/지사장</option>
+                        <option value="30" @(fee.end_income == 30 ? "selected" : "")>임원급</option>
+                        <option value="20" @(fee.end_income == 20 ? "selected" : "")>최고재무경영자</option>
+                        <option value="10" @(fee.end_income == 10 ? "selected" : "")>최고 경영자</option>
+                      </select>
+                      <span class="input-group-text small">미만</span>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <input type="text" name="fee_rate_per" value="@fee.percentage" class="form-control text-right form-control-sm" placeholder="%" />
+                  </td>
+                  <td class="text-center">
+                    <button type="button" onclick="RemoveRowFee(this);" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></button>
+                  </td>
+                </tr>
+              }
+            }
+            else
+            {
+              <tr>
+                <td class="text-center">
+                  <div class="input-group input-group-sm w-p100">
+                    <select name="fee_step_s" class="form-control">
+                      <option value="" selected>없음</option>
+                      <option value="100">신입사원급</option>
+                      <option value="90">경력사원급</option>
+                      <option value="80">대리급</option>
+                      <option value="70">과장급</option>
+                      <option value="60">차장급</option>
+                      <option value="50">부장급</option>
+                      <option value="40">본부장/지사장</option>
+                      <option value="30">임원급</option>
+                      <option value="20">최고재무경영자</option>
+                      <option value="10">최고 경영자</option>
+                    </select>
+                    <span class="input-group-text small">이상&nbsp;&nbsp;</span>
+                    <select name="fee_step_e" class="form-control">
+                      <option value="">없음</option>
+                      <option value="100">신입사원급</option>
+                      <option value="90">경력사원급</option>
+                      <option value="80" selected>대리급</option>
+                      <option value="70">과장급</option>
+                      <option value="60">차장급</option>
+                      <option value="50">부장급</option>
+                      <option value="40">본부장/지사장</option>
+                      <option value="30">임원급</option>
+                      <option value="20">최고재무경영자</option>
+                      <option value="10">최고 경영자</option>
+                    </select>
+                    <span class="input-group-text small">미만</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <input type="text" name="fee_rate_per" value="20" class="form-control text-right form-control-sm" placeholder="%" />
+                </td>
+                <td class="text-center">
+                  <button type="button" onclick="RemoveRowFee(this);" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <div class="input-group input-group-sm w-p100">
+                    <select name="fee_step_s" class="form-control">
+                      <option value="">없음</option>
+                      <option value="100">신입사원급</option>
+                      <option value="90">경력사원급</option>
+                      <option value="80">대리급</option>
+                      <option value="70" selected>과장급</option>
+                      <option value="60">차장급</option>
+                      <option value="50">부장급</option>
+                      <option value="40">본부장/지사장</option>
+                      <option value="30">임원급</option>
+                      <option value="20">최고재무경영자</option>
+                      <option value="10">최고 경영자</option>
+                    </select>
+                    <span class="input-group-text small">이상&nbsp;&nbsp;</span>
+                    <select name="fee_step_e" class="form-control">
+                      <option value="">없음</option>
+                      <option value="100">신입사원급</option>
+                      <option value="90">경력사원급</option>
+                      <option value="80">대리급</option>
+                      <option value="70">과장급</option>
+                      <option value="60">차장급</option>
+                      <option value="50" selected>부장급</option>
+                      <option value="40">본부장/지사장</option>
+                      <option value="30">임원급</option>
+                      <option value="20">최고재무경영자</option>
+                      <option value="10">최고 경영자</option>
+                    </select>
+                    <span class="input-group-text small">미만</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <input type="text" name="fee_rate_per" value="25" class="form-control text-right form-control-sm" placeholder="%" />
+                </td>
+                <td class="text-center">
+                  <button type="button" onclick="RemoveRowFee(this);" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <div class="input-group input-group-sm w-p100">
+                    <select name="fee_step_s" class="form-control">
+                      <option value="">없음</option>
+                      <option value="100">신입사원급</option>
+                      <option value="90">경력사원급</option>
+                      <option value="80">대리급</option>
+                      <option value="70">과장급</option>
+                      <option value="60">차장급</option>
+                      <option value="50">부장급</option>
+                      <option value="40" selected>본부장/지사장</option>
+                      <option value="30">임원급</option>
+                      <option value="20">최고재무경영자</option>
+                      <option value="10">최고 경영자</option>
+                    </select>
+                    <span class="input-group-text small">이상&nbsp;&nbsp;</span>
+                    <select name="fee_step_e" class="form-control">
+                      <option value="" selected>없음</option>
+                      <option value="100">신입사원급</option>
+                      <option value="90">경력사원급</option>
+                      <option value="80">대리급</option>
+                      <option value="70">과장급</option>
+                      <option value="60">차장급</option>
+                      <option value="50">부장급</option>
+                      <option value="40">본부장/지사장</option>
+                      <option value="30">임원급</option>
+                      <option value="20">최고재무경영자</option>
+                      <option value="10">최고 경영자</option>
+                    </select>
+                    <span class="input-group-text small">미만</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <input type="text" name="fee_rate_per" value="30" class="form-control text-right form-control-sm" placeholder="%" />
+                </td>
+                <td class="text-center">
+                  <button type="button" onclick="RemoveRowFee(this);" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+
+
+      </p>
+    </div>
+    <div class="form-group col">
+      <label class="form-control-label form-control-label-sm text-secondary">계약 참고사항 및 기타 코멘트</label>
+      <textarea class="form-control" id="contract_comment" rows="5" placeholder="계약 관련 특이사항, 참고사항을 입력해주세요.">@Model.data.contract_comment</textarea>
+      <div class="w-p100 text-right pt-5">
+        <button type="button" id="btn_submit_fee_rate" onclick="SaveContract();" class="btn btn-primary btn-sm">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  BindDatePicker($(".jDatePicker"));
+
+  function AddRowFee(type) {
+    var template
+    if (type == "a") {
+      template = '<tr>';
+      template += '   <td class="text-center">';
+      template += '       <div class="input-group input-group-sm w-p100">';
+      template += '           <input type="text" name="fee_step_s" value="" class="form-control text-right" />';
+      template += '           <span class="input-group-text small">이상&nbsp;&nbsp;</span>';
+      template += '           <input type="text" name="fee_step_e" value="" class="form-control text-right" />';
+      template += '           <span class="input-group-text small">미만</span>';
+      template += '       </div>';
+      template += '   </td>';
+      template += '   <td class="text-center">';
+      template += '       <input type="text" name="fee_rate_per" value="" class="form-control text-right form-control-sm" placeholder="%" />';
+      template += '   </td>';
+      template += '   <td class="text-center">';
+      template += '       <button type="button" class="btn btn-xs btn-danger" onclick="RemoveRowFee(this);"><i class="fa fa-minus"></i></button>';
+      template += '   </td>';
+      template += '</tr>';
+
+      $("#contract_fee_type_a > tbody").append(template);
+    } else if (type == "b") {
+      template = '<tr>';
+      template += '   <td class="text-center">';
+      template += '       <div class="input-group input-group-sm w-p100">';
+      template += '           <select name="fee_step_s" class="form-control">';
+      template += '               <option value="">없음</option>';
+      template += '               <option value="100">신입사원급</option>';
+      template += '               <option value="90">경력사원급</option>';
+      template += '               <option value="80">대리급</option>';
+      template += '               <option value="70">과장급</option>';
+      template += '               <option value="60">차장급</option>';
+      template += '               <option value="50">부장급</option>';
+      template += '               <option value="40">본부장/지사장</option>';
+      template += '               <option value="30">임원급</option>';
+      template += '               <option value="20">최고재무경영자</option>';
+      template += '               <option value="10">최고 경영자</option>';
+      template += '           </select>';
+      template += '            <span class="input-group-text small">이상&nbsp;&nbsp;</span>';
+      template += '            <select name="fee_step_e" class="form-control">';
+      template += '                <option value="">없음</option>';
+      template += '                <option value="100">신입사원급</option>';
+      template += '                <option value="90">경력사원급</option>';
+      template += '                <option value="80">대리급</option>';
+      template += '                <option value="70">과장급</option>';
+      template += '                <option value="60">차장급</option>';
+      template += '                <option value="50">부장급</option>';
+      template += '                <option value="40">본부장/지사장</option>';
+      template += '                <option value="30">임원급</option>';
+      template += '                <option value="20">최고재무경영자</option>';
+      template += '                <option value="10">최고 경영자</option>';
+      template += '            </select>';
+      template += '            <span class="input-group-text small">미만</span>';
+      template += '        </div>';
+      template += '    </td>';
+      template += '    <td class="text-center">';
+      template += '        <input type="text" name="fee_rate_per" value="" class="form-control text-right form-control-sm" placeholder="%" />';
+      template += '    </td>';
+      template += '    <td class="text-center">';
+      template += '        <button type="button" onclick="RemoveRowFee(this);" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></button>';
+      template += '    </td>';
+      template += '</tr>';
+
+      $("#contract_fee_type_b > tbody").append(template);
+    }
+  }
+
+  function RemoveRowFee(obj) {
+    $(obj).closest('tr').remove();
+  }
+  function setGrtField() {
+    var type = $('#data_grt_type').val()
+    //console.log(type)
+    if (type == "") {
+      $('.grt_field').removeClass("d-none").addClass("d-none")
+    } else {
+      $('.grt_field').removeClass("d-none")
+    }
+  }
+
+  function setDebutField() {
+    var type = $('#data_is_construct_debut').val()
+    //console.log(type)
+    if (type == "N") {
+      $('.debut_field').removeClass("d-none").addClass("d-none")
+      $('#data_construct_debut_per').val(0)
+    } else {
+      $('.debut_field').removeClass("d-none")
+      if ($('#data_construct_debut_per').val() >= 100 || $('#data_construct_debut_per').val() == 0) {
+        $('#data_construct_debut_per').val(30)
+      }
+    }
+  }
+
+  function setDepositField() {
+    var type = $('#data_deposit_gubun1').val()
+    //console.log(type)
+    if (type == "") {
+      $('.deposit_field').removeClass("d-none").addClass("d-none")
+    } else {
+      $('.deposit_field').removeClass("d-none")
+    }
+  }
+  function setFeeType() {
+    $("#contract_fee_type_a").removeClass("d-none").addClass("d-none");
+    $("#contract_fee_type_b").removeClass("d-none").addClass("d-none");
+    $("#contract_fee_type_c").removeClass("d-none").addClass("d-none");
+
+    var st = $(".radio_contract_fee_type:checked").val();
+    if (st && st != "") {
+      $("#contract_fee_type_" + st.toLowerCase()).removeClass("d-none");
+    }
+
+  }
+  $(".radio_contract_fee_type").click(setFeeType);
+  $('#data_deposit_gubun1').change(setDepositField);
+  $('#data_grt_type').change(setGrtField);
+  $('#data_is_construct_debut').change(setDebutField);
+  setFeeType()
+  setDepositField();
+  setGrtField();
+  setDebutField();
+
+  $('#btn_submit_fee_rate').click(function () {
+
+  });
+
+</script>

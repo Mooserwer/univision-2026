@@ -1,0 +1,194 @@
+﻿<!-- Generic page styles -->
+<link rel="stylesheet" href="~/Libs/fileupload/css/style.css">
+
+<!-- CSS to style the file input field as button and adjust the Bootstrap progress bars -->
+<link rel="stylesheet" href="~/Libs/fileupload/css/jquery.fileupload.css">
+<link rel="stylesheet" href="~/Libs/fileupload/css/jquery.fileupload-ui.css">
+<!-- CSS adjustments for browsers with JavaScript disabled -->
+<noscript><link rel="stylesheet" href="~/Libs/fileupload/css/jquery.fileupload-noscript.css"></noscript>
+<noscript><link rel="stylesheet" href="~/Libs/fileupload/css/jquery.fileupload-ui-noscript.css"></noscript>
+
+<link rel="stylesheet" href="~/Content/Common.css" />
+
+<style>
+    .fade.in {
+        opacity: 1;
+    }
+
+    .progress {
+        margin-bottom: 0px;
+    }
+
+    .template-upload p {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .files
+    {
+        height : 200px !important;
+        overflow:auto;
+    }
+
+    .files td {
+        vertical-align: middle;
+    }
+
+    
+</style>
+
+<!-- The file upload form used as target for the file upload widget -->
+
+@using (Html.BeginForm("fileupload", "Partial", FormMethod.Post, new { @id = "fileupload", @enctype = "multipart/form-data" }))
+{
+    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
+    <div class="col-md-12 fileupload-buttonbar no-side-space">
+        <div class="row col-md-12 no-side-space">
+            <div class="row col-md-6 form-group no-left-space">
+
+                <div class="col-md-3 no-left-space">
+                    <label class="form-control-label">
+                        파일구분 :
+                    </label>
+                </div>
+                <div class="col-md-9 no-left-space">
+                    <select class="form-control">
+                        <option>사업자등록증</option>
+                        <option>조직도</option>
+                        <option>기타</option>
+                    </select>
+                </div>
+
+
+            </div>
+            <div class="col-md-6 no-right-space" style="text-align: right">
+                <!-- The fileinput-button span is used to style the file input field as button -->
+                <span class="btn btn-success fileinput-button">
+                    <i class="fas fa-plus"></i>
+                    <span>파일 선택</span>
+                    <input type="file" name="files" multiple>
+                </span>
+                <button type="submit" class="btn btn-primary start">
+                    <i class="fas fa-file-upload"></i>
+                    <span>업로드</span>
+                </button>
+                <!-- The global file processing state -->
+                <span class="fileupload-process"></span>
+            </div>
+        </div>
+        <!-- The global progress state -->
+        <div class="col-md-12 fileupload-progress fade no-side-space ">
+            <!-- The global progress bar -->
+            <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar progress-bar-success" style="width: 0%;"></div>
+            </div>
+            <!-- The extended global progress state -->
+            @*<div class="progress-extended">&nbsp;</div>*@
+        </div>
+    </div>
+    <div class="row col-md-12 fileTable no-side-space">
+        <!-- The table listing the files available for upload/download -->
+        <div id="emptyFile" style="width:100%; height:200px; background:url(../../Images/plus_back.png)">
+
+        </div>
+        <table id="tblFile" role="presentation" class="table table-striped table-bordered9">
+            <colgroup>
+                <col style="width: 55%" />
+                <col style="width: 30%" />
+                <col style="width: 15%" />
+            </colgroup>
+            <tbody class="files"></tbody>
+        </table>
+    </div>
+}
+
+<!-- The template to display files available for upload -->
+<script id="template-upload" type="text/x-tmpl">
+    {% for (var i=0, file; file=o.files[i]; i++) { %}
+    <tr class="template-upload fade">
+        <td>
+            <p class="name">{%=file.name%}</p>
+            <strong class="error text-danger"></strong>
+        </td>
+        <td>
+            <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="progress-bar progress-bar-success" style="width: 0%;"></div>
+            </div>
+        </td>
+        <td style="text-align:right;">
+            {% if (!i && !o.options.autoUpload) { %}
+            <button class="btn btn-sm btn-primary start" disabled style="display: none">
+                <i class="glyphicon glyphicon-upload"></i>
+                <span>Start</span>
+            </button>
+            {% } %}
+            {% if (!i) { %}
+            <button class="btn btn-sm btn-warning cancel">
+                <i class="glyphicon glyphicon-ban-circle"></i>
+                <span>취소</span>
+            </button>
+            {% } %}
+        </td>
+    </tr>
+    {% } %}
+</script>
+<!-- The template to display files available for download -->
+<script id="template-download" type="text/x-tmpl">
+    {% for (var i=0, file; file=o.files[i]; i++) { %}
+    <tr class="template-download fade">
+        <td>
+            <p class="name">
+                <span>{%=file.name%}</span>
+            </p>
+            {% if (file.error) { %}
+            <div><span class="label label-danger">Error</span> {%=file.error%}</div>
+            {% } %}
+        </td>
+        <td>
+            <span class="size">{%=o.formatFileSize(file.size)%}</span>
+        </td>
+        <td>
+            {% if (file.error) { %}
+            <button class="btn btn-sm btn-warning cancel">
+                <i class="glyphicon glyphicon-ban-circle"></i>
+                <span>실패</span>
+            </button>
+            {% } else { %}
+            <a class="btn btn-sm btn-success" href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}">성공</a>
+            {% } %}
+        </td>
+    </tr>
+    {% } %}
+</script>
+
+<!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
+<script src="~/Libs/fileupload/vendor/jquery.ui.widget.js"></script>
+<!-- The Templates plugin is included to render the upload/download listings -->
+<script src="~/Libs/fileupload/tmpl.min.js"></script>
+<!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
+<script src="~/Libs/fileupload/jquery.iframe-transport.js"></script>
+<!-- The basic File Upload plugin -->
+<script src="~/Libs/fileupload/jquery.fileupload.js"></script>
+<!-- The File Upload processing plugin -->
+<script src="~/Libs/fileupload/jquery.fileupload-process.js"></script>
+<!-- The File Upload validation plugin -->
+<script src="~/Libs/fileupload/jquery.fileupload-validate.js"></script>
+<!-- The File Upload user interface plugin -->
+<script src="~/Libs/fileupload/jquery.fileupload-ui.js"></script>
+<!-- The main application script -->
+<script src="~/Libs/fileupload/main.js"></script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        
+
+    });
+
+    function decode(val) {
+        return decodeURI(val);
+    }
+
+</script>

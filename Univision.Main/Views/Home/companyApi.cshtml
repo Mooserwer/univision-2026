@@ -1,0 +1,193 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<a href="@Url.Action("universityApi","Home")" class="btn btn-warning">학교정보 api 이동</a>
+<a href="@Url.Action("Index","Remark")" class="btn btn-primary">Remark 템플릿 보기</a>
+<br />
+<br />
+
+
+<div class="col-md-12">
+    <h3>법인 사업장 조회</h3>
+    <table class="table table-bordered">
+        <tr>
+            <td>
+                법정동주소광역시도코드
+            </td>
+            <td>
+                @Html.TextBox("ldong_addr_mgpl_dg_cd", "")
+            </td>
+            <td>
+                법정동주소시군구코드
+            </td>
+            <td>
+                @Html.TextBox("ldong_addr_mgpl_sggu_cd", "")
+            </td>
+        </tr>
+        <tr>
+            <td>
+                법정동주소읍면동코드
+            </td>
+            <td>
+                @Html.TextBox("ldong_addr_mgpl_sggu_emd_cd", "")
+            </td>
+            <td>
+                사업장명
+            </td>
+            <td>
+                @Html.TextBox("wkpl_nm", "삼성")
+            </td>
+        </tr>
+        <tr>
+            <td>
+                사업자등록번호
+            </td>
+            <td>
+                @Html.TextBox("bzowr_rgst_no", "")
+            </td>
+        </tr>
+        <tr>
+            <td>
+                페이지번호
+            </td>
+            <td>
+                @Html.TextBox("pageNo", "1", new { @type = "number" })
+            </td>
+            <td>행갯수</td>
+            <td>
+                @Html.TextBox("numOfRows", "5", new { @type = "number" })
+            </td>
+        </tr>
+    </table>
+    <button id="btnSearch" class="btn btn-primary">조회</button>
+    <br />
+    <br />
+    <h5>결과</h5>
+    <table id="response" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>자료생성년월</th>
+                <th>식별번호</th>
+                <th>사업장명</th>
+                <th>사업자등록번호</th>
+                <th>사업장도로명상세주소</th>
+                <th>사업장가입상태코드</th>
+                <th>1:법인, 2:개인</th>
+                <th>시도<br />(행정자치부 법정동 주소코드 참조)</th>
+                <th>시군구<br />(행정자치부 법정동 주소코드 참조)</th>
+                <th>읍면동<br />(행정자치부 법정동 주소코드 참조)</th>
+            </tr>
+        </thead>
+        <tbody id="responseBody"></tbody>
+    </table>
+
+</div>
+
+@section scripts {
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            $("#btnSearch").click(function () {
+
+                $.ajax({
+                   url: '@Url.Action("SearchCompanyList", "Home")',
+                   data: {
+                       ldong_addr_mgpl_dg_cd: $("#ldong_addr_mgpl_dg_cd").val()
+                       ,
+                       ldong_addr_mgpl_sggu_cd :$("#ldong_addr_mgpl_sggu_cd").val()
+                       ,
+                       ldong_addr_mgpl_sggu_emd_cd :$("#ldong_addr_mgpl_sggu_emd_cd").val()
+                       ,
+                       wkpl_nm : $("#wkpl_nm").val()
+                       ,
+                       bzowr_rgst_no :$("#bzowr_rgst_no").val()
+                       ,
+                       pageNo: $("#pageNo").val()
+                       ,
+                       numOfRows :$("#numOfRows").val()
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                   beforeSend: function ()
+                   {
+
+                   }
+                })
+                .done(function (json) {
+
+
+                    if (json.ok) {
+
+                        if (json.list.length > 0) {
+
+                            var sb = new StringBuilder();
+
+                            for (var i = 0; i < json.list.length; i++) {
+
+                                sb.append("<tr>");
+                                sb.append("<td>");
+                                sb.append(json.list[i].dataCrtYm)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].seq)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].wkplNm)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].bzowrRgstNo)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].wkplRoadNmDtlAddr)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].wkplJnngStcd)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].wkplStylDvcd)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].ldongAddrMgplDgCd)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].ldongAddrMgplSgguCd)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].ldongAddrMgplSgguEmdCd)
+                                sb.append("</td>");
+
+                                sb.append("</tr>");
+                            }
+
+                            $("#responseBody").empty();
+                            $("#responseBody").append(sb.toString());
+                        }
+
+                    } else {
+                        alert(json.message);
+
+                    }
+                })
+                .fail(function (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+
+            });
+
+        });
+
+    </script>
+
+}

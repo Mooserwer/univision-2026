@@ -1,0 +1,398 @@
+﻿@model Univision.Core.Models.DTO.pjt_recandidate_history
+
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/dropify/dropify.min599c.css?v4.0.4">
+<style>
+  .custom_tooltip {
+    background: #3e8ef7 !important;
+    opacity: 100 !important;
+    border: 0px !important;
+    -webkit-box-shadow: 0 0 0px #aaa !important;
+    box-shadow: 0 0 0px #aaa !important;
+  }
+</style>
+
+@using (Html.BeginForm("ProjectProgressCreate", "Project", FormMethod.Post, new { @id = "ProgressCreateForm" }))
+{
+  @Html.HiddenFor(x => x.p_seq)
+  @Html.HiddenFor(x => x.c_seq)
+  @Html.HiddenFor(x => x.pic_seq)
+  @Html.HiddenFor(x => x.prc_seq)
+  <div class="row no-side-space ">
+    <div class="form-group col-md-6">
+      <label class="form-control-label">후보자명</label>
+      @Html.TextBoxFor(x => x.kor_name, new { @class = "form-control", @readonly = "readonly" })
+    </div>
+    <div class="form-group col-md-6">
+      <label class="form-control-label">진행선택</label>
+      @{
+        var stateList = new SelectList(ProjectHistoryStateCode.ProjectHistoryStateCodes.Where(x => x.Key != ProjectHistoryStateCode.all).ToList(), "Key", "Value");
+      }
+      @Html.DropDownListFor(x => x.state, stateList, new { @class = "form-control", @onchange = "javascript:setDateName();", data_orgstate = Model.state })
+    </div>
+  </div>
+
+  <div class="row no-side-space ">
+    <div class="form-group col-md-12">
+      <label class="form-control-label"><span id="pjt_rec_date_info"></span>일자</label>
+      <div class="input-group">
+        @{
+          string date = Utils.ConvertDateTimeToString(Model.schedule_date);
+          if (string.IsNullOrWhiteSpace(date))
+          {
+            date = Utils.NowKorea().ToString("yyyy-MM-dd");
+          }
+        }
+        @Html.TextBox("schedule_date", date, new { @class = "form-control col-md-4" })
+        <div class="input-group-addon">
+          <i class="fas fa-calendar" style="cursor:pointer"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row no-side-space salaryRow" style="display:@(Model.state == ProjectHistoryStateCode.hireOk ? "flex" : "none")">
+    <div class="form-group col-md-12">
+      <label class="form-control-label">
+        연봉<span class="label-reqired">*</span>
+
+          <span class="text-primary font-weight-900" id="recan_income_won_label">
+            @if (Model.currency_cd != "KRW" && Model.ann_income_won.HasValue)
+            {
+              <text>(원화 환산 예상액 : 약 </text> @Utils.ConvertMoneyToString(Model.ann_income_won) <text>원)</text>
+            }
+
+          </span>
+      </label>
+
+      <div class="input-group input-group-sm">
+        @Html.Hidden("annual_income_org", Model.ann_income, new { @id = "annual_income_org" })
+        @Html.TextBoxFor(x => x.ann_income, new { @class = "form-control form-control-sm text-right" })
+        @Html.HiddenFor(x => x.ann_income_won)
+        <select name="currency_cd" id="recan_currency_cd" class="form-control form-control-sm">
+          <option value="">[금액단위 선택]</option>
+          <option value="KRW" @(Model.currency_cd == "KRW" ? "selected" : "")>KRW(원)</option>
+          <option value="USD" @(Model.currency_cd == "USD" ? "selected" : "")>USD(달러)</option>
+          <option value="HKD" @(Model.currency_cd == "HKD" ? "selected" : "")>HKD(홍콩달러)</option>
+          <option value="JPY" @(Model.currency_cd == "JPY" ? "selected" : "")>JPY(엔화)</option>
+          <option value="SGD" @(Model.currency_cd == "SGD" ? "selected" : "")>SGD(싱가폴 달러)</option>
+          <option value="GBP" @(Model.currency_cd == "GBP" ? "selected" : "")>GBP(파운드)</option>
+          <option value="DEM" @(Model.currency_cd == "DEM" ? "selected" : "")>DEM(마르크)</option>
+          <option value="FRF" @(Model.currency_cd == "FRF" ? "selected" : "")>FRF(프랑스 프랑)</option>
+          <option value="CHF" @(Model.currency_cd == "CHF" ? "selected" : "")>CHF(스위스 프랑)</option>
+          <option value="EUR" @(Model.currency_cd == "EUR" ? "selected" : "")>EUR(유로)</option>
+          <option value="CNY" @(Model.currency_cd == "CNY" ? "selected" : "")>CNY(위안)</option>
+          <option value="AUD" @(Model.currency_cd == "AUD" ? "selected" : "")>AUD(호주달러)</option>
+          <option value="NZD" @(Model.currency_cd == "NZD" ? "selected" : "")>NZD(뉴질랜드달러)</option>
+          <option value="CAD" @(Model.currency_cd == "CAD" ? "selected" : "")>CAD(캐나다달러)</option>
+          <option value="THB" @(Model.currency_cd == "THB" ? "selected" : "")>THB(태국 밧)</option>
+          <option value="TWD" @(Model.currency_cd == "TWD" ? "selected" : "")>TWD(신타이완달러)</option>
+          <option value="VND" @(Model.currency_cd == "VND" ? "selected" : "")>VND(베트남 동)</option>
+        </select>
+      </div>
+
+    </div>
+    <div class="form-group col-md-6 d-none">
+      <label class="form-control-label">보증종료일</label>
+      <div class="input-group input-group-sm">
+        @{
+          string date2 = Utils.ConvertDateTimeToString(Model.guarantee_dt);
+        }
+        @Html.TextBox("guarantee_dt", date2, new { @class = "form-control" })
+        <div class="input-group-addon">
+          <i class="fas fa-calendar" style="cursor:pointer"></i>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12 mb-5">
+      <label class="form-control-label">인보이스 발행여부 </label><i class="fas fa-question-circle" title="인보이스 발행이 필요 없는 건의 경우 사유를 선택해 주십시오."></i>
+      <div class="input-group input-group-sm">
+        <select name="is_no_invoice" id="is_no_invoice" class="form-control form-control-sm">
+          <option value="0">[인보이스 발행]</option>
+          <option value="1" @(Model.is_no_invoice == 1 ? "selected" : "")>[인보이스 미발행] - REPLACE 건</option>
+          <option value="2" @(Model.is_no_invoice == 2 ? "selected" : "")>[인보이스 미발행] - 다른 인보이스와 통합 발행</option>
+          <option value="9" @(Model.is_no_invoice == 9 ? "selected" : "")>[인보이스 미발행] - 기타</option>
+        </select>
+      </div>
+
+    </div>
+    <div class="col-md-12 mb-5 form-inline">
+      <div class="checkbox-custom checkbox-primary border-primary pr-10">
+        <input type="checkbox" id="is_complete" name="is_complete" value="1">
+        <label for="is_complete" style="">입사 확정 후 프로젝트 완료로 변경</label>
+      </div>
+      <label for="is_complete" style="">
+        <i class="fas fa-question-circle" title="후보자 확인 후 바로 프로젝트 상태를 완료 처리로 변경합니다."></i>
+      </label>
+    </div>
+
+  </div>
+
+
+  <div class="row no-side-space">
+    <div class="form-group col-md-12">
+      <label class="form-control-label" id="pjt-progress-req">내용</label><span class="label-reqired hide" id="progress_contents_required">*</span>
+      @Html.TextAreaFor(x => x.contents, new { @class = "form-control", @rows = 2, @placeholder = "참고사항을 적어주세요(추천/통과/입사확정 설정 시 필수항목이 아닙니다.)" })
+    </div>
+  </div>
+
+  <div class="row no-side-space">
+    <div class="col-md-12">
+      <label class="form-control-label">첨부파일</label>
+      <input type="file" id="candiFile" name="candiFile" class="dropify" data-plugin="dropify" data-default-file="@(Model.file_origin_path != null ? Model.file_origin_path : "")" data-height="80" data-errors-position="outside" />
+    </div>
+  </div>
+  <div class="row no-side-space">
+    <div class="col-md-12 mb-5 form-inline">
+      <div class="checkbox-custom checkbox-primary border-primary chk_schedule">
+        <input type="checkbox" id="is_schedule" name="is_schedule" value="1" @(Model.is_schedule == 1 ? "checked" : "")>
+        <label for="is_schedule" style="">스케줄 등록</label>
+      </div>
+      <label for="is_schedule" style="">
+        <i class="fas fa-question-circle" title="면접준비, 채용확정은 자동 등록 됩니다."></i>
+        @*<span style="font-size:11px"><span style="color:red">면접준비, 채용확정</span>은 자동 등록 됩니다.</span>*@
+      </label>
+    </div>
+  </div>
+
+  <div class="text-right">
+    <button type="submit" class="btn btn-sm btn-primary" id="btnPopSave">등록</button>
+  </div>
+}
+
+<script src="~/Libs/remark/global/vendor/dropify/dropify.min599c.js?v4.0.4"></script>
+<script type="text/javascript">
+  window.url_exchange_partial = "@Url.Action("FindExchangeApi", "Partial")";
+  window.c_seq_this = "@Model.c_seq";
+  var pjt_state_code = {
+    inerview: "@ProjectHistoryStateCode.interview",
+    hire_ready: "@ProjectHistoryStateCode.hireReady",
+    fail: "@ProjectHistoryStateCode.fail",
+    hire_ok : "@ProjectHistoryStateCode.hireOk"
+  }
+</script>
+<script type="text/javascript">
+  function setDateName() {
+    var text = $('#state :selected').text()
+    if (text == "입사확정") {
+      text = "출근"
+    }
+    $('#pjt_rec_date_info').text(text);
+    //$('#contents').attr("placeholder", text + " 사유를 적어주세요.");
+  }
+
+  var pjt_validate_opt = {
+    rules: {
+      schedule_date: {
+        required: true
+      }
+    },
+    messages: {
+      schedule_date: {
+        required: "일자는 필수 입력 항목입니다."
+      },
+      contents: {
+        required: "사유는 필수 입력 항목입니다."
+      }
+    }
+  }
+
+  var valid_option_pjt = $.extend({}, valid_option, pjt_validate_opt);
+
+  var validator_pjt = $("#ProgressCreateForm").validate(valid_option_pjt);
+
+  $(document).ready(function () {
+    StopEnterSubmit();
+    BindDatePicker($("#schedule_date"));
+    BindDatePicker($("#guarantee_dt"));
+
+    $(".fa-question-circle").tooltip({
+      tooltipClass: "custom_tooltip"
+    });
+
+    $("#ann_income").bind('keyup', function (event) {
+      removeChar2(event);
+      inputNumberFormat2(this);
+    });
+
+    $("#ann_income").bind('keydown', function () {
+      inputNumberFormat2(this);
+    });
+
+    $("#state").change(function () {
+      setDateName();
+      $('#progress_contents_required').hide();
+
+      $('#contents').attr("required", false);
+      validator_pjt.element('#contents');
+
+
+
+      if ($(this).val() == pjt_state_code.inerview || $(this).val() == pjt_state_code.hire_ready || $(this).val() == pjt_state_code.fail) {
+        $('#progress_contents_required').show();
+        $('#contents').attr("required", true);
+      } else {
+        $('#contents').attr("required", false);
+      }
+      validator_pjt.element('#contents');
+
+
+
+      if ($(this).val() == pjt_state_code.hire_ok) {
+        if ($('#annual_income_org').val() != "" && $('#annual_income_org').val() > 0) {
+          $('#ann_income').val(comma2($('#annual_income_org').val()));
+        } else {
+          $('#ann_income').val(0);
+          $('#ann_income_won').val(0);
+        }
+
+        if ($(this).data("orgstate") != pjt_state_code.hire_ok) {
+          $('#recan_currency_cd').val($('#pjt_currency_cd').val());
+          $('#recan_currency_cd').attr("required", true);
+          $("#is_complete").prop("checked", true);
+          $('#ann_income').change();
+        }
+
+        $(".salaryRow").css("display", "flex");
+        $('.chk_schedule').removeClass('d-none').addClass('d-none');
+      }
+      else {
+        $('#recan_currency_cd').attr("required", false);
+        if ($(this).val() == pjt_state_code.inerview) {
+
+          $('.chk_schedule').removeClass('d-none').addClass('d-none');
+        } else {
+
+          $('.chk_schedule').removeClass('d-none');
+        }
+        $(".salaryRow").css("display", "none");
+        $('#ann_income').val("");
+        $('#ann_income_won').val("");
+        $('#recan_currency_cd').val("");
+        $('#guarantee_dt').val("");
+        $("#is_complete").prop("checked", false);
+      }
+    });
+
+    $("#ann_income,#recan_currency_cd").change(function () {
+      var cur_cd = $("#recan_currency_cd").val();
+      if (cur_cd != "" && cur_cd != "KRW") {
+        ajxCall({
+          url: window.url_exchange_partial,
+          data: {
+            currency: cur_cd
+          },
+          type: 'POST',
+          loading: true,
+          loading_target: ".salaryRow",
+          bef: function () {
+            $('#recan_income_won_label').text("환율 확인 중...");
+          },
+          suc: function (rst) {
+            if (rst && rst.ok) {
+              if (rst.data && rst.data.ex_seq > 0) {
+                var per_won = rst.data.per_won;
+                var per_rate = rst.data.ex_rate;
+                var org_money = uncomma2($('#ann_income').val())
+                var result_won = ((org_money * per_won) / per_rate).toFixed(2);
+                $('#ann_income_won').val(result_won.toString())
+                $('#recan_income_won_label').text("원화 환산 예상액 : 약 " + comma2(result_won.toString()) + "원");
+              } else {
+                $('#recan_income_won_label').text("환율 정보를 찾을 수 없습니다.");
+              }
+            } else {
+              $('#recan_income_won_label').text("환율 정보를 찾을 수 없습니다.");
+            }
+          }
+        })
+      } else {
+        $('#recan_income_won_label').text("");
+        $('#ann_income_won').val($('#ann_income').val())
+      }
+
+
+    });
+
+    //$(".fa-question-circle").hover(function () {
+    //    alert("hover");
+    //}, function () {
+    //        alert("dismiss")
+    //});
+
+    $('.dropify').dropify({
+      messages: {
+        'default': 'Drag and drop a file here or click',
+        'replace': 'Drag and drop or click to replace',
+        'remove': 'Remove',
+        'error': '오류가 발생 했습니다. 다시 시도해주세요.'
+      }
+    });
+
+
+
+    $("#ProgressCreateForm").ajaxForm({
+      dataType: 'json',
+      beforeSubmit: function (arr, $form, options) {
+        arr.push({ name: 'income_num', value: uncomma2($('#ann_income').val()) })
+        arr.push({ name: 'income_won', value: uncomma2($('#ann_income_won').val()) })
+
+        showLoading();
+      },
+      success: function (json) {
+        hideLoading();
+        if (json.ok) {
+          callActivityList(window.c_seq_this, 1)
+          $.fancybox.close();
+        }
+        else {
+          alert(json.message)
+        }
+      },
+      error: function () {
+
+        hideLoading();
+      }
+    });
+
+
+    $("#state").change();
+  });
+
+  setDateName();
+  if ($('#prc_seq').val() == 0) {
+    var pop_help_title = "진행사항에 따른 내용 필수 입력"
+    var pop_help_txt = `진행사항 등록 시 <span class="text-danger">[추천],[서류 및 면접통과], [입사확정]</span>경우에 참고내용은 필수 사항이 아닙니다.
+<br/>단 [면접], [협상&검증], [탈락] 의 경우에는 필수로 입력해야합니다.)
+`;
+
+    //popover_help('pjt-progress-create', '#pjt-progress-req', pop_help_title, pop_help_txt, 9999, "right" );
+  }
+
+
+  function Numberchk() {
+    if (event.keyCode < 45 || event.keyCode > 57) event.returnValue = false;
+  }
+  function vComma(obj) {
+    var str = "" + obj.value.replace(/,/gi, ''); // 콤마 제거
+    var regx = new RegExp(/(-?\d+)(\d{3})/);
+    var bExists = str.indexOf(".", 0);
+    var strArr = str.split('.');
+    while (regx.test(strArr[0])) {
+      strArr[0] = strArr[0].replace(regx, "$1,$2");
+    }
+    if (bExists > -1)
+      obj.value = strArr[0] + "." + strArr[1];
+    else
+      obj.value = strArr[0];
+  }
+
+  function trim(str) {
+    return str.replace(/(^\s*)|(\s*$)/g, "");
+  }
+
+  function getNumber(str) {
+    str = "" + str.replace(/,/gi, ''); // 콤마 제거
+    str = str.replace(/(^\s*)|(\s*$)/g, ""); // trim
+    return (new Number(str));
+  }
+
+</script>

@@ -1,0 +1,121 @@
+﻿@model Univision.Main.Models.Project.ProjectTaxContactListModel
+@using Univision.Security
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+</style>
+
+<div class="panel" style="margin-bottom:0px !important;">
+    <div class="panel-body" style="padding: 5px 10px 5px 10px; max-height:287px; overflow-y:auto">
+        <table class="table table-borderless table-hover">
+            <thead class="text-center">
+                <tr>
+                    <th>부서</th>
+                    <th>이름</th>
+                    @*<th>연락처</th>
+                    <th>이메일</th>*@
+                </tr>
+            </thead>
+            <tbody class="text-center" style="vertical-align:middle;" id="taxTableBody">
+                @if (Model.list.Count > 0)
+                {
+                    foreach (var data in Model.list)
+                    {
+                        <tr style="cursor:pointer" onclick="selectTaxContact('@data.ctc_seq', '@data.division', '@data.name', '@data.email', '@data.phone', '@data.cell_phone', '@data.deposit_manager', '@data.deposit_email')">
+                            <td>
+                                @data.division
+                            </td>
+                            <td>
+                                @data.name
+                            </td>
+                            @*<td>
+                                @data.phone
+                            </td>
+                            <td>
+                                @data.email
+                            </td>*@
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4">
+                            데이터가 없습니다.
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+    <div class="panel-footer text-right">
+        <button id="btnNewTaxContact" type="button" class="btn btn-sm btn-primary">신규 계산서 담당자 등록</button>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("#btnNewTaxContact").click(function () {
+
+            $("#tax_name").removeAttr("readonly");
+            $("#tax_division").removeAttr("readonly");
+            $("#tax_email").removeAttr("readonly");
+            $("#tax_phone").removeAttr("readonly");
+            $("#tax_cell_phone").removeAttr("readonly");
+            $("#tax_deposit_manager").removeAttr("readonly");
+            $("#tax_deposit_email").removeAttr("readonly");
+
+            window.ctc_seq = $("#ctc_seq").val();
+            window.tax_name = $("#tax_name").val();
+            window.tax_division = $("#tax_division").val();
+            window.tax_email = $("#tax_email").val();
+            window.tax_phone = $("#tax_phone").val();
+            window.tax_cell_phone = $("#tax_cell_phone").val();
+            window.tax_deposit_manager = $("#tax_deposit_manager").val();
+            window.tax_deposit_email = $("#tax_deposit_email").val();
+
+            $("#ctc_seq").val("");
+            $("#tax_name").val("");
+            $("#tax_division").val("");
+            $("#tax_email").val("");
+            $("#tax_phone").val("");
+            $("#tax_cell_phone").val("");
+            $("#tax_deposit_manager").val("");
+            $("#tax_deposit_email").val("");
+
+            $("#btnNewTaxSave").css("display", "inline");
+            $("#btnNewTaxReset").css("display", "inline");
+            BindProjectTaxValidation();
+            $("#btnTaxSave").css("display", "none");
+            $("#btnTax").css("display", "none");
+
+            $.fancybox.close();
+        });
+    });
+
+    function selectTaxContact(ctc_seq, division, name, email, phone, cell_phone, deposit_manager, deposit_email) {
+        $("#ctc_seq").val(ctc_seq);
+        $("#tax_division").val(division);
+        $("#tax_ctc_seq").val(cc_seq);
+        $("#tax_name").val(name);
+        $("#tax_email").val(email);
+        $("#tax_phone").val(phone);
+        $("#tax_cell_phone").val(cell_phone);
+        $("#tax_deposit_manager").val(deposit_manager);
+        $("#tax_deposit_email").val(deposit_email);
+        //$("#btnTaxSave").css("display", "inline");
+
+        $.fancybox.close();
+
+        $('#btnTaxSave').click();
+    }
+
+</script>

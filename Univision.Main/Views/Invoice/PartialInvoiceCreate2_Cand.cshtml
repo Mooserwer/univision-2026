@@ -1,0 +1,165 @@
+﻿@model Univision.Main.Models.Invoice.InvoiceCreateModel
+
+@using (Html.BeginForm("", "", FormMethod.Post, new { @id = "frmInvoiceStep2" }))
+{
+
+  <div class="card mg-t-10 mg-x-10 bd bd-indigo no_print">
+    <div class="card-header bg-dark tx-white tx-medium tx-bold bd-0 top-head">
+      인보이스 발행 대상(후보자) 선택
+    </div>
+    <div class="card-body part_show_inv_step2" style="display:none;">
+      <div class="row">
+        <div class="col-12 col-md-12">
+          <div class="form-group">
+            <label class="form-control-label">인보이스 발행 대상 선택(Candidate): <span class="tx-danger">*</span></label>
+            <div class="row">
+              @if (Model.candidateList != null && Model.candidateList.Count > 0)
+              {
+                foreach (var candidate in Model.candidateList)
+                {
+                  <div class="col">
+                    <div class="card pic_selector">
+                      <div class="card-header">
+                        <label class="rdiobox pd-r-10">
+                          <input type="radio" id="pic_seq_@candidate.pic_seq" name="pic_seq" value="@candidate.pic_seq" class="pic_seq step2_check"
+                                 data-prc_seq="@candidate.prc_seq"
+                                 data-c_seq="@candidate.c_seq"
+                                 data-ann_income="@candidate.ann_income"
+                                 data-currency_cd="@candidate.currency_cd"
+                                 data-kor_name="@candidate.kor_name"
+                                 data-eng_name="@candidate.eng_name"
+                                 data-join_dt="@Utils.ConvertDateTimeToString(candidate.schedule_date)"
+                                 @((Model.opt_pre_select_seq == candidate.pic_seq && Model.opt_pre_select_seq > 0) ? "checked" : "")>
+                          <span>
+
+
+                            @candidate.kor_name
+                            @if (candidate.birth_date.HasValue)
+                            {
+                              @("(" + Utils.ConvertDateTimeToString(candidate.birth_date).Substring(2, 2) + "년생")
+                            }
+
+                            @(" / " + Utils.ReturnGenderTxt(candidate.gender) + ")")
+                          </span>
+                        </label>
+                      </div>
+                      <div class="card-body">
+                        - 확정연봉 : @Utils.ConvertMoneyToString(candidate.ann_income) [@candidate.currency_cd]
+                        <br />- 입사일 : @Utils.ConvertDateTimeToString(candidate.schedule_date)
+                      </div>
+                    </div>
+
+                  </div>
+                }
+              }
+              else
+              {
+                <p class="text-center tx-danger">* 입사 확정된 후보자가 없습니다. <br />후보자 입사 확정 처리 또는 기존 발행된 인보이스 취소 후 다시 시도 바랍니다.</p>
+              }
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <hr />
+      <div class="row part_show_pic_seq" style="display:none;">
+        <div class="col-6">
+          <div class="form-group">
+            <label class="form-control-label">인보이스에 표시될 후보자이름: <span class="tx-danger">*</span></label>
+            @Html.TextBoxFor(x => x.candidate_name_kor, new { @class = "form-control part_show_lang_kor", @autocomplete = "off", @placeholder = "인보이스에 표시될 후보자이름(국문)" })
+            @Html.TextBoxFor(x => x.candidate_name_eng, new { @class = "form-control part_show_lang_eng", @autocomplete = "off", @placeholder = "인보이스에 표시될 후보자이름(영문)" })
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="form-group">
+            <label class="form-control-label">보증종료일</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <div class="input-group-text">
+                  <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
+                </div>
+              </div>
+              @Html.TextBox("expire_guarantee", Utils.ConvertDateTimeToString(Model.expire_guarantee), new { @class = "form-control step1_check jq-datepicker", @autocomplete = "off" })
+              <span class="input-group-addon">
+                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+              </span>
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-info bd bd-l-0" title="입사일로 부터 90일 지정" onclick="javascript: fSetAddDay(90);">
+                  90일
+                </button>
+                <button type="button" class="btn btn-info bd bd-l-0" title="입사일로 부터 180일 지정" onclick="javascript: fSetAddDay(180);">
+                  180일
+                </button>
+              </span>
+            </div>
+          </div>
+          @if (Model.pre_invoice != null)
+          {
+            if (Model.pre_invoice.join_dt.HasValue && Model.pre_invoice.expire_guarantee.HasValue)
+            {
+              TimeSpan exp = Model.pre_invoice.expire_guarantee.Value - Model.pre_invoice.join_dt.Value;
+              int exp_day = exp.Days;
+              <div class="alert alert-info pd-5">
+                <i class="fa fa-info-circle"></i>
+                직전 인보이스 보증기간 : <b>[@exp_day 일]</b>
+                <button class="btn btn-sm btn-outline-info" type="button" onclick="javascript:fSetAddDay(@exp_day);">[설정]</button>
+              </div>
+            }
+          }
+        </div>
+      </div>
+      <div class="row part_show_pic_seq" style="display:none;">
+
+        <div class="col-12 col-md-4">
+          <label class="form-control-label" for="candidate_position">후보자 최종직급<span class="tx-danger">*</span></label>
+          <select name="candidate_position" id="candidate_position" class="form-control">
+            <option value="" @(!Model.candidate_position.HasValue ? "selected" : "")>[선택]</option>
+            <option value="30" @(Model.candidate_position == 30 ? "selected" : "")>임원급</option>
+            <option value="50" @(Model.candidate_position == 50 ? "selected" : "")>부장급</option>
+            <option value="60" @(Model.candidate_position == 60 ? "selected" : "")>차장급</option>
+            <option value="70" @(Model.candidate_position == 70 ? "selected" : "")>과장급</option>
+            <option value="80" @(Model.candidate_position == 80 ? "selected" : "")>대리급</option>
+            <option value="100" @(Model.candidate_position == 100 ? "selected" : "")>사원급</option>
+            <option value="110" @(Model.candidate_position == 110 ? "selected" : "")>프리랜서(비정규 전문직)</option>
+          </select>
+          @Html.TextBox("candidate_position_txt", Model.candidate_position_txt, new { @class = "form-control", @autocomplete = "off", @style = "display:none;" })
+        </div>
+
+        <div class="col-6 col-md-4">
+          <label class="form-control-label" for="candidate_source">
+            후보자 소스<span class="tx-danger">*</span>
+          </label>
+          <select name="candidate_source" id="candidate_source" class="form-control">
+            <option value="" @(!Model.candidate_source.HasValue ? "selected" : "")>[선택]</option>
+            <option value="10" @(Model.candidate_source == 10 ? "selected" : "")>[유니비전]</option>
+            <option value="20" @(Model.candidate_source == 20 ? "selected" : "")>[직접지원]</option>
+            <option value="30" @(Model.candidate_source == 30 ? "selected" : "")>[외부DB] - 링크드인</option>
+            <option value="40" @(Model.candidate_source == 45 ? "selected" : "")>[외부DB] - 리멤버(제안)</option>
+            <option value="40" @(Model.candidate_source == 40 ? "selected" : "")>[외부DB] - 리멤버(공고)</option>
+            <option value="50" @(Model.candidate_source == 50 ? "selected" : "")>[외부DB] - 사람인 </option>
+            <option value="991" @(Model.candidate_source == 991 ? "selected" : "")>[외부DB] - 기타 잡포탈</option>
+            <option value="70" @(Model.candidate_source == 70 ? "selected" : "")>[Target Search] - Referral, Cold call, Market Mapping 등</option>
+            <option value="999" @(Model.candidate_source == 999 ? "selected" : "")>기타</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-4">
+          <label class="form-control-label" for="candidate_source_txt">&nbsp;</label>
+          @Html.TextBox("candidate_source_txt", Model.candidate_source_txt, new { @class = "form-control", @autocomplete = "off", @style = "display:none;", @placeholder = "기타 사항은 구체적으로 입력 부탁드립니다." })
+        </div>
+      </div>
+      <hr />
+      <div class="row part_show_pic_seq" style="display:none;">
+        <div class="col-12">
+          <label class="ckbox">
+            <input type="checkbox" value="1" name="opt_is_candidate_name_update" id="opt_is_candidate_name_update" @(Model.opt_is_candidate_name_update == 1 ? "checked" : "")><span>발행요청 시 후보자 이름 정보 업데이트</span>
+          </label>
+        </div>
+      </div>
+      <div class="row pd-t-20">
+        <div class="col-12 tx-right">
+          <button type="button" id="btn_chk_step2" class="btn btn btn-indigo">다음(Next)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

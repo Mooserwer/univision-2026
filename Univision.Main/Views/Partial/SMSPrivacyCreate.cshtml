@@ -1,0 +1,551 @@
+﻿@model Univision.Main.Models.Api.ResponsePrivacyAgree
+@{
+  ViewBag.Title = "개인정보 수집 및 제3자 동의서 발송";
+  ViewBag.NoMenu = true;
+  Layout = "~/Views/Shared/_Layout.cshtml";
+
+  string myPhoneNumber = ViewBag.myPhoneNumber;
+  string companyNumber = ViewBag.companyNumber;
+}
+
+@using (Html.BeginForm("CreatePrivacy", "Partial", FormMethod.Post, new { @class = "", @id = "SmsPrivacyCreateForm" }))
+{
+  @Html.Hidden("contents_len", "")
+  @Html.Hidden("sms_type", "")
+  <div class="p-10">
+    <div class="panel">
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-12 form-group">
+            <label class="form-control-label h4"> <i class="fas fa-send" aria-hidden="true"></i>발송할 동의서 선택<span class="label-reqired">*</span></label>
+
+            <div class="cont pl-10">
+
+              <div class="checkbox-custom checkbox-primary">
+                <input type="checkbox" id="privacy" name="privacy" value="1" @(Model.is_privacy_agree == 1 ? "checked" : "")>
+                <label for="privacy">개인정보 수집·이용에 대한 동의 (이력서 요청 시)</label>
+              </div>
+              <div class="row">
+                <div class="col-12">
+                  @Html.TextArea("privacy_txt", @"1.	수집하는 개인정보 항목 : 이름, 연락처, 이메일, 주소, 생년월일, 성별, 학력사항, 경력사항, 자격사항, 병역정보, 이력서 및 경력기술서에 본인이 기재한 사항과 본인이 제출한 정보.
+
+2.	개인정보의 수집 및 이용 목적 : 채용 전형 진행, 채용 관련 상담 및 안내, 인재풀 등록
+
+3.	개인정보의 보유 및 이용 기간 : 수집한 개인 정보는 상시 채용을 목적으로 보관하며, 처리 목적 달성시까지 보유한다. 단 정보 주체의 파기 요청이 있는 경우, 지체 없이 파기한다.
+
+4.	동의를 거부할 권리 및 동의 거부에 따른 불이익 : 개인정보 수집 및 이용 등과 관련한 위 사항에 대하여 동의를 거부할 수 있습니다. 다만, 동의하지 않을 경우 채용 관련 서비스 및 인재풀 등록에 제한이 있을 수 있습니다.", new { @class = "text-info form-control pl-20", @readonly = "true", @placeholder = "", @rows = 7 })
+                </div>
+              </div>
+              <div class="checkbox-custom checkbox-primary">
+                <input type="checkbox" id="provide3rd" name="provide3rd" value="2" @(Model.is_provide_agree == 1 ? "checked" : "")>
+                <label for="provide3rd">
+                  개인정보 제3자 제공에 대한 동의 (고객사에 추천 시)
+                </label>
+              </div>
+              <div id="provide3rd_div">
+                <div class="row">
+                  <div class="col-12">
+                    @Html.TextArea("provide3rd_txt", @"1.	제공받는 자 : 채용 회사
+
+2.	제공 목적 : 채용 전형 진행, 후보자 정보 확인 및 검증.
+
+3.	제공하는 항목 : 이름, 연락처, 이메일, 주소, 생년월일, 성별, 학력사항, 경력사항, 자격사항, 병역정보, 이력서 및 경력기술서에 본인이 기재한 사항과 본인이 제출한 정보.
+
+4.	제공받는 자의 보유 및 이용 기간 : 개인정보의 이용 목적 달성 시, 즉시 파기합니다.
+
+5.	동의를 거부할 권리 및 동의 거부에 따른 불이익 : 개인정보 제3자 제공과 관련한 위 사항에 대하여 동의를 거부할 수 있습니다. 다만 동의하지 않을 경우 채용 관련 서비스 이용에 제한이 있을 수 있습니다.", new { @class = "text-info form-control pl-20", @readonly = "true", @placeholder = "", @rows = 8 })
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr />
+    <div class="panel">
+      <div class="panel-body">
+        <label class="h4"> <i class="fas fa-send" aria-hidden="true"></i>정보제공자 및 추가내용입력</label>
+        <div class="row">
+          <div class="col-12 form-group">
+            <label class="form-control-label"> <i class="fas fa-send" aria-hidden="true"></i>받는사람 (정보주체)</label>
+            <div class="cont2 row">
+              <div class="col-12 col-md-6">
+                <div class="input-group input-group-sm">
+                  @Html.TextBox("can_name_txt", "", new { @class = "form-control", @placeholder = "수신자 이름" })
+                  @Html.TextBox("can_addr_txt", "", new { @class = "form-control", @placeholder = "휴대전화번호 또는 이메일 입력" })
+                  <div class="input-group-btn">
+                    <a href="#" class="btn btn-primary" id="btnNumAdd">
+                      <i class="icon wb-plus" aria-hidden="true"></i> 추가
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ad_list px-5" style="min-height:53.6px;">
+                @if (Model.receive.Count > 0)
+                {
+                  foreach (var r_info in Model.receive)
+                  {
+                    <div class="receive_div border p-3 mb-1" data-c_seq="@r_info.c_seq" data-can_type="@r_info.can_type" data-can_name="@r_info.can_name" data-can_addr="@r_info.can_addr" data-can_phone="@r_info.can_phone" data-can_email="@r_info.can_email">
+                      <span class="can_name pl-5">@r_info.can_name</span> : <span class="can_addr pl-5">@r_info.can_addr</span>
+                      <button type="button" class="close" onclick="DelReceiveNum(this)" title="삭제">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                      </button>
+                      @if (!String.IsNullOrEmpty(r_info.can_email))
+                      {
+                        <button type="button" class="close text-primary pr-5" onclick="SetCanAddr(this, 'EMAIL')" title="이메일로 발송하기.">
+                          <i class="fas fa-at" aria-hidden="true"></i>
+                        </button>
+                        if (!String.IsNullOrEmpty(r_info.can_phone))
+                        {
+                          <button type="button" class="close text-primary pr-5" onclick="SetCanAddr(this, 'SMS')" title="SMS로 발송하기.">
+                            <i class="fas fa-sms" aria-hidden="true"></i>
+                          </button>
+                        }
+                      }
+                    </div>
+                  }
+                }
+              </div>
+
+            </div>
+          </div>
+
+
+          <div class="col-12 form-group">
+            <label class="form-control-label"> <i class="fas fa-send" aria-hidden="true"></i>발신번호 (문자 발송 시 발신번호, 이메일 발송 시에는 <span class="text-primary">@ViewBag.MyEmail</span> 로 발송됩니다.)<span class="label-reqired">*</span></label>
+            <div class="cont">
+              <div class="col-12 form-inline radio_area">
+                <div class="radio-custom radio-custom-sm pr-20 radio-primary">
+                  <input type="radio" id="primaryPhone" name="send_type" value="025512300" checked="checked">
+                  <label for="primaryPhone">대표전화</label>
+                </div>
+                <div class="radio-custom radio-custom-sm pr-20 radio-primary">
+                  <input type="radio" id="myCellPhone" name="send_type" value="@SMSSendType.cellphone">
+                  <label for="myCellPhone">휴대전화</label>
+                </div>
+                <div class="radio-custom radio-custom-sm radio-primary">
+                  <input type="radio" id="myCompanyPhone" name="send_type" value="@SMSSendType.companyPhone">
+                  <label for="myCompanyPhone">회사전화</label>
+                </div>
+              </div>
+              @Html.TextBox("send_number", "02-551-2300", new { @class = "form-control rad_va", @placeholder = "- 없이 입력해주세요.", @onKeyup = "MobileAutoHypen(event, this);" })
+            </div>
+          </div>
+          
+          <div class="col-12 form-group">
+            @*
+            <label class="form-control-label"> <i class="fas fa-send" aria-hidden="true"></i>내용입력 (동의서 링크는 발송 시 자동으로 추가됩니다.) <span class="label-reqired">*</span></label>
+            <div class="cont2">
+              @Html.TextArea("sms_contents", "", new { @class = "form-control", @placeholder = @"보낼 내용을 입력하세요.
+(동의서 링크는 발송 시 자동으로 내용하단에 추가됩니다.)
+------------------------------
+예시 ) 아래 링크를 눌러 동의를 진행 바랍니다.
+https://www.unicosearch.com/privacyprovide/12345", @rows = 5 })
+
+              <div>
+                <span class="sms_type">SMS</span> :
+                <span class="contentsLen">0</span>/
+                <span class="contentsMaxLen">80</span> Bytes
+              </div>
+            </div>
+            *@
+            <div class="cont3">
+              <div class="col-md-12 float-right custom5">
+                <button class="btn btn-default btn-outline" type="button" id="btnSmsModalClose">취소</button>
+                <button class="btn btn-primary btn-outline ed" id="btnSendSms" type="button">보내기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@section scripts{
+  <script type="text/javascript" src="~/Scripts/Utf8ByteCounter.js"></script>
+  <script type="text/javascript">
+    StopEnterSubmit();
+
+    function SetCanAddr(obj, vtype) {
+      $item = $(obj).closest('.receive_div');
+      var value = "";
+      if ($item.length > 0) {
+        if (vtype == "SMS")
+          value = $item.data("can_phone")
+        else if (vtype == "EMAIL")
+          value = $item.data("can_email")
+
+        $item.data("can_addr", value);
+        $item.data("can_type", vtype);
+        $item.find(".can_addr").text(value);
+      }
+
+    }
+
+    $("#client_name").click(function () {
+      $("#btnClientSearch").click();
+    });
+
+    //회사명 검색
+    $("#btnClientSearch").click(function (e) {
+      e.preventDefault();
+
+      $.ajax({
+        url: '/Partial/SearchClient',
+        data: {
+          searchTxt: $("#client_name").val()
+        },
+        dataType: 'html',
+        type: 'GET',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (json) {
+          hideLoading();
+
+          $.fancybox.open({
+            'content': json,
+            'width': '800',
+            'height': '385',
+            'autoDimensions': false,
+            'type': 'iframe',
+            'autoSize': false,
+            'title': '고객사 목록',
+            helpers: {
+              title: {
+                type: 'inside',
+                position: 'top'
+              },
+              overlay: {
+                closeClick: false
+              }
+            }
+          });
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    });
+
+    //수신목록 추가 버튼 클릭시,
+    $("#btnNumAdd").click(function () {
+      var send_type = "";
+      var can_name = $("#can_name_txt").val().trim();
+      var can_addr = $("#can_addr_txt").val().trim();
+
+      if (can_name == "" || can_addr == "" ) {
+        $("#can_name_txt").focus();
+        callErrorToastr("받는사람 이름 / 전화번호(또는 이메일)을 입력하여 주십시오.")
+        return false;
+      }
+
+      if (chkNumberExp(can_addr)) {
+        send_type = "SMS";
+      } else if (ValidateEmail(can_addr)) {
+        send_type = "EMAIL";
+      } else {
+        $("#can_addr_txt").focus();
+        callErrorToastr("휴대전화 번호 또는 이메일 형식으로 입력하여 주십시오..", $("#smsModal"))
+        return false;
+      }
+
+      /*
+      if (!chkDuplicateNumber(hpno)) {
+        $("#receive_number").focus();
+        callErrorToastr("이미 등록된 전화번호 입니다.", $("#smsModal"))
+        return false;
+      }
+      */
+      var $item = $("<div class='receive_div border p-3 mb-1'>");
+      $item.data("c_seq", 0);
+      $item.data("can_type", send_type);
+      $item.data("can_name", can_name);
+      $item.data("can_addr", can_addr);
+      if (send_type == "SMS") {
+        $item.data("can_phone", can_addr);
+      } else if (send_type == "EMAIL") {
+        $item.data("can_email", can_addr);
+      }
+
+      var appendHtml = "";
+      appendHtml += "<span class='can_name pl-5'>" + can_name + "</span> : <span class='can_addr pl-5'>" + can_addr + "</span>";
+      appendHtml += "<button type='button' class='close ' onclick='DelReceiveNum(this)' title='삭제'>";
+      appendHtml += " <i class='fas fa-times' aria-hidden='true'></i>";
+      appendHtml += "</button>";
+      if (send_type == "EMAIL") {
+        appendHtml += "<button type='button' class='close text-primary pr-5' onclick='SetCanAddr(this, \'EMAIL\')' title='E-MAIL로 발송됩니다.'>"
+        appendHtml += "<i class='fas fa-at' aria-hidden='true'></i>";
+        appendHtml += "</button>";
+      } else if (send_type == "SMS") {
+        appendHtml += "<button type='button' class='close text-primary pr-5' onclick='SetCanAddr(this, \'SMS\')' title='SMS로 발송됩니다.'>"
+        appendHtml += "<i class='fas fa-sms' aria-hidden='true'></i>";
+        appendHtml += "</button>";
+      }
+
+
+
+
+      $item.append(appendHtml)
+      $item.tooltip();
+      $(".ad_list").append($item);
+
+      $("#can_name_txt").val("");
+      $("#can_addr_txt").val("");
+
+      $("#can_name_txt").focus();
+    });
+
+    //수신번호 엔터 입력시,
+    $("#can_addr_txt").keydown(function (e) {
+
+      if (e.keyCode == 13)
+        $("#btnNumAdd").click();
+      else
+        return;
+
+    });
+
+    $("#can_name_txt").keydown(function (e) {
+
+      if (e.keyCode == 13)
+        $("#can_addr_txt").focus()
+      else
+        return;
+
+    });
+
+    //textarea 문자열 byte길이 계산
+    $("#sms_contents").keyup(function () {
+      var len = getByteLength($(this).val());
+
+      if (len > 80) {
+        $(".sms_type").text("LMS");
+        $(".contentsMaxLen").text("2000");
+        $("#sms_type").val("@SMSType.lms");
+      }
+
+      else {
+        $(".sms_type").text("SMS");
+        $(".contentsMaxLen").text("80");
+        $("#sms_type").val("@SMSType.sms");
+      }
+
+      $("#contents_len").val(len);
+
+      $(".contentsLen").text(len);
+    });
+
+    //휴대전화, 회사전화 체크.
+    $('input[name="send_type"]').change(function() {
+      if ($(this).val() == "@SMSSendType.cellphone") {
+        $("#send_number").val("@myPhoneNumber")
+      } else if ($(this).val() == "025512300") {
+        $("#send_number").val("02-551-2300")
+      }
+      else {
+        $("#send_number").val("@companyNumber")
+      }
+    });
+
+    function agree_show_hide(id, target_id) {
+      if ($(id).prop("checked")) {
+        $(target_id).show();
+      } else {
+        $(target_id).hide();
+      }
+    }
+
+    $('#privacy').click(function () {
+      agree_show_hide('#privacy', '#privacy_txt');
+    });
+
+    $('#provide3rd').click(function () {
+      agree_show_hide('#provide3rd', '#provide3rd_div');
+    });
+
+    agree_show_hide('#privacy', '#privacy_txt');
+    agree_show_hide('#provide3rd', '#provide3rd_div');
+
+    //전송 버튼 클릭.
+    $("#btnSendSms").click(function () {
+
+      if (!$('#privacy').prop("checked") && !$('#provide3rd').prop("checked")) {
+        $("#privacy").focus();
+        callErrorToastr("발송할 동의서를 선택하세요.(최소 1개 이상)", $("#smsModal"));
+        return false;
+      }
+
+
+      if ($("#send_number").val() == "") {
+        $("#send_number").focus();
+        callErrorToastr("발신번호를 입력하세요.", $("#smsModal"));
+        return false;
+      }
+
+      if ($("#can_name_txt").val() != "" && $("#can_addr_txt").val() != "") {
+        $("#btnNumAdd").click();
+      }
+
+
+      var receive_info = [];
+
+      $(".ad_list").find(".receive_div").each(function () {
+        var $item = $(this);
+
+        if ($item.data("can_name") && $item.data("can_addr")) {
+          var info = { c_seq: $item.data("c_seq"), can_type: $item.data("can_type"), can_name: $item.data("can_name"), can_addr: $item.data("can_addr") };
+          receive_info.push(info);
+        }
+
+      });
+      if (receive_info.length == 0) {
+        $("#can_name_txt").focus();
+        callErrorToastr("수신자 정보를 입력하세요.", $("#smsModal"));
+        return false;
+      }
+      /*
+      if ($('#provide3rd').prop("checked") && $("#client_seq").val() == 0){
+        $("#client_name").focus();
+        callErrorToastr("개인정보 제 3자 동의서를 위한 고객사를 선택하여 주세요.", $("#smsModal"));
+        return false;
+      }
+      */
+
+      /*
+      if ($("#can_name").val() == "") {
+        $("#can_name").focus();
+        callErrorToastr("수신자 이름을 입력하세요.", $("#smsModal"));
+        return false;
+      }
+
+      if ($("#can_contact").val() == "") {
+        $("#can_contact").focus();
+        callErrorToastr("수신번호(받는사람)를 입력하세요.", $("#smsModal"));
+        return false;
+      }
+      */
+      /*
+      if ($("#sms_contents").val() == "") {
+        $("#sms_contents").focus();
+        callErrorToastr("내용을 입력하세요.", $("#smsModal"));
+        return false;
+      }
+      */
+      alertify.confirm()
+        .set({
+          'labels': { ok: '확인', cancel: '취소' },
+          'onok': function () {
+            var currentData = {
+              is_privacy_agree: $('#privacy').prop("checked") ? 1 : 0,
+              privacy_text: $('#privacy').prop("checked") ? $('#privacy_txt').val() : "",
+              is_provide_agree: $('#provide3rd').prop("checked") ? 1 : 0,
+              provide_text: $('#provide3rd').prop("checked") ? $('#provide3rd_txt').val() : "",
+              client_seq: -1,
+              client_name: "유니코써치에서 제안한 입사 지원 기업",
+              send_phone: $("#send_number").val(),
+              receive: receive_info
+              //contents: $("#sms_contents").val()
+              //contents_len: $("#contents_len").val()
+            };
+
+            var formURL = $("#SmsPrivacyCreateForm").attr("action");
+            $.ajax({
+              url: formURL,
+              type: "POST",
+              dataType: 'json',
+              data: {
+                data: currentData
+              },
+              beforeSend: function () {
+                showLoading();
+              },
+              success: function (json) {
+                hideLoading();
+                if (json.ok) {
+                  NormalAlert(json.message, function () {
+                    if (opener.privacyReload) {
+                      opener.privacyReload();
+                    }
+
+                    self.close();
+                  });
+                }
+                else {
+                  ErrorAlert(json.message);
+                }
+              },
+              error: function (jqXHR, textStatus, errorThrown) {
+                hideLoading();
+                ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+              }
+            });
+          },
+          'oncancel': function () {
+            return;
+          },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>동의서 발송')
+        .setting({
+          message: "동의서를 발송 하시겠습니까?"
+        }).show();
+
+    });
+
+
+    //올바른 전화번호인지 체크
+    function chkNumberExp(num) {
+
+      var regExp = /^(01[016789]{1}|02|0[346789]{1}[0-9]{1}|0507)-?[0-9]{3,4}-?[0-9]{4}$/;
+
+      if (!regExp.test(num)) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+
+    function ValidateEmail(mail) {
+      if (/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(mail)) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+
+    //중복번호 체크
+    function chkDuplicateNumber(num) {
+
+      var isChk = true;
+
+      var nowNum = num.replace(/\-/gi, "");
+
+      $(".ad_list .receive_div").each(function () {
+
+        var tmpNo = $(this).find(".receive_num").text().replace(/\-/gi, "");
+
+        if (nowNum == tmpNo) {
+          isChk = false;
+          return false;
+        }
+      });
+
+      return isChk;
+    }
+
+    //수신번호 목록에서 삭제
+    function DelReceiveNum(obj) {
+      $(obj).closest(".receive_div").remove();
+    }
+
+  </script>
+
+  <script src="~/Libs/remark/global/vendor/bootstrap-tokenfield/bootstrap-tokenfield.min599c.js?v4.0.4"></script>
+}

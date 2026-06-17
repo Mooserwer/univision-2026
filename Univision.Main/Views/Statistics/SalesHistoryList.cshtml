@@ -1,0 +1,184 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.SalesHistoryListModel
+
+@{
+    Layout = null;
+}
+
+<div class="col-xl-12">
+    <div class="panel custom1">
+        <header class="panel-heading">
+            <h3 class="panel-title">
+                매출상세내역
+            </h3>
+        </header>
+
+        <div>
+            <div class="table-responsive">
+                <table id="default-table" class="table table-hover scrolltable">
+                    <colgroup>
+                        <col style="width:5%;">
+                        <col style="width:5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                        <col style="width:7.5%;">
+                    </colgroup>
+                    <tbody>
+                        <tr class="sum2">
+                            <td colspan="9">합계</td>
+                            <td>@Utils.ConvertMoneyToString(Model.sumData.sum_annual_income)</td>
+                            <td></td>
+                            <td>@Utils.ConvertMoneyToString(Model.sumData.sum_billing_money)</td>
+                            <td></td>
+                            <td>@Utils.ConvertMoneyToString(Model.sumData.sum_auth_amt)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div data-plugin="scrollable">
+            <div data-role="container" style="padding:0 !important; margin:0 !important;">
+                <div data-role="content" style="padding:0 !important; margin:0 !important;">
+                    <div class="table-responsive">
+                        <table id="default-table" class="table table-hover scrolltable">
+                            <colgroup>
+
+                                <col style="width:10%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                                <col style="width:7.5%;">
+                            </colgroup>
+                            <thead>
+                                <tr>
+
+                                    <th rowspan="2">고객사</th>
+                                    <th colspan="4">담당</th>
+                                    <th colspan="3">일정</th>
+                                    <th colspan="3">완료일</th>
+                                    <th colspan="2">인정매출</th>
+                                </tr>
+                                <tr>
+                                    <th>AM</th>
+                                    <th>SM</th>
+                                    <th>Contact</th>
+                                    <th>입사자</th>
+                                    <th>입사</th>
+                                    <th>빌링</th>
+                                    <th>입금</th>
+                                    <th>연봉</th>
+                                    <th>수수료</th>
+                                    <th>매출액</th>
+                                    <th>비율</th>
+                                    <th>성과</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                @if (Model.list.Count > 0)
+                                {
+
+
+                                    foreach (var data in Model.list)
+                                    {
+                                    <tr>
+
+                                        <td title="@data.client_name">
+                                            <a href="@Url.Action("ClientDetail", "Client", new { @c_seq = data.client_seq })">
+                                                @Utils.Truncate(data.client_name, 10)
+                                            </a>
+                                        </td>
+                                        <td title="@data.am_name">
+                                            @Utils.Truncate(data.am_name, 7)
+                                        </td>
+                                        <td title="@data.searcher_name">
+                                            @Utils.Truncate(data.searcher_name, 8)
+                                        </td>
+                                        <td title="@data.contact_name">
+                                            @Utils.Truncate(data.contact_name, 8)
+                                        </td>
+                                        <td title="@data.candidate_name">
+                                            <a href="@Url.Action("CandidateDetail", "Candidate", new { @c_seq = data.candidate_seq })">
+                                                @Utils.Truncate(data.candidate_name, 5)
+                                            </a>
+                                        </td>
+                                        <td>
+                                            @Utils.ConvertDateTimeToString(data.schedule_date)
+                                        </td>
+                                        <td>
+                                            @Utils.ConvertDateTimeToString(data.billing_dt)
+                                        </td>
+                                        <td>
+                                            @Utils.ConvertDateTimeToString(data.deposit_dt)
+                                        </td>
+                                        <td>
+                                            @Utils.ConvertMoneyToString(data.annual_income)
+                                        </td>
+                                        <td>
+                                            @Utils.ConvertMoneyToString(data.fee_rate)%
+                                        </td>
+                                        <td>
+                                            @Utils.ConvertMoneyToString(data.billing_money)
+                                        </td>
+                                        <td>
+                                            @(data.auth_rate)%
+                                        </td>
+                                        <td>
+                                            @Utils.ConvertMoneyToString(data.auth_amt)
+                                        </td>
+                                    </tr>
+
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="13">
+                                            매출 내역이 없습니다.
+                                        </td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                             ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                             x => String.Format("javascript:SalesHistoryPageMove({0})", x))
+            </div>
+        </div>
+    </div>
+
+    <!-- 현재 페이지 사용 시작 -->
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            function SalesHistoryPageMove(page) {
+                callSalesHistoryList(page)
+            }
+        });
+
+
+    </script>
+    <!-- 현재 페이지 사용 끝 -->

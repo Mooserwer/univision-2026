@@ -1,0 +1,520 @@
+﻿@model Univision.Core.Models.DTO.schedule
+
+@{
+  Layout = null;
+}
+<link rel='stylesheet' href='~/Libs/selectize/css/selectize.bootstrap3.css' />
+<link rel='stylesheet' href='~/Content/jquery.timepicker.min.css' />
+<script src='~/Scripts/jquery.timepicker.min.js'></script>
+<script src='~/Libs/selectize/js/standalone/selectize.js'></script>
+
+<div class="modal-dialog modal-simple">
+
+  @using (Html.BeginForm("CreateSchedule", "Schedule", FormMethod.Post, new { @id = "CreateForm", @class = "modal-content form-horizontal" }))
+  {
+    @Html.HiddenFor(x => x.s_seq)
+    <div class="modal-header">
+      <button type="button" class="close" aria-hidden="true" data-dismiss="modal">×</button>
+      <h4 class="modal-title">스케줄 예약</h4>
+    </div>
+    <div class="modal-body">
+      <div class="row">
+        <label for="title" class="col-md-3 col-form-label col-form-label font-weight-bold">제목<small>[Title]</small><span class="text-danger">*</span></label>
+        <div class="col-md-8">
+          @Html.TextBoxFor(x => x.title, new { @class = "form-control form-control-sm", @placeholder = "스케줄 제목을 입력하세요." })
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="title" class="col-md-3 col-form-label col-form-label font-weight-bold">타입<small>[Type]</small><span class="text-danger">*</span></label>
+        <div class="col-md-4">
+          @{
+
+            var typeList = new SelectList(ScheduleType.ScheduleTypes, "Key", "Value").ToList();
+            typeList.Insert(0, new SelectListItem { Value = "", Text = "선택" });
+          }
+          @Html.DropDownListFor(x => x.type, typeList, new { @class = "form-control form-control-sm" })
+
+        </div>
+      </div>
+
+      <div class="attend_user" style="display:@(Model.type == ScheduleType.share ? "block" : "none")">
+        <hr />
+        <div class="row">
+          <label for="contact_dv_contact_name" class="col-md-3 col-form-label col-form-label font-weight-bold">공유자<small>[Share]</small></label>
+          <div class="col-md-8">
+            <input type="text" name="attend_user" id="attend_user" class="form-control form-control-sm" placeholder="공유자 입력" data-value="@Model.attend_user">
+          </div>
+        </div>
+      </div>
+
+      <hr />
+
+      <div class="row mb-5">
+        <label for="start_date" class="col-md-3 col-form-label col-form-label font-weight-bold">Start<span class="text-danger">*</span><small>[Date & Time]</small></label>
+        <div class="col-md-7">
+          <div class="input-group">
+
+            @Html.TextBox("start_date", Utils.ConvertDateTimeHourToString2(Model.start_date), new { @class = "form-control form-control-sm text-center jDateTimePicker", @placeholder = "YYYY-MM-DD hh:mm", @maxlength = "16", @autocomplete = "off" })
+            <span class="input-group-addon mr-5 cur_hand">
+              <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <label for="end_date" class="col-md-3 col-form-label col-form-label font-weight-bold">End<span class="text-danger">*</span><small>[Date & Time]</small></label>
+        <div class="col-md-7">
+          <div class="input-group">
+            @Html.TextBox("end_date", Utils.ConvertDateTimeHourToString2(Model.end_date), new { @class = "form-control form-control-sm text-center jDateTimePicker", @placeholder = "YYYY-MM-DD hh:mm", @maxlength = "16", @autocomplete = "off" })
+            <span class="input-group-addon mr-5 cur_hand">
+              <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+
+      <div class="row">
+        <label for="contents" class="col-md-3 col-form-label col-form-label font-weight-bold">내용<small>[Contents]</small></label>
+        <div class="col-md-8">
+          @Html.TextAreaFor(x => x.contents, new { @class = "form-control" })
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="form-actions">
+        <!--수정시,-->
+        @if (Model.prc_seq.HasValue || Model.c_seq.HasValue || Model.cl_seq.HasValue)
+        {
+          string url = "";
+          if (Model.prc_seq.HasValue)
+          {
+            url = Url.Action("ProjectDetail", "Project", new { @p_seq = Model.p_seq });
+          }
+          else if (Model.c_seq.HasValue)
+          {
+            url = "";
+          }
+          else
+          {
+            url = Url.Action("ClientDetail", "Client", new { @c_seq = Model.cl_seq });
+          }
+
+          <a href="@url" class="btn btn-info" id="btnMove">Move to Page</a>
+        }
+
+        @if (Model.s_seq > 0)
+        {
+          <button class="btn btn-danger" type="button" id="btnDelete">Delete</button>
+        }
+
+        <button class="btn btn-primary" type="submit" id="btnSave">Save</button>
+        <a class="btn btn-sm btn-white" data-dismiss="modal" href="javascript:void(0)">Cancel</a>
+      </div>
+    </div>
+  }
+</div>
+
+<script type="text/javascript">
+
+    var endDateValidTxt = "";
+
+    //스케줄 타입 validator
+    var typeValidator = {
+        selector: '#type',
+        validators: {
+            callback: {
+                message: '스케줄 타입을 선택하세요.',
+                callback: function (input) {
+
+                    var fv = $("#CreateForm").data("formValidation");
+
+                    let isEmpty = true;
+
+                    if ($("#type").val() != "") {
+                        isEmpty = false;
+                    }
+
+                    if (!isEmpty) {
+                        // Update the status of callback validator for all fields
+                        fv.updateStatus('type', 'Valid', 'callback');
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+    };
+
+    //스케줄 시작일 validator
+    var sDateTimeValidator = {
+
+        selector: '#start_date',
+        validators: {
+            notEmpty: {
+                message: "시작 일을 선택하세요."
+            },
+            callback: {
+                message: "시작 일을 종료 일 이전으로 선택 하세요.",
+                callback: function (input) {
+
+                    var fv = $("#CreateForm").data("formValidation");
+
+                    let isValid = false;
+
+                    var endDate = $("#CreateForm").find("#end_date").val();
+
+                    if (moment(input) >= moment(endDate)) {
+                        isValid = true;
+                    }
+
+                    if (!isValid) {
+                        // Update the status of callback validator for all fields
+                        fv.updateStatus('start_date', 'Valid', 'callback');
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+
+    };
+
+    //스케줄 종료일 validator
+    var eDateTimeValidator = {
+
+        selector: '#end_date',
+        validators: {
+            notEmpty: {
+                message: "종료 날짜를 선택하세요."
+            },
+            callback: {
+                message: "종료 날짜를 시작 날짜 이후로 입력 하세요.",
+                callback: function (input) {
+
+                    var fv = $("#CreateForm").data("formValidation");
+
+                    let isValid = false;
+
+                    var startDate = $("#CreateForm").find("#start_date").val();
+
+                    if (moment(startDate) >= moment(input)) {
+                        isValid = true;
+                    }
+
+                    if (!isValid) {
+                        // Update the status of callback validator for all fields
+                        fv.updateStatus('end_date', 'Valid', 'callback');
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+    };
+
+    //공유인원 validator
+    var attendUserValidator = {
+        selector: '#attend_user',
+        validators: {
+            callback: {
+                message: "공유인을 선택하세요.",
+                callback: function (input) {
+
+                    var fv = $("#CreateForm").data("formValidation");
+
+                    let isValid = false;
+
+                    if (inpu == "")
+                        isValid = true;
+
+                    if (!isValid) {
+                        // Update the status of callback validator for all fields
+                        fv.updateStatus('attend_user', 'Valid', 'callback');
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+    }
+
+    var $selectize = $('#attend_user').selectize({
+        plugins: ['remove_button', 'drag_drop'],
+        delimiter: ',',
+        preload: true,
+        persist: false,
+        valueField: 'uv_seq',
+        labelField: 'name',
+        searchField: ['name', 'email'],
+        //options : data,
+        create: function (input) {
+            return {
+                value: input,
+                text: input
+            }
+        },
+        onDelete: function() {
+            this.clearOptions();        // clear the data
+            this.renderCache = { };      // clear the html template cacheA
+        },
+        load: function(q, callBack) {
+            //if (!q.length) return callback();
+            var url = '@Url.Action("FindUserEmail", "Partial")?q=' + escape(q);
+            console.log(url);
+            $.ajax({
+            type: 'POST',
+                url: url,
+                error: function() {
+                    callBack();
+                },
+                success: function(data) {
+                    callBack(data);
+                }
+            });
+        },
+        render:
+        {
+            option: function(item, escape) {
+                var label = item.name || item.email;
+                var caption = item.name ? ' [' + item.email + ']' : null;
+                return '<div>' +
+                    '<span class="label">' + escape(label) + '</span>' +
+                    (caption ? '<span class="caption">' + escape(caption) + '</span>' : '') +
+                    '</div>';
+            }
+        }
+    });
+    var selectize = $selectize[0].selectize;
+
+    $(document).ready(function () {
+
+        StopEnterSubmit();
+
+        BindDateTimePicker('.jDateTimePicker');
+
+        //스케줄 타입 변경
+        $("#type").change(function () {
+
+            //특정인 공유시,
+            if ($(this).val() == "3") {
+                $(".attend_user").css("display", "block");
+                $('#CreateForm').formValidation('addField', $("#CreateForm").find("#attend_user"), attendUserValidator);
+            }
+            else {
+                $(".attend_user").css("display", "none");
+                $('#CreateForm').formValidation('removeField', $("#CreateForm").find("#attend_user"));
+            }
+
+        });
+
+        $("#start_date").change(function () {
+            $("#CreateForm").data("formValidation").revalidateField("start_date");
+            $("#CreateForm").data("formValidation").revalidateField("end_date");
+        });
+
+        $("#end_date").change(function () {
+            $("#CreateForm").data("formValidation").revalidateField("start_date");
+            $("#CreateForm").data("formValidation").revalidateField("end_date");
+        });
+
+
+        $("#CreateForm").formValidation({
+            framework: "bootstrap4",
+            button: {
+                selector: "#btnSave",
+                disabled: "disabled"
+            },
+            submitHandler: function () {
+
+            },
+            icon: null,
+            fields: {
+                title: {
+                    validators: {
+                        notEmpty: {
+                            message: "프로젝트 제목은 필수 입력 항목입니다."
+                        }
+                    }
+                },
+                type: typeValidator,
+                attend_user: attendUserValidator,
+                start_date: sDateTimeValidator,
+                end_date: eDateTimeValidator,
+            },
+            err: {
+                clazz: "invalid-feedback"
+            },
+            control: {
+                valid: "is-valid",
+                invalid: "is-invalid"
+            },
+            row: {
+                invalid: "has-danger"
+            }
+        })
+        //validation 성공시, ajax submit.
+        //ajax submit 사용하지 않을 경우, on 부분은 삭제해도 됨.
+        .on('success.form.fv', function (e) {
+            //기본 submit 이벤트 취소.
+            e.preventDefault();
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            var formURL = $("#CreateForm").attr("action");
+                            $.ajax({
+                                url: formURL,
+                                type: "POST",
+                                dataType: 'json',
+                                data: $("#CreateForm").serialize(),
+                                beforeSend: function () {
+                                    showLoading("#CreateForm");
+                                },
+                                success: function (json) {
+                                    hideLoading("#CreateForm");
+                                    if (json.ok) {
+
+                                        NormalAlert("스케줄을 등록 했습니다.");
+
+                                        //신규
+                                        if (json.mode == "@CommonCodes.Create") {
+
+                                            var evt = new Object();
+                                            evt.id = json.schedule.id;
+                                            evt.title = json.schedule.title;
+                                            evt.contents = json.schedule.contents;
+                                            evt.start = json.schedule.start;
+                                            evt.end = json.schedule.end;
+                                            evt.attend_cnt = json.schedule.attend_cnt;
+                                            evt.borderColor = json.schedule.borderColor;
+                                            evt.backgroundColor = json.schedule.backgroundColor;
+
+
+                                            $("#calendar").fullCalendar('renderEvent', evt);
+
+                                        }
+                                        //수정
+                                        else if(json.mode == "@CommonCodes.Update"){
+
+                                            var evt = $("#calendar").fullCalendar('clientEvents', json.schedule.s_seq)[0];
+
+                                            evt.title = json.schedule.title;
+                                            evt.contents = json.schedule.contents;
+                                            evt.start = json.schedule.start;
+                                            evt.end = json.schedule.end;
+                                            evt.attend_cnt = json.schedule.attend_cnt;
+                                            evt.borderColor = json.schedule.borderColor;
+                                            evt.backgroundColor = json.schedule.backgroundColor;
+
+                                            $("#calendar").fullCalendar('updateEvent', evt);
+                                        }
+
+                                        $('#calendarViewModal').modal('hide');
+                                        $('#calendar').fullCalendar('unselect');
+
+                                    }
+                                    else {
+                                        ErrorAlert(json.message);
+                                    }
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    hideLoading("#CreateForm");
+                                    ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                                }
+                            });
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>스케줄 등록')
+                    .setting({
+                        message: "스케줄을 등록 하시겠습니까?"
+                    }).show();
+        });
+
+        //공유자가 있는 경우.
+        if ("@Model.attend_user" != "") {
+            getUserEmail('@Model.attend_user');
+        }
+
+        //스케줄 삭제.
+        $("#btnDelete").click(function () {
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+
+                            $.ajax({
+                               url: '@Url.Action("DeleteSchedule", "Schedule")',
+                                data: {
+                                    s_seq: $("#s_seq").val()
+                               },
+                               dataType: 'json',
+                               type: 'POST',
+                               beforeSend: function ()
+                               {
+                                   showLoading("#CreateForm");
+                               }
+                            })
+                            .done(function (json) {
+                                hideLoading("#CreateForm");
+                                if (json.ok) {
+
+                                    NormalAlert(json.message);
+                                    $('#calendar').fullCalendar('removeEvents', json.s_seq);
+                                    $('#calendarViewModal').modal('hide');
+                                    $('#calendar').fullCalendar('unselect');
+
+                                } else {
+                                    ErrorAlert(json.message);
+                                }
+                            })
+                            .fail(function (e) {
+                                hideLoading("#CreateForm");
+                                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                            });
+
+
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>스케줄 삭제')
+                    .setting({
+                        message: "스케줄을 삭제 하시겠습니까?"
+                    }).show();
+
+
+        });
+
+    }); //document ready End.
+
+
+    function getUserEmail(val) {
+
+        selectize.clear(true);
+        if(val && val != '') {
+            var url = '@Url.Action("FindUserEmail", "Partial")?seqs='+escape(val);
+            $.ajax({
+                type: 'POST',
+                url: url,
+                success: function (data) {
+
+                    for(i=0; i < data.length; i++){
+                        selectize.addOption({name:data[i].name,email:data[i].email, uv_seq:data[i].uv_seq});
+                        selectize.addItem(data[i].uv_seq, false);
+                    }
+                }
+            });
+        }
+    }
+
+
+</script>

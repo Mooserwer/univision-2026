@@ -1,0 +1,431 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientListViewModel
+@{
+    ViewBag.Title = "OffLimit 리스트";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int start_item = Model.PagingInfo.TotalItems == 0 ? 0 : ((Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage) + 1;
+    int end_item = Model.PagingInfo.TotalItems == 0 ? 0 : start_item + Model.list.Count() - 1;
+}
+
+<style>
+    .extend-box {
+        position: absolute !important;
+        top: 1.9em;
+        right: 1em;
+    }
+
+    .panel-body .input-search .form-control {
+        border-radius: 2px;
+    }
+
+    .panel-body .form-control-label {
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+    }
+
+    .panel-body .form-group {
+        margin-bottom: 3px;
+    }
+
+    .panel {
+        margin-bottom: 1rem;
+    }
+
+    .table thead th {
+        font-weight: bold;
+    }
+
+    /*.innertable {
+        border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;
+    }*/
+
+    .innertable tr {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        /*border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;*/
+    }
+
+        .innertable tr td {
+            width: 100%;
+            border: 0px;
+            border-color: white;
+            background-color: white;
+            empty-cells: show;
+            border-collapse: inherit;
+            padding: initial;
+        }
+
+    @@media (max-width:1500px) {
+        .table.table-client thead th:nth-of-type(1) {
+            display: none
+        }
+
+        .table.table-client tbody td:nth-of-type(1) {
+            display: none
+        }
+
+        .table.table-client thead th:nth-of-type(6) {
+            display: none
+        }
+
+        .table.table-client tbody td:nth-of-type(6) {
+            display: none
+        }
+    }
+
+    @@media (max-width:898px) {
+        .table.table-client thead th:nth-of-type(4) {
+            display: none
+        }
+
+        .table.table-client tbody td:nth-of-type(4) {
+            display: none
+        }
+    }
+
+    @@media (max-width:500px) {
+        .table.table-client thead th:nth-of-type(3) {
+            display: none
+        }
+
+        .table.table-client tbody td:nth-of-type(3) {
+            display: none
+        }
+
+        .table.table-client thead th:nth-of-type(5) {
+            display: none
+        }
+
+        .table.table-client tbody td:nth-of-type(5) {
+            display: none
+        }
+    }
+</style>
+
+<link href="~/Libs/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/user.min599c.css?v4.0.4">
+
+
+<div class="page-user">
+  <div class="page-content">
+    <!--검색 Form -->
+    @using (Html.BeginForm("OfflimitList", "Client", FormMethod.Get, new { @id = "SearchForm" }))
+    {
+      @Html.HiddenFor(x => x.search.state)
+      @Html.HiddenFor(x => x.search.orderTxt)
+      @Html.HiddenFor(x => x.search.orderOption)
+      @Html.HiddenFor(x => x.search.excelDown)
+      @Html.HiddenFor(x => x.search.offlimit)
+      
+      <!-- 검색 패널 시작 -->
+      <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+          <div class="panel-title" >
+            <i class="fas fa-search" id="offlimit-list"></i>
+            Off-limit List
+          </div>
+          <a class="panel-action icon wb-minus extend-box" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true">
+          </a>
+        </div>
+
+
+        <div class="panel-body bg-blue-grey-200">
+          <div class="row">
+            <div class="col-12">
+              @Html.LabelFor(x => x.search.kor_name, "Client Name(Kr or En)", new { @class = "form-control-label small" })
+              @Html.TextBoxFor(x => x.search.kor_name, new { @class = "form-control form-control-sm", @placeholder = "고객사명 검색(국문 또는 영문)" })
+            </div>
+            <div class="col">
+              <div class="form-group text-right">
+                <div class="btn-group">
+                  <button type="submit" id="btnSearch" class="btn btn-sm btn-primary" title="검색">
+                    <i class="fas fa-search"></i>
+                    Search
+                  </button>
+                  <button type="button" id="btnReset" class="btn btn-sm btn-danger" title="검색조건 초기화">
+                    <i class="fas fa-redo"></i>
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 검색조건 네째줄 끝 -->
+        </div>
+      </div>
+      <!-- 검색 패널 끝 -->
+    }
+
+    <div class="panel">
+      @using (Html.BeginForm("ClientListExcelDown", "Client", FormMethod.Get, new { @id = "ExcelForm" }))
+      {
+        @Html.Hidden("korName", Model.search.kor_name)
+        @Html.Hidden("engName", Model.search.eng_name)
+        @Html.Hidden("ceoName", Model.search.ceo)
+        @Html.Hidden("bizNum", Model.search.biz_num)
+        @Html.Hidden("contactName", Model.search.contact_name)
+        @Html.Hidden("contactEmail", Model.search.contact_email)
+        @Html.Hidden("amName", Model.search.am_name)
+        @Html.Hidden("createUser", Model.search.create_user)
+        @Html.Hidden("isForeign", Model.search.is_foreign)
+        @Html.Hidden("offlimit", Model.search.offlimit)
+        @Html.Hidden("isContract", Model.search.is_contract)
+        @Html.Hidden("searchStart", Model.search.createStart)
+        @Html.Hidden("searchEnd", Model.search.createEnd)
+        @Html.Hidden("orderOption", Model.search.orderOption)
+        @Html.Hidden("orderTxt", Model.search.orderTxt)
+        @Html.Hidden("is_my_client", Model.search.is_my_client)
+      }
+      <div class="panel-body">
+        <div class="row pb-5">
+          <div class="col-sm-12 col-md-6 h5">
+            Search Results (@start_item.ToString("N0")  ~ @end_item.ToString("N0") of @Model.PagingInfo.TotalItems.ToString("N0"))
+            <span class="panel-desc h6">
+              Page : @Model.PagingInfo.CurrentPage.ToString("N0") of @(((Model.PagingInfo.TotalItems / Model.PagingInfo.ItemsPerPage) + 1).ToString("N0"))
+            </span>
+          </div>
+          @*
+          <div class="col-sm-12 col-md-6 text-right">
+              <div class="btn-group">
+                  @if (Univision.Security.AppIdentity.isExternal != 1)
+                  {
+                      <button class="btn btn-sm btn-success" id="btnExcel" title="Download Search results to Excel">
+                          <i class="icon wb-table" ></i>
+                          Excel
+                      </button>
+                  }
+                  <a href="@Url.Action("ClientCreate", "Client")" class="btn btn-sm btn-primary w-150" title="Client Registration"><i class="icon wb-plus"></i> New Client</a>
+              </div>
+          </div>
+          *@
+        </div>
+        <table class="block_table mt-10 table table-striped table-hover">
+
+          <thead>
+            <tr>
+              <th data-tablesaw-priority="3" style="min-width:50px;" class=" text-center hidden-sm-down hidden-lg-down-cus">No.</th>
+              <th class="text-center" style="">
+                Client Name
+                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "kor_name", Model.search.orderOption) colSort" orderTxt="kor_name"></i>
+              </th>
+              <th class="text-center">AM</th>
+              <th data-tablesaw-priority="2" class="hidden-sm-down text-center">Industry</th>
+              <th data-tablesaw-priority="1" style="width:100px;"class="hidden-sm-down text-center">
+                Update.
+                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "modify_dt", Model.search.orderOption) colSort" orderTxt="modify_dt"></i>
+              </th>
+              <th data-tablesaw-priority="4" class="hidden-sm-down text-center hidden-lg-down-cus">Project Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (Model.list.Count > 0)
+            {
+              long num = 1 + ((Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage);
+
+              foreach (var data in Model.list)
+              {
+                <tr>
+                  <td class="hidden-sm-down text-center hidden-lg-down-cus">@(num++)</td>
+                  <td>
+                    @if (data.offlimit == 1)
+                    {
+                      <span class="badge badge-danger" title="전 임직원 컨택 금지">OFFLIMIT</span>
+                    }
+                    else if (data.offlimit == 2)
+                    {
+                      <span class="badge badge-warning" title="유니코에 의해 채용된 임직원 컨택 금지">OFFLIMIT</span>
+                    }
+                    else if (data.offlimit == 3)
+                    {
+                      <span class="badge badge-outline badge-warning" title="계약서 내 오프리밋 조항은 없지만 고객사의 요청 등">[계약서 미표기] OFFLIMIT</span>
+                    }
+                    <a href="@Url.Action("ClientDetail", "Client", new { c_seq = data.c_seq})" class="">
+                      @data.kor_name
+                      @*
+      @if (data.is_inorder == 1)
+      {
+          <small class="red-600" title="인오더 고객사">*</small>
+      }
+                      *@
+                      @if (!String.IsNullOrWhiteSpace(data.ceo))
+                      {
+                        <small class="text-dark"> - (@data.ceo)</small>
+                      }
+                      @if (!String.IsNullOrWhiteSpace(data.eng_name))
+                      {
+                        <br /><small>@data.eng_name</small>
+                      }
+                    </a>
+                    <br />
+                    @*
+    @if (data.offlimit == 1)
+    {
+        <label class="badge badge-dander">Off Limit</label>
+    }
+    <label class="badge @(data.is_foreign_invest == 1 ? "badge-primary" : "badge-info")">@(data.is_contract == 1 ? "Foreign" : "Domestic")</label>
+    <label class="badge @(data.is_contract == 1 ? "badge-success" : "badge-secondary")">@(data.is_contract == 1 ? "Contract" : "Not Contract")</label>
+                    *@
+                  </td>
+                  <td class="text-center ">
+                    @if (data.am_name != null)
+                    {
+                      string[] arrAm = data.am_name.Split('/');
+                      @*<text>@arrAm.Length</text><br />*@
+                      for (int k = 0; k < arrAm.Length; k++)
+                      {
+                        if (k == 0)
+                        {
+                          @arrAm[k]
+                        }
+                        else
+                        {
+                          <text> / </text> @arrAm[k]
+                        }
+
+                      }
+                    }
+                  </td>
+                  <td class="hidden-sm-down text-center">
+                    @if (!String.IsNullOrEmpty(data.business_name2))
+                    {
+                      <text>[</text> @(data.business_name1 +" > "+ data.business_name2) <text>]</text>
+                    }
+                  </td>
+                  <td class="hidden-sm-down text-center">
+                    @(((DateTime)data.modify_dt).ToString("yyyy-MM-dd"))
+
+                    @if (data.modify_dt != null)
+                    {
+                      <br /><small>[ @(((DateTime)data.create_dt).ToString("yyyy-MM-dd")) ]</small>
+                    }
+                  </td>
+                  <td class="hidden-sm-down text-center hidden-lg-down-cus ">
+                    <div class="badge-group" title="Total project count">
+                      <label class="badge badge-info">Total </label><label class="badge badge-secondary"> @data.totalCnt</label>
+                    </div>
+                    <div class="badge-group" title="Success project count">
+                      <label class="badge badge-success">Success </label><label class="badge badge-secondary"> @data.successCnt</label>
+                    </div>
+                    <div class="badge-group" title="On going project count">
+                      <label class="badge badge-primary">On going </label><label class="badge badge-secondary"> @data.progressCnt</label>
+                    </div>
+                    <div class="badge-group" title="Closing project count">
+                      <label class="badge badge-danger">Closing </label><label class="badge badge-secondary"> @data.failCnt</label>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+
+            else
+            {
+              <tr>
+                <td colspan="6" style="text-align:center;height:200px;vertical-align:middle;">
+                  <b>No Data.</b>
+                </td>
+              </tr>
+            }
+
+          </tbody>
+        </table>
+        <br />
+        @Html.PageAjaxLinks(Model.PagingInfo,
+                   ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                   x => Url.Action("OfflimitList", new
+                   {
+                       page = x
+                   }))
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+@section scripts {
+
+
+
+    <script type="text/javascript">
+
+        $("#btnReset").click(function () {
+            location.href = "@Url.Action("OfflimitList", "Client")";
+        });
+
+        $(document).ready(function () {
+
+            BindDatePicker($(".jDatePicker"));
+
+            $("#btnExcel").click(function () {
+
+                //$("#korName").val($("#search_kor_name").val());
+                //$("#searchTxt").val($("#search_searchTxt").val());
+                //$("#orderOption").val($("#search_orderOption").val());
+                //$("#orderTxt").val($("#search_orderTxt").val());
+
+                $("#ExcelForm").submit();
+            });
+
+            $(".colSort").click(function () {
+
+                $(".colSort").not(this).each(function () {
+
+                    $(this).removeClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $(this).addClass("fa-sort");
+                })
+
+                $(this).removeClass("fa-sort");
+
+                if ($(this).hasClass("fa-sort-up")) {
+                    $(this).addClass("fa-sort-down");
+                    $(this).removeClass("fa-sort-up");
+                    $("#search_orderTxt").val($(this).attr("orderTxt"));
+                    $("#search_orderOption").val("DESC");
+                }
+                else {
+                    $(this).addClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $("#search_orderTxt").val($(this).attr("orderTxt"));
+                    $("#search_orderOption").val("ASC");
+                }
+
+                $("#SearchForm").submit();
+
+            });
+        });
+
+        function changeSearchState(state) {
+
+            $("#search_state").val(state);
+            $("#SearchForm").submit();
+
+        }
+
+        function resetSearchForm() {
+            $("#search_searchTxt").val("");
+            $("#search_orderTxt").val("");
+            $("#search_orderOption").val("");
+            $("#SearchForm").submit();
+        }
+
+      var pop_help_title = "Off-limit 고객사 조회 안내."
+      var pop_help_txt = `<span class="text-danger">현재 계약서 상 Off-limit 조항에 해당되는 고객사 목록입니다.
+  <br>해당 고객사들의 임직원은 컨택하지 않도록 주의해야합니다.</span>
+  <br/><span class="badge badge-danger">OFFLIMIT</span> : 고객사 전 임직원 컨택 금지
+  <br/><span class="badge badge-warning">OFFLIMIT</span> : 유니코에 의해 채용된 임직원 컨택 금지`;
+
+      //popover_help('offlimit-list2', '#offlimit-list', pop_help_title, pop_help_txt);
+    </script>
+
+}

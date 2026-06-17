@@ -1,0 +1,323 @@
+﻿@model Univision.Main.Models.Project.MyProjectListModel
+<style>
+  h3 {
+    margin-top: 0px !important;
+  }
+
+  .fancybox-title {
+    text-align: left !important;
+  }
+
+  .client-md, .member-title-md, .client-sm, .member-title-sm {
+    display: none;
+  }
+
+  @@media (max-width:898px) {
+    .client-md {
+      display: block;
+    }
+
+    .member-title-md {
+      display: inline;
+    }
+
+    .app-work .panel-body .table .work-progress {
+      display: none
+    }
+  }
+
+  @@media (max-width:500px) {
+    .client-sm {
+      display: inline-block;
+    }
+
+    .member-title-sm {
+      display: inline;
+    }
+
+    .table.table-my-project thead th:nth-of-type(2) {
+      display: none
+    }
+
+    .table.table-my-project tbody td:nth-of-type(2) {
+      display: none
+    }
+
+    .app-work .panel-body .table .work-progress {
+      display: none
+    }
+  }
+</style>
+<div id="pop_search_project" class="p-0">
+  <div class="mb-10">
+    <div class="row">
+      <div class="col">
+        <div class="input-group input-group-sm">
+          @Html.HiddenFor(x => x.search.except_c_seq, new { @id = "c_seq" })
+          @Html.TextBoxFor(x => x.search.searchTxt, new { @id = "searchTxt", @class = "form-control", @placeholder = "Title or Client" })
+          @Html.TextBoxFor(x => x.search.searchTxt2, new { @id = "searchTxt2", @class = "form-control", @placeholder = "AM or SM" })
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-primary" id="btn_pop_search_project">
+              <i class="fas fa-search" aria-hidden="true"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel" id="searchMyProject">
+    <div class="panel-body scrollable">
+      <table class="table table-borderless table-hover table-my-project" style="table-layout:fixed;">
+        <thead class="text-center">
+          <tr>
+            <th style="">Client / Title</th>
+            <th style="width:25%;">AM/SM</th>
+
+            <!--
+            <th style="width:45%;">&nbsp;</th>
+                -->
+          </tr>
+        </thead>
+        <tbody class="text-center">
+          @if (Model.list.Count > 0)
+          {
+            foreach (var data in Model.list)
+            {
+              <tr style="cursor:pointer">
+                <td class="text-left text-truncate">
+                  <span onclick="CreateInterestConfirm('@data.p_seq', 20, '@data.exist_candidate');">
+                    <div class="font-weight-900">
+                      [@data.company_name]
+                      <div class="client-sm">
+                        - AM : @data.am_names
+                        / SM : @data.searcher_names
+                      </div>
+                    </div>
+                    @if (data.is_my_key == 1)
+                    {
+                      <i class="fa fa-key yellow-700" title="Key project"></i>
+                    }
+                    @data.title
+                  </span>
+                  @if (data.exist_candidate.Value == 1)
+                  {
+                    <small class="text-danger">
+                      <br />[이미 이 프로젝트에 등록됨]
+                    </small>
+                  }
+                  else
+                  {
+                    <br />
+                    <button class="btn btn-xs btn-outline-secondary" onclick="CreateInterestConfirm('@data.p_seq', 20, '@data.exist_candidate');">잠재후보등록</button>
+                    <button class="btn btn-xs btn-outline-primary" onclick="CreateInterestConfirm('@data.p_seq', 30, '@data.exist_candidate');">바로추천</button>
+                    <button class="btn btn-xs btn-outline-warning dropdown-toggle" id="ap_dropdown_@data.p_seq" data-toggle="dropdown" aria-expanded="true">Makeup 신청 후 추천</button>
+                    <div class="dropdown-menu" aria-labelledby="ap_dropdown_@data.p_seq" role="menu">
+                      <a class="dropdown-item" href="javascript:void(0)" onclick="CreateInterestConfirm('@data.p_seq', 35, '@data.exist_candidate', ['K']);" role="menuitem">국문 Makeup 요청</a>
+                      <a class="dropdown-item" href="javascript:void(0)" onclick="CreateInterestConfirm('@data.p_seq', 35, '@data.exist_candidate', ['E']);" role="menuitem">영문 Makeup 요청</a>
+                      <a class="dropdown-item" href="javascript:void(0)" onclick="CreateInterestConfirm('@data.p_seq', 35, '@data.exist_candidate', ['K', 'E']);" role="menuitem">국문 + 영문 Makeup 요청</a>
+
+                    </div>
+
+                  }
+
+
+
+                </td>
+                <td class="text-center">
+                  <span class="">AM : </span> @data.am_names
+                  <div class="">
+                    SM : @data.searcher_names
+                  </div>
+                </td>
+
+              </tr>
+            }
+          }
+          else
+          {
+            <tr>
+              <td colspan="4">No Data Found.</td>
+            </tr>
+          }
+
+        </tbody>
+      </table>
+
+      @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                   ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                   x => String.Format("javascript:FancyBoxSearchAndPageMove({0})", x))
+
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+    $('#btn_pop_search_project').click(function () {
+        FancyBoxSearchAndPageMove(1);
+    });
+
+        //FancyBox 팝업 내의 페이지 이동.
+        function FancyBoxSearchAndPageMove(page) {
+            if (page == null || page == undefined)
+                page = 1;
+
+            $.ajax({
+                url: '@Url.Action("SearchMyProject", "Candidate")',
+                data: {
+                    except_c_seq : $("#c_seq").val(),
+                    searchTxt: $("#searchTxt").val(),
+                    searchTxt2: $("#searchTxt2").val()
+                    , page: page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#searchMyProject');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#searchMyProject');
+                $("#CandidateMyProjectModal .modal-body").html(view);
+                /*
+                $.fancybox({
+                    'content': view,
+                    'width': $(".fancybox-outer").width(),
+                    'height': $(".fancybox-outer").height(),
+                    'autoDimensions': false,
+                    'type': 'iframe',
+                    'autoSize': false,
+                    'title': $(".fancybox-title").text(),
+                    helpers: {
+                        title: {
+                            type: 'inside',
+                            position: 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+                */
+
+            })
+            .always(function () {
+                hideLoading('#searchMyProject');
+            });
+        }
+
+
+        //관심후보 등록(confirm)
+
+    function CreateInterestConfirm(p_seq, type, is_exist, resume_type) {
+            if (is_exist == 1) {
+                ErrorAlert("이 프로젝트에는 이미 현재 후보자가 등록되어 있습니다. <br/><small>[Candidate is already in this project]</small>");
+                return;
+            }
+      var makeup_info = "";
+            var type_txt = "잠재후보등록";
+            if (type == 30) {
+                type_txt = "추천등록"
+            } else if (type == 35)  {
+              type_txt = "Makeup 요청 후 추천"
+              makeup_info = `
+<div class="border border-info pb-15 p-10">
+  <h4 class='font-weight-900'>[메이크업 신청 시 유의사항]</h4>
+  <span class='font-weight-800'> ◆ 메이크업 진행이 어려운 이력서 형식 </span></br>
+  <div class='pl-10'>
+    - <span class='font-weight-600'>메이크업 완료 후 일부 업데이트(경력 및 자기소개 추가 등) 발생 시</span><br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ 컨설턴트 직접 작업 요청<br />
+    - <span class='font-weight-600'>10 page 이상 이력서</span><br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ 컨설턴트 직접 작업 or 후보자에게 유니코 양식으로 작성 요청<br />
+    - <span class='font-weight-600'>Text 복사가 되지 않고, 복사 시 글머리가 없는 경우, 경력 구분이 없는 PDF 파일 이력서</span><br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→  후보자에게 원본 워드 파일 요청<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(*후보자 요청 불가시, 최소 컨설턴트가 워드로 변환 및 경력 구분하여 신청 요망)<br />
+  </div>
+  <span class='font-weight-600'> ◆ 하루 최대 5건까지 신청 (퇴근 후/주말은 다음 작업하는 날 개수로 포함.) </span>
+</div>`;
+            }
+
+            var c_seq = $("#c_seq").val();
+
+            alertify.confirm()
+                .set({
+                    'labels': { ok: '확인', cancel: '취소' },
+                    'onok': function () {
+                        CreateInterest(c_seq, type, p_seq, resume_type);
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>Add To Project ['+type_txt+']')
+                .setting({
+                    message: "Are you sure want to add["+type_txt+"] this candidate to Project?<br/>"+makeup_info,
+                })
+                .show();
+        }
+
+        //My List 등록
+        function CreateInterest(c_seq, type, p_seq, resume_type) {
+            var type_txt = "잠재후보등록";
+            if (type == 30) {
+                type_txt = "추천등록"
+            } else if (type == 35)  {
+                type_txt = "Makeup 요청 후 추천"
+            }
+
+            $.ajax({
+               url: '@Url.Action("ProjectRecandidateCreate", "Project")',
+               data: {
+                   c_seq: c_seq,
+                   p_seq: p_seq,
+                   state: type,
+                   contents: type_txt,
+                   resume_type : resume_type
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading('#searchMyProject');
+               }
+            })
+            .done(function (json) {
+                hideLoading('#searchMyProject');
+
+                result_msg = ""
+                if (typeof (json.message) != "string" && type == 35) {
+                    for (i = 0; i < json.message.length; i++) {
+                        result_msg += (result_msg != "" ? "<br/>" : " - ") + json.message[i];
+                    }
+                } else {
+                    result_msg = json.message;
+                }
+
+                if (json.ok) {
+                    $.fancybox.close();
+                    //NormalAlert(json.message);
+                    alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            location.href = "/Project/ProjectDetail?p_seq=" + p_seq;
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>Add Complete')
+                    .setting({
+                        message: result_msg + "<br/><hr> - 해당 프로젝트로 바로 이동하시겠습니까?",
+                    })
+                    .show();
+
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading('#searchMyProject');
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+</script>

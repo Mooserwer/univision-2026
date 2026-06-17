@@ -1,0 +1,808 @@
+﻿@using Univision.Security;
+
+<!DOCTYPE html>
+<html class="no-js @(ViewBag.NoMenu == true ? "":"css-menubar")" lang="ko">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+  <meta name="description" content="UnicoSearch | Univision">
+  <meta name="author" content="">
+
+  <title>UniVision - @ViewBag.Title</title>
+
+  <link rel="apple-touch-icon" href="~/Libs/remark/base/assets/images/apple-touch-icon.png">
+  <link rel="shortcut icon" href="~/Libs/remark/base/assets/images/favicon.ico">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="~/Libs/remark/global/css/bootstrap.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/global/css/bootstrap-extend.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/base/assets/css/site.min599c.css?v4.1.0">
+  @if (ViewBag.noJqueryUi != true)
+  {
+    <link rel="stylesheet" href="~/Content/jquery-ui.css?v4.1.0">
+  }
+  
+  <!-- Plugins -->
+  <!-- token field-->
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/bootstrap-tokenfield/bootstrap-tokenfield.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/animsition/animsition.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/asscrollable/asScrollable.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/switchery/switchery.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/intro-js/introjs.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/slidepanel/slidePanel.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/flag-icon-css/flag-icon.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/bootstrap-datepicker/bootstrap-datepicker.min599c.css?v4.1.0" />
+  @if (ViewBag.use_validation != true)
+  {
+    <link rel="stylesheet" href="~/Libs/remark/global/vendor/formvalidation/formValidation.min599c.css" />
+  }
+
+  <link rel="stylesheet" href="~/Libs/remark/global/fonts/mfglabs/mfglabs.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/toastr/toastr.min599c.css?v4.1.0">
+
+  <!-- Fonts -->
+  <link rel="stylesheet" href="~/Libs/remark/global/fonts/web-icons/web-icons.min599c.css?v4.1.0">
+  <link rel="stylesheet" href="~/Libs/remark/global/fonts/brand-icons/brand-icons.min599c.css?v4.1.0">
+  <link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+
+  <!-- Fancybox-->
+  <link rel="stylesheet" href="~/Libs/fancybox/jquery.fancybox.css?v4.1.0" />
+
+  <!-- isLoading-->
+  <link rel="stylesheet" href="~/Content/jquery.isloading.css?v4.1.0" />
+
+  <!-- PageNation -->
+  <link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/structure/pagination.min599c.css?v4.1.0">
+
+  <!-- font awesome -->
+  <link rel="stylesheet" href="~/Libs/fontawesome/css/all.min.css?v4.1.0" />
+
+  <!-- Alertify-->
+  <link rel="stylesheet" href="~/Libs/alertifyjs/css/alertify.min.css?v4.1.0" />
+  <link rel="stylesheet" href="~/Libs/alertifyjs/css/themes/bootstrap.rtl.min.css?v4.1.0" />
+
+  <!-- 공통 -->
+  <link rel="stylesheet" href="~/Content/Common.css?v4.4.5" />
+
+  <!--테이블-->
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/tablesaw/tablesaw.min599c.css?v4.1.0" />
+  @*
+    <!-- datetimepicker -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/css/tempusdominus-bootstrap-4.min.css" integrity="sha512-PMjWzHVtwxdq7m7GIxBot5vdxUY+5aKP9wpKtvnNBZrVv1srI8tU6xvFMzG8crLNcMj/8Xl/WWmo/oAP/40p1g==" crossorigin="anonymous" />
+  *@
+  <link href="~/Libs/datetimepicker-master/jquery.datetimepicker.css?v4.1.0" rel="stylesheet" />
+
+
+  <link rel="stylesheet" href="~/Libs/remark/global/vendor/asrange/asRange.min599c.css?v4.1.0">
+
+  <link href="~/Libs/summernote/summernote-bs4.min.css" rel="stylesheet">
+
+  <!--[if lt IE 9]>
+    <script src="~/Libs/remark/global/vendor/html5shiv/html5shiv.min.js?v4.1.0"></script>
+    <![endif]-->
+  <!--[if lt IE 10]>
+    <script src="~/Libs/remark/global/vendor/media-match/media.match.min.js?v4.1.0"></script>
+    <script src="~/Libs/remark/global/vendor/respond/respond.min.js?v4.1.0"></script>
+    <![endif]-->
+  <!-- Scripts -->
+  <script src="~/Libs/remark/global/vendor/breakpoints/breakpoints.min599c.js?v4.1.0"></script>
+  <script>
+    Breakpoints();
+  </script>
+
+  <!-- Core -->
+
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/babel-external-helpers/babel-external-helpers599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/jquery/jquery.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/popper-js/umd/popper.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/bootstrap/bootstrap.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/animsition/animsition.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/mousewheel/jquery.mousewheel599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/asscrollbar/jquery-asScrollbar.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/asscrollable/jquery-asScrollable.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/ashoverscroll/jquery-asHoverScroll.min599c.js?v4.1.0"></script>
+
+</head>
+<body class="animsition @(ViewBag.MenuFold==true?"site-menubar-fold site-menubar-keep":"")" style="@(ViewBag.NoMenu == true ? "padding-top:0px;" : "")">
+
+
+  @if (ViewBag.NoMenu != true)
+  {
+    @Html.Partial("_Header")
+    @Html.Partial("_LeftMenu")
+  }
+
+
+  <!-- Page -->
+  <div class="page" style="@(ViewBag.NoMenu == true ? "margin-left:0px;" : "")">
+    @RenderBody()
+  </div>
+  @RenderSection("subPage", required: false)
+  <!-- End Page -->
+
+  <div class="overlay2"></div>
+
+  <footer class="site-footer">
+    <div class="site-footer-legal">© 2019 UniVision</div>
+    <div class="site-footer-right">
+      Success with <i class="red-600 wb wb-heart"></i> by Unico Search
+    </div>
+  </footer>
+
+  <!-- SMS 발송폼 모달 시작 -->
+  <div class="modal fade show sms" role="dialog" id="smsModal">
+    <div class="modal-dialog modal-simple smspop">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="icondemo-wrap vertical-align" data-name="message">
+            <div class="icondemo vertical-align-middle">
+              <i class="icon ml-message" aria-hidden="true"></i>
+            </div>
+          </div>
+          <h4 class="modal-title" id="smsModalLabel">문자 보내기</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body" id="smsModalBody">
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade show sms" role="dialog" id="MakeupModal">
+    <div class="modal-dialog modal-lg modal-simple smspop">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="icondemo-wrap vertical-align" data-name="message">
+            <div class="icondemo vertical-align-middle">
+              <i class="icon ml-list" aria-hidden="true"></i>
+            </div>
+          </div>
+          <h4 class="modal-title" id="MakeupModalLabel">Makeup 대기열 현황</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body" id="makeupModalBody">
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SMS 발송폼 모달 끝 -->
+  <!-- 개인정보 수정 모달 시작 -->
+  <div class="modal fade show" role="dialog" id="personalModal">
+    <div class="modal-dialog modal-simple smspop">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="icondemo-wrap vertical-align" data-name="message">
+            <div class="icondemo vertical-align-middle">
+              <i class="icon ml-message" aria-hidden="true"></i>
+            </div>
+          </div>
+          <h4 class="modal-title" id="personalModalLabel">개인정보 수정</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body" id="personalModalBody" ">
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 개인정보 수정 모달 끝 -->
+  <!-- 개인정보 수정 모달 시작 -->
+  <div class="modal fade show" role="dialog" id="kpiModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-info">
+          <h4 class="modal-title text-light" id="kpiModalLabel">@DateTime.Now.Month 월 KPI 현황</h4>
+        </div>
+        <div class="modal-body" id="kpiModalBody">
+
+        </div>
+        <div class="modal-footer">
+          <div class="float-right">
+            <button class="btn btn-primary" onclick="closeKpiModal();">확인(하루동안 열리지 않음)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 개인정보 수정 모달 끝 -->
+  <!-- Plugins -->
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/switchery/switchery.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/intro-js/intro.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/screenfull/screenfull599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/slidepanel/jquery-slidePanel.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/formatter/jquery.formatter.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Scripts/jquery.form.min.js?v4.1.0"></script>
+  @*<script type="text/javascript" src="~/Scripts/jquery.validate.js"></script>*@
+
+  <!-- Plugins For This Page -->
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/bootstrap-table/bootstrap-table.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/bootstrap-table/extensions/mobile/bootstrap-table-mobile.min599c.js?v4.1.0"></script>
+  @*<script type="text/javascript" src="~/Libs/remark/global/vendor/moment/moment.min599c.js?v4.1.0"></script>*@
+  @*<script src="~/Libs/remark/global/vendor/footable/footable.min599c.js?v4.1.0"></script>*@
+
+  <!-- Moment -->
+  <script type="text/javascript" src="~/Scripts/moment.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Scripts/moment-with-locales.min.js?v4.1.0"></script>
+
+  @if (ViewBag.use_validation != true)
+  {
+    <script type="text/javascript" src="~/Libs/remark/global/vendor/formvalidation/formValidation.min599c.js?v4.1.0"></script>
+    <script type="text/javascript" src="~/Libs/remark/global/vendor/formvalidation/framework/bootstrap.min599c.js?v4.1.0"></script>
+    <script type="text/javascript" src="~/Libs/remark/global/vendor/formvalidation/framework/bootstrap4.min599c.js?v4.1.0"></script>
+  }
+  else
+  {
+    <script type="text/javascript" src="~/Scripts/validation/jquery.validate.min.js?v4.1.0"></script>
+    <script type="text/javascript" src="~/Scripts/validation/additional-methods.js?v4.1.0"></script>
+    <script type="text/javascript" src="~/Scripts/validation/valid_option.js?v4.1.0"></script>
+  }
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/toastr/toastr.min599c.js?v4.1.0"></script>
+
+  <!-- Scripts -->
+  <script type="text/javascript" src="~/Libs/remark/global/js/Component.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Plugin.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Base.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Config.min599c.js?v4.1.0"></script>
+
+  <script type="text/javascript" src="~/Libs/remark/base/assets/js/Section/Menubar.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/base/assets/js/Section/GridMenu.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/base/assets/js/Section/Sidebar.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/base/assets/js/Section/PageAside.min599c.js?v4.1.0"></script>
+  <!--<script type="text/javascript" src="~/Libs/remark/base/assets/js/Plugin/menu.min599c.js?v4.1.0"></script>-->
+  <script type="text/javascript" src="~/Libs/remark/base/assets/js/Plugin/menu.js?v4.1.0"></script>
+  @if (ViewBag.noJqueryUi != true)
+  {
+    <script type="text/javascript" src="~/Scripts/jquery-ui.js?v4.1.0"></script>
+  }
+
+
+  <!-- Config -->
+  <script type="text/javascript" src="~/Libs/remark/global/js/config/colors.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/base/assets/js/config/tour.min599c.js?v4.1.0"></script>
+  <script>
+    Config.set('assets', '/Libs/remark/base/assets');
+  </script>
+
+
+
+  <!-- Page -->
+  <script type="text/javascript" src="~/Libs/remark/base/assets/js/Site.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Plugin/asscrollable.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Plugin/slidepanel.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Plugin/switchery.min599c.js?v4.1.0" "></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Plugin/formatter.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Plugin/animate-list.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Plugin/panel.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/vendor/bootstrap-datepicker/bootstrap-datepicker.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Plugin/bootstrap-datepicker.min599c.js?v4.1.0"></script>
+  <script type="text/javascript" src="~/Libs/remark/global/js/Plugin/toastr.min599c.js?v4.1.0"></script>
+
+  <!-- Fancybox-->
+  <script type="text/javascript" src="~/Libs/fancybox/jquery.fancybox.js?v4.1.0"></script>
+
+  <!-- isLoading -->
+  <script type="text/javascript" src="~/Scripts/jquery.isloading.js?v4.1.0"></script>
+
+  <script type="text/javascript" src="~/Libs/jquery-loading-overlay-master/dist/loadingoverlay.min.js?v4.1.0"></script>
+
+  <!-- Highlight -->
+  <script type="text/javascript" src="~/Scripts/jquery-highlight.js?v4.1.0"></script>
+
+  <!-- Alertify-->
+  <script type="text/javascript" src="~/Libs/alertifyjs/alertify.min.js?v4.1.0"></script>
+
+  <!-- datepicker 한글화 -->
+  <script type="text/javascript" src="~/Scripts/datepicker_kr.js?v4.1.0"></script>
+  @*
+    <!-- datetimepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/js/tempusdominus-bootstrap-4.min.js" integrity="sha512-2JBCbWoMJPH+Uj7Wq5OLub8E5edWHlTM4ar/YJkZh3plwB2INhhOC3eDoqHm1Za/ZOSksrLlURLoyXVdfQXqwg==" crossorigin="anonymous"></script>
+  *@
+  <script type="text/javascript" src="~/Libs/datetimepicker-master/build/jquery.datetimepicker.full.min.js?v4.1.0"></script>
+
+  <script type="text/javascript" src="~/Scripts/CommonFormat.js?v4.1.0"></script>
+
+  <!-- 공통 JS -->
+  <script type="text/javascript" src="~/Scripts/common.js?vV6.3.2"></script>
+  <script type="text/javascript" src="~/Scripts/CommonAlert.js?v4.1.0"></script>
+
+  <!-- base64 인코딩 -->
+  <script type="text/javascript" src="~/Scripts/webtoolkit.base64.js?v4.1.0"></script>
+
+  <!-- 외부환경 항목 오픈 로그 -->
+  <script type="text/javascript" src="~/Scripts/elementblock.js?v4.1.0"></script>
+
+
+
+  <script type="text/javascript">
+
+        var confirmObj = false;
+
+        (function (document, window, $) {
+            'use strict';
+
+            var Site = window.Site;
+            $(document).ready(function () {
+                Site.run();
+            });
+        })(document, window, jQuery);
+
+
+        alertify.defaults.transition = "zoom";
+        alertify.defaults.theme.ok = "btn btn-primary";
+        alertify.defaults.theme.cancel = "btn btn-danger";
+        alertify.defaults.theme.input = "form-control";
+
+        chkBrowser();
+
+        //쿠키 삭제.
+        //removeCookies();
+
+        //외부환경 블록.
+        @*var isExternal = '@AppIdentity.isExternal';
+
+        if (isExternal == "1") {
+            setElementBlock(null, '@AppIdentity.user_seq');
+            removeElementBlock(null, '@AppIdentity.user_seq');
+        }*@
+
+
+        $(".site-menu-title").click(function(e) {
+           // Do something
+            sender = $(e.target);
+            var link = sender.attr("data-link")
+            if(link) location.href = link, e.stopPropagation()
+
+            //e.stopPropagation();
+        });
+
+        function chkBrowser() {
+
+            var browse = navigator.userAgent.toLowerCase();
+            var msg = "";
+            //debugger;
+            if((navigator.appName == 'Netscape' && browse.indexOf('trident') != -1) || (browse.indexOf("msie") != -1) || (browse.indexOf("firefox") != -1)) {
+                 msg = "본 사이트는 크롬버전에 최적화되어있습니다.";
+            }
+
+            if (msg != "") {
+
+                toastr.options = {
+                  "closeButton": true,
+                  "debug": false,
+                  "newestOnTop": false,
+                  "progressBar": false,
+                  "positionClass": "toast-top-full-width",
+                  "preventDuplicates": false,
+                  "onclick": null,
+                  "showDuration": "300",
+                  "hideDuration": "1000",
+                  "timeOut": "0",
+                  "extendedTimeOut": "0",
+                  "showEasing": "swing",
+                  "hideEasing": "linear",
+                  "showMethod": "fadeIn",
+                  "hideMethod": "fadeOut"
+                }
+                toastr.error(msg);
+            }
+        }
+
+        function showLoading(obj) {
+
+            if (obj == undefined) {
+                $.LoadingOverlay("show", {
+                    image: "",
+                    fontawesome: "fa fa-spinner fa-spin",
+                    size: 5
+                });
+            }
+            else {
+                $(obj).LoadingOverlay("show");
+            }
+        }
+
+        function hideLoading(obj) {
+            if (obj == undefined) {
+                $.LoadingOverlay("hide");
+            }
+            else {
+                $(obj).LoadingOverlay("hide");
+
+            }
+        }
+
+
+
+        function BindDatePicker(obj) {
+            var option = {
+                format: "yyyy-mm-dd",
+                language: "kr",
+                autoclose: true
+            };
+
+            $(obj).datepicker(option);
+
+            $(".input-group-addon").click(function () {
+                $(this).prev().focus();
+            })
+        };
+
+        function BindDateTimePicker(obj) {
+          $(obj).datetimepicker({
+            format: "Y-m-d H:i"
+            , step: 15 //스텝 타임
+            , width: 100
+          });
+
+          $.datetimepicker.setLocale('ko');
+        }
+
+        function Truncate(value, len) {
+            if (value.length > len)
+                return value.substr(0, len) + "...";
+            else
+                return value
+        }
+
+        function StringBuilder() {
+            var strings = [];
+
+            this.append = function (string) {
+                string = verify(string);
+                if (string.length > 0) strings[strings.length] = string;
+            };
+
+            this.appendLine = function (string) {
+                string = verify(string);
+                if (this.isEmpty()) {
+                    if (string.length > 0) strings[strings.length] = string;
+                    else return;
+                }
+                else strings[strings.length] = string.length > 0 ? "\r\n" + string : "\r\n";
+            };
+
+            this.clear = function () { strings = []; };
+
+            this.isEmpty = function () { return strings.length == 0; };
+
+            this.toString = function () { return strings.join(""); };
+
+            var verify = function (string) {
+                if (!defined(string)) return "";
+                if (getType(string) != getType(new String())) return String(string);
+                return string;
+            };
+
+            var defined = function (el) {
+                // Changed per Ryan O'Hara's comment:
+                return el != null && typeof (el) != "undefined";
+            };
+
+            var getType = function (instance) {
+                if (!defined(instance.constructor)) throw Error("Unexpected object type");
+                var type = String(instance.constructor).match(/function\s+(\w+)/);
+
+                return defined(type) ? type[1] : "undefined";
+            };
+        };
+
+        //입력한 문자열 전달
+        function inputNumberFormat(obj) {
+            obj.value = comma(uncomma(obj.value));
+    }
+
+
+        //콤마찍기
+        function comma(str) {
+            str = String(str);
+            var regx    = new RegExp(/(-?\d+)(\d{3})/);
+            var bExists = str.indexOf(".", 0);
+            var strArr  = str.split('.');
+
+            while (regx.test(strArr[0])) {
+                strArr[0] = strArr[0].replace(regx,"$1,$2");
+            }
+
+            if (bExists > -1)
+                str = strArr[0] + "." + strArr[1];
+            else
+                str = strArr[0];
+
+            return String(str);
+    }
+
+
+
+        //콤마풀기
+        function uncomma(str) {
+            str = String(str);
+            return new Number(str.replace(/,/gi,''));
+    }
+
+
+    function removeChar2(event) {
+
+      event = event || window.event;
+      var keyID = (event.which) ? event.which : event.keyCode;
+
+      if (keyID == 8 || keyID == 46 || keyID == 37 || keyID == 39) {
+
+        return;
+
+      } else {
+
+        //숫자만 입력
+        event.target.value = event.target.value.replace(/[^-\.0-9]/g, "");
+
+      }
+
+    }
+
+    function inputNumberFormat2(obj) {
+      obj.value = comma2(obj.value);
+    }
+    function comma2(obj) {
+
+      var regx = new RegExp(/(-?\d+)(\d{3})/);
+      var bExists = obj.indexOf(".", 0);
+      var strArr = obj.split('.');
+
+      while (regx.test(strArr[0])) {
+
+        strArr[0] = strArr[0].replace(regx, "$1,$2");
+      }
+
+      if (bExists > -1) {
+
+        obj = strArr[0] + "." + strArr[1];
+
+      } else {
+
+        obj = strArr[0];
+
+      }
+
+      return obj;
+
+    }
+
+    function uncomma2(str) {
+
+      str = "" + str.replace(/,/gi, '');
+      str = str.replace(/(^\s*)|(\s*$)/g, "");
+
+      return (new Number(str));//문자열을 숫자로 반환
+
+    }
+
+
+        //숫자만 리턴(저장할때)
+        //alert(cf_getNumberOnly('1,2./3g')); -> 123 return
+        function cf_getNumberOnly(str) {
+
+            str = "" + str.replace(/,/gi,''); // 콤마 제거
+            str = str.replace(/(^\s*)|(\s*$)/g, ""); // trim
+            return (new Number(str));
+
+        }
+        @*
+        //입력한 문자열 전달
+        function inputNumberFormat(obj) {
+            obj.value = comma(uncomma(obj.value));
+        }
+
+        //콤마찍기
+        function comma(str) {
+            str = String(str);
+            return str.replace(/(\d)(?=(?:\d{3})+(?!\d))/g, '$1,');
+        }
+
+        //콤마풀기
+        function uncomma(str) {
+            str = String(str);
+            return new Number(str.replace(/,/gi,''));
+        }
+
+        //숫자만 리턴(저장할때)
+        //alert(cf_getNumberOnly('1,2./3g')); -> 123 return
+        function cf_getNumberOnly(str) {
+
+            str = "" + str.replace(/,/gi,''); // 콤마 제거
+            str = str.replace(/(^\s*)|(\s*$)/g, ""); // trim
+            return (new Number(str));
+
+        }
+        *@
+        //문자열 길이계산.(한글:2byte, 영문 숫자 : 1byte)
+        function getByteLength(s, b, i, c) {
+            for (b = i = 0; c = s.charCodeAt(i++); b += c >> 7 ? 2 : 1);
+            return b;
+        }
+
+        //SMS 발송 모달 오픈
+        function openSmsSendModal(receive_number) {
+            var win = window.open('@Url.Action("SMSCreate", "Partial")' + '?receive_number=' + receive_number, 'SMSPOP', 'width=500, height=530');
+            win.focus();
+            return
+        }
+
+    function openUrl(url) {
+      var newWindow = window.open(url, '_blank', 'width=800,height=800,scrollbars=yes,resizable=yes');
+      if (newWindow) {
+        // 팝업이 차단되지 않은 경우
+        newWindow.focus();
+      } else {
+        // 팝업이 차단된 경우
+        ErrorAlert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+        return;
+      }
+    }
+    
+    function openPrivacySmsSendModal(receive_type, c_seq, cl_seq) {
+      var win_tag = (c_seq ? 'SMSPRIVACY_' + c_seq : 'SMSPRIVACY');
+      var param = '?receive_type=' + (receive_type ? receive_type : '') + (c_seq ? '&c_list=' + c_seq : '') + (cl_seq ? '&cl_seq=' + cl_seq : '')
+      var win = window.open('@Url.Action("SMSPrivacyCreate", "Partial")' + param , win_tag, 'width=800, height=600');
+      win.focus();
+      return
+    }
+
+        function PopMakeupRequestList(from, to) {
+            $.fancybox.open({
+                href : "@Url.Action("MakeupRequestList", "Project")",
+                ajax : {
+                    type: "post",
+                    data: {
+                        search_status : 1,
+                        start_date: from,
+                        end_date : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: true,
+                'title': '메모장 내역 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+        function openMakeupRequestModal(from, to) {
+
+            $.ajax({
+                url: '@Url.Action("MakeupRequestList", "Project")',
+                data: {
+                        search_status : 1,
+                        start_date: from,
+                        end_date : to
+                },
+                dataType: 'html',
+                type: 'GET',
+                beforeSend: function ()
+                {
+                    $(".page").isLoading({
+                        text: "Loading",
+                        position: "overlay"
+                    });
+                }
+            })
+            .done(function (view) {
+                $(".page").isLoading("hide");
+
+                $('#MakeupModal .modal-body').html(view)
+                $('#MakeupModal').modal('toggle');
+            })
+            .fail(function (e) {
+                $(".page").isLoading( "hide" );
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+
+        function callErrorToastr(msg, obj)
+        {
+            toastr.options = {
+              "closeButton": true,
+              "debug": false,
+              "newestOnTop": true,
+              "progressBar": true,
+              "positionClass": "toast-top-center",
+              "preventDuplicates": false,
+              "onclick": null,
+              "showDuration": "300",
+              "hideDuration": "1000",
+              "timeOut": "5000",
+              "extendedTimeOut": "1000",
+              "showEasing": "swing",
+              "hideEasing": "linear",
+              "showMethod": "fadeIn",
+              "hideMethod": "fadeOut",
+            }
+
+            toastr.error(msg);
+
+            //toastr 위치 조정..
+            var $notifyContainer = $('#toast-container').closest('.toast-top-center');
+            if ($notifyContainer) {
+                $notifyContainer.css("top", $(obj).position().top + 100);
+            }
+        }
+
+        //자바스크립트 오류 elmah 전송
+        function JSErrorHandler(xhr) {
+            //$.post("/Base/LogJavaScriptError", { message: encodeURIComponent(xhr.responseText) });
+        }
+
+        //팬시박스 호출 공통.
+        function callFancyBox(url, data, fTitle, fWidth, fHeight) {
+
+            $.fancybox.open({
+                href: url,
+                ajax : {
+                    type: "post",
+                    data: data
+                },
+                title: fTitle,
+                width: parseInt(fWidth),
+                height: parseInt(fHeight),
+                autoDimensions:false,
+                type: 'ajax',
+                scrolling : 'auto',
+                autoSize: false,
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+
+
+        function StopEnterSubmit() {
+
+            $('input[type="text"]').keypress(function() {
+              if (event.keyCode === 13) {
+                event.preventDefault();
+              };
+            });
+    };
+    /*
+     * kpi 팝업 일단 보류함
+    function closeKpiModal() {
+      setCookieOrg('univision_kpi_daily', "Y", 1)
+      $('#kpiModal').modal('toggle');
+    }
+    $(document).ready(function () {
+      if (isNullOrEmpty(getCookieOrg('univision_kpi_daily'))) {
+        callKpiModal();
+      }
+    });
+    */
+
+
+
+  </script>
+
+  @RenderSection("scripts", required: false)
+
+</body>
+</html>

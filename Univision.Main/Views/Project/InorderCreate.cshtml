@@ -1,0 +1,846 @@
+﻿@model Univision.Main.Models.Project.InorderCreateModel
+@{
+    ViewBag.Title = "Inorder 생성";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_cus.css?v=1533562669">
+
+<div class="page-user">
+    <div class="page-content">
+        @using (Html.BeginForm("InorderCreate", "Project", FormMethod.Post, new { @id = "CreateForm", @autocomplete = "off" }))
+        {
+            @Html.HiddenFor(x => x.i_seq)
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-newspaper"></i>
+                        Client Information
+                    </h3>
+                </div>
+                <div id="clientInfo" class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4 form-group">
+                            @Html.LabelFor(x => x.clt_name, "Client Name", new { @class = "form-control-label" })
+                            <span class="label-reqired">*</span>
+                            <div class="input-group">
+                                @Html.TextBoxFor(x => x.clt_name, new { @class = "form-control", @required = "required", @placeholder = "고객사명(직접입력 또는 검색)" })
+                                @Html.HiddenFor(x => x.c_seq)
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-primary" id="btnClientSearch"><i class="icon wb-search" aria-hidden="true"></i></button>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 form-group">
+                            @Html.LabelFor(x => x.clt_busi_type, "Business Type", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.clt_busi_type, new { @class = "form-control", @placeholder = "업종" })
+                        </div>
+                        <div class="col-md-4 form-group">
+                            @Html.LabelFor(x => x.clt_url, "Homepage", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.clt_url, new { @class = "form-control", @placeholder = "홈페이지(http://exam.net)" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-address-card"></i>
+                        Contact Information
+                    </h3>
+                </div>
+                <div id="contactInfo" class="panel-body">
+                    <div class="row">
+                        <div class="col-md-3  form-group">
+                            @Html.LabelFor(x => x.cc_name, "Contact Name", new { @class = "form-control-label" })
+                            <span class="label-reqired">*</span>
+                            @Html.TextBoxFor(x => x.cc_name, new { @class = "form-control", @required = "required", @placeholder = "담당자명" })
+                        </div>
+                        <div class="col-md-3 form-group">
+                            @Html.LabelFor(x => x.cc_gender, "Gender", new { @class = "form-control-label" })
+                            <div class="form-inline">
+                                <div class="radio-custom radio-primary">
+                                    <input type="radio" id="gender0" name="cc_gender" value="0" @(Model.cc_gender == 0 ? "checked" : "") />
+                                    <label for="gender1">Unknown</label>
+                                </div>
+                                <div class="radio-custom radio-primary ml-10">
+                                    <input type="radio" id="gender1" name="cc_gender" value="1" @(Model.cc_gender == 1 ? "checked" : "") />
+                                    <label for="gender1">Male</label>
+                                </div>
+                                <div class="radio-custom radio-primary ml-10">
+                                    <input type="radio" id="gender2" name="cc_gender" value="2" @(Model.cc_gender == 2 ? "checked" : "") />
+                                    <label for="gender2">Female</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 form-group">
+                            @Html.LabelFor(x => x.cc_position, "Position", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.cc_position, new { @class = "form-control", @placeholder = "직급" })
+                        </div>
+                        <div class="col-md-3 form-group">
+                            @Html.LabelFor(x => x.cc_division, "Dept.", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.cc_division, new { @class = "form-control", @placeholder = "부서" })
+                        </div>
+                       
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 form-group">
+                            @Html.LabelFor(x => x.cc_phone, " Phone", new { @class = "form-control-label" })
+                            <span class="label-reqired">*</span>
+                            @Html.TextBoxFor(x => x.cc_phone, new { @class = "form-control least-one-contact", @placeholder = "00-0000-0000" })
+                        </div>
+                        <div class="col-md-3 form-group">
+                            @Html.LabelFor(x => x.cc_cell_phone, " Mobile", new { @class = "form-control-label" })
+                            <span class="label-reqired">*</span>
+                            @Html.TextBoxFor(x => x.cc_cell_phone, new { @class = "form-control least-one-contact", @onKeyup = "MobileAutoHypen(event, this);", @placeholder = "010-0000-0000" })
+                        </div>
+                        <div class="col-md-3 form-group">
+                            @Html.LabelFor(x => x.cc_email, " E-mail", new { @class = "form-control-label" })
+                            <span class="label-reqired">*</span>
+                            @Html.TextBoxFor(x => x.cc_email, new { @class = "form-control least-one-contact", @placeholder = "email@email.com" })
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12 col-12 form-group">
+                            @Html.LabelFor(x => x.cc_reason, "Known path", new { @class = "form-control-label" })
+                            @Html.TextAreaFor(x => x.cc_reason, new { @class = "form-control", @placeholder = "유니코써치를 알게 된 경로", @rows=5 })
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="fas fa-share"></i>
+                        Description of the Request
+                    </h3>
+                </div>
+                <div id="inorderInfo" class="panel-body">
+                    <div class="row">
+                        <div class="col-md-3 form-group">
+                            @Html.LabelFor(x => x.inorder_dt, "Order date", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.inorder_dt, "{0:yyyy-MM-dd}", new { @class = "form-control date-time", @required = "required" })
+                        </div>
+                        <div class="col-md-3 form-group">
+                            @Html.LabelFor(x => x.inorder_type, "Inorder type", new { @class = "form-control-label" })
+                            <select id="inorder_type" name="inorder_type" class="form-control">
+                                <option value="">[의뢰구분 선택]</option>
+                                <option value="1" @(Model.inorder_type == 1 ? "selected" : "")>Executive Search</option>
+                                <option value="2" @(Model.inorder_type == 2 ? "selected" : "")>Reference Check</option>
+                                <option value="3" @(Model.inorder_type == 3 ? "selected" : "")>Assessment</option>
+                                <option value="4" @(Model.inorder_type == 4 ? "selected" : "")>Recruitment Process Outsourcing(RPO)</option>
+                                <option value="6" @(Model.inorder_type == 6 ? "selected" : "")>Outside directors</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 form-group">
+                            @Html.LabelFor(x => x.can_dept, "Recruting department", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.can_dept, new { @class = "form-control", @placeholder = "채용 부서" })
+                        </div>
+                        <div class="col-md-3 form-group">
+                            @Html.LabelFor(x => x.can_pos, "Recruting position", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.can_pos, new { @class = "form-control", @placeholder = "채용 직급" })
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            @Html.LabelFor(x => x.can_location, "Location", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.can_location, new { @class = "form-control", @placeholder = "근무지역" })
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 col-12 form-group">
+                            @Html.LabelFor(x => x.can_jobdesc, "Job description", new { @class = "form-control-label" })
+                            <span class="label-reqired">*</span>
+                            @Html.TextAreaFor(x => x.can_jobdesc, new { @class = "form-control", @required = "required", @rows = "6", @placeholder = "담당업무 (JD파일 등록 시 생략가능)" })
+                        </div>
+                        <div class="col-md-6 col-12 form-group">
+                            @Html.LabelFor(x => x.can_contents, "Qualifications", new { @class = "form-control-label" })
+                            @Html.TextAreaFor(x => x.can_contents, new { @class = "form-control", @rows = "6", @placeholder = "자격요건 (JD파일 등록 시 생략가능)" })
+                        </div>
+                    </div>
+
+                    @if (Model.i_seq == 0)
+                    {
+                        <div class="row" id="inorder_file">
+                            <div class="col-12">
+                                <div id="inorder_file" class="dropzone h-full text-left">
+                                    <label for="inorder_file" class="form-control-label">Files</label>
+                                    <div class="row py-2">
+                                        <div class="col">
+                                            <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+                                        </div>
+                                    </div>
+                                    <div class="row py-2" id="inorder_file_rst">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="text-right">
+                <button type="submit" class="btn btn-primary" id="btnSave">Submit </button>
+                <button type="reset" class="btn btn-default btn-outline">Reset</button>
+            </div>
+                
+        }
+    </div>
+</div>
+
+@section scripts {
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/additional-methods.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/validation/localization/messages_ko.min.js"></script>
+    <script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
+    <script src="~/Scripts/validation/valid_option.js"></script>
+    <script type="text/javascript">
+        
+        var valid_option = {
+            rules: {
+                cc_phone: {  
+                    require_from_group: [1, ".least-one-contact"]
+                },
+                cc_cell_phone: {
+                    require_from_group: [1, ".least-one-contact"]
+                },
+                cc_email: {
+                    require_from_group: [1, ".least-one-contact"],
+                    email : true
+                }   
+            },
+            messages: {
+                cc_phone: {
+                   require_from_group: "최소 하나 이상의 연락처를 입력해 주세요."
+                },
+                cc_cell_phone: {
+                   require_from_group: "최소 하나 이상의 연락처를 입력해 주세요."
+                },
+                cc_email: {
+                   require_from_group: "최소 하나 이상의 연락처를 입력해 주세요."
+                }
+            },
+            submitHandler: validHanlder
+        }
+
+        function validHanlder(form) {
+            //form 전송을 위한 데이터 생성.
+            //기본정보
+            
+            var currentData = {
+                i_seq: $("#i_seq").val(),
+                c_seq: $("#c_seq").val(),
+                clt_name: $("#clt_name").val(),
+                clt_busi_type: $("#clt_busi_type").val(),
+                clt_url: $("#clt_url").val(),
+                cc_name: $("#cc_name").val(),
+                cc_gender: $('input[name="cc_gender"]:checked').val(),
+                cc_position: $("#cc_position").val(),
+                cc_division: $("#cc_division").val(),
+                cc_phone: $("#cc_phone").val(),
+                cc_cell_phone: $("#cc_cell_phone").val(),
+                cc_email: $("#cc_email").val(),
+                cc_reason: $("#cc_reason").val(),
+                inorder_dt: $("#inorder_dt").val(),
+                inorder_type: $("#inorder_type").val(),
+                can_dept: $("#can_dept").val(),
+                can_pos: $("#can_pos").val(),
+                can_location: $("#can_location").val(),
+                can_jobdesc: $("#can_jobdesc").val(),
+                can_contents: $("#can_contents").val(),
+                fileList: []
+            };
+
+            //파일
+            $("#inorder_file").find('#inorder_file_rst').find('.file_div').each(function () {
+                var fileData = {
+                    file_origin_path: $(this).find('input[name="file_origin_path"]').val()
+                }
+                currentData.fileList.push(fileData);
+            });
+
+            var formURL = $("#CreateForm").attr("action");
+            $.ajax({
+                url: formURL,
+                type: "POST",
+                dataType: 'json',
+                data: {
+                    data : currentData
+                },
+                beforeSend: function () {
+                    showLoading();
+                },
+                success: function (json) {
+                    hideLoading();
+                    if (json.ok) {
+                        NormalAlert("오더를 등록 했습니다.");
+                        location.href = "/Project/InorderDetail?i_seq=" + json.i_seq;
+                    }
+                    else {
+                        ErrorAlert(json.message);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoading();
+                    ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                }
+            });
+
+        }
+
+
+        $("#CreateForm").validate(valid_option);
+
+        StopEnterSubmit();
+
+        BindDatePicker('.date-time');
+
+        if ($('.dropzone').length > 0) {
+            var myDropzone = new Dropzone("div#inorder_file", {
+                url: "@Url.Action("CreateTempInorderFile", "Project")",
+                method: "post",
+                params: {
+                    "uploadFolder": "@ViewBag.uploadFolder"
+                }
+            });
+
+            myDropzone.on("success", function (file, response) {
+                if (response.ok) {
+
+                    file_html = MakeHtmlFileList(response.result);
+                    $('#inorder_file_rst').prepend($(file_html).hide().fadeIn(1000));
+                    console.log(response.file_rst);
+                    //NormalAlert(response.file_rst);
+                    this.removeFile(file);
+
+                    if ($("#can_jobdesc").val() == "") {
+                        $("#can_jobdesc").val("첨부파일을 참고하세요.");
+                    }
+                    
+
+                } else {
+                    ErrorAlert("[ERROR]" + response.message);
+                }
+
+            });
+
+
+        }
+
+        function MakeHtmlFileList(obj_file) {
+            var cols = ""
+            if(obj_file.file_path && obj_file.file_path != ''){
+                var icon_str = "";
+                var badge_str = "badge-secondary";
+                var width_str = 'style="width:85%;"';
+                var btn_str = "";
+
+
+                if (obj_file.file_extension == ".pdf") {
+                  icon_str = "far fa-file-pdf text-primary"
+                } else if ( obj_file.file_extension == ".jpg" || obj_file.file_extension == ".png" || obj_file.file_extension == ".gif" || obj_file.file_extension == ".bmp" ){
+                  icon_str = "far fa-file-image text-primary";
+                } else if ( obj_file.file_extension == ".doc" || obj_file.file_extension == ".docx" ){
+                  icon_str = "far fa-file-word text-primary";
+                } else if ( obj_file.file_extension == ".xls" || obj_file.file_extension == ".xlsx"  ){
+                  icon_str = "far fa-file-excel text-primary";
+                } else if ( obj_file.file_extension == ".ppt" || obj_file.file_extension == ".pptx"){
+                  icon_str = "far fa-file-powerpoint text-primary";
+                } else {
+                  icon_str = "fa fa-file-alt text-light";
+                }
+
+                cols += '<div class="py-0 file_div col-12">' //'+obj_file.col+'
+                cols += '  <input type="hidden" name="file_origin_path" value="'+obj_file.file_origin_path+'">'
+                cols += '  <a href="/'+obj_file.file_dir+'" class="file_info text-left text-truncate pointer badge '+badge_str+'" title="'+obj_file.file_path+'" download ' + width_str
+                cols += '  >';
+                cols += '    <i class="'+icon_str+'" aria-hidden="true"></i> ' + obj_file.file_path ;
+                cols += '  </a>'
+                cols += '  <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger" style="width:10%;" onclick="RemoveFile(this);">';
+                cols += '   <i class="fa fa-trash pointer" aria-hidden="true"></i>';
+                cols += '  </a>' + btn_str;
+                cols += '</div>';
+
+            }
+            return cols;
+        }
+
+        function RemoveFile(obj) {
+
+            alertify.confirm()
+                .set({
+                    'labels': { ok: 'OK', cancel: 'Cancel' },
+                    'onok': function () {
+                        //TODO:실제 서버에서 파일 삭제 프로세스 추가 예정
+
+                        DeleteFile(obj)
+
+
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('Remove file')
+                .setting({
+                    message: "Are you sure want to delete this file?",
+                })
+                .show();
+        }
+
+        //임시 이력서 파일 삭제
+        function DeleteFile(obj) {
+            file_origin_path = $(obj).closest('.file_div').find("input[name=file_origin_path]").val();
+            $.ajax({
+                    url: '@Url.Action("DeleteInorderTempFile", "Project")',
+                    data: {
+                        file_origin_path: file_origin_path
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                    beforeSend: function () {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+                    if (json.ok) {
+                        $(obj).closest('.file_div').remove();
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+        }
+
+
+
+        //회사명 검색
+            $("#btnClientSearch").click(function(){
+
+                $.ajax({
+                    url: '@Url.Action("SearchClientPopup", "Project")',
+                    data: {
+                        searchTxt: $("#clt_name").val(),
+                        c_seq_id: '#c_seq',
+                        name_id: '#clt_name',
+                        industry_id: '#clt_busi_type',
+                        url_id : '#clt_url'
+                    },
+                    dataType: 'html',
+                    type: 'GET',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':json,
+                        'width': '800',
+                        'height': '385',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': '고객사 목록',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+
+        function fvVaildContact(input) {
+            let isEmpty = true;
+            const Elements = $('.least-one-contact');
+            for (const i in Elements) {
+
+                if (Elements[i].value !== '') {
+                    isEmpty = false;
+                    break;
+                }
+            }
+
+            if (!isEmpty) {
+                console.log(fv)
+                // Update the status of callback validator for all fields
+                fv.updateFieldStatus(input.name, 'Valid', 'callback');
+                return true;
+            }
+
+            return false;
+        }
+
+        var valid_option = {
+            ignore:[],
+            errorClass: "is-invalid invalid-feedback-custom",
+            validClass: "is-valid",
+            errorPlacement: function(error, element) {
+                var obj = element;
+                obj = obj.closest('.form-group');
+                error.appendTo(obj);
+            }
+        }
+
+        $("#CreateForm").validate(valid_option);
+
+        ////폼 유효성 검사
+        //const fv = $("#CreateForm").formValidation({
+        //    framework: "bootstrap4",
+        //    button: {
+        //        selector: "#btnSave",
+        //        disabled: "disabled"
+        //    },
+        //    submitHandler: function () {
+
+        //    },
+        //    icon: null,
+        //    fields: {
+        //        cc_cell_phone: {
+        //            validators: {
+        //                callback: {
+        //                    message: '최소 하나이상의 연락처를 입력하셔야 합니다.',
+        //                    callback: fvVaildContact
+        //                },
+        //                regexp: {
+        //                    regexp: /^\d{2,3}-\d{3,4}-\d{4}$/,
+        //                    message: "010-0000-0000 형식 입니다."
+        //                }
+        //            }
+        //        },
+        //        cc_phone: {
+        //            validators: {
+        //                callback: {
+        //                    message: '최소 하나이상의 연락처를 입력하셔야 합니다.',
+        //                    callback: fvVaildContact
+        //                },
+        //                regexp: {
+        //                    regexp: /^\d{2,3}-\d{3,4}-\d{4}$/,
+        //                    message: "전화번호 형식이 올바르지 않습니다."
+        //                }
+        //            }
+        //        },
+        //        cc_email: {
+        //            validators: {
+        //                callback: {
+        //                    message: '최소 하나이상의 연락처를 입력하셔야 합니다.',
+        //                    callback: fvVaildContact
+        //                },
+        //                emailAddress: {
+        //                    message: "이메일 주소 형식이 올바르지 않습니다."
+        //                }
+        //            }
+        //        }
+        //    },
+        //    err: {
+        //        class: "invalid-feedback"
+        //    },
+        //    control: {
+        //        valid: "is-valid",
+        //        invalid: "is-invalid"
+        //    },
+        //    row: {
+        //        invalid: "has-danger"
+        //    }
+        //})
+        ////validation 성공시, ajax submit.
+        ////ajax submit 사용하지 않을 경우, on 부분은 삭제해도 됨.
+        //.on('success.form.fv', function (e) {
+        //    //기본 submit 이벤트 취소.
+        //    e.preventDefault();
+
+        //    //form 전송을 위한 데이터 생성.
+        //    //기본정보
+        //    var currentData = {
+        //        i_seq: $("#i_seq").val(),
+        //        c_seq: $("#c_seq").val(),
+        //        clt_name: $("#clt_name").val(),
+        //        clt_busi_type: $("#clt_name").val(),
+        //        clt_url: $("#eng_name").val(),
+        //        cc_name: $("#birth_date").val(),
+        //        cc_pos: $("#birth_date").val(),
+        //        cc_phone: $("#birth_date").val(),
+        //        cc_cell_phone: $("#birth_date").val(),
+        //        cc_email: $("#birth_date").val(),
+        //        cc_reason: $("#birth_date").val(),
+        //        inorder_dt: $("#birth_date").val(),
+        //        inorder_type: $("#birth_date").val(),
+        //        can_dept: $("#birth_date").val(),
+        //        can_pos: $("#birth_date").val(),
+        //        can_location: $("#birth_date").val(),
+        //        can_jobdesc: $("#birth_date").val(),
+        //        can_contents: $("#birth_date").val(),
+
+        //        fileList: []
+        //    };
+
+        //    //이력서(국문)
+        //    $("#resumeInfo").find('#kor_file_rst').find('.file_div').each(function () {
+        //        var resumeData = {
+        //            file_type: 'K',
+        //            file_origin_path: $(this).find('input[name="file_origin_path"]').val()
+        //        }
+        //        currentData.resumeList.push(resumeData);
+        //    });
+        //    //이력서(영문)
+        //    $("#resumeInfo").find('#eng_file_rst').find('.file_div').each(function () {
+        //        var resumeData = {
+        //            file_type: 'E',
+        //            file_origin_path: $(this).find('input[name="file_origin_path"]').val()
+        //        }
+        //        currentData.resumeList.push(resumeData);
+        //    });
+        //    //이력서(기타)
+        //    $("#resumeInfo").find('#etc_file_rst').find('.file_div').each(function () {
+        //        var resumeData = {
+        //            file_type: 'O',
+        //            file_origin_path: $(this).find('input[name="file_origin_path"]').val()
+        //        }
+        //        currentData.resumeList.push(resumeData);
+        //    });
+
+        //    //학력
+        //    $(".schoolRow").each(function () {
+
+        //        var schoolData = {};
+        //        if ($(this).find("[id^=gubun_]").val() == "1") {
+        //            schoolData = {
+        //                cs_seq: $(this).find("[id^=cs_seq_]").val(),
+        //                sc_seq: $(this).find("[id^=sc_seq_]").val(),
+        //                gubun: $(this).find("[id^=gubun_]").val(),
+        //                gubun_str: $(this).find("[id^=gubun_] option:selected").attr("gubun_str"),
+        //                schoolName: $(this).find("[id^=schoolName_]").val(),
+        //                is_foreign_school: $(this).find("[id^=is_foreign_school_]:checked").val(),
+        //                graduate_year: $(this).find("[id^=graduate_year_]").val(),
+        //                graduate_status: $(this).find("[id^=graduate_status_]").val()
+        //            };
+        //        }
+        //        else {
+        //            schoolData = {
+        //                cs_seq: $(this).find("[id^=cs_seq_]").val(),
+        //                sc_seq: $(this).find("[id^=sc_seq_]").val(),
+        //                gubun: $(this).find("[id^=gubun_]").val(),
+        //                gubun_str: $(this).find("[id^=gubun_] option:selected").attr("gubun_str"),
+        //                sch1: $(this).find("[id^=gubun_] option:selected").attr("sch1"),
+        //                campusName: $(this).find("[id^=campusName_]").val(),
+        //                schoolName: $(this).find("[id^=schoolName_]").val(),
+        //                is_foreign_school: $(this).find("[id^=is_foreign_school_]:checked").val(),
+        //                admission_year: $(this).find("[id^=admission_year_]").val(),
+        //                graduate_year: $(this).find("[id^=graduate_year_]").val(),
+        //                graduate_status: $(this).find("[id^=graduate_status_]").val(),
+        //                is_transfer: $(this).find("[id^=is_transfer_]:checked").val(),
+        //                category1_name: $(this).find("[id^=category1_name_] option:selected").val(),
+        //                major_name: $(this).find("[id^=major_name_]").val(),
+        //                credit: $(this).find("[id^=credit_]").val(),
+        //                total_credit: $(this).find("[id^=total_credit_]").val()
+        //            };
+        //        }
+
+        //        currentData.schoolList.push(schoolData);
+        //    });
+
+
+        //    //경력
+        //    $(".companyRow").each(function () {
+        //        var companyData = {
+        //            g_seq: $(this).find("[id^=g_seq_]").val(),
+        //            cc_seq: $(this).find("[id^=cc_seq_]").val(),
+        //            company_name: $(this).find("[id^=company_name_]").val(),
+        //            division_name: $(this).find("[id^=division_name_]").val(),
+        //            join_dt: $(this).find("[id^=join_dt_]").val(),
+        //            leave_dt: $(this).find("[id^=leave_dt_]").val(),
+        //            is_work: $(this).find("[id^=is_work_]:checked").val(),
+        //            r_code: $(this).find("[id^=r_code_]").val(),
+        //            p_code: $(this).find("[id^=p_code_]").val(),
+        //            jobList: {},
+        //            annual_income: $(this).find("[id^=annual_income_]").val()
+        //        };
+
+        //        var compJobRow = [];
+        //        $(this).find(".jobCode").each(function () {
+
+        //            var jobData = {
+        //                job_code3: $(this).attr("code3"),
+        //                job_name3: $(this).attr("name3")
+        //            };
+        //            compJobRow.push(jobData);
+        //        });
+
+        //        companyData.jobList = compJobRow;
+
+        //        currentData.companyList.push(companyData);
+        //    });
+
+
+        //    //희망근무지
+        //    $(".placeRow").each(function () {
+        //        var placeData = {
+        //            cp_seq: $(this).find("[id^=cp_seq_]").val(),
+        //            code1: $(this).find("[id^=place_code1_]").val(),
+        //            area1: $(this).find("[id^=place_area1_]").val(),
+        //            code2: $(this).find("[id^=place_code2_]").val(),
+        //            area2: $(this).find("[id^=place_area2_]").val()
+        //        };
+
+        //        currentData.placeList.push(placeData);
+        //    });
+
+
+        //    //직무
+        //    $(".jobRow").each(function () {
+
+        //        $(this).find(".badge").each(function () {
+
+        //            //카테고리 직무에 하위 직무가 더 있다면
+        //            if ($(this).closest(".jobRow").find(".badge").length > 1) {
+        //                if ($(this).hasClass("jobCode2badge")) {
+        //                    return;
+        //                }
+        //            }
+
+        //            var jobData = {
+        //                code1: $(this).attr("code1"),
+        //                code2: $(this).attr("code2"),
+        //                code3: $(this).attr("code3")
+        //            };
+        //            currentData.jobList.push(jobData);
+        //        });
+        //    });
+
+        //    //산업
+        //    $(".busiRow").each(function () {
+
+        //        $(this).find(".badge").each(function () {
+
+        //            //카테고리 산업에 하위 산업이 더 있다면
+        //            if ($(this).closest(".busiRow").find(".badge").length > 1) {
+        //                if ($(this).hasClass("busiCode2badge")) {
+        //                    return;
+        //                }
+        //            }
+
+        //            var busiData = {
+        //                code1: $(this).attr("code1"),
+        //                code2: $(this).attr("code2"),
+        //                code3: $(this).attr("code3")
+        //            };
+        //            currentData.busiList.push(busiData);
+        //        });
+        //    });
+
+        //    //외국어능력
+        //    $(".foreignDiv").each(function () {
+
+        //        var foreignData = {
+        //            code: $(this).find("[id^=foreign_code_]").val(),
+        //            ability: $(this).find("[id^=foreign_ability_]").val()
+        //        };
+
+        //        currentData.foreignList.push(foreignData);
+        //    });
+
+        //    var formURL = $("#CreateForm").attr("action");
+        //    $.ajax({
+        //        url: formURL,
+        //        type: "POST",
+        //        dataType: 'json',
+        //        data: {
+        //            data : currentData
+        //        },
+        //        success: function (json) {
+
+        //            if (json.ok) {
+        //                NormalAlert("후보자를 등록 했습니다.");
+        //                location.href = "/Candidate/CandidateDetail?c_seq=" + json.c_seq;
+        //            }
+        //            else {
+        //                ErrorAlert(json.message);
+        //            }
+        //        },
+        //        error: function (jqXHR, textStatus, errorThrown) {
+        //            ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+        //        }
+        //    });
+        //});
+
+
+        /////========================
+        $("#btnReset").click(function () {
+            location.href = "@Url.Action("Inorder", "Client")";
+        });
+
+        $(document).ready(function () {
+
+            $("#btnExcel").click(function () {
+
+                //$("#korName").val($("#search_kor_name").val());
+                //$("#searchTxt").val($("#search_searchTxt").val());
+                //$("#orderOption").val($("#search_orderOption").val());
+                //$("#orderTxt").val($("#search_orderTxt").val());
+
+                $("#ExcelForm").submit();
+            });
+
+            $(".colSort").click(function () {
+
+                $(".colSort").not(this).each(function () {
+
+                    $(this).removeClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $(this).addClass("fa-sort");
+                })
+
+                $(this).removeClass("fa-sort");
+
+                if ($(this).hasClass("fa-sort-up")) {
+                    $(this).addClass("fa-sort-down");
+                    $(this).removeClass("fa-sort-up");
+                    $("#search_orderTxt").val($(this).attr("orderTxt"));
+                    $("#search_orderOption").val("DESC");
+                }
+                else {
+                    $(this).addClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $("#search_orderTxt").val($(this).attr("orderTxt"));
+                    $("#search_orderOption").val("ASC");
+                }
+
+                $("#SearchForm").submit();
+
+            });
+        });
+
+        function changeSearchState(state) {
+
+            $("#search_state").val(state);
+            $("#SearchForm").submit();
+
+        }
+
+        function resetSearchForm() {
+            $("#search_searchTxt").val("");
+            $("#search_orderTxt").val("");
+            $("#search_orderOption").val("");
+            $("#SearchForm").submit();
+        }
+
+    </script>
+
+}

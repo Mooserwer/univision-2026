@@ -1,0 +1,128 @@
+﻿<div class="modal" id="modal_request_makeup" tabindex="-1"
+     role="dialog"
+     aria-labelledby="modal_request_makeup_label"
+     aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="frm_request_makeup">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            Request Makeup
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+
+          <div class="row">
+            <div class="col-12 text-center form-inline">
+              <div class="checkbox-custom checkbox-custom-sm checkbox-primary mr-10">
+                <input type="checkbox" name="rm_lang" class="rm_lang" id="kor_request_makeup" value="K">
+                <label for="kor_request_makeup">Kor(국문)</label>
+              </div>
+
+              <div class="checkbox-custom checkbox-custom-sm checkbox-primary">
+                <input type="checkbox" name="rm_lang" class="rm_lang" id="eng_request_makeup" value="E">
+                <label for="eng_request_makeup">Eng(영문)</label>
+              </div>
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-12 text-center form-inline">
+              <div class="checkbox-custom checkbox-custom-sm checkbox-primary">
+                <input type="checkbox" name="with_recommand_makeup" class="" id="with_recommand_makeup" value="1" checked>
+                <label for="with_recommand_makeup">메이크업 요청 과 함께 추천상태로 변경<br />(잠재후보 일 경우만)</label>
+              </div>
+            </div>
+          </div>
+          <div class="border border-info pb-15 p-10">
+            <h4 class='font-weight-900'>[메이크업 신청 시 유의사항]</h4>
+            <span class='font-weight-800'> ◆ 메이크업 진행이 어려운 이력서 형식 </span></br>
+            <div class='pl-10'>
+              - <span class='font-weight-600'>메이크업 완료 후 일부 업데이트(경력 및 자기소개 추가 등) 발생 시</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ 컨설턴트 직접 작업 요청<br />
+              - <span class='font-weight-600'>10 page 이상 이력서</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ 컨설턴트 직접 작업 or 후보자에게 유니코 양식으로 작성 요청<br />
+              - <span class='font-weight-600'>Text 복사가 되지 않고, 복사 시 글머리가 없는 경우, 경력 구분이 없는 PDF 파일 이력서</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→  후보자에게 원본 워드 파일 요청<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(*후보자 요청 불가시, 최소 컨설턴트가 워드로 변환 및 경력 구분하여 신청 요망)<br />
+            </div>
+            <span class='font-weight-600'> ◆ 하루 최대 5건까지 신청 (퇴근 후/주말은 다음 작업하는 날 개수로 포함.) </span>
+          </div>
+          <!--
+  <div class="row">
+      <div class="col">
+          <label for="vd_dt_comment" class="col-form-label col-form-label-sm font-weight-bold">Comment</label>
+          <textarea type="text" name="dt_comment" class="form-control form-control-sm" id="rm_dt_comment"></textarea>
+      </div>
+  </div>
+  -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary btn_request_submit">요청(Request)</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기(Close)</button>
+        </div>
+    </form>
+  </div>
+</div>
+<script>
+  $('.btn_request_submit').click(function (e) {
+    e.preventDefault();
+    if ($('.rm_lang:checked').length <= 0) {
+      ErrorAlert("요청할 메이크업 이력서 종류를 선택하여 주십시오.");
+      return;
+    }
+    var with_req = $('#with_recommand_makeup').prop("checked");
+
+    var request_data = {
+      p_seq: $('#p_seq').val(),
+      resume_type: $('.rm_lang:checked').map(function () { return $(this).val(); }).toArray(),
+      with_recommand: with_req ? 1 : 0,
+      pic_seq_list: []
+    }
+    $('.chk_request_makeup:checked').each(function () {
+      request_data.pic_seq_list.push($(this).val());
+    });
+
+    ConfirmAlert('Confirm!', 'Makeup 요청을 진행하시겠습니까?', function () {
+      $.ajax({
+        type: 'POST',
+        url: window.url_request_makeup,
+        data: request_data,
+        dataType: 'json',
+        success: function (data) {
+          err_msg = ""
+          if (typeof (data.message) != "string") {
+            for (i = 0; i < data.message.length; i++) {
+              err_msg += (err_msg != "" ? "<br/>" : "") + data.message[i];
+            }
+          } else {
+            err_msg = data.message;
+          }
+
+          if (!data.ok || data.total_cnt == data.fail_cnt || data.total_cnt == data.no_cnt) {
+            //fget_alert();
+            ErrorAlert(err_msg);
+            return;
+          } else {
+            var waiting_msg = "";
+            if (data.waiting_cnt && data.waiting_cnt > 0) {
+              waiting_msg = "- 현재 Makeup 대기열 : " + (data.waiting_cnt + 1) + "<br/>[MAKEUP 신청 현황을 통해 현재 대기열을 확인 할 수 있습니다.]<br/>";
+            }
+            NormalAlert("요청완료<br/>" + waiting_msg + err_msg, function () {
+              $('#modal_request_makeup').modal('hide');
+              callProjectProgress($('#p_seq').val(), $('#search_state_for_makeup').val(), $('#search_page_for_makeup').val())
+            });
+          }
+
+
+
+
+
+        }
+      });
+    });
+  });
+</script>

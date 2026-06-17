@@ -1,0 +1,59 @@
+﻿@using Univision.Core.Models.DTO.Logs
+@model List<client_log>
+@{
+    Layout = null;
+}
+    <div class="page-content">
+        <div class="form-inline mb-10">
+            <select class="form-control col-md-4" id="log_seq" name="log_seq" onchange="bindClientLog()">
+                @if (Model != null && Model.Count > 0)
+                {
+                    string text = string.Empty;
+                    string status = string.Empty;
+                    <option value="">데이터를 선택하세요</option>
+                    foreach (client_log data in Model)
+                    {
+                        status = data.event_type == "U" ? "Update" : "Delete";
+                        text = $"{status} {data.name} {data.event_dt_str}";
+                        <option value="@data.c_seq_log">@text</option>
+                    }
+                }
+                else
+                {
+                    <option value="">데이터가 없습니다.</option>
+                }
+            </select>
+        </div>
+        <div class="container" id="divClientDetialLog">
+
+
+        </div>
+    </div>
+<script>
+    var bindClientLog = function () {
+        try {
+            var log_seq = $("select[name='log_seq']").val();
+            var c_seq = "@ViewBag.c_seq";
+             showLoading('#divClientDetialLog');
+             $.ajax({
+                type: "post",
+                url: "@Url.Action("ClientDetailLog","Client")",
+                 cache: false,
+                 data: { c_seq: c_seq, log_seq: log_seq },
+                dataType: "html",
+                success: function (data) {
+                    $("#divClientDetialLog").html(data);
+                },
+                error: function (e) {
+                    showLoading('#divClientDetialLog');
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                   
+                }
+
+            });
+        } catch (e) {
+            showLoading('#divClientDetialLog');
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        }
+    }
+</script>

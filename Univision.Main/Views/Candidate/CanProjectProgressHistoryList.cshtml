@@ -1,0 +1,24 @@
+﻿@using Univision.Core.Models.DTO;
+@model List<pjt_recandidate_history>
+    <div class="mt-5 pl-15 pt-10" style="border-top:1px solid #cccccc;">
+        @if (Model.Count > 1)
+        {
+            Model.RemoveAt(0);
+        <ul class="list-group small">
+            @foreach (var data in Model)
+            {
+            <li class="list-group-item p-5">
+                - [<b>@Utils.ReturnProjectHistoryStateTxt(data.state)</b> <span class="text-secondary">(@Utils.ConvertDateTimeToString(data.schedule_date))</span>] @data.contents
+                @if (!string.IsNullOrWhiteSpace(data.file_directory))
+                {
+                    <a class="text-primary" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.prc_seq, @type = "pjtRecHistory" })">
+                        <i class="fas fa-file"></i>
+                    </a>
+                }
+                <br />
+                <small class="float-right">[Updated by @data.create_name]</small>
+            </li>
+            }
+        </ul>
+        }
+    </div>

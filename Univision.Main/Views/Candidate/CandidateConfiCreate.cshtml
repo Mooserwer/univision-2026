@@ -1,0 +1,97 @@
+﻿@model Univision.Core.Models.DTO.candidate
+
+@{
+  Layout = null;
+}
+
+@using (Html.BeginForm("UpdateCandidateConfi", "Candidate", FormMethod.Post, new { @id = "CreateConfiForm", @autocomplete = "off" }))
+{
+  @Html.HiddenFor(x => x.c_seq, new { @id = "confi_c_seq" })
+  <div class="row"><div class="col text-danger">* 후보자 혹은 고객사의 요청으로 DB등록자 이외의 타 컨설턴트가 직접 컨택 불가한 경우</div></div>
+  <div class="row">
+    <div class="col-8 form-group">
+      @Html.LabelFor(x => x.is_confidential, "Confidential 여부", new { @class = "form-control-label" })
+      <div class="input-group input-group-sm">
+        <div class="checkbox-custom checkbox-custom-sm checkbox-primary mb-0 pr-10">
+          <input type="checkbox" id="is_confidential" name="is_confidential" value="1" @(Model.is_confidential == 1 ? "checked" : "") />
+          <label for="is_confidential" title="Confidential">Confidential</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mb-10 row_confi_remark @((Model.is_confidential ?? 0)== 0 ? "d-none" : "")">
+    <div class="col-12 col-md-12 form-group">
+      @Html.LabelFor(x => x.confi_remark, "내용 <Details>", new { @class = "form-control-label" })
+      @Html.TextAreaFor(x => x.confi_remark, new { @class = "form-control", @placeholder = "상세내용을 입력해 주십시오.", @rows = 5 })
+    </div>
+    <div class="col-12 form-group text-right">
+      Lastest Update : @Utils.ConvertDateTimeToString(Model.confidential_date) [ @Model.confidential_name ]
+    </div>
+  </div>
+  <div class="row">
+    <div class="col text-right">
+      <button type="button" class="btn btn-sm btn-primary w-150" id="btnConfiSave" title="등록"><i class="icon wb-check"></i> SUBMIT</button>
+    </div>
+  </div>
+
+}
+
+<script type="text/javascript">
+
+  var candidate_confi_validate_opt = {
+    rules: {
+      confi_remark: {
+        required: '#is_confidential:checked'
+      }
+    },
+    messages: {
+      confi_remark: {
+        required: "사유를 입력해 주십시오."
+      }
+    },
+    submitHandler: function (form) {
+      var request_data = {
+        c_seq: $("#confi_c_seq").val(),
+        is_confidential: $("input[name='is_confidential']:checked").val() ? 1 : 0,
+        confi_remark: $("#confi_remark").val()
+      }
+      ConfirmAlert('Confidential 설정 ', '해당 후보자의 Confidential 정보를 저장하시겠습니까?', function () {
+        ajxCall({
+          type: 'POST',
+          url: $("#CreateConfiForm").attr("action"),
+          data: request_data,
+          dataType: 'json',
+          loading: true,
+          loading_target: '#CreateConfiForm',
+          suc: function (json) {
+            NormalAlert(json.message, function () {
+              location.href = location.href;
+            });
+          },
+          err: function (e) {
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.\n' + e.message);
+          }
+        })
+      });
+    }
+  }
+
+  var valid_confi_option = $.extend({}, valid_option, candidate_confi_validate_opt);
+
+  var validator_confi = $("#CreateConfiForm").validate(valid_confi_option);
+
+  $('#is_confidential').click(function () {
+    if ($(this).prop("checked")) {
+      $(".row_confi_remark").removeClass("d-none");
+    } else {
+      $(".row_confi_remark").removeClass("d-none").addClass("d-none");
+      $('#confi_remark').val("");
+    }
+    validator_confi.element('#confi_remark');
+  });
+  StopEnterSubmit();
+  $("#btnConfiSave").click(function () {
+    $('#CreateConfiForm').submit();
+  });
+
+</script>

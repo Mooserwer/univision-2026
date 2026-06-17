@@ -1,0 +1,19 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.CandidateSearchModel
+
+@if (Model.business.Count() > 0)
+{
+  var idx = 0;
+  foreach (var business in Model.business)
+  {
+    <div id='busi@(business.code2)' code2='@business.code2' class='busiRow catRow no-side-space'>
+      <span class='category'>
+        <span class='badge badge-outline badge-default bg-white cur_hand badge-lg busiCode2badge' code1='@business.code1' code2='@business.code2' code2name='@business.code_name2' onclick='DelCategoryBadge(this)'>@business.code_name2 <i class='far fa-times-circle'></i></span>
+        <input type="hidden" name="search.business[@idx].code1" value="@business.code1" />
+        <input type="hidden" name="search.business[@idx].code2" value="@business.code2" />
+        <input type="hidden" name="search.business[@idx].code_name2" value="@business.code_name2" />
+      </span>
+    </div>
+    idx++;
+  }
+
+}

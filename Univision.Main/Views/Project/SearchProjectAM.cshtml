@@ -1,0 +1,198 @@
+﻿@model Univision.Main.Models.Project.SearchProjectAMModel
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+</style>
+
+<div class="form-inline mb-10 stss02">
+    @{
+
+        var deptList = new SelectList(Model.deptList, "ud_seq", "ud_name").ToList();
+        deptList.Insert(0, new SelectListItem { Value = "0", Text = "팀 선택" });
+    }
+    @Html.DropDownListFor(x => x.ud_seq, deptList, new { @class = "form-control col-md-3" })
+    <div class="input-group no-side-space sts03">
+        @Html.TextBoxFor(x => x.searchTxt, new { @class = "form-control", @placeholder = "AM 이름" })
+        <button type="button" id="btnPopSearch" class="btn btn-primary" onclick="FancyBoxSearch();"><i class="fas fa-search" aria-hidden="true"></i></button>
+    </div>
+
+    @*<div class="input-group col-md-12 no-side-space">
+            @Html.TextBoxFor(x => x.searchTxt, new { @class = "form-control", @placeholder = "AM 이름" })
+            <button type="button" class="btn btn-primary" onclick="FancyBoxSearch();"><i class="fas fa-search" aria-hidden="true"></i></button>
+        </div>*@
+</div>
+
+
+<div class="panel sts02" style="margin-bottom:0px !important;">
+    <div class="panel-body" style="padding: 5px 10px 5px 10px; max-height:225px; overflow-y:auto">
+        <table class="table table-borderless table-hover">
+            <thead class="text-center">
+                <tr>
+                    <th class="tbw10">
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" id="checkAll" name="checkAll">
+                            <label for="checkAll"></label>
+                        </div>
+                    </th>
+                    <th class="tbw45">이름</th>
+                    <th class="tbw45">직급</th>
+                    <th class="hidden-sm-down">팀명</th>
+                </tr>
+            </thead>
+            <tbody class="text-center" style="vertical-align:middle;">
+                @if (Model.list.Count > 0)
+                {
+                    foreach (var data in Model.list)
+                    {
+                        <tr>
+                            <td>
+                                <div class="checkbox-custom checkbox-primary">
+                                    <input type="checkbox" id="@data.uv_seq" name="uv_seq" value="@data.uv_seq" dept="@data.ud_name" uv_name="@data.name">
+                                    <label for="@data.uv_seq"></label>
+                                </div>
+                            </td>
+                            <td>
+                                @data.name
+                            </td>
+                            <td>
+                                @data.rank_name
+                            </td>
+                            <td class="hidden-sm-down">
+                                @data.ud_name
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4">데이터가 없습니다.</td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="text-right mt-10">
+    <button type="button" id="btnPopConfirm" class="btn btn-primary">등록</button>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("#searchTxt").keydown(function (e) {
+            if (e.keyCode == 13)
+                $("#btnPopSearch").click();
+            else
+                return;
+        });
+
+        $("input:checkbox[name='uv_seq']").each(function () {
+            if (AM_Arr.indexOf($(this).val()) > -1) {
+                $(this).prop("checked", true);
+            }
+        })
+
+        $("#checkAll").click(function () {
+            if ($(this).is(":checked")) {
+                $("input:checkbox[name='uv_seq']").prop("checked", true);
+            }
+            else {
+                $("input:checkbox[name='uv_seq']").prop("checked", false);
+            }
+        });
+
+        $("#btnPopConfirm").click(function () {
+
+            var appendHtml = "";
+
+            $("input:checkbox[name='uv_seq']").each(function () {
+
+                if (!$(this).is(":checked")) {
+                    //만일 체크 해제된 항목이라면 본문에서도 지워줌.
+                    if (AM_Arr.indexOf($(this).val())) {
+
+                        var unChkVal = $(this).val();
+
+                        $("#AMDiv").find("span").each(function () {
+                            if ($(this).attr("am_seq") == unChkVal) {
+                                $(this).remove();
+                            }
+                        });
+                    }
+                }
+
+                //이미 추가된 항목이면 패스
+                if (AM_Arr.indexOf($(this).val()) > -1) {
+                    return;
+                }
+
+                if ($(this).is(":checked")) {
+                    appendHtml += "<span class='category mr-5'>";
+                    appendHtml += "<span class='badge badge-outline badge-default bg-white cur_hand badge-lg' am_seq='" + $(this).val() + "'>";
+                    //appendHtml += "[" + $(this).attr("dept") + "] " + $(this).attr("uv_name");
+                    appendHtml += $(this).attr("uv_name");
+                    appendHtml += "<i class='far fa-times-circle' onclick='removeBadge(this)'></i>";
+                    appendHtml += "</span>";
+                    appendHtml += "</span>";
+                }
+
+            });
+
+            $("#AMDiv").append(appendHtml.toString());
+            $('#CreateForm').formValidation('revalidateField', 'AMDiv');
+
+            $.fancybox.close();
+        });
+    });
+
+    //FancyBox 팝업 내의 페이지 이동.
+    function FancyBoxSearch() {
+
+        $.ajax({
+            url: '@Url.Action("SearchProjectAM", "Project")',
+            data: {
+                ud_seq: $("#ud_seq").val()
+                ,searchTxt: $("#searchTxt").val()
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function () {
+
+            }
+        })
+        .done(function (view) {
+
+            $.fancybox({
+                'content': view,
+                'width': $(".fancybox-outer").width(),
+                'height': $(".fancybox-outer").height(),
+                'autoDimensions': false,
+                'type': 'iframe',
+                'autoSize': false,
+                'title': $(".fancybox-title").text(),
+                helpers: {
+                    title: {
+                        type: 'inside',
+                        position: 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .always(function () {
+
+        });
+    }
+
+</script>

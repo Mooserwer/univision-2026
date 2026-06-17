@@ -1,0 +1,1074 @@
+﻿@model Univision.Core.Models.DTO.Response.Project.ProjectListViewModel
+@{
+
+  ViewBag.Title = "All Project";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.noJqueryUi = false;
+
+
+
+}
+
+<style>
+  .extend-box {
+    position: absolute !important;
+    top: 1.9em;
+    right: 1em;
+  }
+
+  .panel-body .input-search .form-control {
+    border-radius: 2px;
+  }
+
+  .panel-body .form-control-label {
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+  }
+
+  .panel-body .form-group {
+    margin-bottom: 3px;
+  }
+
+  .panel {
+    margin-bottom: 1rem;
+  }
+
+  .table thead th {
+    font-weight: bold;
+  }
+
+  .bg-warning {
+    background-color: #ab8000 !important;
+  }
+
+  .cd-border-list {
+    border-left: 1px solid #ddd;
+    padding-left: 5px;
+  }
+
+  u {
+    text-decoration-skip-ink: auto;
+    text-decoration-style: double;
+    text-decoration-thickness: 1px;
+    text-decoration-color: #ff6a00;
+    text-underline-offset: 3px;
+  }
+
+  .cus-d-1000 {
+    display: none !important;
+  }
+
+  @@media (max-width:1000px) {
+    .cus-d-1000 {
+      display: inline-block !important;
+    }
+
+    .cus-h-1000 {
+      display: none !important;
+    }
+
+    .table.table-project-all thead th:nth-of-type(1) {
+      display: none
+    }
+
+    .table.table-project-all tbody td:nth-of-type(1) {
+      display: none
+    }
+
+    .table.table-project-all thead th:nth-of-type(4) {
+      display: none
+    }
+
+    .table.table-project-all tbody td:nth-of-type(4) {
+      display: none
+    }
+
+    .table.table-project-all thead th:nth-of-type(5) {
+      display: none
+    }
+
+    .table.table-project-all tbody td:nth-of-type(5) {
+      display: none
+    }
+  }
+</style>
+<link href="~/Libs/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/user.min599c.css?v4.0.4">
+<div class="page-user">
+  <div class="page-content">
+    @using (Html.BeginForm("NewAllProjectList", "Project", FormMethod.Get, new { @id = "SearchForm", @autocomplete = "off" }))
+    {
+      <div class="panel panel-dark animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+          <div class="panel-title">
+            <i class="fas fa-briefcase"></i>
+            'ALL' PROJECT <small class="text-light">(전체 프로젝트 조회)</small>
+          </div>
+          <div class="panel-actions w-md-p30">
+            @*
+              <div class="panel-action input-search w-full">
+                <button type="submit" class="input-search-btn pr-20">
+                  <i class="icon wb-search" aria-hidden="true" title="Search"></i>
+                </button>
+                @Html.TextBoxFor(x => x.search.total, new { @class = "form-control", @placeholder = "Search - 검색어 입력 (고객사, 구인제목, AM, SM, 등)" })
+              </div>
+            *@
+            <div class="panel-action w-full">
+              <div class="input-group">
+                @Html.TextBoxFor(x => x.search.total, new { @class = "form-control", @placeholder = "Search - 검색어 입력 (고객사, 구인제목, AM, SM, 등)" })
+                <div class="input-group-btn">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="icon wb-search" aria-hidden="true" title="Search"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="panel-body p-15 bg-blue-grey-200">
+          <!--검색 Form -->
+          @Html.HiddenFor(x => x.search.state)
+          @Html.HiddenFor(x => x.search.orderTxt1)
+          @Html.HiddenFor(x => x.search.orderOption1)
+          @Html.HiddenFor(x => x.search.orderTxt2)
+          @Html.HiddenFor(x => x.search.orderOption2)
+          @Html.Hidden("CurrentPage", Model.PagingInfo.CurrentPage, new { @id = "SearchForm_CurrentPage" })
+          @Html.Hidden("ItemsPerPage", Model.PagingInfo.ItemsPerPage)
+          <!-- 검색 패널 시작 -->
+          <hr class="d-md-none d-block" />
+          <div class="row">
+            <div class="col-12 col-md-6 col-lg-2">
+              @Html.LabelFor(x => x.search.pjt_type, "프로젝트 구분 (Type)", new { @class = "form-control-label" })
+              <select id="search_pjt_type" name="search.pjt_type" class="form-control form-control">
+                <option value="0">[전체 (ALL)]</option>
+                <option value="1" @(Model.search.pjt_type == 1 ? "selected" : "")>채용 (Recruitment)</option>
+                <option value="2" @(Model.search.pjt_type == 2 ? "selected" : "")>평판조회 (Referrence Check)</option>
+                <option value="3" @(Model.search.pjt_type == 3 ? "selected" : "")>재취업 (Outplacement)</option>
+                <option value="4" @(Model.search.pjt_type == 4 ? "selected" : "")>채용대행 (RPO) </option>
+                <option value="5" @(Model.search.pjt_type == 4 ? "selected" : "")>마켓매핑 (Long List) </option>
+                <option value="6" @(Model.search.pjt_type == 4 ? "selected" : "")>사외이사 서비스 (Outside director) </option>
+                <option value="9" @(Model.search.pjt_type == 9 ? "selected" : "")>기타 (Other consulting)</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              @Html.LabelFor(x => x.search.position_start, "직급 (Position)", new { @class = "form-control-label" })
+              @{
+                var positionList = new SelectList(Model.search.positionList, "p_code", "p_name").ToList();
+                positionList.Insert(0, new SelectListItem { Value = "0", Text = "직급 전체 (All Position)" });
+              }
+              <div class="input-group">
+                @Html.DropDownListFor(x => x.search.position_start, positionList, new { @class = "form-control form-control" })
+                <span class="input-group-addon bg-transparent px-5">~</span>
+                @Html.DropDownListFor(x => x.search.position_end, positionList, new { @class = "form-control form-control" })
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-8 col-lg-6">
+              @Html.LabelFor(x => x.search.range_field, "기간 검색(Date)", new { @class = "form-control-label" })
+              <div class="form-group">
+                <div class="input-group">
+                  <span class="input-group-prepend">
+                    <select id="search_range_field" name="search.range_field" class="form-control form-control w-150">
+                      <option value="create_dt_idx" @(Model.search.range_field == "create_dt_idx" ? "selected" : "")>등록일(Reg.)</option>
+                      <option value="modify_dt_idx" @(Model.search.range_field == "modify_dt_idx" ? "selected" : "")>수정일(Update)</option>
+                      <option value="close_dt_idx" @(Model.search.range_field == "close_dt_idx" ? "selected" : "")>완료/종료일(Close/Complete)</option>
+                    </select>
+                  </span>
+                  @Html.TextBoxFor(x => x.search.dt_start, new { @class = "form-control date-time", @placeholder = "YYYY-MM-DD" })
+                  <span class="input-group-addon bg-transparent px-5"> ~ </span>
+                  @Html.TextBoxFor(x => x.search.dt_end, new { @class = "form-control date-time", @placeholder = "YYYY-MM-DD" })
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+              @Html.LabelFor(x => x.search.client, "고객사 (Client)", new { @class = "form-control-label" })
+              <div class="form-group">
+                @Html.TextBoxFor(x => x.search.client, new { @class = "form-control form-control" })
+              </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              @Html.LabelFor(x => x.search.title, "구인제목 (Title)", new { @class = "form-control-label" })
+              <div class="form-group">
+                @Html.TextBoxFor(x => x.search.title, new { @class = "form-control form-control" })
+              </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              @Html.LabelFor(x => x.search.user_name, "AM/SM", new { @class = "form-control-label" })
+              <div class="form-group">
+                @Html.TextBoxFor(x => x.search.user_name, new { @class = "form-control" })
+              </div>
+            </div>
+          </div>
+          <!-- 검색조건 첫째줄 끝 -->
+          <!-- 검색조건 넷째줄 시작 -->
+          <div class="row">
+            <div class="col-sm-12 col-md-5">
+              <label class="form-control-label">
+                산업(Industry)
+              </label>
+              <div class="input-group input-group redo-site" id="businessDiv">
+                <div class="bg-white pl-5 pr-5 w-p100 form-inline codeBindDiv" id="busiCodeList">
+                  @Html.Partial("PartialProjectSearchBusiList", Model.search)
+                </div>
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-outline-primary" onclick="FindBusiness()">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-outline-primary btn-redo-code">
+                    <i class="fas fa-redo" placeholder="초기화"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+            <div class="col-sm-12 col-md-5">
+              <label class="form-control-label">
+                직무(Job Functions)
+              </label>
+              <div class="input-group input-group redo-site" id="JobDiv">
+                <div class="bg-white pl-5 pr-5 w-p100 form-inline codeBindDiv" id="jobCodeList">
+                  @Html.Partial("PartialProjectSearchJobList", Model.search)
+                </div>
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-outline-primary" onclick="javascript:FindJob()">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-outline-primary btn-redo-code">
+                    <i class="fas fa-redo" placeholder="초기화"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-2">
+              @Html.LabelFor(x => x.search.is_pe, "PE Portfolio", new { @class = "form-control-label small" })
+              <select id="search_is_pe" name="search.is_pe" class="form-control form-control">
+                <option value="9">[전체 (ALL)]</option>
+                <option value="1" @(Model.search.is_pe == 1 ? "selected" : "")>PE 프로젝트만</option>
+                <option value="0" @(Model.search.is_pe == 0 ? "selected" : "")>PE 프로젝트 제외</option>
+              </select>
+            </div>
+          </div>
+          <!-- 검색조건 넷째줄 끝 -->
+          <!-- 검색조건 여섯째줄 시작 -->
+          <div class="row pt-15">
+            <div class="col-6">
+              <div class="form-group text-left">
+                <button type="button" id="btnReset" class="btn btn-outline-danger" title="검색조건 초기화">
+                  <i class="fas fa-redo"></i>
+                  Reset
+                </button>
+
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-group text-right">
+                <a class="mr-10" data-toggle="collapse" href="#exampleCollapseExample"
+                   aria-expanded="false" aria-controls="exampleCollapseExample">
+                  <i class="fas fa-arrow-down"></i> 엑셀 다운로드 항목 선택
+                </a>
+                <button type="submit" id="btnSearch" class="btn btn-primary w-200" title="검색">
+                  <i class="fas fa-search"></i>
+                  Search
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- 검색조건 여섯째줄 끝 -->
+
+
+
+        </div>
+      </div>
+    }
+    <div class="row">
+      <div class="col">
+        @using (Html.BeginForm("AllProjectExcelList", "Project", FormMethod.Post, new { @id = "SearchExcelForm", @autocomplete = "off" }))
+        {
+
+
+          <div class="collapse in" id="exampleCollapseExample">
+            <div class="card card-default">
+              <div class="card-block bg-blue-grey-200">
+                <div class="row">
+                  <div class="col-6">
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_all" name="exl_pjt_all" value="exl_pjt_all" checked autocomplete="off" />
+                      <label for="exl_pjt_all">전체 항목</label>
+                    </div>
+                  </div>
+                  <div class="col-6 text-right">
+                    조회기간 : 
+                    <a class="btn btn-sm btn-outline-info" href="javascript:setDateRange(4);">
+                      5개년
+                    </a>
+                    |
+                    <a class="btn btn-sm btn-outline-info" href="javascript:setDateRange(2);">
+                      3개년
+                    </a>
+                    |
+                    <a class="btn btn-sm btn-outline-info" href="javascript:setDateRange(0);" title="전체 기간 데이터를 받으실 경우 소요 시간이 오래 걸릴 수 있습니다.">
+                      전체기간
+                    </a>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-6 col-md-3">
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_p_seq" name="exl_pjt_sub" value="프로젝트_코드" checked autocomplete="off" />
+                      <label for="exl_pjt_p_seq">프로젝트 코드</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_c_seq" name="exl_pjt_sub" value="고객사_코드" checked autocomplete="off" />
+                      <label for="exl_pjt_c_seq">고객사 코드</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_client_kor" name="exl_pjt_sub" value="고객사_국문명" checked autocomplete="off" />
+                      <label for="exl_pjt_client_kor">고객사 국문명</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_client_eng" name="exl_pjt_sub" value="고객사_영문명" checked autocomplete="off" />
+                      <label for="exl_pjt_client_eng">고객사 영문명</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_type" name="exl_pjt_sub" value="프로젝트_구분" checked autocomplete="off" />
+                      <label for="exl_pjt_type">프로젝트 구분</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_status" name="exl_pjt_sub" value="프로젝트_진행상태" checked autocomplete="off" />
+                      <label for="exl_pjt_status">프로젝트 진행상태</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_is_pe" name="exl_pjt_sub" value="PE_구분" checked autocomplete="off" />
+                      <label for="exl_pjt_is_pe">PE구분</label>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3">
+
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_title" name="exl_pjt_sub" value="구인제목" checked autocomplete="off" />
+                      <label for="exl_pjt_title">구인제목</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_salary" name="exl_pjt_sub" value="예상_연봉" checked autocomplete="off" />
+                      <label for="exl_pjt_salary">연봉(예상)</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_feerate" name="exl_pjt_sub" value="수수료율" checked autocomplete="off" />
+                      <label for="exl_pjt_salary">수수료율</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_position" name="exl_pjt_sub" value="포지션명" checked autocomplete="off" />
+                      <label for="exl_pjt_position">포지션명</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_pos_seq" name="exl_pjt_sub" value="직급분류" checked autocomplete="off" />
+                      <label for="exl_pjt_pos_seq">직급분류</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_hire_info" name="exl_pjt_sub" value="채용후보자정보" checked autocomplete="off" />
+                      <label for="exl_pjt_cand_name">채용후보자정보</label>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_business1" name="exl_pjt_sub" value="주_산업_대분류" checked autocomplete="off" />
+                      <label for="exl_pjt_business1">주 산업 대분류</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_business2" name="exl_pjt_sub" value="주_산업_소분류" checked autocomplete="off" />
+                      <label for="exl_pjt_business2">주 산업 소분류</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_sub_business1" name="exl_pjt_sub" value="보조_산업_대분류" checked autocomplete="off" />
+                      <label for="exl_pjt_sub_business1">보조 산업 대분류</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_sub_business2" name="exl_pjt_sub" value="보조_산업_소분류" checked autocomplete="off" />
+                      <label for="exl_pjt_sub_business2">보조 산업 소분류</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_job1" name="exl_pjt_sub" value="주_직무_대분류" checked autocomplete="off" />
+                      <label for="exl_pjt_job1">주 직무 대분류</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_job2" name="exl_pjt_sub" value="주_직무_소분류" checked autocomplete="off" />
+                      <label for="exl_pjt_job2">주 직무 소분류</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_sub_job1" name="exl_pjt_sub" value="보조_직무_대분류" checked autocomplete="off" />
+                      <label for="exl_pjt_sub_job1">보조 직무 대분류</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_sub_job2" name="exl_pjt_sub" value="보조_직무_소분류" checked autocomplete="off" />
+                      <label for="exl_pjt_sub_job2">보조 직무 소분류</label>
+                    </div>
+                  </div>
+
+                  <div class="col-6 col-md-3">
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_am" name="exl_pjt_sub" value="AM" checked autocomplete="off" />
+                      <label for="exl_pjt_am">AM</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_sm" name="exl_pjt_sub" value="SM" checked autocomplete="off" />
+                      <label for="exl_pjt_sm">SM</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_create_dt" name="exl_pjt_sub" value="최초등록일" checked autocomplete="off" />
+                      <label for="exl_pjt_create_dt">최초등록일</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_modify_dt" name="exl_pjt_sub" value="최종수정일" checked autocomplete="off" />
+                      <label for="exl_pjt_modify_dt">최종수정일</label>
+                    </div>
+                    <div class="checkbox-custom checkbox-default">
+                      <input type="checkbox" id="exl_pjt_close_dt" name="exl_pjt_sub" value="종료일" checked autocomplete="off" />
+                      <label for="exl_pjt_close_dt">종료일</label>
+                    </div>
+                  </div>
+                  <hr />
+
+                  <div class="col-12 pt-15">
+                    <div class="form-group text-right">
+                      <a href="#" id="btnPjtExcel" class="btn btn-success w-200" title="엑셀다운로드">
+                        <i class="fas fa-file-excel"></i>
+                        엑셀 다운로드
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+      </div>
+    </div>
+    <!-- 검색 패널 끝 -->
+
+    <div class="panel">
+
+      <div class="panel-body" id="panel_pjt_list">
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+@section scripts{
+  <script src="~/Libs/bootstrap-select/js/bootstrap-select.min.js"></script>
+  <script src='~/Libs/selectize/js/standalone/selectize.js'></script>
+  <script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+
+  <script type="text/javascript">
+    window.multi_api_hidden_pretext = "search."
+    BindDatePicker('.date-time');
+
+    window.onpopstate = function (event) {
+      //console.log(event, event.state , event.state.form_name , event.state.form_data , $(event.state.form_name) , event.state.title , document.title);
+      if (event.state && event.state.form_name && event.state.form_data && $(event.state.form_name) && event.state.title == document.title) {
+        event.preventDefault();
+        $(event.state.form_name).deserialize(event.state.form_data)
+        SetJobBusiAjx(event.state.form_data);
+
+        Search();
+
+      }
+    };
+
+    function setDateRange(year) {
+      if (!year)
+        year = 0;
+
+      var search_year = '';
+      if (year > 0) {
+        var today = new Date();
+
+        search_year = (today.getFullYear() - year - 1) + '-01-01';
+      }
+        
+      
+      $('#search_dt_start').val(search_year);
+      $('#search_dt_end').val('');
+    }
+
+    $('#exl_pjt_all').click(function () {
+      var checked = $(this).prop("checked");
+
+      $('input[name=exl_pjt_sub]').each(function () {
+        $(this).prop("checked", checked);
+      });
+
+    });
+
+    $('input[name=exl_pjt_sub]').click(function () {
+      var check = true;
+      $('input[name=exl_pjt_sub]').each(function () {
+        if (!$(this).prop("checked")) {
+          check = false;
+          return;
+        }
+      });
+      $('#exl_pjt_all').prop("checked", check);
+    });
+
+    $('#btnPjtExcel').click(function (e) {
+      e.preventDefault();
+
+      var check = false;
+      $('input[name=exl_pjt_sub]').each(function () {
+        if ($(this).prop("checked")) {
+          check = true;
+          return;
+        }
+      });
+
+      if (!check) {
+        ErrorAlert('최소 하나 이상의 엑셀 항목을 선택 해주세요.');
+        return;
+      }
+      PjtExcel();
+    });
+
+
+
+    function PjtExcel() {
+      var search_data = $('#SearchForm, #SearchExcelForm').serializeObject();
+
+      $.ajax({
+        url: '@Url.Action("NewAllProjectExcelList", "Project")',
+        data: search_data,
+        type: 'POST',
+        cache: false,
+        xhrFields: {
+          responseType: "blob",
+        },
+        beforeSend: function () {
+          $('.page-content').LoadingOverlay('show'); //로딩화면 표시
+        }
+      }).done(function (blob, status, xhr) {
+        // check for a filename
+        var fileName = "";
+        var disposition = xhr.getResponseHeader("Content-Disposition");
+
+        if (disposition && disposition.indexOf("attachment") !== -1) {
+          var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+          var matches = filenameRegex.exec(disposition);
+
+          if (matches != null && matches[1]) {
+            fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+          }
+        }
+
+        // for IE
+        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+          window.navigator.msSaveOrOpenBlob(blob, fileName);
+        } else {
+          var URL = window.URL || window.webkitURL;
+          var downloadUrl = URL.createObjectURL(blob);
+
+          if (fileName) {
+            var a = document.createElement("a");
+
+            // for safari
+            if (a.download === undefined) {
+              window.location.href = downloadUrl;
+            } else {
+              a.href = downloadUrl;
+              a.download = fileName;
+              document.body.appendChild(a);
+              a.click();
+            }
+          } else {
+            window.location.href = downloadUrl;
+          }
+        }
+      }).always(function () {
+        $('.page-content').LoadingOverlay('hide'); //로딩화면 표시
+      });
+
+
+    }
+
+
+    function SetJobBusiAjx(ddata) {
+      ajxCall({
+          url: '@Url.Action("PartialProjectSearchBusiList")',
+          data: ddata,
+          dataType: 'html',
+          suc: function (response) {
+            $('#busiCodeList').empty();
+            $('#busiCodeList').html(response);
+          }
+        })
+
+        ajxCall({
+          url: '@Url.Action("PartialProjectSearchJobList")',
+          data: ddata,
+          dataType: 'html',
+          suc: function (response) {
+            $('#jobCodeList').empty();
+            $('#jobCodeList').html(response);
+          }
+        })
+    }
+
+    jQuery.fn.deserialize = function (data) {
+      var f = this,
+        map = {},
+        find = function (selector) { return f.is("form") ? f.find(selector) : f.filter(selector); };
+      //Get map of values
+      jQuery.each(data.split("&"), function () {
+        var nv = this.split("="),
+          n = decodeURIComponent(nv[0]),
+          v = nv.length > 1 ? decodeURIComponent(nv[1]) : null;
+        if (!(n in map)) {
+          map[n] = [];
+        }
+        map[n].push(v);
+      })
+      //Set values for all form elements in the data
+      jQuery.each(map, function (n, v) {
+        find("[name='" + n + "']").val(v);
+      })
+      //Clear all form elements not in form data
+      find("input:text,select,textarea").each(function () {
+        if (!(jQuery(this).attr("name") in map)) {
+          jQuery(this).val("");
+        }
+      })
+      find("input:checkbox:checked,input:radio:checked").each(function () {
+        if (!(jQuery(this).attr("name") in map)) {
+          this.checked = false;
+        }
+      })
+      return this;
+    };
+    jQuery.fn.serializeObject = function () {
+      var result = {};
+      var extend = function (i, element) {
+        var node = result[element.name];
+        if ("undefined" !== typeof node && node !== null) {
+          if ($.isArray(node)) {
+            node.push(element.value);
+          } else {
+            result[element.name] = [node, element.value];
+          }
+        } else {
+          result[element.name] = element.value;
+        }
+      }
+
+      $.each(this.serializeArray(), extend);
+
+      return result;
+    };
+    /*
+    jQuery.fn.serializeObject = function () {
+      var obj = null;
+      try {
+        if (this[0].tagName && this[0].tagName.toUpperCase() == "FORM") {
+          var arr = this.serializeArray();
+          console.log(arr);
+          if (arr) {
+            obj = {};
+            jQuery.each(arr, function () {
+              obj[this.name] = this.value;
+            });
+          }//if ( arr ) {
+        }
+      } catch (e) {
+        alert(e.message);
+      } finally {
+      }
+
+      return obj;
+    };
+    */
+
+
+
+    $('#SearchForm').submit(function () { //submit이 발생하면
+      $('#SearchForm_CurrentPage').val(1);
+      Search(true); //옵션값대로 ajax비동기 동작을 시키고
+      return false; //기본 동작인 submit의 동작을 막아 페이지 reload를 막는다.
+    });
+
+    function SearchPaging(page) {
+      $('#SearchForm_CurrentPage').val(page);
+      Search(true);
+    }
+
+    function Search(pushstate) {
+      var search_data = $('#SearchForm').serializeObject();
+      console.log(search_data);
+      var serial_data = $('#SearchForm').serialize().replace(/[^=&]+=(&|$)/g, "").replace(/&$/, "");
+      console.log(serial_data);
+
+      ajxCall({
+        url: '@Url.Action("NewAllProjectAjxList", "Project")',
+        data: search_data,
+        dataType: 'html',
+        type: 'POST',
+        loading: true,
+        loading_target: '.page-content',
+        suc: function (response) {
+          $('#panel_pjt_list').empty();
+          $('#panel_pjt_list').html(response);
+        },
+        comp: function () {
+          if(pushstate === true) {
+            window.history.pushState({ title: document.title, form_name: '#SearchForm', form_data: serial_data }, document.title, "?replace=1&" + serial_data); //주소표시줄 업데이트
+          } else {//  console.log("replace");
+            window.history.replaceState({ title: document.title, form_name: '#SearchForm', form_data: serial_data }, document.title, "?replace=1&" + serial_data); //주소표시줄 업데이트
+          }
+
+        }
+      })
+
+
+    }
+
+    function cd_order_set(field) {
+      if ($('#search_orderTxt1').val() == field) {
+        if ($('#search_orderOption1').val() == "DESC") {
+          $('#search_orderOption1').val("ASC");
+        } else {
+          $('#search_orderOption1').val("DESC");
+        }
+      } else {
+        $('#search_orderTxt1').val(field);
+        $('#search_orderOption1').val("ASC");
+      }
+      Search(true);
+    }
+
+    function cd_state_set(state) {
+      $('#SearchForm_CurrentPage').val(1);
+      $('#search_state').val(state);
+      Search(true);
+    }
+
+
+    //검색 초기화
+    $("#btnReset").click(function () {
+      location.href = '@Url.Action("NewAllProjectList", "Project")';
+    });
+
+
+
+
+
+    //직무, 산업 검색 초기화 버튼 클릭.
+    $(".btn-redo-code").click(function (e) {
+      e.preventDefault();
+
+      $(this).closest(".redo-site").find(".codeBindDiv").empty();
+    })
+    //학교검색 input에 Autocomplete 바인딩
+    function BindSchoolAutocomplete($obj) {
+      $obj.autocomplete({
+        source: function (request, response) {
+          $.ajax({
+            type: 'post',
+            url: '@Url.Action("FindSchoolApi2", "Partial")',
+            dataType: "json",
+            //request.term = $("#autocomplete").val()
+            data: { schoolName: request.term },
+            success: function (data) {
+              //서버에서 json 데이터 response 후 목록에 뿌려주기 위함
+              response(
+                $.map(data.list, function (item) {
+
+                  var schoolName = "";
+                  if (item.campusName != undefined) {
+                    schoolName = item.school_name + '(' + item.campus_name + ')';
+                  }
+                  else {
+                    schoolName = item.school_name;
+                  }
+
+                  return {
+                    label: schoolName,
+                    value: item.school_name
+                  }
+                })
+              );
+              $(".ui-autocomplete").highlight(request.term);
+            }
+          });
+        },
+        delay: 300,
+        autoFocus: false, //첫번째 값을 자동 focus한다
+        minLength: 2,  //조회를 위한 최소글자수
+        select: function (event, ui) {
+          //console.log($(event.target).closest(".schoolRow").find("[id^=campusName_]"));
+          $(event.target).closest(".schoolRow").find("[id^=campusName_]").val(ui.item.campusName);
+          // 만약 검색리스트에서 선택하였을때 선택한 데이터에 의한 이벤트발생
+          $(event.target).closest("div").next().find("input").focus();
+        },
+        focus: function (event, ui) {
+          //event.target.value = ui.item.label;
+          event.preventDefault();
+        }
+      });
+    }
+    //BindSchoolAutocomplete($('#search_school'));
+
+    //전공검색 input에 Autocomplete 바인딩
+    function BindMajorAutocomplete($obj) {
+      $obj.autocomplete({
+        source: function (request, response) {
+          $.ajax({
+            type: 'post',
+            url: '@Url.Action("FindMajorApi", "Partial")',
+            dataType: "json",
+            //request.term = $("#autocomplete").val()
+            data: { major_name: request.term },
+            success: function (data) {
+              //서버에서 json 데이터 response 후 목록에 뿌려주기 위함
+              response(
+                $.map(data.list, function (item) {
+                  return {
+                    label: item.major_name,
+                    value: item.major_name,
+                    category1_name: item.category1_name
+                  }
+                })
+              );
+              $(".ui-autocomplete").highlight(request.term);
+            }
+          });
+        },
+        delay: 300,
+        autoFocus: false, //첫번째 값을 자동 focus한다
+        minLength: 2,  //조회를 위한 최소글자수
+        select: function (event, ui) {
+          $(event.target).closest("div").next().find("input").focus();
+        },
+        focus: function (event, ui) {
+          //event.target.value = ui.item.label;
+          event.preventDefault();
+        }
+      });
+    }
+    //BindMajorAutocomplete($('#search_major'));
+
+    //회사 찾기
+    function BindCompanyAutocomplete($obj) {
+      $obj.autocomplete({
+        source: function (request, response) {
+          $.ajax({
+            type: 'post',
+            url: '@Url.Action("FindCompanyApi", "Partial")',
+            dataType: "json",
+            //request.term = $("#autocomplete").val()
+            data: {
+              companyName: request.term
+            },
+            success: function (data) {
+              //console.log(data)
+              //서버에서 json 데이터 response 후 목록에 뿌려주기 위함
+              response(
+                $.map(data.list, function (item) {
+                  //console.log(item);
+                  return {
+                    label: item.WKPL_NM,
+                    value: item.WKPL_NM,
+                    g_seq: item.G_SEQ,
+                    rgstNo: item.BZOWR_RGST_NO,
+                    busi: item.VLDT_VL_KRN_NM
+                  }
+                })
+              );
+
+              $(".ui-autocomplete").highlight(request.term);
+            }
+          });
+        },
+        autoFocus: false, //첫번째 값을 자동 focus한다
+        minLength: 2,  //조회를 위한 최소글자수
+        select: function (event, ui) {
+          $(event.target).closest("div").find("input[name='g_seq']").val(ui.item.g_seq);
+          // 만약 검색리스트에서 선택하였을때 선택한 데이터에 의한 이벤트발생
+          $(event.target).closest("div").next().find("input").focus();
+        },
+        focus: function (event, ui) {
+          //event.target.value = ui.item.label;
+          event.preventDefault();
+        }
+      }).data("ui-autocomplete")._renderItem = function (ul, item) {
+
+        return $("<li>")
+          .data("ui-menu-item", item)
+          .append("<div class='ui-menu-item-wrapper'><span class='font-size-12'>" + item.label + "</span></div>")
+          .appendTo(ul);
+      };
+    }
+    //BindCompanyAutocomplete($('#search_company'))
+
+    //직무,산업 추가
+    function FindBusiness() {
+      busiCodeArr = [];
+
+      $(".busiRow").each(function () {
+        $(this).find(".badge").each(function () {
+
+          //카테고리 직무에 하위 직무가 더 있다면
+          if ($(this).closest(".busiRow").find(".badge").length > 1) {
+            if ($(this).hasClass("busiCode2badge")) {
+              return;
+            }
+          }
+
+          var busi = {
+            code1: $(this).attr("code1"),
+            code2: $(this).attr("code2")
+          };
+          busiCodeArr.push(busi);
+        });
+      });
+
+      $.ajax({
+        url: '@Url.Action("BusinessMultiApi2", "Partial")',
+        data: {
+
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (json) {
+          hideLoading();
+
+          $.fancybox.open({
+            'content': json,
+            'width': '640',
+            'height': 'auto',
+            'autoDimensions': false,
+            'type': 'iframe',
+            'autoSize': false,
+            'title': 'Find Industry',
+            helpers: {
+              title: {
+                type: 'inside',
+                position: 'top'
+              },
+              overlay: {
+                closeClick: false
+              }
+            }
+          });
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+
+    }
+
+    function FindJob() {
+      jobCodeArr = [];
+
+      $(".jobRow").each(function () {
+        $(this).find(".badge").each(function () {
+
+          //카테고리 직무에 하위 직무가 더 있다면
+          if ($(this).closest(".jobRow").find(".badge").length > 1) {
+            if ($(this).hasClass("jobCode2badge")) {
+              return;
+            }
+          }
+
+          var busi = {
+            code1: $(this).attr("code1"),
+            code2: $(this).attr("code2")
+          };
+          jobCodeArr.push(busi);
+        });
+      });
+
+      $.ajax({
+        url: '@Url.Action("JobMultiApi2", "Partial")',
+        data: {
+
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (json) {
+          hideLoading();
+
+          $.fancybox.open({
+            'content': json,
+            'width': '640',
+            'height': 'auto',
+            'autoDimensions': false,
+            'type': 'iframe',
+            'autoSize': false,
+            'title': 'Find Job',
+            helpers: {
+              title: {
+                type: 'inside',
+                position: 'top'
+              },
+              overlay: {
+                closeClick: false
+              }
+            }
+          });
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+
+    }
+
+    //Badge 카테고리 삭제.
+    function DelCategoryBadge(obj) {
+
+      $(obj).closest(".catRow").remove();
+      reindexJobBusiness();
+    }
+
+    function reindexJobBusiness() {
+      var i = 0
+      $('#busiCodeList').find('.busiRow').each(function () {
+        $(this).find('input').each(function () {
+
+          $(this).attr('name', $(this).attr('name').replace(/\[[^\]]*\]/, '[' + (i) + ']'));
+
+        });
+        i++;
+      })
+
+      var i = 0
+      $('#jobCodeList').find('.jobRow').each(function () {
+        $(this).find('input').each(function () {
+
+          $(this).attr('name', $(this).attr('name').replace(/\[[^\]]*\]/, '[' + (i) + ']'));
+
+        });
+        i++;
+      })
+    }
+
+
+
+    Search();
+  </script>
+
+}

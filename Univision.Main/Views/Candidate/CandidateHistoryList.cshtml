@@ -1,0 +1,309 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.CandidateHistoryListViewModel
+
+@{
+    ViewBag.Title = "Candidate History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .extend-box {
+        position: absolute !important;
+        top: 1.9em;
+        right: 1em;
+    }
+
+    .panel-body .input-search .form-control {
+        border-radius: 2px;
+    }
+
+    .panel-body .form-control-label {
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+    }
+
+    .panel-body .form-group {
+        margin-bottom: 3px;
+    }
+
+    .panel {
+        margin-bottom: 1rem;
+    }
+
+    .table thead th {
+        font-weight: bold;
+    }
+
+    .timeline-icon {
+        margin-left: 20px !important;
+    }
+    .timeline-icon .timeline-dot {
+        margin-left: -20px !important;
+    }
+
+    .timeline-avatar {
+        margin-left: 20px !important;
+    }
+    .timeline-avatar .timeline-dot {
+        margin-left: -20px !important;
+    }
+
+    .timeline-avatar-sm {
+        margin-left: 15px !important;
+    }
+    .timeline-avatar-sm .timeline-dot {
+        margin-left: -15px !important;
+    }
+
+    .timeline-avatar-lg {
+        margin-left: 25px !important;
+    }
+    .timeline-avatar-lg .timeline-dot {
+        margin-left: -25px !important;
+    }
+
+    .timeline-feed {
+        margin-left: 15px !important;
+    }
+    .timeline-feed .timeline-dot {
+        margin-left: -15px !important;
+    }
+
+    .timeline-feed .timeline-item {
+        padding-right: 30px !important;
+        margin-bottom: 22px !important;
+    }
+
+    .timeline:before {
+        left: 0 !important;
+    }
+    .timeline-item,
+    .timeline-item.timeline-reverse {
+        float: none !important;
+        width: 100% !important;
+        padding-right: 0 !important;
+        padding-left: 40px !important;
+        margin-top: 0 !important;
+        margin-bottom: 60px !important;
+    }
+    .timeline-dot {
+        right: auto !important;
+        left: 0 !important;
+        margin-right: 0 !important;
+        margin-left: -7px !important;
+    }
+    .timeline-info {
+        display: inline-block !important;
+        float: none !important
+    }
+    .timeline-footer {
+        right: auto !important;
+        bottom: -26px !important;
+        left: 0 !important;
+        margin-right: 0 !important;
+        margin-left: 40px !important;
+    }
+
+    .timeline-period{
+        padding:10px !important;
+        margin-bottom: 5px !important;
+    }
+</style>
+
+<div class="page-content container">
+    <!--검색 Form -->
+    @using (Html.BeginForm("CandidateHistoryList", "Candidate", FormMethod.Get, new { @id = "SearchForm" }))
+    {
+        <!-- 검색 패널 시작 -->
+        <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+            <div class="panel-heading">
+                <div class="panel-title">
+                    <i class="fas fa-history"></i>
+                    Candidate History
+                </div>
+                <div class="panel-actions">
+                    <div class="panel-action">
+
+                    </div>
+                    <div class="panel-action input-search">
+                        <div class="checkbox-custom checkbox-primary" title="내가 작성한 히스토리만 보기">
+                            @Html.CheckBoxFor(x => x.search.is_my_history)
+                            <label for="search_is_my_history">My History Only</label>
+                        </div>
+                    </div>
+                    <div class="w-100 d-md-none"></div>
+                    <div class="panel-action input-search">
+                        <button type="submit" class="input-search-btn">
+                            <i class="icon wb-search" aria-hidden="true"></i>
+                            &nbsp;&nbsp;
+                        </button>
+                        @Html.TextBoxFor(x => x.search.search_txt, new { @class = "form-control", @placeholder = "검색어 입력" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body bg-blue-grey-200">
+
+
+            </div>
+        </div>
+        <!-- 검색 패널 끝 -->
+    }
+
+    <!-- Timeline -->
+    <ul id="ul_can_history" class="timeline timeline-icon">
+        @if (Model.list.Count > 0)
+        {
+            int i = 0;
+            foreach (var date_group in Model.list)
+            {
+
+                <li class="timeline-period">@date_group.group_date</li>
+                if (date_group.group_list.Count > 0)
+                {
+                    foreach (var group in date_group.group_list)
+                    {
+                        i++;
+                        <li class="timeline-item @(i % 2 == 0 ? "timeline-reverse" : "")">
+
+                            <div class="timeline-dot @group.dot_color">
+                                @if (group.table_type == "PH")
+                                {
+                                    <i class="fa fa-briefcase" aria-hidden="true"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa fa-user" aria-hidden="true"></i>
+                                }
+                            </div>
+                            <div class="timeline-info mb-10 ">
+                                <time datetime="@group.end_dt" title="@group.start_dt ~ @group.end_dt">@Utils.gfGetPrettyDate(group.end_dt)</time>
+                            </div>
+                            @if (group.activityList.Count > 0)
+                            {
+                                <div class="timeline-content">
+                                    <div class="card card-article card-shadow">
+                                        <div class="card-block">
+                                            <h5 class="card-title">
+                                                <span>Candidate: <a href="@Url.Action("CandidateDetail", "Candidate", new { c_seq = group.activityList[0].c_seq})" title="후보자 상세화면이동">@group.activityList[0].candidate_name</a>&nbsp;<a href="@Url.Action("CandidateDetail", "Candidate", new { c_seq = group.activityList[0].c_seq})" target="_blank" title="새창에서 열기"><i class="fas fa-external-link-alt"></i></a></span>
+                                            </h5>
+                                            @if (group.activityList[0].table_type == "PH")
+                                            {
+                                                <h5 class="card-title">
+                                                    <span>Project : <a href="@Url.Action("ProjectDetail", "Project", new { p_seq = group.activityList[0].p_seq})" title="프로젝트 상세화면 이동">@group.activityList[0].pjt_title</a>&nbsp;<a href="@Url.Action("ProjectDetail", "Project", new { p_seq = group.activityList[0].p_seq})" title="새창에서 열기"><i class="fas fa-external-link-alt"></i></a></span>
+                                                </h5>
+
+                                            }
+                                        </div>
+
+                                        @foreach (var activity in group.activityList)
+                                        {
+                                            <div class="card-block">
+
+                                                <p class="card-text">
+                                                    @activity.create_dt <small>[wrote by @activity.create_name]</small>
+                                                </p>
+                                                <p>
+                                                    @if (activity.p_seq != null && activity.p_seq != 0)
+                                                    {
+                                                        int progress = 0;
+                                                        string progressClass = "";
+
+                                                        switch (activity.state)
+                                                        {
+                                                            case ProjectHistoryStateCode.interest:
+                                                            case ProjectHistoryStateCode.fail:
+                                                                progress = 0;
+                                                                progressClass = "";
+                                                                break;
+
+                                                            case ProjectHistoryStateCode.recommand:
+                                                            case ProjectHistoryStateCode.paper:
+                                                                progress = 25;
+                                                                progressClass = "progress-bar-warning";
+                                                                break;
+
+                                                            case ProjectHistoryStateCode.interview:
+                                                            case ProjectHistoryStateCode.interviewOk:
+                                                                progress = 50;
+                                                                progressClass = "progress-bar-info";
+                                                                break;
+
+                                                            case ProjectHistoryStateCode.hireReady:
+                                                                progress = 75;
+                                                                progressClass = "progress-bar-primary";
+                                                                break;
+
+                                                            case ProjectHistoryStateCode.hireOk:
+                                                                progress = 100;
+                                                                progressClass = "progress-bar-success";
+                                                                break;
+                                                        }
+
+                                                        <div class="progress mb-10" data-labeltype="percentage" data-goal="-40" data-plugin="progress">
+                                                            <div class="progress-label position-absolute h-p100 w-full text-dark text-center" style="line-height:15px;font-size:.858rem;">@(progress)% - @(Utils.ReturnProjectHistoryStateTxt(activity.state)) ( @Utils.ConvertDateTimeToString(activity.ca_date) )</div>
+                                                            <div class="progress-bar @progressClass" aria-valuemin="-100" aria-valuemax="0" aria-valuenow="-80" role="progressbar" style="width: @(progress)%;">
+
+                                                            </div>
+                                                        </div>
+
+                                                        if (activity.annual_income > 0)
+                                                        {
+                                                            <small>Salary : @Utils.ConvertMoneyToString(activity.annual_income)</small><br />
+                                                        }
+                                                        
+                                                    }
+                                                    @activity.memo
+                                                </p>
+                                            </div>
+                                        }
+                                        @*
+                                            <div class="card-block">
+                                                <div class="card-actions float-right">
+                                                    <a href="javascript:void(0)">
+                                                        <i class="icon wb-chat-working" aria-hidden="true"></i>
+                                                        <span>2500</span>
+                                                    </a>
+                                                    <a href="javascript:void(0)">
+                                                        <i class="icon wb-heart" aria-hidden="true"></i>
+                                                        <span>20</span>
+                                                    </a>
+                                                </div>
+                                                <a class="btn btn-primary btn-outline card-link" href="javascript:void(0)">Read More</a>
+                                            </div>
+                                        *@
+                                    </div>
+                                </div>
+                            }
+                        </li>
+
+                    }
+                }
+
+
+            }
+        }
+    </ul>
+    @Html.PageAjaxLinks(Model.PagingInfo,
+                     ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                     x => Url.Action("CandidateHistoryList", new
+                     {
+                         page = x
+                     }))
+    <!-- End Timeline -->
+
+</div>
+
+@section scripts{
+    <script src="~/Libs/bootstrap-select/js/bootstrap-select.min.js"></script>
+    <script src="~/Libs/remark/global/vendor/jquery-appear/jquery.appear599c.js?v4.0.4"></script>
+    <script src="~/Libs/remark/base/assets/examples/js/structure/timeline.min599c.js?v4.0.4"></script>
+    <script type="text/javascript">
+        //검색 초기화
+        $("#btnReset").click(function () {
+            location.href = "@Url.Action("CandidateHistoryList", "Candidate")";
+        });
+
+        
+    </script>
+
+}

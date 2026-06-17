@@ -1,0 +1,154 @@
+﻿@model Univision.Main.Models.Invoice.InvoiceCreateModel
+
+@using (Html.BeginForm("", "", FormMethod.Post, new { @id = "frmInvoiceStep1" }))
+{
+
+  <div class="card mg-t-10 mg-x-10 bd bd-indigo no_print">
+    <div class="card-header bg-dark tx-white tx-medium tx-bold bd-0 top-head">
+      인보이스 기본정보 설정
+    </div>
+    <div class="card-body part_show_inv_step1">
+      <div class="row">
+        <div class="col-12 col-md-12">
+          <div class="form-group">
+            <!-- 언어 선택 시 인보이스 국문/영문 양식 변경 기능-->
+            <!-- 언어 선택 시 인보이스 국문/영문 필요 데이터 검증(각각 국/영문 후보자명과 회사명) -->
+            <label class="form-control-label">언어 선택(Language): <span class="tx-danger">*</span></label>
+            <div class="form-inline">
+              <label class="rdiobox pd-r-10">
+                <input type="radio" id="invoice_lang_kor" name="invoice_lang" value="0" @(Model.invoice_lang == 0 ? "checked" : "")>
+                <span>국문 (Korean)</span>
+              </label>
+              <label class="rdiobox pd-r-10">
+                <input type="radio" id="invoice_lang_eng" name="invoice_lang" value="1" @(Model.invoice_lang == 1 ? "checked" : "")>
+                <span>영문 (English)</span>
+              </label>
+              <label class="rdiobox">
+                <input type="radio" id="invoice_lang_both" name="invoice_lang" value="2" @(Model.invoice_lang == 2 ? "checked" : "") disabled>
+                <span>국문+영문 (준비 중)</span>
+              </label>
+            </div>
+          </div>
+          @if (Model.pre_invoice != null)
+          {
+            string lang_str = "국문";
+            if (@Model.pre_invoice.invoice_lang == 1)
+            {
+              lang_str = "영문";
+            }
+            <div class="alert alert-info pd-5">
+              <i class="fa fa-info-circle"></i>
+              직전 인보이스 발행 언어 : <b>[@lang_str]</b>
+            </div>
+          }
+        </div>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="col-12 col-md-12">
+          <div class="form-group">
+            <!-- 종류 선택 시 인보이스 내용 변경 기능-->
+            <!-- 선수금 제외 등 빌링 금액 처리 필요 -->
+            <label class="form-control-label">인보이스 종류(Type): <span class="tx-danger">*</span></label>
+            <div class="form-inline">
+              @if (Model.invoice_type == 1)
+              {
+                <label class="rdiobox pd-r-10">
+                  <input type="radio" id="invoice_type_1" name="invoice_type" value="1" @(Model.invoice_type == 1 ? "checked" : "")>
+                  <span>선수금 (Contengency)</span>
+                </label>
+              }
+              else if (Model.invoice_type == 3)
+              {
+                <label class="rdiobox pd-r-10">
+                  <input type="radio" id="invoice_type_3" name="invoice_type" value="3" @(Model.invoice_type == 3 ? "checked" : "")>
+                  <span>컨설팅 (Consulting)</span>
+                </label>
+              }
+              else if (Model.invoice_type == 4)
+              {
+                <label class="rdiobox pd-r-10">
+                  <input type="radio" id="invoice_type_4" name="invoice_type" value="4" @(Model.invoice_type == 4 ? "checked" : "")>
+                  <span>환불 (Refund) : 후보자 중도 퇴사 등의 사유로 일부금액 환불 시</span>
+                </label>
+              }
+              else if (Model.invoice_type == 5)
+              {
+                <label class="rdiobox pd-r-10">
+                  <input type="radio" id="invoice_type_5" name="invoice_type" value="5" @(Model.invoice_type == 5 ? "checked" : "")>
+                  <span>취소 (Cancel) : 재발행 등의 이유로 발행 금액 전액 취소 시 </span>
+                </label>
+              }
+              else
+              {
+                <label class="rdiobox pd-r-10">
+                  <input type="radio" id="invoice_type_0" name="invoice_type" value="0" @(Model.invoice_type == 0 ? "checked" : "")>
+                  <span>성공 (Cantengency)</span>
+                </label>
+                <label class="rdiobox">
+                  <input type="radio" id="invoice_type_2" name="invoice_type" value="2" @(Model.invoice_type == 2 ? "checked" : "") @(Model.retainer_amt <= 0 ? "disabled" : "")>
+                  <span>잔금 (Retainer balance)</span>
+                </label>
+              }
+            </div>
+
+          </div>
+          @if (Model.retainer_amt > 0)
+          {
+            <div class="alert alert-warning pd-5">
+              <i class="fa fa-info-circle"></i>
+              * 선수금 발행내역이 감지되어 잔금인보이스로 자동 선택됩니다.<br />선수금을 제하지 않고 발행을 원하실 경우 일반인보이스로 선택해주세요.
+            </div>
+          }
+        </div>
+      </div>
+      <hr />
+      <div class="row">
+        <iv class="col-12 col-md-6">
+          <div class="form-group">
+            <label class="form-control-label">인보이스 발행 요청일 (Billing date): </label>
+
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <div class="input-group-text">
+                  <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
+                </div>
+              </div>
+              @{
+                string billing_dt = Utils.ConvertDateTimeToString(Model.billing_dt);
+              }
+              @Html.TextBox("billing_dt", billing_dt, new { @class = "form-control", @autocomplete = "off", @readonly = "true", @placeholder = "빌링 요청일(YYYY-MM-DD)" })
+
+            </div>
+          </div>
+        </iv>
+        <div class="col-12 col-md-6">
+          <div class="form-group">
+            <label class="form-control-label">계산서 발행 희망일: <span class="tx-danger">*</span></label>
+
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <div class="input-group-text">
+                  <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
+                </div>
+              </div>
+              @Html.TextBox("tax_req_dt", (Model.tax_req_dt.HasValue ? Utils.ConvertDateTimeToString(Model.tax_req_dt) : ""), new { @class = "form-control step1_check jq-datepicker", @autocomplete = "off", @placeholder = "계산서 발행 희망일(YYYY-MM-DD)" })
+              <span class="input-group-btn pd-l-3">
+                <button class="btn btn-info bd bd-l-0" type="button" onclick="setBillingDate(this)" title="인보이스 발행일과 동일">인보이스 발행일</button>
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="row pd-t-20">
+
+        <div class="col-12 tx-right">
+          <button type="button" id="btn_chk_step1" class="btn btn btn-indigo">다음(Next)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,2595 @@
+﻿@model Univision.Main.Models.Project.ProjectCreateModel
+@using Univision.Security
+
+@{
+  string subTitle = "";
+  if (Model.is_share_pjt == 1)
+  {
+    subTitle = "공유 ";
+  }
+  else if (Model.is_cowork == 1)
+  {
+    subTitle = "Co-work ";
+  }
+
+  ViewBag.Title = subTitle + "프로젝트[채용] " + Model.title;
+  Layout = "~/Views/Shared/_Layout.cshtml";
+
+  string tmp_txt = String.Empty;
+}
+
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/bootstrap-tokenfield/bootstrap-tokenfield.min599c.css?v4.0.4">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/project.min599c.css?4.0.2" />
+<link rel="stylesheet" href="~/Libs/bootstrap-toggle/css/bootstrap-toggle.min.css">
+<style>
+  .placeDiv span {
+    font-size: 15px;
+  }
+
+  .job_list {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 250px;
+    display: inline-block;
+  }
+
+  .font-weight-bold {
+    font-weight: bold !important;
+  }
+
+
+  #PjtFileBody.removal-lock .btn-pjt-file-remove {
+    display: none;
+  }
+
+  #PjtFileBody .link-pjt-file {
+    width: 85%;
+  }
+
+  #PjtFileBody.removal-lock .link-pjt-file {
+    width: 100% !important;
+  }
+
+  .file_rst > div:nth-child(1n+5) {
+    display: none;
+  }
+
+  .file_rst > div:nth-child(1n+6).btn-more, .file_rst.more > div:nth-child(1n+4).btn-collapse {
+    cursor: pointer;
+    display: block;
+  }
+
+  .file_rst > div:nth-child(1n+6).btn-collapse, .file_rst.more > div:nth-child(1n+4).btn-more {
+    display: none;
+  }
+
+  .file_rst.more > div.file_div {
+    display: block !important;
+  }
+
+  .file_rst > div.btn-more, .file_rst > div.btn-collapse {
+    display: none;
+  }
+</style>
+
+<div class="page-content">
+  @using (Html.BeginForm("ProjectProgressExcelList", "Project", FormMethod.Get, new { @id = "ExcelForm" }))
+  {
+    <input type="hidden" name="excel_p_seq" id="excel_p_seq" value="@Model.p_seq" />
+    <input type="hidden" name="excel_state" id="excel_state" value="" />
+    <input type="hidden" name="excel_orderTxt" id="excel_orderTxt" value="" />
+    <input type="hidden" name="excel_orderOption" id="excel_orderOption" value="" />
+
+  }
+  @Html.HiddenFor(x => x.p_seq)
+
+  <!-- 공유 프로젝트 시작-->
+  <div id="sharePanel" class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms; display:none;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-share"></i>
+        공유 정보
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="shareInfo" class="panel-body">
+      <div class="row">
+        <div class="col-md-12">
+          <label class="form-control-label form-control-label-sm text-secondary" for="share_fee_rate">Fee Share</label>
+          <p class="form-control-plaintext">
+            @(Model.share_fee_rate)%
+          </p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <label class="form-control-label form-control-label-sm text-secondary" for="share_comments">Comment</label>
+          <p class="form-control-plaintext">
+
+            @if (!String.IsNullOrWhiteSpace(Model.share_comments))
+            {
+              @Html.Raw(Model.share_comments.Replace("\r\n", "<br />").Replace("\n", "<br />").Replace("\r", "<br />"));
+            }
+          </p>
+        </div>
+      </div>
+
+      <!--
+        <div class="row">
+            <div class="col-md-12">
+                <label class="form-control-label form-control-label-sm text-secondary" for="secret_info">비공개정보</label>
+                <p class="form-control-plaintext">
+                    @Model.secret_info &nbsp;
+                </p>
+            </div>
+        </div>
+        <div id="commentList" class="card border border-primary">
+        </div>
+      -->
+    </div>
+  </div>
+  <!-- 공유 프로젝트 끝-->
+  <div class="panel">
+    <div class="panel-heading">
+      <h3 class="panel-title"></h3>
+
+
+      <div class="panel-actions">
+
+        <div class="panel-action">
+          @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+          {
+            if (Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+            {
+              if (Model.is_my_key == 1)
+              {
+                <button type="button" class="btn btn-sm btn-warning btn-outline" id="btnSetKeyPjt" onclick="cancelMyKeyProject(@Model.p_seq)" title="Remove from key project">
+                  <i class="fa fa-key"></i>
+                  Key 프로젝트 해제
+                </button>
+              }
+              else
+              {
+                <button type="button" class="btn btn-sm btn-success btn-outline" id="btnSetKeyPjt" onclick="SetMyKeyProject(@Model.p_seq)" title="Set as key project">
+                  <i class="fa fa-key"></i>
+                  Key 프로젝트로 설정
+                </button>
+
+              }
+            }
+            if (Model.pjt_status == 1)
+            {
+
+              <span class="pr-20">
+                @if (Model.is_share_3m == 1)
+                {
+                  <button type="button" class="btn btn-sm btn-danger" onclick="cancelShareProject(this, @Model.p_seq)" title="공유 취소/마감">Cancel Share</button>
+
+                }
+                else
+                {
+                  <button type="button" class="btn btn-sm btn-primary" onclick="shareProject(this, @Model.p_seq)" title="프로젝트 공유하기">Share</button>
+                }
+                @if (Model.is_cowork == 1)
+                {
+                  <button type="button" class="btn btn-sm btn-warning" onclick="cancelCoWorkProject(this, @Model.p_seq)" title="Co-work 취소/마감">Cancel Cowork</button>
+                }
+                else
+                {
+                  <button type="button" class="btn btn-sm btn-info" onclick="CoWorkAlram(@Model.p_seq)" title="Co-work 요청">Cowork</button>
+
+                }
+              </span>
+              <button type="button" class="btn btn-sm btn-primary" id="btnPjtState">프로젝트 상태변경</button>
+              <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq, @c_seq = Model.c_seq, @type = "pjtCopy" })" class="btn btn-sm btn-info" title="이 프로젝트 복사">
+                Copy
+              </a>
+
+            }
+            else
+            {
+              @*PMS 오픈 관련 등록기능 제한*@
+              @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+                {*@
+              <button type="button" class="btn btn-sm btn-warning" id="btnPjtState">프로젝트 상태변경</button>
+              <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq, @c_seq = Model.c_seq, @type = "pjtCopy" })" class="btn btn-sm btn-info" title="이 프로젝트 복사">
+                Copy
+              </a>
+              @*}*@
+            }
+            <button type="button" class="btn btn-sm btn-success border-primary" id="btnCreateInvoice" onclick="CreateInvoice(@Model.p_seq)" title="인보이스 발행(채용, 선수금, 취소 등)">
+              <i class="fa fa-file-invoice"></i>
+              인보이스 발행 (Invoice)
+            </button>
+          }
+          @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+          {
+            if (AppIdentity.ua_seq <= 3 || Model.pjt_status == 1 || Model.pjt_status == 4)
+            {
+
+              <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq })" id="btnModify" class="btn btn-sm btn-secondary" title="프로젝트 정보 수정">수정 (Modify)</a>
+
+            }
+          }
+          @if (Model.log_cnt > 0)
+          {
+            <a href="@Url.Action("ProjectLog", "Log", new { p_seq = Model.p_seq })" id="btnHisotry" class="btn btn-sm btn-default">Log</a>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-newspaper"></i>
+        Project Information [Recruitment]
+        @{
+          string classNm = "";
+          string txt = "";
+
+          switch (Model.pjt_status)
+          {
+            case 1:
+              classNm = "badge-primary";
+              txt = "진행";
+              break;
+            case 2:
+              classNm = "badge-warning";
+              txt = "보류";
+              break;
+            case 3:
+              classNm = "badge-danger";
+              txt = "종료";
+              break;
+            case 4:
+              classNm = "badge-info";
+              txt = "완료";
+              break;
+            case 5:
+              classNm = "badge-success";
+              txt = "성공";
+              break;
+
+          }
+        }
+        <span class="badge @classNm">@txt</span>
+        <span style="font-size:12px; color:black">@Model.status_comment</span>
+      </h3>
+      <div class="panel-actions">
+
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectInfo" class="panel-body">
+      <div class="row">
+        <div class="form-group col-md-4 col-6">
+          <label class="form-control-label form-control-label-sm text-secondary" for="company_name">
+            Client
+            <a href="@Url.Action("ClientDetail", "Client", new { c_seq = Model.c_seq })" target="_blank" title="고객사 상세정보 열기">
+              <i class="fas fa-external-link-alt"></i>
+            </a>
+          </label>
+          @Html.HiddenFor(x => x.c_seq)
+          <div class="input-group input-group-sm">
+            <lable class="form-control-plaintext">
+              @Model.company_name
+            </lable>
+          </div>
+        </div>
+        <div class="form-group col-md-8 col-12">
+          <label class="form-control-label form-control-label-sm text-secondary" for="title">
+            Title
+          </label>
+          <div class="input-group input-group-sm">
+            <lable class="form-control-plaintext">
+              @if (Model.is_pe == 1)
+              {
+                <span class="badge badge-info" title="PE Portfolio">PE</span>
+              }
+              @Model.title
+            </lable>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="form-group col-md-6 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="AMDiv">
+            AM
+          </label>
+          @{
+            tmp_txt = "";
+            if (Model.amList.Count > 0)
+            {
+              foreach (var am in Model.amList)
+              {
+                tmp_txt += !String.IsNullOrEmpty(tmp_txt) ? "," + @am.name : "" + @am.name;
+
+              }
+            }
+          }
+
+          <div class="input-group input-group-sm">
+            <lable class="form-control-plaintext">
+              @tmp_txt
+            </lable>
+          </div>
+        </div>
+
+        <div class="form-group col-md-6 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="Searcher">
+            SM
+
+          </label>
+          @{
+            tmp_txt = "";
+            if (Model.searcherList.Count > 0)
+            {
+              foreach (var searcher in Model.searcherList)
+              {
+                if (!String.IsNullOrEmpty(tmp_txt))
+                {
+                  tmp_txt += ",";
+                }
+
+                tmp_txt += searcher.name;
+              }
+            }
+
+          }
+          <div class="input-group input-group-sm">
+            <lable class="form-control-plaintext">
+              @tmp_txt
+            </lable>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="form-group col-6 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="businessCodeDiv">
+            Industry  <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i>
+          </label>
+          <div class="input-group input-group-sm" id="businessCodeDiv">
+            <lable class="form-control-plaintext longLen">
+              - @Model.business_name1 > @Model.business_name2 &nbsp;
+            </lable>
+          </div>
+          @if (!String.IsNullOrEmpty(Model.sub_business_name2))
+          {
+            <div class="input-group input-group-sm pt-0" id="businessCodeDiv">
+              <lable class="form-control-plaintext pt-0 longLen">
+                - @Model.sub_business_name1 > @Model.sub_business_name2 &nbsp;
+              </lable>
+            </div>
+          }
+        </div>
+        <div class="form-group col-6 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="jobCodeDiv">
+            Job function  <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i>
+
+          </label>
+          <div class="input-group input-group-sm pt-0" id="jobCodeDiv">
+            <lable class="form-control-plaintext longLen">
+              - @Model.job_name1 > @Model.job_name2 &nbsp;
+            </lable>
+          </div>
+          @if (!String.IsNullOrEmpty(Model.sub_job_name2))
+          {
+            <div class="input-group input-group-sm pt-0" id="jobCodeDiv">
+              <lable class="form-control-plaintext pt-0 longLen">
+                - @Model.sub_job_name1 > @Model.sub_job_name2 &nbsp;
+              </lable>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="form-group col-md-4 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="exp_salary">
+            Salary
+            @if (Model.currency_cd != "KRW" && Model.exp_salary_won.HasValue)
+            {
+              <span class="text-primary font-weight-900" id="exp_won_label">(원화 환산 예상액 : 약 @Utils.ConvertMoneyToString(Model.exp_salary_won)원)</span>
+            }
+          </label>
+          <div class="input-group input-group-sm">
+            <lable class="form-control-plaintext text-right">
+              @Utils.ConvertMoneyToString(Model.exp_salary)
+              @*Utils.ReturnCurrencyTxt(Model.currency_cd)*@
+              [@Model.currency_cd]
+              @Html.HiddenFor(x => x.exp_salary)
+              <input type="hidden" id="pjt_currency_cd" value="@Model.currency_cd" />
+            </lable>
+          </div>
+        </div>
+        <div class="form-group col-md-2 tbw50">
+
+          <label class="form-control-label form-control-label-sm text-secondary" for="fee_rate">Fee rate </label>
+          <div class="input-group input-group-sm">
+            <lable class="form-control-plaintext text-right">
+              @String.Format("{0:0.#}", Model.fee_rate) %
+            </lable>
+            @*<span class="input-group-addon">%</span>*@
+          </div>
+        </div>
+        <div class="form-group col-md-2 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="position_seq">
+            Position
+          </label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Utils.ReturnPositionCodeTxt(Model.position_seq)
+            </label>
+          </div>
+        </div>
+        <div class="form-group col-md-2 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="fee_rate">포지션명 </label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Model.position_str &nbsp;
+            </label>
+          </div>
+        </div>
+        <div class="form-group col-md-2">
+          <label class="form-control-label form-control-label-sm text-secondary" for="expreience_number">
+            Experience(Year)
+          </label>
+          <div class="input-group input-group-sm">
+            <div class="input-group input-group-sm">
+              @{
+                string experience_type = "";
+                switch (Model.experience_type)
+                {
+                  case 1:
+                    experience_type = "년 이상";
+                    break;
+                  case 2:
+                    experience_type = "년 이하";
+                    break;
+                  default:
+                    experience_type = "";
+                    break;
+                }
+              }
+              <label class="form-control-plaintext">
+                @Model.expreience_number @experience_type
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-group col-12 pb-10" id="internal_div">
+          <label class="form-control-label form-control-label-sm text-secondary" for="requirement">
+            내부 참고자료 <small class="text-info">(포스팅 시 공개되지 않는 내용입니다.)</small>
+          </label>
+          <div>
+            <label class="form-control border-info" style="min-height:100px; height:auto" id="internal_label">
+              @if (!String.IsNullOrEmpty(Model.internal_contents))
+              {
+                /*@Html.Raw(Model.requirement.Replace("\r\n", "<br />").Replace("\n", "<br />").Replace("\r", "<br />"))*/
+                @Html.Raw(Model.internal_contents.Replace("&lt;", "<").Replace("&gt;", ">").Replace(System.Environment.NewLine, " <br />"))
+              }
+            </label>
+          </div>
+
+        </div>
+        <div class="form-group col-md-6">
+          <label class="form-control-label form-control-label-sm text-secondary" for="assign_task">
+            담당업무 <small class="text-secondary">(포스팅 시 공개되는 내용입니다.)</small>
+          </label>
+          <div>
+            <label class="form-control" style="min-height:100px; height:auto">
+              @if (!String.IsNullOrEmpty(Model.assign_task))
+              {
+                /*@Html.Raw(Model.assign_task.Replace("\r\n", "<br />").Replace("\n", "<br />").Replace("\r", "<br />"))*/
+                @Html.Raw(Model.assign_task.Replace("&lt;", "<").Replace("&gt;", ">").Replace(System.Environment.NewLine, " <br />"))
+              }
+              &nbsp;
+            </label>
+          </div>
+
+        </div>
+        <div class="form-group col-md-6">
+          <label class="form-control-label form-control-label-sm text-secondary" for="requirement">
+            자격요건 <small class="text-secondary">(포스팅 시 공개되는 내용입니다.)</small>
+          </label>
+          <div>
+            <label class="form-control" style="min-height:100px; height:auto">
+              @if (!String.IsNullOrEmpty(Model.requirement))
+              {
+                /*@Html.Raw(Model.requirement.Replace("\r\n", "<br />").Replace("\n", "<br />").Replace("\r", "<br />"))*/
+                @Html.Raw(Model.requirement.Replace("&lt;", "<").Replace("&gt;", ">").Replace(System.Environment.NewLine, " <br />"))
+              }
+              &nbsp;
+            </label>
+          </div>
+
+        </div>
+
+        <div class="form-group col-12 pt-10">
+          <h5 class="form-control-label form-control-label-sm text-secondary" title="파일 - JD 또는 참고서류 업로드.">
+            <i class="fa fa-folder-open fa-fw"></i>
+            파일 - JD 또는 참고서류 업로드.
+            @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+            {
+              <label class="float-right checkbox-inline" title="삭제 할 파일이 있을 경우 잠금을 해제해 주세요">
+                <input type="checkbox" id="switch-pjt-file-remove" data-size="mini" data-toggle="toggle" data-off="<i class='fa fa-lock'></i> Remove Lock" data-on="<i class='fa fa-unlock'></i> Remove Unlock">
+              </label>
+            }
+          </h5>
+          <div id="PjtFileBody" class="removal-lock">
+          </div>
+        </div>
+      </div>
+      <div class="row">
+
+        <div class="form-group col-md-2 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="recruit_number">
+            모집인원
+          </label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Model.recruit_number &nbsp;
+            </label>
+          </div>
+        </div>
+        <div class="form-group col-md-3 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="edu_code">Education</label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Utils.ReturnEducationTxt(Model.edu_code) &nbsp;
+            </label>
+          </div>
+        </div>
+        <div class="form-group col-md-3 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="foreign_lang">Language</label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Utils.ReturnLanguageCodeTxt(Model.foreign_lang)
+              @if (!string.IsNullOrWhiteSpace(Model.foreign_lang))
+              {
+                <text>[@Utils.ReturnLanguageLevelCodeTxt(Model.foreign_level)]</text>
+              } &nbsp;
+            </label>
+          </div>
+        </div>
+        <div class="form-group col-md-4 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="place">
+            Place
+          </label>
+          @{
+            tmp_txt = "";
+            if (Model.placeList.Count > 0)
+            {
+              foreach (var place in Model.placeList)
+              {
+
+
+                if (place.code1 == place.code2)
+                {
+                  if (!String.IsNullOrEmpty(tmp_txt))
+                  {
+                    tmp_txt += ", ";
+                  }
+
+                  tmp_txt += "[" + place.area2 + "]";
+
+                  //tmp_txt += !String.IsNullOrEmpty(tmp_txt) ? "," : "" + "[" + place.area2 + "]";
+                }
+                else
+                {
+                  if (!String.IsNullOrEmpty(tmp_txt))
+                  {
+                    tmp_txt += ", ";
+                  }
+
+                  tmp_txt += "[" + (place.area1 + " " + place.area2) + "]";
+
+                  //tmp_txt += !String.IsNullOrEmpty(tmp_txt) ? "," : "" + "[" + (place.area1 + " " + place.area2) + "]";
+                }
+              }
+            }
+
+          }
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @tmp_txt &nbsp;
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-group col-md-3">
+          <label class="form-control-label  form-control-label-sm text-secondary" for="is_posting">Web posting</label>
+          @if (Model.is_posting == 1 && Model.pjt_status == 1)
+          {
+            <a href="https://www.unicosearch.com/candidate/recruit/@Model.p_seq" target="_blank" title="포스팅 보기">
+              <i class="fas fa-external-link-alt"></i>
+            </a>
+          }
+
+          <div>
+            <div class="radio-custom radio-custom-sm radio-default radio-inline">
+              <input type="radio" id="hire" name="is_posting" value="1" @(Model.is_posting == 1 ? "checked" : "") disabled>
+              <label for="hire">Yes</label>
+            </div>
+            <div class="radio-custom radio-custom-sm radio-default radio-inline">
+              <input type="radio" id="reputation" name="is_posting" value="0" @(Model.is_posting != 1 ? "checked" : "") disabled>
+              <label for="radio">No</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group col-md-9">
+          <label class="form-control-label form-control-label-sm text-secondary">
+            Documents
+          </label>
+          <div id="paperDiv" name="paperDiv" class="form-inline">
+            <div class="checkbox-custom checkbox-custom-sm checkbox-primary">
+              <input type="checkbox" id="is_kor_resume" value="1" @(Model.is_kor_resume == 1 ? "checked" : "") disabled>
+              <label for="is_kor_resume">국문이력서</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="checkbox-custom checkbox-custom-sm checkbox-primary">
+              <input type="checkbox" id="is_eng_resume" value="1" @(Model.is_eng_resume == 1 ? "checked" : "") disabled>
+              <label for="is_eng_resume">영문이력서</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="checkbox-custom checkbox-custom-sm checkbox-primary">
+              <input type="checkbox" id="is_portfolio" value="1" @(Model.is_portfolio == 1 ? "checked" : "") disabled>
+              <label for="is_portfolio">포트폴리오</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="checkbox-custom checkbox-custom-sm checkbox-primary">
+              <input type="checkbox" id="is_self_introduction" value="1" @(Model.is_self_introduction == 1 ? "checked" : "") disabled>
+              <label for="is_self_introduction">자기소개서</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="checkbox-custom checkbox-custom-sm checkbox-primary">
+              <input type="checkbox" id="is_etc" value="1" @(Model.is_etc == 1 ? "checked" : "") disabled>
+              <label for="is_etc">기타</label>&nbsp;&nbsp;
+            </div>
+            @Model.etc_comment &nbsp;
+
+          </div>
+        </div>
+      </div>
+
+
+
+      <div class="row">
+        <div class="form-group col-6">
+          <label class="form-control-label form-control-label-sm text-secondary" title="프로젝트 진행(재진행) 일자">
+            Open Date
+          </label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Model.open_dt
+            </label>
+          </div>
+        </div>
+        <div class="form-group col-6">
+          <label class="form-control-label form-control-label-sm text-secondary" title="프로젝트 마감(종료, 보류, 완료, 성공) 일자">
+            Close Date
+          </label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Model.close_dt
+            </label>
+          </div>
+        </div>
+      </div>
+      @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+      {
+        if (AppIdentity.ua_seq <= 3 || Model.pjt_status == 1 || Model.pjt_status == 4)
+        {
+          <div class="row">
+            <div class="col-md-12 vertical-align text-right pt-10">
+              <div class="vertical-align-bottom">
+                <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq })" id="btnModify" class="btn btn-success" title="프로젝트 정보 수정">Modify Project</a>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- 프로젝트 부가정보 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-project-diagram"></i>
+        A.I. 제안을 위한 추가정보 입력 <small class="text-danger">(※ 후보자 A.I. 제안 및 관리를 위한 항목으로 외부에 노출되지 않습니다.)</small>
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectAdd" class="panel-body">
+      <div class="row">
+        @*
+          <div class="form-group col-md-6">
+              <label class="form-control-label form-control-label-sm text-secondary">구인절차</label>
+              <div class="form-inline">
+                  <div class="checkbox-custom checkbox-primary">
+                      <input type="checkbox" id="is_pre_interview" value="1" @(Model.is_pre_interview == 1 ? "checked" : "") disabled>
+                      <label for="is_pre_interview" class="mr-30">사전면접</label>
+                  </div>
+
+                  <div class="checkbox-custom checkbox-primary">
+                      <input type="checkbox" id="is_number" value="1" @(Model.is_number == 1 ? "checked" : "") disabled>
+                      <label></label>
+                  </div>
+
+                  <select class="form-control form-control-sm mr-5 sts08" id="interview_number" name="interview_number" disabled>
+                      <option value="1" @(Model.interview_number == 1 ? "selected" : "")>1</option>
+                      <option value="2" @(Model.interview_number == 2 ? "selected" : "")>2</option>
+                      <option value="3" @(Model.interview_number == 3 ? "selected" : "")>3</option>
+                      <option value="4" @(Model.interview_number == 4 ? "selected" : "")>4</option>
+                      <option value="5" @(Model.interview_number == 5 ? "selected" : "")>5</option>
+                  </select>
+                  <label for="interview_number" class="mr-30">차 면접</label>
+
+                  <div class="checkbox-custom checkbox-primary">
+                      <input type="checkbox" id="is_personality_test" value="1" @(Model.is_personality_test == 1 ? "checked" : "") disabled>
+                      <label for="is_personality_test" class="mr-30 sts09">인적성검사</label>
+                  </div>
+              </div>
+          </div>
+        *@
+        <div class="form-group col-md-4">
+          <label class="form-control-label form-control-label-sm text-secondary">산업/직무 조건</label>
+          <div>
+            @if (Model.no_business == 1)
+            {
+              <span id="no_business_type" class="badge badge-lg badge-outline badge-primary">전체 산업에서 제안받기</span>
+            }
+            else if (Model.no_business == 2)
+            {
+              <span id="no_business_type" class="badge badge-lg badge-outline badge-info no_business_type">현재 산업대분류에서 제안받기</span>
+            }
+            else
+            {
+              <span id="no_business_type" class="badge badge-lg badge-outline badge-dark no_business_type">등록한 산업으로만 제안받기</span>
+            }
+
+            @if (Model.no_job == 1)
+            {
+              <span id="no_job_type" class="badge badge-lg badge-outline badge-primary">전체 직무에서 제안받기</span>
+            }
+            else if (Model.no_job == 2)
+            {
+              <span id="no_job_type" class="badge badge-lg badge-outline badge-info no_job_type">현재 직무대분류에서 제안받기</span>
+            }
+            else
+            {
+              <span id="no_job_type" class="badge badge-lg badge-outline badge-dark no_job_type">등록한 직무만 제안받기</span>
+            }
+          </div>
+        </div>
+        @*
+          <div class="form-group col-md-4">
+            <label class="form-control-label form-control-label-sm text-secondary" for="confidentiallity">Confidentiallity</label>
+            <div class="checkbox-custom checkbox-primary">
+              <input type="checkbox" id="confidentiallity" name="confidentiallity" value="1" @(Model.confidentiallity == 1 ? "checked" : "") disabled>
+              <label for="inputUnchecked"></label>
+            </div>
+          </div>
+        *@
+        <div class="form-group col-md-4">
+          <label class="form-control-label form-control-label-sm text-secondary" for="genderMan">성별 <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i></label>
+          <div>
+            <div class="radio-custom radio-default radio-inline">
+              <input type="radio" id="genderMan" name="gender_type" value="1" @(Model.gender_type == 1 ? "checked" : "") disabled>
+              <label for="hire">남</label>
+            </div>
+            <div class="radio-custom radio-default radio-inline">
+              <input type="radio" id="genderWoman" name="gender_type" value="2" @(Model.gender_type == 2 ? "checked" : "") disabled>
+              <label for="genderWoman">여</label>
+            </div>
+            <div class="radio-custom radio-default radio-inline">
+              <input type="radio" id="genderNone" name="gender_type" value="0" checked @(Model.gender_type == 0 ? "checked" : "") disabled>
+              <label for="genderNone">무관</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group col-md-4 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="start_age">연령대(생년) <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i> - <small>(ex : 1980 ~ 1990)</small></label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Model.start_age ~ @Model.end_age
+            </label>
+
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-group col-md-4 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="target_school_nm">타겟학교 <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i></label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Model.target_school_nm &nbsp;
+            </label>
+          </div>
+        </div>
+        <div class="form-group col-md-4 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="target_major_nm">타겟전공 <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i></label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Model.target_major_nm &nbsp;
+            </label>
+          </div>
+        </div>
+        <div class="form-group col-md-4 tbw50">
+          <label class="form-control-label form-control-label-sm text-secondary" for="target_company_nm">타겟회사 <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i></label>
+          <div class="input-group input-group-sm">
+            <label class="form-control-plaintext">
+              @Model.target_company_nm &nbsp;
+            </label>
+          </div>
+        </div>
+        <div class="form-group col-md-12">
+          <label class="form-control-label form-control-label-sm text-secondary" for="keywordField">통합 검색어 (OR 조건) <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i></label>
+          @{
+            var keywordVal = "";
+            if (Model.keywordList.Count > 0)
+            {
+              keywordVal = String.Join(",", Model.keywordList.Select(x => x.pk_name).ToArray());
+            }
+          }
+          <input type="text" id="keywordField" name="keywordField" class="form-control form-control-sm" data-plugin="tokenfield" value="@keywordVal" readonly />
+        </div>
+      </div>
+    </div>
+
+
+
+  </div>
+  <!-- 프로젝트 부가정보 끝-->
+  <!-- 프로젝트 진행사항 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-tasks"></i>
+        Project Progress <small>(진행상황)</small>
+      </h3>
+      <div class="panel-actions sts11">
+        <div class="sts10" style="display:inline-block">
+          @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+          {
+            <a href="#" class="btn btn-xs btn-success btn-outline" id="btn_progress_excel" title="Download candidates list to Excel ">EXCEL</a>
+          }
+          <a href="#" class="btn btn-xs btn-info" id="btn_progress_create_checked" title="Changing the status of selected candidates">선택한 후보자 일괄 상태변경</a>
+          @if (Model.pjt_status == 1 || Model.pjt_status == 4)
+          {
+            <!--<a href="#" class="btn btn-xs btn-success" id="btn_gpt_makeup" title="GPT에게 메이크업 요청(beta)">Makeup(by GPT)<span class="badge badge-primary">beta</span></a>-->
+            <a href="#" class="btn btn-xs btn-success" id="btn_gpt_makeup2" title="GPT에게 메이크업 요청">Makeup(by GPT)</a>
+            @*PMS 오픈 관련 등록기능 제한*@
+            @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      {*@
+            <a href="#" class="btn btn-xs btn-dark" id="btn_send_privacy">개인정보 동의서 발송</a>
+            <a href="#" class="btn btn-xs btn-warning" id="btn_requestmakeup" title="메이크업 요청">Request Makeup</a>
+            <a href="@Url.Action("CandidateList", "Candidate")" class="btn btn-xs btn-primary">Add New candidate</a>
+            <a href="#" class="btn btn-xs btn-info btn-outline" id="btn_move_candidate" title="Move selected candidates">후보자 이관</a>
+            @*}*@
+          }
+        </div>
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectProgress" class="panel-body" style="z-index:1;">
+      <!-- ajax 로 바인딩 -->
+    </div>
+  </div>
+  <!-- 프로젝트 진행사항 끝 -->
+  <!-- 간편 후보자 리스트 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms; display:none;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-id-card"></i>
+        간편 후보자 현황
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectSimpleCandidate" class="panel-body">
+
+    </div>
+  </div>
+  <!-- 간편 후보자 리스트 끝-->
+  @if (Model.pjt_status == 1)
+  {
+    <!-- 프로젝트 후보자 제안 시작 -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <i class="fas fa-user-plus"></i>
+          후보자 A.I 제안<span class="text-primary" id="pjg_sugg_total"></span> - <small>※ 후보자 자동제안 참조 항목 (<i class="fas fa-info-circle text-info"></i>) 을 입력하시면 정확도가 올라갑니다.</small>
+        </h3>
+        <div class="panel-actions">
+          <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+        </div>
+      </div>
+      <div id="projectCandiSuggetion" class="panel-body">
+
+      </div>
+    </div>
+    <!-- 프로젝트 후보자 제안 끝 -->
+  }
+  <!-- 프로젝트 담당자 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-user-tie"></i>
+        Contact (채용 및 인보이스 담당자)
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectContact" class="panel-body">
+      @using (Html.BeginForm("ProjectNewContactSave", "Project", FormMethod.Post, new { @id = "ProjectContactForm" }))
+      {
+        <div class="row">
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_name">이름</label>
+            @Html.HiddenFor(x => x.cc_seq)
+            @Html.TextBoxFor(x => x.contact_name, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_position">직함</label>
+            @Html.TextBoxFor(x => x.contact_position, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="male">Gender</label>
+            <div class="form-inline">
+              <div class="form-group">
+                <div class="radio-custom radio-default radio-inline">
+                  <input type="radio" id="male" name="contact_gender" value="1" disabled @(Model.contact_gender == 1 ? "checked" : "")>
+                  <label for="hire">남</label>
+                </div>
+                <div class="radio-custom radio-default radio-inline">
+                  <input type="radio" id="female" name="contact_gender" value="2" disabled @(Model.contact_gender == 2 ? "checked" : "")>
+                  <label for="genderWoman">여</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_division">부서명</label>
+            @Html.TextBoxFor(x => x.contact_division, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_email">이메일</label>
+            @Html.TextBoxFor(x => x.contact_email, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_phone">전화번호</label>
+            @Html.TextBoxFor(x => x.contact_phone, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="contact_cell_phone">휴대폰</label>
+            @Html.TextBoxFor(x => x.contact_cell_phone, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3 vertical-align ">
+            <div class="vertical-align-bottom">
+              <button type="submit" id="btnNewContactSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
+              <button type="button" id="btnNewContactReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
+              <button type="button" id="btnContactSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
+              <button type="button" id="btnContact" class="btn btn-sm btn-success">담당자 불러오기</button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+  <!-- 프로젝트 담당자 끝-->
+  <!-- 세금계산서 담당자 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-wallet"></i>
+        E-Tax Information
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectTax" class="panel-body">
+      @using (Html.BeginForm("ProjectNewTaxContactSave", "Project", FormMethod.Post, new { @id = "ProjectTaxForm" }))
+      {
+        <div class="row">
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_name">담당자</label>
+            @Html.HiddenFor(x => x.ctc_seq)
+            @Html.TextBoxFor(x => x.tax_name, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_division">담당부서</label>
+            @Html.TextBoxFor(x => x.tax_division, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_email">이메일</label>
+            @Html.TextBoxFor(x => x.tax_email, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_phone">전화번호</label>
+            @Html.TextBoxFor(x => x.tax_phone, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_cell_phone">휴대폰</label>
+            @Html.TextBoxFor(x => x.tax_cell_phone, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_deposit_manager">발행용 담당자명</label>
+            @Html.TextBoxFor(x => x.tax_deposit_manager, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3">
+            <label class="form-control-label" for="tax_deposit_email">발행용 이메일</label>
+            @Html.TextBoxFor(x => x.tax_deposit_email, new { @class = "form-control form-control-sm", @readonly = "readonly" })
+          </div>
+          <div class="form-group col-md-3 vertical-align">
+            <div class="vertical-align-bottom">
+              <button type="submit" id="btnNewTaxSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
+              <button type="button" id="btnNewTaxReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
+              <button type="button" id="btnTaxSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
+              <button type="button" id="btnTax" class="btn btn-sm btn-success">계산서 담당 불러오기</button>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+  <!-- 세금계산서 담당자 끝 -->
+  <!-- 프로젝트 인보이스 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-file-invoice-dollar"></i>
+        Invoice
+        <button type="button" class="btn btn-xs btn-success" id="btnCreateRetainerInvoice" title="선수금 인보이스 발행요청">
+          Retainer Invoice(선수금 인보이스)
+        </button>
+
+        <button type="button" class="btn btn-xs btn-secondary" id="btnCreateRefundInvoice" style="display:none;" title="환불 인보이스 발행요청">
+          Refund Invoice(환불 인보이스)
+        </button>
+
+        <span class="small"><small class="text-info">- Contigency 인보이스는 입사확정 후보자 정보에서 요청하십시오.</small></span>
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectInvoice" class="panel-body">
+
+    </div>
+  </div>
+  <!-- 프로젝트 인보이스 끝 -->
+  <!-- 프로젝트 메모 시작 -->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-sticky-note"></i>
+        Memo
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="projectMemo" class="panel-body">
+
+    </div>
+  </div>
+  <!-- 프로젝트 메모 끝 -->
+
+  <div class="modal fade" id="InvoiceCreateModal" aria-hidden="false" aria-labelledby="InvoiceCreateModalLabel" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-simple">
+      <div class="modal-content sts12" style="width:750px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+          <h4 class="modal-title text-center" id="InvoiceCreateModalLabel">
+            <i class="fas fa-file-invoice-dollar"></i>
+            Invoice Information
+          </h4>
+        </div>
+        <div class="modal-body" style="max-height:800px; overflow-y:auto">
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="ProjectMoveCandidateModal" aria-hidden="false" aria-labelledby="ProjectMoveCandidateModalLabel" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-simple">
+      <div class="modal-content sts12" style="width:750px;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+          <h4 class="modal-title text-center" id="InvoiceCreateModalLabel">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            선택후보자 이관하기
+          </h4>
+        </div>
+        <div class="modal-body" style="max-height:800px; overflow-y:auto">
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section scripts {
+  <script src="~/Libs/bootstrap-toggle/js/bootstrap-toggle.min.js"></script>
+  <script src="~/Libs/remark/global/vendor/bootstrap-tokenfield/bootstrap-tokenfield.min599c.js?v4.0.4"></script>
+  <script src="~/Libs/remark/global/js/Plugin/bootstrap-tokenfield.min599c.js?v4.0.4"></script>
+  <script type="text/javascript">
+          window.model_p_seq = "@Model.p_seq";
+          window.model_c_seq = "@Model.c_seq";
+          window.model_is_share_3m = "@Model.is_share_3m";
+          window.model_is_cowork = "@Model.is_cowork";
+          window.model_pjt_status = "@Model.pjt_status";
+
+          window.url_request_makeup = "@Url.Action("RequestMakeup", "Project")";
+          window.url_project_rt_invoice_create = "@Url.Action("ProjectRetainerInvoiceCreate", "Project")";
+          window.url_project_rf_invoice_create = "@Url.Action("ProjectRefundInvoiceCreate", "Project")";
+          window.url_invoice_new_select = "@Url.Action("InvoiceNewSelect", "Invoice")";
+          window.url_share_project_create = "@Url.Action("ShareProjectCreate", "Project")";
+          window.url_share_project_cancel = "@Url.Action("ShareProjectCancel", "Project")";
+          window.url_create_cowork_alram = "@Url.Action("CreateCoWorkAlram", "Project")";
+          window.url_create_key_project = "@Url.Action("CreateKeyProject", "Project")";
+          window.url_cowork_project_cancel = "@Url.Action("CoworkProjectCancel", "Project")";
+          window.url_cancel_key_project = "@Url.Action("RemoveKeyProject", "Project")";
+          window.url_project_state_change = "@Url.Action("ProjectStateChange", "Project")";
+          window.url_search_project_tax_contact = "@Url.Action("SearchProjectTaxContact", "Project")";
+          window.url_search_project_contact = "@Url.Action("SearchProjectContact", "Project")";
+          window.url_project_tax_contact_save = "@Url.Action("ProjectTaxContactSave", "Project")";
+          window.url_project_contact_save = "@Url.Action("ProjectContactSave", "Project")";
+          window.url_project_progress_list = "@Url.Action("ProjectProgressList", "Project")";
+          window.url_project_set_sugg_type = "@Url.Action("ProjectSetSuggType", "Project")";
+          window.url_project_candi_suggetion_list = "@Url.Action("ProjectCandiSuggetionList", "Project")";
+          window.url_project_simple_candidate_list = "@Url.Action("ProjectSimpleCandidateList", "Project")";
+          window.url_project_invoice_list = "@Url.Action("ProjectInvoiceList", "Project")";
+          window.url_project_memo_list = "@Url.Action("ProjectMemoList", "Project")";
+          window.url_share_project_board_list = "@Url.Action("ShareProjectBoardList", "Project")";
+          window.url_project_progress_create_multi = "@Url.Action("ProjectProgressCreateMulti", "Project")";
+          window.url_project_move_candidate = "@Url.Action("ProjectMoveCandidate", "Project")";
+          window.url_sms_privacy_create_patial = "@Url.Action("SMSPrivacyCreate", "Partial")";
+          window.url_project_file_list = "@Url.Action("ProjectFileList", "Project")"
+          window.url_makeup_gpt = "@Url.Action("MakeupGPT", "GPT")"
+          window.url_makeup_gpt_new = "@Url.Action("MakeupGPT", "nGPT")"
+  </script>
+  <script type="text/javascript">
+    function CreateInvoice(p_seq) {
+      var win_tag = 'INVOICE_' + p_seq;
+      var param = '?p_seq=' + p_seq
+      var win = window.open(window.url_invoice_new_select + param, win_tag, 'width=993, height=800');
+      win.focus();
+
+    }
+
+
+    if ($('#internal_label').text().trim() == '') {
+      $('#internal_div').hide();
+    }
+
+    $('#switch-pjt-file-remove').change(function () {
+      $('#PjtFileBody').removeClass('removal-lock')
+      if (!$(this).prop('checked')) {
+        $('#PjtFileBody').addClass('removal-lock')
+      }
+    })
+
+    function callPjtFileList(p_seq) {
+      if ($('#PjtFileBody').length == 0) {
+        return;
+      }
+      ajxCall({
+        url: window.url_project_file_list,
+        data: {
+          p_seq: p_seq
+        },
+        dataType: 'html',
+        type: 'POST',
+        loading: true,
+        loading_target: "#PjtFileBody",
+        suc: function (view) {
+          $('#PjtFileBody').html(view);
+        }
+      });
+    }
+
+    $('#btn_progress_excel').click(function (e) {
+      e.preventDefault();
+      $('#excel_state').val($('#search_state_for_makeup').val());
+      $('#excel_orderTxt').val($('#progress_orderTxt').val());
+      $('#excel_stexcel_orderOptionate').val($('#progress_orderOption').val());
+
+      $('#ExcelForm').submit();
+    })
+
+    function fChkContactInfo() {
+      var valid_msg = ""
+      if ($('#cc_seq').val() == 0 || $('#cc_seq').val() == "") {
+        valid_msg += (valid_msg != "" ? "<br/>" : "") + "Contact(채용 및 인보이스 담당자) 정보가 없습니다. Contact(채용 및 인보이스 담당자)정보를 입력 후 진행하여 주시기 바랍니다."
+      }
+      if ($('#ctc_seq').val() == 0 || $('#ctc_seq').val() == "") {
+        valid_msg += (valid_msg != "" ? "<br/>" : "") + "세금계산서 담당자 정보가 없습니다. 세금계산서 담당자 정보를 입력 후 진행하여 주시기 바랍니다."
+      }
+
+      if (valid_msg != "") {
+        ErrorAlert(valid_msg);
+        return false;
+      }
+
+      return true;
+    }
+    //슬라이드 형식 인보이스 발행화면
+    $('#btnCreateRetainerInvoice1').click(function () {
+      if (!fChkContactInfo()) {
+        return;
+      }
+
+      $.slidePanel.show(
+        {
+          url: window.url_project_rt_invoice_create,
+          settings: {
+            data: {
+              p_seq: window.model_p_seq
+            },
+            method: 'GET'
+          }
+        },
+        {
+          mouseDrag: false,
+          touchDrag: false,
+          pointerDrag: false,
+        });
+
+    });
+
+
+    $('#btnCreateRetainerInvoice').click(function () {
+      alert("화면 상단의 [인보이스 발행] 버튼을 통해 발행 부탁드립니다.");
+      CreateInvoice(window.model_p_seq)
+      return;
+
+      if (!fChkContactInfo()) {
+        return;
+      }
+
+      $.ajax({
+        url: window.url_project_rt_invoice_create,
+        data: {
+          p_seq: window.model_p_seq
+        },
+        dataType: 'html',
+        type: 'GET',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (view) {
+          hideLoading();
+
+          //모달은 Invoice View 때문에 ProjectDetail.cshtml 페이지에 넣어둠.
+          $("#InvoiceCreateModal .modal-body").html(view)
+          $("#InvoiceCreateModal .modal-body").find('#client_contact_name').val($('#contact_name').val());
+          $("#InvoiceCreateModal .modal-body").find('#client_contact_tel').val($('#contact_phone').val());
+          $("#InvoiceCreateModal .modal-body").find('#client_contact_email').val($('#contact_email').val());
+          $("#InvoiceCreateModal .modal-body").find('#client_etax_name').val($('#tax_deposit_manager').val());
+          $("#InvoiceCreateModal .modal-body").find('#client_etax_tel').val($('#tax_phone').val());
+          $("#InvoiceCreateModal .modal-body").find('#client_etax_email').val($('#tax_deposit_email').val());
+          $('#InvoiceCreateModal').modal('toggle');
+
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    });
+
+    $('#btnCreateRefundInvoice').click(function () {
+      alert("화면 상단의 [인보이스 발행] 버튼을 통해 발행 부탁드립니다.");
+      CreateInvoice(window.model_p_seq)
+      return;
+
+      if (!fChkContactInfo()) {
+        return;
+      }
+
+      $.ajax({
+        url: window.url_project_rf_invoice_create,
+        data: {
+          p_seq: window.model_p_seq
+        },
+        dataType: 'html',
+        type: 'GET',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (view) {
+          hideLoading();
+
+          //모달은 Invoice View 때문에 ProjectDetail.cshtml 페이지에 넣어둠.
+          $("#InvoiceCreateModal .modal-body").html(view)
+          $("#InvoiceCreateModal .modal-body").find('#client_contact_name').val($('#contact_name').val());
+          $("#InvoiceCreateModal .modal-body").find('#client_contact_tel').val($('#contact_phone').val());
+          $("#InvoiceCreateModal .modal-body").find('#client_contact_email').val($('#contact_email').val());
+          $("#InvoiceCreateModal .modal-body").find('#client_etax_name').val($('#tax_deposit_manager').val());
+          $("#InvoiceCreateModal .modal-body").find('#client_etax_tel').val($('#tax_phone').val());
+          $("#InvoiceCreateModal .modal-body").find('#client_etax_email').val($('#tax_deposit_email').val());
+          $('#InvoiceCreateModal').modal('toggle');
+
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    });
+
+
+
+    //공유 프로젝트
+    function shareProject(obj, p_seq) {
+      callShareBtn = obj;
+      $.ajax({
+        url: window.url_share_project_create,
+        data: {
+          p_seq: p_seq
+        },
+        dataType: 'html',
+        type: 'GET',
+        beforeSend: function () {
+          $(".page").isLoading({
+            text: "Loading",
+            position: "overlay"
+          });
+        }
+      })
+        .done(function (json) {
+          $(".page").isLoading("hide");
+
+          $.fancybox.open({
+            'content': json,
+            'width': '400',
+            'height': '385',
+            'autoDimensions': false,
+            'type': 'iframe',
+            'autoSize': false,
+            'title': '프로젝트 공유',
+            helpers: {
+              title: {
+                type: 'inside',
+                position: 'top'
+              },
+              overlay: {
+                closeClick: false
+              }
+            }
+          });
+        })
+        .fail(function (e) {
+          $(".page").isLoading("hide");
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+
+    //공유 프로젝트 취소
+    function cancelShareProject(obj, p_seq) {
+      alertify.confirm()
+        .set({
+          'labels': { ok: '확인', cancel: '취소' },
+          'onok': function () {
+
+            callShareBtn = obj;
+
+            $.ajax({
+              url: window.url_share_project_cancel,
+              data: {
+                p_seq: p_seq
+              },
+              dataType: 'json',
+              type: 'POST',
+              beforeSend: function () {
+
+              }
+            })
+              .done(function (json) {
+
+                if (json.ok) {
+
+                  NormalAlert(json.message);
+                  $(callShareBtn).removeClass("btn-danger");
+                  $(callShareBtn).addClass("btn-primary");
+                  $(callShareBtn).text("Share");
+                  $(callShareBtn).attr("onclick", "shareProject(this, " + p_seq + ")");
+
+                } else {
+                  ErrorAlert(json.message);
+                }
+              })
+              .fail(function (e) {
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+              });
+          },
+          'oncancel': function () {
+
+            return;
+          },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>프로젝트 공유 취소')
+        .setting({
+          message: "해당 프로젝트의 공유를 취소하시겠습니까?",
+        })
+        .show();
+    }
+
+    //전담코웍 알림
+    function CoWorkAlram(p_seq) {
+      alertify.confirm()
+        .set({
+          'labels': { ok: '확인', cancel: '취소' },
+          'onok': function () {
+
+            $.ajax({
+              url: window.url_create_cowork_alram,
+              data: {
+                p_seq: p_seq
+              },
+              dataType: 'json',
+              type: 'POST',
+              beforeSend: function () {
+
+              }
+            })
+              .done(function (json) {
+
+                if (json.ok) {
+
+                  NormalAlert(json.message);
+                  chkAlertBadge();
+                } else {
+                  ErrorAlert(json.message);
+                }
+              })
+              .fail(function (e) {
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+              });
+          },
+          'oncancel': function () {
+
+            return;
+          },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>전담코웤 알림')
+        .setting({
+          message: "전담코웤 알림을 보내시겠습니까?",
+        })
+        .show();
+    }
+
+    function SetMyKeyProject(p_seq) {
+      alertify.confirm()
+        .set({
+          'labels': { ok: '확인', cancel: '취소' },
+          'onok': function () {
+
+            $.ajax({
+              url: window.url_create_key_project,
+              data: {
+                p_seq: p_seq
+              },
+              dataType: 'json',
+              type: 'POST',
+              beforeSend: function () {
+
+              }
+            })
+              .done(function (json) {
+
+                if (json.ok) {
+                  NormalAlert(json.message);
+                  $('#btnSetKeyPjt').removeClass("btn-success");
+                  $('#btnSetKeyPjt').addClass("btn-warning");
+                  $('#btnSetKeyPjt').html("<i class='fa fa-key'></i> Key 프로젝트 해제");
+                  $('#btnSetKeyPjt').attr("onclick", "cancelMyKeyProject(" + p_seq + ")");
+                  $('#btnSetKeyPjt').attr("title", "Remove from key project");
+                } else {
+                  ErrorAlert(json.message);
+                }
+              })
+              .fail(function (e) {
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+              });
+          },
+          'oncancel': function () {
+
+            return;
+          },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>Key 프로젝트 설정')
+        .setting({
+          message: "나의 Key 프로젝트로 설정하시겠습니까?",
+        })
+        .show();
+    }
+
+    function cancelCoWorkProject(obj, p_seq) {
+      alertify.confirm()
+        .set({
+          'labels': { ok: '확인', cancel: '취소' },
+          'onok': function () {
+
+            callShareBtn = obj;
+
+            $.ajax({
+              url: window.url_cowork_project_cancel,
+              data: {
+                p_seq: p_seq
+              },
+              dataType: 'json',
+              type: 'POST',
+              beforeSend: function () {
+
+              }
+            })
+              .done(function (json) {
+
+                if (json.ok) {
+
+                  NormalAlert(json.message);
+                  $(callShareBtn).removeClass("btn-danger");
+                  $(callShareBtn).addClass("btn-primary");
+                  $(callShareBtn).text("공유");
+                  $(callShareBtn).attr("onclick", "shareProject(this, " + p_seq + ")");
+
+                } else {
+                  ErrorAlert(json.message);
+                }
+              })
+              .fail(function (e) {
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+              });
+          },
+          'oncancel': function () {
+
+            return;
+          },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>프로젝트 코웍 취소')
+        .setting({
+          message: "해당 프로젝트의 코웍 요청을 취소하시겠습니까?",
+        })
+        .show();
+    }
+
+    function cancelMyKeyProject(p_seq) {
+      alertify.confirm()
+        .set({
+          'labels': { ok: '확인', cancel: '취소' },
+          'onok': function () {
+            $.ajax({
+              url: window.url_cancel_key_project,
+              data: {
+                p_seq: p_seq
+              },
+              dataType: 'json',
+              type: 'POST',
+              beforeSend: function () {
+
+              }
+            })
+              .done(function (json) {
+
+                if (json.ok) {
+                  NormalAlert(json.message);
+                  $('#btnSetKeyPjt').removeClass("btn-warning");
+                  $('#btnSetKeyPjt').addClass("btn-success");
+                  $('#btnSetKeyPjt').html("<i class='fa fa-key'></i> Key 프로젝트로 설정");
+                  $('#btnSetKeyPjt').attr("onclick", "SetMyKeyProject(" + p_seq + ")");
+                  $('#btnSetKeyPjt').attr("title", "Set as key project");
+
+                } else {
+                  ErrorAlert(json.message);
+                }
+              })
+              .fail(function (e) {
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+              });
+          },
+          'oncancel': function () {
+
+            return;
+          },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>Key 프로젝트 취소')
+        .setting({
+          message: "현재 프로젝트를 Key 프로젝트에서 제거 하시겠습니까?",
+        })
+        .show();
+    }
+
+
+    $(document).ready(function () {
+
+      var is_share = window.model_is_share_3m;
+      var is_cowork = window.model_is_cowork;
+      if (is_share == 1 || is_cowork == 1) {
+        $("#sharePanel").css("display", "block");
+        callBoardList($("#p_seq").val(), 1)
+      }
+
+      $(".token").find("a.close").remove();
+      $(".token").find(".token-label").css("padding-right", "5px");
+
+      //프로젝트 마감 버튼 클릭시
+      $("#btnPjtState").click(function () {
+        $.ajax({
+          url: window.url_project_state_change,
+          data: {
+            p_seq: $("#p_seq").val()
+          },
+          dataType: 'html',
+          type: 'GET',
+          beforeSend: function () {
+            showLoading();
+          }
+        })
+          .done(function (json) {
+            hideLoading();
+
+            $.fancybox.open({
+              'content': json,
+              'width': '300',
+              'height': '200',
+              'autoDimensions': false,
+              'type': 'iframe',
+              'autoSize': false,
+              'title': '프로젝트 상태 변경',
+              helpers: {
+                title: {
+                  type: 'inside',
+                  position: 'top'
+                },
+                overlay: {
+                  closeClick: false
+                }
+              },
+              afterClose: function () {
+                // fancybox is closed, run myOtherFunct()
+
+              }
+            });
+
+          })
+          .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+          });
+      });
+
+      //전자세금계산서 담당자
+      $("#btnTax").click(function () {
+
+        if ($("#company_name").val() == "" || $("#c_seq").val() == 0) {
+          NormalAlert("고객사 명을 검색 하세요.")
+          return false;
+        }
+
+        $.ajax({
+          url: window.url_search_project_tax_contact,
+          data: {
+            p_seq: $("#p_seq").val(),
+            c_seq: $("#c_seq").val()
+          },
+          dataType: 'html',
+          type: 'POST',
+          beforeSend: function () {
+            showLoading();
+          }
+        })
+          .done(function (json) {
+            hideLoading();
+
+            $.fancybox.open({
+              'content': json,
+              'width': '500',
+              'height': '385',
+              'autoDimensions': false,
+              'type': 'iframe',
+              'autoSize': false,
+              'title': 'E-Tax 담당자 목록',
+              helpers: {
+                title: {
+                  type: 'inside',
+                  position: 'top'
+                },
+                overlay: {
+                  closeClick: false
+                }
+              }
+            });
+          })
+          .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+          });
+
+      });
+
+      //담당자 불러오기
+      $("#btnContact").click(function () {
+
+        if ($("#company_name").val() == "" || $("#c_seq").val() == 0) {
+          NormalAlert("고객사 명을 검색 하세요.")
+          return false;
+        }
+
+        $.ajax({
+          url: window.url_search_project_contact,
+          data: {
+            p_seq: $("#p_seq").val(),
+            c_seq: $("#c_seq").val()
+          },
+          dataType: 'html',
+          type: 'POST',
+          beforeSend: function () {
+            showLoading();
+          }
+        })
+          .done(function (json) {
+            hideLoading();
+
+            $.fancybox.open({
+              'content': json,
+              'width': '500',
+              'height': '385',
+              'autoDimensions': false,
+              'type': 'iframe',
+              'autoSize': false,
+              'title': 'Contact(인보이스 담당자) 목록',
+              helpers: {
+                title: {
+                  type: 'inside',
+                  position: 'top'
+                },
+                overlay: {
+                  closeClick: false
+                }
+              }
+            });
+          })
+          .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+          });
+
+      });
+
+
+      //세금계산서 담당자 저장.
+      $("#btnTaxSave").click(function () {
+
+
+        $.ajax({
+          url: window.url_project_tax_contact_save,
+          data: {
+
+            p_seq: $("#p_seq").val()
+            ,
+            ctc_seq: $("#ctc_seq").val()
+          },
+          dataType: 'json',
+          type: 'POST',
+          beforeSend: function () {
+            showLoading("#projectTax");
+          }
+        })
+          .done(function (json) {
+            hideLoading("#projectTax");
+            if (json.ok) {
+              NormalAlert(json.message);
+            } else {
+              ErrorAlert(json.message);
+            }
+          })
+          .fail(function (e) {
+            hideLoading("#projectTax");
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+          });
+
+      });
+
+      //프로젝트 담당자 저장
+      $("#btnContactSave").click(function () {
+
+        $.ajax({
+          url: window.url_project_contact_save,
+          data: {
+            p_seq: $("#p_seq").val()
+            ,
+            cc_seq: $("#cc_seq").val()
+          },
+          dataType: 'json',
+          type: 'POST',
+          beforeSend: function () {
+            showLoading("#projectContact");
+          }
+        })
+          .done(function (json) {
+            hideLoading("#projectContact");
+            if (json.ok) {
+              NormalAlert(json.message);
+            } else {
+              ErrorAlert(json.message);
+            }
+          })
+          .fail(function (e) {
+            hideLoading("#projectContact");
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+          });
+
+      });
+    });
+
+    $('#btnNewContactReset').click(function () {
+      $("#cc_seq").val(window.cc_seq);
+      $("#contact_name").val(window.contact_name);
+      $("#male").prop("checked", window.male);
+      $("#female").prop("checked", window.female);
+      $("#contact_email").val(window.contact_email);
+      $("#contact_phone").val(window.contact_phone);
+      $("#contact_cell_phone").val(window.contact_cell_phone);
+      $("#contact_division").val(window.contact_division);
+      $("#contact_position").val(window.contact_position);
+
+      $("#btnNewContactSave").css("display", "none");
+      $("#btnNewContactReset").css("display", "none");
+      $("#btnContact").css("display", "inline");
+
+      $("#contact_name").attr("readonly", "readonly");
+      $("#male").attr("disabled", "disabled");
+      $("#female").attr("disabled", "disabled");
+      $("#contact_email").attr("readonly", "readonly");
+      $("#contact_phone").attr("readonly", "readonly");
+      $("#contact_cell_phone").attr("readonly", "readonly");
+      $("#contact_division").attr("readonly", "readonly");
+      $("#contact_position").attr("readonly", "readonly");
+
+    });
+
+    $('#btnNewTaxReset').click(function () {
+
+      $("#ctc_seq").val(window.ctc_seq);
+      $("#tax_name").val(window.tax_name);
+      $("#tax_division").val(window.tax_division);
+      $("#tax_email").val(window.tax_email);
+      $("#tax_phone").val(window.tax_phone);
+      $("#tax_cell_phone").val(window.tax_cell_phone);
+      $("#tax_deposit_manager").val(window.tax_deposit_manager);
+      $("#tax_deposit_email").val(window.tax_deposit_email);
+
+      $("#btnNewTaxSave").css("display", "none");
+      $("#btnNewTaxReset").css("display", "none");
+      $("#btnTax").css("display", "inline");
+
+      $("#tax_name").attr("readonly", "readonly");
+      $("#tax_division").attr("readonly", "readonly");
+      $("#tax_email").attr("readonly", "readonly");
+      $("#tax_phone").attr("readonly", "readonly");
+      $("#tax_cell_phone").attr("readonly", "readonly");
+      $("#tax_deposit_manager").attr("readonly", "readonly");
+      $("#tax_deposit_email").attr("readonly", "readonly");
+
+    });
+
+    function BindProjectContactValidation() {
+
+      var phoneValidator = {
+        validators: {
+          selector: "contact_phone",
+          callback: {
+            message: "전화번호 혹은 휴대폰 번호 중 한 개의 번호는 입력 하셔야 합니다.",
+            callback: function (input) {
+
+              var fv = $("#ProjectContactForm").data("formValidation");
+
+              let isEmpty = true;
+
+              if ($("#contact_phone").val() != "" || $("#contact_cell_phone").val() != "") {
+                isEmpty = false;
+              }
+
+              if (!isEmpty) {
+                // Update the status of callback validator for all fields
+                fv.updateStatus('contact_phone', 'Valid', 'callback');
+                fv.updateStatus('contact_cell_phone', 'Valid', 'callback');
+                return true;
+              }
+
+              return false;
+            }
+          }
+        }
+      };
+
+
+
+      $("#ProjectContactForm").formValidation({
+        framework: "bootstrap4",
+        button: {
+          selector: "#btnNewContactSave",
+          disabled: "disabled"
+        },
+        submitHandler: function () {
+        },
+        icon: null,
+        fields: {
+          contact_name: {
+            validators: {
+              notEmpty: {
+                message: "이름은 필수 입력 항목 입니다."
+              }
+            }
+          },
+          contact_gender: {
+            validators: {
+              notEmpty: {
+                message: "성별을 선택하세요."
+              }
+            }
+          },
+          contact_division: {
+            validators: {
+              notEmpty: {
+                message: "부서명은 필수 입력 항목 입니다."
+              }
+            }
+          },
+          contact_position: {
+            validators: {
+              notEmpty: {
+                message: "직함은 필수 입력 항목 입니다."
+              }
+            }
+          },
+          contact_email: {
+            validators: {
+              notEmpty: {
+                message: "이메일은 필수 입력 항목 입니다."
+              }
+            }
+          },
+          contact_phone: phoneValidator,
+          contact_cell_phone: phoneValidator,
+        },
+        err: {
+          clazz: "invalid-feedback"
+        },
+        control: {
+          valid: "is-valid",
+          invalid: "is-invalid"
+        },
+        row: {
+          invalid: "has-danger"
+        }
+      })
+        .on('success.form.fv', function (e) {
+          e.preventDefault();
+
+          var formURL = $("#ProjectContactForm").attr("action");
+
+          $.ajax({
+            url: formURL,
+            type: "POST",
+            dataType: 'json',
+            data: {
+              c_seq: $("#c_seq").val()
+              , p_seq: $("#p_seq").val()
+              , name: $("#contact_name").val()
+              , gender: $("input[name='contact_gender']:checked").val()
+              , email: $("#contact_email").val()
+              , phone: $("#contact_phone").val()
+              , cell_phone: $("#contact_cell_phone").val()
+              , division: $("#contact_division").val()
+              , position: $("#contact_position").val()
+            },
+            beforeSend: function () {
+              showLoading("#projectContact");
+            },
+            success: function (json) {
+              hideLoading("#projectContact");
+
+              if (json.ok) {
+                location.reload();
+              }
+              else {
+                ErrorAlert(json.message);
+              }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+              hideLoading("#projectContact");
+
+              ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요1.");
+            }
+          });
+        });
+    }
+
+    function BindProjectTaxValidation() {
+
+      var phoneValidator = {
+        validators: {
+          selector: "tax_phone",
+          callback: {
+            message: "전화번호 혹은 휴대폰 번호 중 한 개의 번호는 입력 하셔야 합니다.",
+            callback: function (input) {
+
+              var fv = $("#ProjectTaxForm").data("formValidation");
+
+              let isEmpty = true;
+
+              if ($("#tax_phone").val() != "" || $("#tax_cell_phone").val() != "") {
+                isEmpty = false;
+              }
+
+              if (!isEmpty) {
+                // Update the status of callback validator for all fields
+                fv.updateStatus('tax_phone', 'Valid', 'callback');
+                fv.updateStatus('tax_cell_phone', 'Valid', 'callback');
+                return true;
+              }
+
+              return false;
+            }
+          }
+        }
+      };
+
+      $("#ProjectTaxForm").formValidation({
+        framework: "bootstrap4",
+        button: {
+          selector: "#btnNewTaxSave",
+          disabled: "disabled"
+        },
+        submitHandler: function () {
+        },
+        icon: null,
+        fields: {
+          tax_name: {
+            validators: {
+              notEmpty: {
+                message: "담당자명은 필수 입력 항목 입니다."
+              }
+            }
+          },
+          tax_division: {
+            validators: {
+              notEmpty: {
+                message: "담당 부서명은 필수 입력 항목 입니다."
+              }
+            }
+          },
+          tax_deposit_manager: {
+            validators: {
+              notEmpty: {
+                message: "발행용 담당자명 담당자명은 필수 입력 항목 입니다."
+              }
+            }
+          },
+          tax_deposit_email: {
+            validators: {
+              notEmpty: {
+                message: "발행용 이메일은 필수 입력 항목 입니다."
+              },
+              emailAddress: true
+            }
+          },
+          tax_email: {
+            validators: {
+              notEmpty: {
+                message: "이메일은 필수 입력 항목 입니다."
+              },
+              emailAddress: true
+            }
+          },
+          tax_phone: phoneValidator,
+          tax_cell_phone: phoneValidator,
+        },
+        err: {
+          clazz: "invalid-feedback"
+        },
+        control: {
+          valid: "is-valid",
+          invalid: "is-invalid"
+        },
+        row: {
+          invalid: "has-danger"
+        }
+      })
+        .on('success.form.fv', function (e) {
+          e.preventDefault();
+
+          var formURL = $("#ProjectTaxForm").attr("action");
+
+          $.ajax({
+            url: formURL,
+            type: "POST",
+            dataType: 'json',
+            data: {
+              c_seq: $("#c_seq").val()
+              , p_seq: $("#p_seq").val()
+              , division: $("#tax_division").val()
+              , name: $("#tax_name").val()
+              , email: $("#tax_email").val()
+              , phone: $("#tax_phone").val()
+              , cell_phone: $("#tax_cell_phone").val()
+              , deposit_manager: $("#tax_deposit_manager").val()
+              , deposit_email: $("#tax_deposit_email").val()
+            },
+            beforeSend: function () {
+              showLoading("#projectTax");
+            },
+            success: function (json) {
+              hideLoading("#projectTax");
+
+              if (json.ok) {
+                location.reload();
+              }
+              else {
+                ErrorAlert(json.message);
+              }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+              hideLoading("#projectTax");
+
+              ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요1.");
+            }
+          });
+        });
+    }
+
+    //프로젝트 진행사항
+
+    function callProjectProgress(p_seq, state, page) {
+
+      if (page == null || page == undefined)
+        page = 1;
+
+      $.ajax({
+        url: window.url_project_progress_list,
+        data: {
+          p_seq: p_seq
+          , state: state
+          , page: page
+          , orderTxt: $('#progress_orderTxt').val()
+          , orderOption: $('#progress_orderOption').val()
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading('#projectProgress');
+        }
+      })
+        .done(function (view) {
+          hideLoading('#projectProgress');
+
+          $('#projectProgress').html(view);
+
+        })
+        .always(function () {
+          hideLoading('#projectProgress');
+
+        });
+    }
+
+
+    function ProjectSetSuggType(e, p_seq, busi, job) {
+      e.preventDefault();
+
+      $.ajax({
+        url: window.url_project_set_sugg_type,
+        data: {
+          p_seq: p_seq,
+          busi_type: busi,
+          job_type: job
+        },
+        dataType: 'json',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading('#projectCandiSuggetion');
+        }
+      })
+        .done(function (rst) {
+          hideLoading('#projectCandiSuggetion');
+          if (rst.ok) {
+            var busi_tag = $('#no_business_type');
+            var job_tag = $('#no_job_type');
+            if (busi) {
+              if (busi == 1) {
+                busi_tag.removeClass().addClass("badge badge-lg badge-outline badge-primary").text("전체 산업에서 제안");
+              } else if (busi == 2) {
+                busi_tag.removeClass().addClass("badge badge-lg badge-outline badge-info").text("해당 산업대분류에서 제안");
+              } else {
+                busi_tag.removeClass().addClass("badge badge-lg badge-outline badge-dark").text("등록한 산업으로만 제안");
+              }
+            }
+
+            if (job) {
+              if (job == 1) {
+                job_tag.removeClass().addClass("badge badge-lg badge-outline badge-primary").text("전체 직무에서 제안");
+              } else if (job == 2) {
+                job_tag.removeClass().addClass("badge badge-lg badge-outline badge-info").text("해당 직무대분류에서 제안");
+              } else {
+                job_tag.removeClass().addClass("badge badge-lg badge-outline badge-dark").text("등록한 직무로만 제안");
+              }
+            }
+            callProjectCandiSuggetionList(rst.p_seq, 1)
+          }
+        })
+        .always(function () {
+          hideLoading('#projectCandiSuggetion');
+        });
+    }
+
+    //후보자 제안 목록
+    function callProjectCandiSuggetionList(p_seq, page) {
+      if (!page) {
+        page = 1;
+      }
+
+      $.ajax({
+        url: window.url_project_candi_suggetion_list,
+        data: {
+          p_seq: p_seq,
+          page: page
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading('#projectCandiSuggetion');
+        }
+      })
+        .done(function (view) {
+          hideLoading('#projectCandiSuggetion');
+          $('#projectCandiSuggetion').html(view);
+
+        })
+        .always(function () {
+          hideLoading('#projectCandiSuggetion');
+        });
+    }
+
+    //간편 후보자 목록
+    function callProjectSimpleCandidateList(p_seq, page) {
+
+      $.ajax({
+        url: window.url_project_simple_candidate_list,
+        data: {
+          p_seq: p_seq
+          , page: page
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading('#projectSimpleCandidate');
+        }
+      })
+        .done(function (view) {
+          hideLoading('#projectSimpleCandidate');
+          $('#projectSimpleCandidate').html(view);
+
+        })
+        .always(function () {
+          hideLoading('#projectSimpleCandidate');
+        });
+    }
+
+    //인보이스 리스트
+    function callProjectInvoiceList(p_seq, page) {
+      $.ajax({
+        url: window.url_project_invoice_list,
+        data: {
+          p_seq: p_seq
+          , page: page
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading('#projectInvoice');
+        }
+      })
+        .done(function (view) {
+          hideLoading('#projectInvoice');
+          $('#projectInvoice').empty();
+          $('#projectInvoice').html(view);
+
+        })
+        .always(function () {
+          hideLoading('#projectInvoice');
+        });
+    }
+
+    //메모 리스트
+    function callMemoList(p_seq, page) {
+
+      $.ajax({
+        url: window.url_project_memo_list,
+        data: {
+          p_seq: p_seq
+          , page: page
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading('#projectMemo');
+        }
+      })
+        .done(function (view) {
+          hideLoading('#projectMemo');
+          $('#projectMemo').html(view);
+
+        })
+        .always(function () {
+          hideLoading('#projectMemo');
+        });
+    }
+
+    //공유 프로젝트 코멘트
+    function callBoardList(p_seq, page) {
+
+      $.ajax({
+        url: window.url_share_project_board_list,
+        data: {
+          p_seq: p_seq
+          , page: page
+        },
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading('#commentList');
+        }
+      })
+        .done(function (view) {
+          hideLoading('#commentList');
+          $('#commentList').html(view);
+
+        })
+        .always(function () {
+          hideLoading('#commentList');
+        });
+    }
+
+    $('#btn_move_candidate').click(function (e) {
+      e.preventDefault();
+      if ($('.chk_request_makeup:checked').length <= 0) {
+        ErrorAlert("이관 할 후보자를 체크 후 진행하여 주십시오.");
+        return;
+      }
+
+      var pic_seqs = new Array();
+      $('.chk_request_makeup:checked').each(function () {
+        pic_seqs.push($(this).val());
+      });
+
+      $.ajax({
+        url: window.url_project_move_candidate,
+        data: {
+          p_seq: window.model_p_seq,
+          pic_seqs: pic_seqs
+        },
+        dataType: 'html',
+        type: 'post',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (view) {
+          hideLoading();
+
+          //모달은 Invoice View 때문에 ProjectDetail.cshtml 페이지에 넣어둠.
+          $("#ProjectMoveCandidateModal .modal-body").html(view)
+
+          $('#ProjectMoveCandidateModal').modal('toggle');
+
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    });
+
+
+
+    $('#btn_progress_create_checked').click(function (e) {
+      e.preventDefault();
+      if ($('.chk_request_makeup:checked').length <= 0) {
+        ErrorAlert("변경 할 후보자를 체크 후 진행하여 주십시오.");
+        return;
+      }
+
+      var pic_seqs = new Array();
+      $('.chk_request_makeup:checked').each(function () {
+        pic_seqs.push($(this).val());
+      });
+
+
+
+      $.ajax({
+        url: window.url_project_progress_create_multi,
+        data: {
+          p_seq: window.model_p_seq,
+          pic_seqs: pic_seqs
+        },
+        dataType: 'html',
+        type: 'post',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (json) {
+          hideLoading();
+
+          $.fancybox.open({
+            'content': json,
+            'width': '530',
+            'height': 'auto',
+            'autoDimensions': false,
+            'type': 'iframe',
+            'autoSize': false,
+            'title': "[선택후보자] 일괄 상태변경",
+            helpers: {
+              title: {
+                type: 'inside',
+                position: 'top'
+              },
+              overlay: {
+                closeClick: false
+              }
+            }
+          });
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    });
+
+    $('#btn_send_privacy').click(function (e) {
+      e.preventDefault();
+      if ($('.chk_request_makeup:checked').length <= 0) {
+        ErrorAlert("동의서를 발송 할 후보자를 체크 후 진행하여 주십시오.");
+        return;
+      }
+
+      var c_list_str = ""
+      $('.chk_request_makeup:checked').each(function () {
+        if ($(this).data("c_seq") != "") {
+          c_list_str += (c_list_str != "" ? "&" : "") + "c_list=" + $(this).data("c_seq");
+        }
+      });
+
+
+
+      var cl_seq = window.model_c_seq;
+
+      var win_tag = (c_seq ? 'SMSPRIVACY_' + cl_seq : 'SMSPRIVACY');
+      var param = '?receive_type=' + (c_list_str ? '&' + c_list_str : '') + (cl_seq ? '&cl_seq=' + cl_seq : '')
+      var win = window.open(window.url_sms_privacy_create_patial + param, win_tag, 'width=800, height=600');
+      win.focus();
+      return
+    });
+
+    $('#btn_gpt_makeup').click(function (e) {
+      e.preventDefault();
+      if ($('.chk_request_makeup:checked').length <= 0) {
+        ErrorAlert("메이크업할 후보자를 체크 후 진행하여 주십시오.");
+        return;
+      }
+
+      param = 'p_seq=' + $('#p_seq').val()
+
+      $('.chk_request_makeup:checked').each(function (p, a) {
+        param += '&pic_seq=' + a.value;
+      });
+      url = window.url_makeup_gpt + '?' + param;
+
+      var newWindow = window.open(url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      if (newWindow) {
+        // 팝업이 차단되지 않은 경우
+
+
+
+        newWindow.focus();
+      } else {
+        // 팝업이 차단된 경우
+        ErrorAlert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+        return;
+      }
+    });
+
+
+    $('#btn_gpt_makeup2').click(function (e) {
+      e.preventDefault();
+      if ($('.chk_request_makeup:checked').length <= 0) {
+        ErrorAlert("메이크업할 후보자를 체크 후 진행하여 주십시오.");
+        return;
+      }
+
+      param = 'p_seq=' + $('#p_seq').val()
+
+      $('.chk_request_makeup:checked').each(function (p, a) {
+        param += '&pic_seq=' + a.value;
+      });
+      url = window.url_makeup_gpt_new + '?' + param;
+
+      var newWindow = window.open(url, '_blank', 'width=1105,height=600,scrollbars=yes,resizable=yes');
+      if (newWindow) {
+        // 팝업이 차단되지 않은 경우
+
+
+
+        newWindow.focus();
+      } else {
+        // 팝업이 차단된 경우
+        ErrorAlert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+        return;
+      }
+    });
+
+    $("#btn_requestmakeup").click(function (e) {
+      e.preventDefault();
+      if ($('.chk_request_makeup:checked').length <= 0) {
+        ErrorAlert("메이크업 요청할 후보자를 체크 후 진행하여 주십시오.");
+        return;
+      }
+
+      //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+      if ($('#modal_request_makeup').length > 0) {
+        $('#modal_request_makeup').parent().remove();
+      }
+
+      $('body').append($('<div>').load('/Modal/RequestMakeUpModal.html?v4.0.6', function () {
+
+        $('#modal_request_makeup').modal('show');
+
+
+      }));
+    });
+
+    function privacyReload() {
+      callProjectProgress(window.model_p_seq, 0, 1)
+    }
+    callProjectProgress(window.model_p_seq, 0, 1)
+
+    if (window.model_pjt_status == "1") {
+      callProjectCandiSuggetionList(window.model_p_seq)
+    }
+
+    //callProjectSimpleCandidateList(window.model_p_seq, 1)
+    callProjectInvoiceList(window.model_p_seq, 1)
+    callMemoList(window.model_p_seq, 1)
+    callPjtFileList(window.model_p_seq);
+
+    function privacyReload() {
+      callProjectProgress(window.model_p_seq, 0, 1)
+    }
+
+
+  </script>
+
+}

@@ -1,0 +1,82 @@
+﻿<div id='company_row_{0}' class='panel border border-primary companyRow mb-10 pb-5 no-company-selected'>
+  <div class='panel-body pt-10 pb-5'>
+    <div class='drag_handle position-absolute' style='top:5px;left:10px;cursor:cell;'><i class='fa fa-arrows-alt-v' aria-hidden='true'></i></div>
+    <a class="panel-action fas fa-times position-absolute" style="top:5px;right:10px;" aria-hidden="true" href="javascript:void(0);" onclick="DeleteRow(this)"></a>
+    <div class="row">
+      <div class="form-group col-2 col-md-3 col-lg-2">
+        <select id="pos_type_{0}" name="pos_type" class="form-control form-control-sm" onchange="ChangeCompanyGubun(this);">
+          <option value="">[SELECT]</option>
+          <option value="1">사내이사</option>
+          <option value="2">사외이사</option>
+          <option value="3">일반경력</option>
+        </select>
+      </div>
+      <div class="form-group col-3 col-md-2 col-lg-2 od-field">
+        <select id="outdirector_type_{0}" name="outdirector_type" class="form-control form-control-sm">
+          <option value="">[SELECT]</option>
+          <option value="1">기업</option>
+          <option value="2">행정</option>
+          <option value="3">정치</option>
+          <option value="4">학계</option>
+          <option value="5">법조</option>
+          <option value="6">언론</option>
+          <option value="7">전문직</option>
+          <option value="8">군인</option>
+          <option value="9">기타</option>
+        </select>
+      </div>
+      <div class="form-group col-4 col-md-3 col-lg-3 c-level-field">
+        <input type="text" id="group_name_{0}" name="group_name" value="" class="form-control form-control-sm" placeholder="그룹명">
+      </div>
+      <div class="form-group col-2 col-md-2 col-lg-2 shared-field">
+        <div class="form-group form-inline">
+          <div class="radio-custom radio-custom-sm radio-primary pr-3">
+            <input type="radio" name="is_top" id="is_top_{0}" class="form-control-label small" value="1" />
+            <label for="is_top_{0}">대표 경력으로 설정</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-group col-2 col-md-2 col-lg-1 shared-field">
+        <div class="form-group form-inline">
+          <div class="checkbox-custom checkbox-custom-sm checkbox-primary pr-3">
+            <input type="checkbox" name="is_display" id="is_display_{0}" class="form-control-label small" value="1" />
+            <label for="is_display_{0}">주요경력</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class='row shared-field'>
+      <div class='form-group col-md-4'>
+        <input type='hidden' id='g_seq_{0}' name='g_seq' value=''>
+        <input type='hidden' id='dc_seq_{0}' name='dc_seq' value=''>
+        <input type='text' id='company_name_{0}' name='company_name' value='' class='form-control form-control-sm find_company_autocomplete' placeholder='회사명'>
+      </div>
+      <div class='form-group col-md-3'>
+        <input type='text' id='division_name_{0}' name='division_name' value='' class='form-control form-control-sm' placeholder='부서 / 직급'>
+      </div>
+      <div class='form-group col-md-3 c-level-field'>
+        <div class='input-group input-group-sm'>
+          <input type='text' id='join_dt_{0}' name='join_dt' class='form-control' value='' placeholder='입사년월' onkeyUp='return CalculationExperience(event, this)' maxlength='7'>
+          <div class='input-group-text px-3'>
+            ~
+          </div>
+          <input type='text' id='leave_dt_{0}' name='leave_dt' class='form-control' value='' placeholder='퇴사년월' onkeyUp='return CalculationExperience(event, this)' maxlength='7'>
+        </div>
+      </div>
+      <div class='form-group col-md-2'>
+        <div class='checkbox-custom checkbox-custom-sm checkbox-default mt-5'>
+          <input type='checkbox' id='is_work_{0}' name='is_work' value='1'>
+          <label for='is_work_{0}' class="small">재직중</label>
+        </div>
+      </div>
+    </div>
+
+    <!--
+    <div class='row more_company_info'>
+        <div class='form-group col'>
+            <textarea id='exp_comment_{0}' name='exp_comment' class='form-control form-control-sm' placeholder='Comment'></textarea>
+        </div>
+    </div>
+    -->
+  </div>
+</div>

@@ -1,0 +1,104 @@
+﻿@model Univision.Main.Models.Project.MyProjectListModel
+@{
+  Layout = null;
+}
+@*
+  <div class="row">
+    @if (Model.list.Count > 0)
+    {
+      foreach (var data in Model.list)
+      {
+        <div class="col-3">
+          <div class="card card-bordered shadow">
+            <div class="card-header">
+              @if (data.is_share_pjt == 1)
+              {
+                <span class="badge badge-info badge-pill">
+                  SOURCING &lt;@data.share_fee_rate%&gt;
+                </span>
+              }
+              @if (data.is_cowork == 1)
+              {
+                <span class="badge badge-primary badge-pill">
+                  COWORK
+                </span>
+              }
+            </div>
+            <div class="card-body">
+              @data.company_name<br />
+              <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })" class="text-truncate s2" title="@data.title">
+                @data.title
+              </a>
+              <hr />
+              @if (!String.IsNullOrEmpty(data.share_comments))
+              {
+                <div class="text-truncate">
+                  @Html.Raw(data.share_comments.Replace("\r\n", "<br />").Replace("\n", "<br />").Replace("\r", "<br />"))
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    }
+    else
+    {
+
+        <div class="col">
+          <div class="card card-bordered">
+            <div class="card-body">
+              공유된 프로젝트가 없습니다.
+            </div>
+          </div>
+        </div>
+
+    }
+  </div>
+*@
+<div class="table-responsive">
+  <table id="default-table" class="table table-striped table-hover mobile_auto_table" style="table-layout:fixed;">
+    <thead>
+      <tr>
+        <th class="tbw20" title="고객사">CLIENT</th>
+        <th class="tbw60" title="구인제목" style="width:35%;">TITLE</th>
+        <th class="tbw20 sts19" style="width:10%;">AM</th>
+        <th class="hidden-sm-down" title="산업">IND.</th>
+        <th class="hidden-sm-down" title="직무">JOB.</th>
+        <th class="hidden-sm-down" title="공유시작일" style="word-break:keep-all" style="width:12%;">SHARED</th>
+        <th class="hidden-sm-down" title="조회 수" style="width:8%;">READ</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (Model.list.Count > 0)
+      {
+        foreach (var data in Model.list)
+
+        {
+          <tr>
+            <td class="text-truncate" style="text-align:left;" title="@data.company_name">
+              <span class="text-truncate s2">@data.company_name</span>
+            </td>
+            <td class="ali_l tbw60 text-truncate">
+              <a href="@Url.Action("ProjectDetail", "Project", new { @p_seq = data.p_seq })" class="text-truncate s2" title="@data.title">
+                &lt;@data.share_fee_rate%&gt;
+                @data.title
+
+              </a>
+            </td>
+            <td class="tbw20 tbw20" title="@data.am_names"><span class="text-truncate s2">@data.am_names</span></td>
+            <td class="text-truncate hidden-sm-down" title="@data.business_names2">@data.business_names2</td>
+            <td class="text-truncate hidden-sm-down" title="@data.job_names2">@data.job_names2</td>
+            <td class="hidden-sm-down">@Utils.ConvertDateTimeToString(data.share_dt)</td>
+            <td class="text-right hidden-sm-down">@data.read_cnt</td>
+          </tr>
+        }
+      }
+      else
+      {
+        <tr>
+          <td colspan="7">No shared project.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

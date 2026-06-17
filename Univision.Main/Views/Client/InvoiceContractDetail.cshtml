@@ -1,0 +1,192 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientContractDetailModel
+@using Univision.Security
+@{
+  Layout = null;
+}
+@if (Model.data.cc_seq > 0)
+
+{
+  <div class="row">
+    <div class="col-md-7">
+      <div class="row">
+        <div class="col-md-6">
+          <label>
+            최종 계약일
+          </label>
+          <div class="form-group">
+            @Model.data.contract_date
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label>
+            후보자 보증기간
+          </label>
+          <div class="form-group">
+            @if (!String.IsNullOrEmpty(Model.data.grt_type))
+            {
+              <text>
+                @Model.data.grt_type [ <span class="font-weight-600">@Model.data.grt_period @Model.data.grt_gubun</span> ]
+              </text>
+            }
+            else
+            {
+              <text>[보증기간 정보 없음]</text>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <label>
+            VAT 구분
+          </label>
+          <div class="form-group">
+            @if (Model.data.vat_type.HasValue)
+            {
+              if (Model.data.vat_type.Value == 3)
+              {
+                <text>
+                  [ <span class="font-weight-600 tx-success">@(Utils.ReturnVatTypeTxt(Model.data.vat_type.Value)) </span> ]
+                </text>
+              }
+              else if (Model.data.vat_type.Value == 2)
+              {
+                <text>
+                  [ <span class="font-weight-600 tx-danger">@(Utils.ReturnVatTypeTxt(Model.data.vat_type.Value)) </span> ]
+                </text>
+              }
+              else
+              {
+                <text>
+                  [ <span class="font-weight-600">@(Utils.ReturnVatTypeTxt(Model.data.vat_type.Value)) </span> ]
+                </text>
+              }
+            }
+            else
+            {
+              <text>[VAT 구분 정보 없음]</text>
+            }
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label>
+            입금일 지정
+          </label>
+          <div class="form-group">
+            @if (!String.IsNullOrEmpty(Model.data.deposit_gubun1))
+            {
+              <text>
+                @Model.data.deposit_gubun1 [<span class="font-weight-600">@Model.data.deposit_period @Model.data.deposit_gubun2</span> ]이내
+              </text>
+            }
+            else
+            {
+              <text>[입금일 정보 없음]</text>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label>
+            기초조사비 공제 여부
+          </label>
+          <div class="form-group">
+            @if (Model.data.is_construct_debut == "Y")
+            {
+              <label class="badge bagde-lg badge-primary">Yes</label>
+              <span>(@Model.data.construct_debut_per %)</span>
+            }
+            else
+            {
+              <label class="badge bagde-lg badge-warning">No</label>
+            }
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+    <div class="col-md-5">
+
+
+      <label>
+        수수료율 반영 구분
+      </label>
+      <div class="form-group">
+        [@Utils.ReturnContractFeeTypeTxt(Model.data.fee_type)]
+        @if (Model.data.fee_type == "C")
+        {
+          <label class="badge bagde-lg badge-primary">@Model.data.fix_fee_rate %</label>
+        }
+        else
+        {
+          if (Model.feeList.Count > 0)
+          {
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr>
+                  <th>
+                    @Utils.ReturnContractFeeTypeTxt(Model.data.fee_type).Substring(0, 2) 구간
+                    @((Model.data.fee_type == "A" && !String.IsNullOrEmpty(Model.data.currency_cd)) ? "["+Model.data.currency_cd+"]" : "")
+                  </th>
+                  <th>수수료율</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach (var fee in Model.feeList)
+                {
+                  <tr>
+                    <td>
+                      @if (Model.data.fee_type == "A")
+                      {
+                        @((fee.start_income == null || fee.start_income <= 0) ? "" : Utils.ConvertMoneyToString(fee.start_income) + " 이상 ")
+                        @((fee.end_income == null || fee.end_income >= 9999999999) ? "" : Utils.ConvertMoneyToString(fee.end_income) + " 미만 ")
+                      }
+                      else if (Model.data.fee_type == "B")
+                      {
+                        @((fee.start_income == null || fee.start_income <= 0) ? "" : fee.start_income_name + " 이상 ")
+                        @((fee.end_income == null || fee.end_income >= 9999999999) ? "" : fee.end_income_name + " 미만 ")
+                      }
+
+
+                    </td>
+                    <td>@fee.percentage %</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+      </div>
+
+
+    </div>
+  </div>
+
+  if (!String.IsNullOrEmpty(Model.data.contract_comment))
+  {
+    <hr />
+    <div class="row">
+      <div class="col">
+        <label>
+          계약 참고사항 및 기타 코멘트
+        </label>
+        <div class="form-group">
+          @Html.Raw(Model.data.contract_comment.Replace("\r\n", "\n").Replace("\n", "<br />"))
+        </div>
+
+      </div>
+    </div>
+  }
+
+}
+else
+{
+  <div class="card">
+    <div class="card-block text-center">
+      <h4 class="card-title">계약 정보가 등록되지 않았습니다.</h4>
+    </div>
+  </div>
+}

@@ -1,0 +1,1605 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.CandidateDetailViewModel
+@using Univision.Security
+
+@{
+  //ViewBag.Title = "후보자 상세보기";
+  ViewBag.use_validation = true;
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+  .extend-box {
+    position: absolute !important;
+    top: 1.9em;
+    right: 1em;
+  }
+
+  .job_list {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 250px;
+    display: inline-block;
+  }
+
+  .placeDiv span {
+    font-size: 15px;
+  }
+
+  .category::after {
+    content: " > "
+  }
+
+  .catRow {
+    margin-top: 3px;
+  }
+
+  .form-group {
+    margin-bottom: 10px !important;
+  }
+
+  .form-control-label {
+    margin-bottom: 0px !important;
+    padding-bottom: 0px !important;
+  }
+
+  .no-top-line {
+    border-top: 0px !important;
+  }
+
+  .table thead th {
+    font-weight: bold;
+  }
+
+  #resumeBody h4 {
+    font-size: 14px;
+    margin-bottom: 0px;
+  }
+
+  .page-profile .user-background .timeline-item,
+  .page-profile .user-background .timeline-single .page-profile .user-background .timeline-item {
+    margin-bottom: 12px;
+    padding-left: 10px
+  }
+
+  .page-profile .user-background .timeline-dot {
+    height: 10px;
+    width: 10px;
+    margin-left: -5px;
+    line-height: 10px;
+    background-color: #ccd5db
+  }
+
+  .page-profile .user-background .timeline-content > img {
+    max-width: 120px
+  }
+
+  .pl-2em {
+    padding-left: 2em !important;
+  }
+
+  .text-strike {
+    text-decoration: line-through !important;
+  }
+
+  #resumeBody.removal-lock .btn-resume-remove {
+    display: none;
+  }
+
+  #resumeBody .link-resume {
+    width: 85%;
+  }
+
+    #resumeBody .link-resume.type-pdf {
+      width: 70%;
+    }
+
+  #resumeBody.removal-lock .link-resume {
+    width: 100% !important;
+  }
+
+    #resumeBody.removal-lock .link-resume.type-pdf {
+      width: 85% !important;
+    }
+
+  .file_rst > div:nth-child(1n+3),
+  .timeline > li:nth-child(1n+3),
+  .active_list > li:nth-child(1n+11) {
+    display: none;
+  }
+
+  .file_rst > div:nth-child(1n+4).btn-more, .file_rst.more > div:nth-child(1n+4).btn-collapse,
+  .timeline > li:nth-child(1n+4).btn-li-more, .timeline.more > li:nth-child(1n+4).btn-li-collapse,
+  .active_list > div:nth-child(1n+12).btn-memo-more, .active_list.more > div:nth-child(1n+12).btn-memo-collapse {
+    cursor: pointer;
+    display: block;
+  }
+
+  .file_rst > div:nth-child(1n+4).btn-collapse, .file_rst.more > div:nth-child(1n+4).btn-more,
+  .timeline > li:nth-child(1n+4).btn-li-collapse, .timeline.more > li:nth-child(1n+4).btn-li-more,
+  .active_list > div:nth-child(1n+12).btn-memo-collapse, .active_list.more > div:nth-child(1n+12).btn-memo-more {
+    display: none;
+  }
+
+  .file_rst.more > div.file_div,
+  .timeline.more > li.timeline-item,
+  .active_list.more > li.can_activities {
+    display: block !important;
+  }
+
+  .file_rst > div.btn-more, .file_rst > div.btn-collapse,
+  .timeline > li.btn-li-more, .timeline > li.btn-li-collapse,
+  .active_list > div.btn-memo-more, .active_list > div.btn-memo-collapse {
+    display: none;
+  }
+
+  .btn-memo-more, .btn-memo-collapse {
+    display: none;
+  }
+
+  .after_modal_appended {
+    position: relative;
+  }
+</style>
+<link rel="stylesheet" href="~/Libs/bootstrap-toggle/css/bootstrap-toggle.min.css">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/profile.min599c.css?v4.0.4">
+<div class="page-profile">
+  <div class="page-content container-fluid">
+
+    <p class="py-0 my-0">
+      @if (Model.data.is_confidential == 1)
+      {
+        <div class="alert alert-alt alert-warning alert-dismissible bg-orange-100" role="alert">
+          <span class="font-weight-900 text-warning">- Confidential : </span>
+          @if (!String.IsNullOrEmpty(Model.data.confi_remark) && Model.data.confi_remark != " ")
+          {
+            <span class="font-weight-100">@Model.data.confi_remark</span>
+          }
+          else
+          {
+            <span class="font-weight-normal">Contact 시 DB등록자에게 먼저 문의 바랍니다.</span>
+          }
+        </div>
+      }
+
+      @if (Model.data.is_inactive == 1)
+      {
+        <div class="alert alert-alt alert-danger alert-dismissible bg-red-100" role="alert">
+          <span class="font-weight-900 text-danger">- Inactive : </span>
+          @if (!String.IsNullOrEmpty(Model.data.inactive_remark) && Model.data.inactive_remark != " ")
+          {
+            <span class="font-weight-normal">@Model.data.inactive_remark</span>
+          }
+          else
+          {
+            <span class="font-weight-normal">Contact 시 DB등록자에게 먼저 문의 바랍니다.</span>
+          }
+        </div>
+      }
+
+    </p>
+    <span class="py-0 my-0" id="caution_alert">
+      @if (Model.data.attention_type > 0)
+      {
+        <div class="alert alert-alt alert-info alert-dismissible bg-blue-grey-200" role="alert">
+          <span class="font-weight-900 text-info">- Attention : </span>
+          <span class="font-weight-900">
+            [@Utils.ReturnAttentionTypeTxt(Model.data.attention_type)]
+          </span>
+          <br />
+          @Model.data.attention_remark
+        </div>
+      }
+
+      @if (Model.data.caution_type == 6)
+      {
+        <div class="alert alert-alt alert-success alert-dismissible bg-green-100" role="alert">
+          @(ViewBag.hire_in_year ? "최근 1년 내 " : "") @Utils.ReturnCautionTypeTxt(Model.data.caution_type)  @ViewBag.latest_hire_dt
+        </div>
+      }
+
+    </span>
+    <div class="row">
+      <div class="col-md-6 col-xxl-8 pb-10">
+        <div class="card-block" id="div_candidate_info">
+          <div class="modal fade" id="modal_candidate_warning" tabindex="-1" role="dialog" aria-labelledby="dialog_confirm_mapLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-title">
+                  <h3 class="pl-20">※ 후보자에 대한 주의사항이 있습니다.</h3>
+                </div>
+                <div class="modal-body">
+                  <p>
+
+                    @if (Model.data.is_confidential == 1)
+                    {
+                      <div class="alert alert-alt alert-warning alert-dismissible bg-orange-100" role="alert">
+                        <span class="font-weight-900 text-warning">- Confidential : </span>
+                        @if (!String.IsNullOrEmpty(Model.data.confi_remark) && Model.data.confi_remark != " ")
+                        {
+                          <span class="font-weight-100">@Html.Raw(Model.data.confi_remark.Replace("\r\n", "<br />").Replace("\n", "<br />").Replace("\r", "<br />"))</span>
+                        }
+                        else
+                        {
+                          <span class="font-weight-normal">[사유 확인 불가] Contact 시 DB등록자에게 먼저 문의 바랍니다.</span>
+                        }
+                      </div>
+                    }
+
+                    @if (Model.data.is_inactive == 1)
+                    {
+                      <div class="alert alert-alt alert-danger alert-dismissible bg-red-100" role="alert">
+                        <span class="font-weight-900 text-danger">- Inactive : </span>
+                        @if (!String.IsNullOrEmpty(Model.data.inactive_remark) && Model.data.inactive_remark != " ")
+                        {
+                          <span class="font-weight-normal">@Html.Raw(Model.data.inactive_remark.Replace("\r\n", "<br />").Replace("\n", "<br />").Replace("\r", "<br />"))</span>
+                        }
+                        else
+                        {
+                          <span class="font-weight-normal">[사유 확인 불가] Contact 시 DB등록자에게 먼저 문의 바랍니다.</span>
+                        }
+                      </div>
+                    }
+
+
+
+                    @if (Model.data.attention_type > 0)
+                    {
+                      <div class="alert alert-alt alert-info alert-dismissible bg-blue-grey-200" role="alert">
+                        <span class="font-weight-900 text-info">- Attention : </span>
+                        <span class="font-weight-900">
+                          [@Utils.ReturnAttentionTypeTxt(Model.data.attention_type)]
+                        </span>
+                        <br />
+                        @Html.Raw(Model.data.attention_remark.Replace("\r\n", "<br />").Replace("\n", "<br />").Replace("\r", "<br />"))
+                      </div>
+                    }
+
+                    @if (Model.data.caution_type == 6 && ViewBag.hire_in_year == true)
+                    {
+                      <div class="alert alert-alt alert-success alert-dismissible bg-green-100" role="alert">
+                        최근 1년 내 @Utils.ReturnCautionTypeTxt(Model.data.caution_type) @ViewBag.latest_hire_dt
+                      </div>
+                    }
+                    <div>
+                      <div class="checkbox-custom checkbox-custom-sm checkbox-primary mb-0" title="확인여부">
+                        <input type="checkbox" id="chk_modal_candidate_warning" name="is_foreign" value="1" />
+                        <label for="chk_modal_candidate_warning">해당 주의 사항을 확인하고 후보자 Contact 시 주의 하겠습니다.</label>
+                      </div>
+                    </div>
+                  </p>
+                </div>
+                <div class="modal-footer">
+                  <span style="float:right"><button type="button" class="btn btn-primary d-none" id="btn_modal_candidate_warning" data-dismiss="modal">닫기</button></span>
+                </div>
+              </div>
+              <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+          </div>
+
+          @*
+            <div class='ribbon ribbon-danger ribbon-bookmark'>
+                <span class='ribbon-inner'>
+                    @Utils.Get1ToString(Model.data.is_confidential, "Confidential ")
+                </span>
+            </div>
+            <div class='ribbon ribbon-warning ribbon-reverse'>
+                <span class='ribbon-inner'>
+                    @Utils.Get1ToString(Model.data.is_inactive, "Inactive ")
+                </span>
+            </div>
+          *@
+          <!-- 주요 정보 (Confidential / Inactive )-->
+
+          <div class="float-right">
+            @if (Model.data.is_external_lock == 1)
+            {
+              <a class="btn btn-sm btn-primary mr-10" href="javascript:openCandidateExternalLock('@Model.data.c_seq');" title="Unlock private information">
+                <i class="fas fa-unlock-alt"></i> 연락처 확인
+              </a>
+              @*PMS 오픈 관련 등록기능 제한*@
+              if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              {
+                <a id="btnModify" href="javascript:void(0)" class="btn btn-sm btn-success" onclick="openCandidateExternalLockToHref('@Model.data.c_seq', '@Url.Action("CandidateCreate", "Candidate", new { @c_seq = Model.data.c_seq, @is_pop = ViewBag.is_pop })')"><i class="icon wb-edit"></i> Modify</a>
+              }
+            }
+            else
+            {
+              @*PMS 오픈 관련 등록기능 제한*@
+              if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              {
+                <a id="btnModify" href="@Url.Action("CandidateCreate", "Candidate", new { @c_seq = Model.data.c_seq, @is_pop = ViewBag.is_pop })" class="btn btn-sm btn-success"><i class="icon wb-edit"></i> Modify</a>
+              }
+            }
+            @if (Model.data.log_cnt > 0)
+            {
+              <a href="@Url.Action("CandidateLog", "Log", new { c_seq = Model.data.c_seq})" id="btnHisotry" class="btn btn-sm btn-default">Log</a>
+            }
+          </div>
+
+          <h4 class="profile-user">
+            @Model.data.kor_name
+            @if (!String.IsNullOrEmpty(Model.data.eng_name) && Model.data.eng_name.Trim() != "")
+            {
+              <small>[@Model.data.eng_name.Trim()]</small>
+            }
+            -
+            <small>
+              @if (Model.data.birth_date.HasValue)
+              {
+                if (Model.data.birth_date.Value.Year == 1900)
+                {
+                  <text>[나이 알수 없음]</text>
+                }
+                else
+                {
+                  @("만 " + Utils.GetAge(Model.data.birth_date) + "세")
+                }
+
+                if (Model.data.ex_birthdate == 1)
+                {
+                  <i class="fa fa-question-circle text-warning" aria-hidden="true" title="Uncertain birthday"></i>
+                }
+              }
+              @(" (" + Utils.ReturnGenderTxt(Model.data.gender) + ")")
+            </small>
+          </h4>
+          <p class="profile-job mb-1">
+            @if (Model.data.country_code != "KR" && !String.IsNullOrEmpty(Model.data.country_code))
+            {
+              <div class="py-1">
+                <i class="fa fa-globe-asia fa-fw" aria-hidden="true" title="Nationality"></i> @Model.data.country_code
+              </div>
+            }
+            <div class="py-1">
+
+              <i class="fa fa-birthday-cake fa-fw" aria-hidden="true" title="Day of birth"></i>
+              @Utils.ConvertDateTimeToString(Model.data.birth_date)
+              @if (Model.data.ex_birthdate == 1)
+              {
+                <i class="fa fa-question-circle text-warning" aria-hidden="true" title="Uncertain birthday"></i>
+              }
+            </div>
+            <div class="py-1">
+              @if (!string.IsNullOrWhiteSpace(Model.data.email1))
+              {
+
+                <i class="fa fa-at fa-fw" aria-hidden="true" title="E-mail"></i>
+                <a href="mailto:@(Model.data.email1)">@Model.data.email1</a>
+                <a href="javascript:funcCopy('@(Model.data.email1)')" class="text-secondary">
+                  <i class="fa fa-copy" aria-hidden="true" title="Copy"></i>
+                </a>
+                <button type="button" class="btn btn-xs btn-warning" onclick="openPrivacySmsSendModal('EMAIL', '@Model.data.c_seq')" title="개인정보 수집/제공 동의 발송">동의서 발송</button>
+
+              }
+              @if (!string.IsNullOrWhiteSpace(Model.data.email2))
+              {
+                <br />
+                <i class="fa fa-at fa-fw invisible" aria-hidden="true" title="E-mail"></i> <a href="mailto:@(Model.data.email2)">@Model.data.email2</a>
+                <a href="javascript:funcCopy('@(Model.data.email2)')" class="text-secondary">
+                  <i class="fa fa-copy" aria-hidden="true" title="Copy"></i>
+                </a>
+              }
+              <button type="button" class="btn btn-xs btn-primary" id="btn-edit-can-contact" onclick="CandidateContactModal('@Model.data.c_seq')" title="연락처(전화/이메일) 수정하기">연락처 수정</button>
+            </div>
+
+
+
+            @if (!string.IsNullOrWhiteSpace(Model.data.cell_phone))
+            {
+              <div class="py-1">
+                @if (Model.data.cell_phone.Length > 2 && Model.data.cell_phone.Substring(0, 2) == "01")
+                {
+                  <i class="fa fa-mobile-alt fa-fw" aria-hidden="true" title="Mobile"></i>
+                }
+                else
+                {
+                  <i class="fa fa-phone fa-fw" aria-hidden="true" title="Phone"></i>
+                }
+                <span class="@(Model.data.wrong_phone2 == 1 ? "text-strike" : "")">@Model.data.cell_phone</span>&nbsp;
+                <a href="javascript:funcCopy('@(Model.data.cell_phone)')" class="text-secondary">
+                  <i class="fa fa-copy" aria-hidden="true" title="Copy"></i>
+                </a>
+                @if (Model.data.cell_phone.Length > 2 && Model.data.cell_phone.Substring(0, 2) == "01")
+                {
+                  <button type="button" class="btn btn-xs btn-success" onclick="openSmsSendModal('@Model.data.cell_phone')" title="이 전화번호로 문자 발송">SMS</button>
+                  <button type="button" class="btn btn-xs btn-warning" onclick="openPrivacySmsSendModal('SMS2', '@Model.data.c_seq')" title="개인정보 수집/제공 동의 발송">동의서 발송</button>
+                }
+
+                @if (Model.data.wrong_phone2 == 1)
+                {
+                  <i class="fa fa-times-circle text-warning" aria-hidden="true" title="Wrong number"></i>
+                }
+                <button type="button" class="btn btn-xs btn-primary" id="btn-edit-can-contact" onclick="CandidateContactModal('@Model.data.c_seq')" title="연락처(전화/이메일) 수정하기">연락처 수정</button>
+              </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.data.phone))
+            {
+              <div class="py-1">
+                @if (Model.data.phone.Length > 2 && Model.data.phone.Substring(0, 2) == "01")
+                {
+                  <i class="fa fa-mobile-alt fa-fw" aria-hidden="true" title="Mobile"></i>
+                }
+                else
+                {
+                  <i class="fa fa-phone fa-fw" aria-hidden="true" title="Phone"></i>
+                }
+                <span class="@(Model.data.wrong_phone == 1 ? "text-strike" : "")">@Model.data.phone</span>
+                <a href="javascript:funcCopy('@(Model.data.phone)')" class="text-secondary">
+                  <i class="fa fa-copy" aria-hidden="true" title="Copy"></i>
+                </a>
+
+                @if (Model.data.phone.Length > 2 && Model.data.phone.Substring(0, 2) == "01")
+                {
+                  <button type="button" class="btn btn-xs btn-success" onclick="openSmsSendModal('@Model.data.phone')" title="이 전화번호로 문자 발송">SMS</button>
+                  <button type="button" class="btn btn-xs btn-warning" onclick="openPrivacySmsSendModal('SMS1', '@Model.data.c_seq')" title="개인정보 수집/제공 동의 발송">동의서 발송</button>
+
+
+                }
+                @if (Model.data.wrong_phone == 1)
+                {
+                  <i class="fa fa-times-circle text-warning" aria-hidden="true" title="Wrong number"></i>
+                }
+              </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.data.sns_link1) || !string.IsNullOrWhiteSpace(Model.data.sns_link2) || !string.IsNullOrWhiteSpace(Model.data.sns_link3))
+            {
+              <div class="py-1 text-truncate">
+                @if (!string.IsNullOrWhiteSpace(Model.data.sns_link1))
+                {
+
+                  var url = Model.data.sns_link1;
+
+                  if (string.IsNullOrWhiteSpace(url))
+                  {
+                    url = "javascript:void(0);";
+                  }
+                  else
+                  {
+                    if (!url.Contains("http://") && !url.Contains("https://"))
+                    {
+                      url = "http://" + url;
+                    }
+                  }
+
+                  <i class="fab @(Utils.ReturnFALinkClass(Model.data.sns_link1)) fa-fw" aria-hidden="true" title="URL"></i>
+                  <a href="@url" target="_blank">@Model.data.sns_link1</a>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.data.sns_link2))
+                {
+                  var url = Model.data.sns_link2;
+
+                  if (string.IsNullOrWhiteSpace(url))
+                  {
+                    url = "javascript:void(0);";
+                  }
+                  else
+                  {
+                    if (!url.Contains("http://") && !url.Contains("https://"))
+                    {
+                      url = "http://" + url;
+                    }
+                  }
+                  <br />
+                  <i class="fab @(Utils.ReturnFALinkClass(Model.data.sns_link2)) fa-fw" aria-hidden="true" title="URL"></i>
+                  <a href="@url" target="_blank">@Model.data.sns_link2</a>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.data.sns_link3))
+                {
+                  var url = Model.data.sns_link3;
+
+                  if (string.IsNullOrWhiteSpace(url))
+                  {
+                    url = "javascript:void(0);";
+                  }
+                  else
+                  {
+                    if (!url.Contains("http://") && !url.Contains("https://"))
+                    {
+                      url = "http://" + url;
+                    }
+                  }
+                  <br />
+                  <i class="fab @(Utils.ReturnFALinkClass(Model.data.sns_link3)) fa-fw" aria-hidden="true" title="URL"></i>
+                  <a href="@url" target="_blank">@Model.data.sns_link3</a>
+                }
+              </div>
+            }
+            <div class="py-1">
+
+              <i class="fa fa-home fa-fw" aria-hidden="true" title="Address"></i>
+              @Model.data.addr1
+              @if (Model.data.ex_addr == 1)
+              {
+                <i class="fa fa-globe text-primary" aria-hidden="true" title="해외 거주"></i>
+              }
+            </div>
+            <div class="py-1">
+              @if (Model.data.hope_salary != null && Model.data.hope_salary > 0)
+              {
+                <i class="fa fa-won-sign fa-fw" aria-hidden="true" title="Salary(Hopeful)"></i> @(Model.data.hope_salary)
+              }
+              @if (Model.data.hope_salary2 != null && Model.data.hope_salary2 > 0)
+              {
+                <text> ~ </text> @(Model.data.hope_salary2)
+              }
+            </div>
+            <div class="py-1 row">
+              <div class="col-4">
+                <button class="btn btn-info btn-sm btn-block" onclick="CreateAttentionModal('@Model.data.c_seq')" title="주의요망사항 설정">
+                  <i class="fa fa-user-check" aria-hidden="true"></i>
+                  Attention
+                </button>
+              </div>
+
+              <div class="col-4">
+                <button class="btn btn-warning btn-sm btn-block" onclick="CreateConfiModal('@Model.data.c_seq')" title="Confidential 설정">
+                  <i class="fa fa-eye-slash" aria-hidden="true"></i> Confidential
+                </button>
+              </div>
+
+              <div class="col-4">
+                <button class="btn btn-danger btn-sm btn-block" onclick="CreateInactiveModal('@Model.data.c_seq')" title="Inactive 설정">
+                  <i class="fa fa-user-lock" aria-hidden="true"></i> Inactive
+                </button>
+              </div>
+            </div>
+            <!--
+                <div class="py-1 form-inline">
+                  <div class="form-group">
+                    <label class="form-control-label" for="data_caution_type">
+                      주의요망사항
+                    </label>
+                    <div class="input-group input-group-sm">
+                      @Html.DropDownListFor(x => x.data.caution_type, new SelectList(CandidateCautionType.CandidateCautionTypes, "Key", "Value"), new { @class = "form-control form-control-sm " })
+                      <span class="input-group-btn">
+                        <button type="button" class="btn btn-sm btn-primary" onclick="saveCautionType()">
+                          <i class="fas fa-save"></i> 적용
+                        </button>
+                      </span>
+                    </div>
+
+                  </div>
+                </div>
+              -->
+          </p>
+          <hr />
+          <div class="row">
+            <div class="col-12 col-xxl-6">
+
+              @if (Model.data.is_external_lock != 1)
+              {
+                var kor_resume = Model.resumeList.Where(x => x.file_type == "K").FirstOrDefault();
+                var eng_resume = Model.resumeList.Where(x => x.file_type == "E").FirstOrDefault();
+
+                if (kor_resume != null || eng_resume != null)
+                {
+
+                  <p>
+                    <dl class="dl-horizontal row">
+                      <dt class="col-1"><i class="fa fa-file-alt fa-fw" aria-hidden="true" title="Resume"></i></dt>
+                      <dd class="col-11">최신 이력서 다운로드 </dd>
+                      <dd class="col offset-1" style="line-height:2em;">
+                        @if (kor_resume != null)
+                        {
+                          <a class="badge badge-outline badge-primary" href="javascript:void(0)" onclick="DownloadFile(@kor_resume.cr_seq, 'canResume')" title="국문이력서 다운로드">
+                            <i class="fas @Utils.ReturnFileExtensionClass(kor_resume.file_extension)"></i> Resume(Kor) [@Utils.ConvertDateTimeToString(kor_resume.create_dt)]
+                          </a>
+                        }
+                        @if (eng_resume != null)
+                        {
+                          <a class="badge badge-outline badge-info" href="javascript:void(0)" onclick="DownloadFile(@eng_resume.cr_seq, 'canResume')" title="영문이력서 다운로드">
+                            <i class="fas @Utils.ReturnFileExtensionClass(eng_resume.file_extension)"></i> Resume(Eng) [@Utils.ConvertDateTimeToString(eng_resume.create_dt)]
+                          </a>
+                        }
+                      </dd>
+                    </dl>
+                  </p>
+                }
+              }
+
+              @if (!string.IsNullOrWhiteSpace(Model.data.keyword))
+              {
+                string[] keywordList = Model.data.keyword.Split(',');
+                if (keywordList.Length > 0)
+                {
+                  <p>
+                    <dl class="dl-horizontal row">
+                      <dt class="col-1"><i class="fa fa-key fa-fw" aria-hidden="true" title="Keyword"></i></dt>
+                      <dd class="col" style="line-height:2em;">
+                        @foreach (var keyword in keywordList)
+                        {
+                          <label class="badge badge-outline badge-info font-size-12">
+                            @keyword
+                          </label>
+                        }
+                      </dd>
+                    </dl>
+                  </p>
+                }
+              }
+            </div>
+            <div class="col-12 col-xxl-6">
+
+              @if (Model.agreeList.Count() > 0)
+              {
+                int agree_idx = 0;
+                <p>
+                  <dl class="dl-horizontal row">
+                    <dt class="col-1"><i class="fa fa-file-alt fa-fw" aria-hidden="true" title="Privacy Agreement"></i></dt>
+                    <dd class="col-11">최근 개인정보 동의  </dd>
+                    <dd class="col offset-1" style="line-height:2em;">
+                      @foreach (var agrees in Model.agreeList)
+                      {
+                        agree_idx++;
+                        <label class="badge badge-outline badge-primary font-size-12">
+                          @if (agrees.agree_gubun == 3)
+                          {
+                            <text>- 수집 및 제3자 제공[@agrees.client_name] </text>
+                          }
+                          else if (agrees.agree_gubun == 1)
+                          {
+                            <text>- 수집</text>
+                          }
+                          else if (agrees.agree_gubun == 2)
+                          {
+                            <text>- 제3자 제공[@agrees.client_name] </text>
+                          }
+
+                          @if (agrees.agree_dt != null)
+                          {
+                            <text> (@Utils.ConvertDateTimeToString(agrees.agree_dt))</text>
+                          }
+
+
+
+                        </label>
+                        if (agree_idx > 3)
+                        {
+                          break;
+                        }
+                      }
+                    </dd>
+                  </dl>
+                </p>
+
+              }
+            </div>
+          </div>
+          <hr />
+          <p>
+            <dl class="dl-horizontal row">
+              <dt class="col-1"><i class="fa fa-link fa-fw" aria-hidden="true" title="후보자 소스"></i></dt>
+              <dd class="col-11">
+                @Utils.ReturnRegTypeTxt(Model.data.reg_type)
+              </dd>
+              <dt class="col-1"><i class="fa fa-user-circle fa-fw" aria-hidden="true" title="DB 등록자"></i></dt>
+              <dd class="col-11">
+                @if (!String.IsNullOrEmpty(Model.data.create_name))
+                {
+                  @Model.data.manager_name
+                }
+                else
+                {
+                  <text>(홈페이지 가입자)</text>
+                }
+              </dd>
+              <dt class="col-1"><i class="fas fa-user-plus fa-fw" aria-hidden="true" title="등록일/등록자"></i></dt>
+              <dd class="col-11">
+                @Model.data.create_dt<small>(@Model.data.create_name)</small>
+              </dd>
+              <dt class="col-1"><i class="fas fa-user-edit fa-fw" aria-hidden="true" title="수정일/수정자"></i></dt>
+              <dd class="col-11">
+                @Model.data.modify_dt<small>(@Model.data.modify_name)</small>
+              </dd>
+            </dl>
+          </p>
+          <hr />
+
+          <div class="text-center">
+            @*PMS 오픈 관련 등록기능 제한*@
+            @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+            {
+              <span id="span_my_list_btn">
+
+                @if (Model.data.cf_seq != 0)
+                {
+                  <button type="button" class="btn btn-info btn-sm" onclick="CreateMyListConfirm('@Model.data.c_seq')">
+                    <i class="fa fa-user-edit" aria-hidden="true"></i> Update My List
+                  </button>
+                }
+                else
+                {
+                  <button type="button" class="btn btn-primary btn-sm" onclick="CreateMyListConfirm('@Model.data.c_seq')">
+                    <i class="fa fa-plus" aria-hidden="true"></i> Add to My List
+                  </button>
+                }
+              </span>
+              <span>
+                <button type="button" class="btn btn-success btn-sm" onclick="PopupProject('@Model.data.c_seq')">
+                  <i class="fa fa-user-plus" aria-hidden="true"></i>
+                  Add to project
+                </button>
+              </span>
+            }
+          </div>
+          <hr />
+          <div class="py-0 row">
+            <div class="col-xxl-6 user-background card mb-1">
+              <div class="card-block p-5">
+                <h5 class="card-title">
+                  <i class="fa fa-graduation-cap fa-fw"></i>
+                  <span>Education</span>
+                </h5>
+                @if (Model.schoolList.Count > 0)
+                {
+                  <ul class="timeline timeline-single">
+
+                    @foreach (var school in Model.schoolList)
+                    {
+                      <li class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                          <span class="block mb-5 font-weight-900">
+                            <!--년도넣어야 이쁨-->
+                            @(school.schoolName + " [" + Utils.ReturnSchoolEducationStateTxt(school.gubun.AsInt()) + " " + Utils.ReturnSchoolGraduateStateTxt(school.graduate_status) + "]")
+                            @if (school.is_transfer == 1)
+                            {
+                              <span class="text-primary"> (편입)</span>
+                            }
+                            <br /><small>
+                              [
+                              @if (!string.IsNullOrWhiteSpace(school.admission_year))
+                              {
+                                @(school.admission_year)
+                              }
+                              ~
+                              @if (!string.IsNullOrWhiteSpace(school.graduate_year))
+                              {
+                                @(school.graduate_year)
+                              }
+                              ]
+                            </small>
+
+                          </span>
+                          <span class="block mb-5">
+                            @if (!string.IsNullOrWhiteSpace(school.category1_name))
+                            {
+                              @("[" + school.category1_name + "]")
+                            }
+                            @school.major_name
+                            @if (!string.IsNullOrWhiteSpace(school.sub_major_name))
+                            {
+                              <br />
+                              <small class="pl-10">
+                                - 복수전공/부전공 :
+                                @if (!string.IsNullOrWhiteSpace(school.sub_category1_name))
+                                {
+                                  @("[" + school.sub_category1_name + "]")
+                                }
+                                @school.sub_major_name
+                              </small>
+                            }
+                          </span>
+                        </div>
+                      </li>
+                    }
+                    <li class="py-0 btn-li-more text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More (@(Model.schoolList.Count - 2))</li>
+                    <li class="py-0 btn-li-collapse text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </li>
+                  </ul>
+                }
+                else
+                {
+                  <div class="text-center py-10">No Education Data.</div>
+                }
+
+              </div>
+            </div>
+            <div class="col-xxl-6 user-background card mb-1">
+              <div class="card-block p-5">
+                <h5 class="card-title">
+                  <i class="fa fa-city fa-fw"></i>
+                  <span>Experience </span>
+                  @{
+                    int i_career = 0;
+                    i_career = Model.data.career_range.HasValue ? Model.data.career_range.Value : Model.data.cur_career_month;
+                  }
+                  <span>
+                    - Total : @(i_career / 12) year(s)
+                  </span>
+                  @if ((i_career % 12) > 0)
+                  {
+                    <span>
+                      @(i_career % 12) month(s)
+                    </span>
+                  }
+                </h5>
+                @if (Model.careerList.Count > 0)
+                {
+                  <ul class="timeline timeline-single ">
+
+                    @foreach (var career in Model.careerList)
+                    {
+                      int company_idx = 0;
+
+                      <li class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                          <span class="block mb-5 font-weight-900">
+                            <!--년도넣어야 이쁨-->
+                            <span class="offlimit-chk-@(company_idx)">
+                              @career.company_name
+                            </span>
+                            @(career.is_work == 1 ? "[" + Utils.ReturnWorkCodeTxt(career.is_work) + "]" : "")
+                            <br /><small>
+                              [
+                              @if (!string.IsNullOrWhiteSpace(career.join_dt))
+                              {
+                                @(career.join_dt)
+                              }
+                              ~
+                              @if (!string.IsNullOrWhiteSpace(career.leave_dt))
+                              {
+                                @(career.leave_dt)
+                              }
+                              ]
+                            </small>
+                          </span>
+
+                          <span class="block mb-5">
+                            @career.division_name
+                          </span>
+
+                          <span class="block mb-5">
+                            @career.r_name
+                          </span>
+                        </div>
+                      </li>
+                      company_idx++;
+                    }
+                    <li class="py-0 btn-li-more text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More (@(Model.careerList.Count - 2))</li>
+                    <li class="py-0 btn-li-collapse text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </li>
+                  </ul>
+                }
+                else
+                {
+                  <div class="text-center py-10">No Experience Data.</div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <hr />
+          <div class="user-background card mb-1">
+            <div class="card-block p-5">
+              <h5 class="card-title">
+                <i class="fa fa-briefcase fa-fw"></i>
+                <span title="산업 & 직무">Industries &amp; Job functions</span>
+              </h5>
+              <div class="py-0 row">
+                <div class="col-xxl-6 user-background card mb-1">
+                  <div class="card-block p-5">
+                    <div class="card-title">
+                      <i class="fa fa-industry fa-fw"></i>
+                      <span>Industries</span>
+                    </div>
+                    <ul class="list-group list-group-full mb-5">
+
+                      @if (Model.businessList.Count > 0)
+                      {
+                        double bef_busi_code = 0;
+                        foreach (var busi in Model.businessList)
+                        {
+                          if (busi.code1 != bef_busi_code)
+                          {
+                            <li class="list-group-item p-5 border-0">
+                              <i class="fa fa-minus fa-fw"></i>
+
+                              <label class="badge badge-lg badge-info">
+                                @busi.code_name1
+                              </label>
+                              @if (Model.businessList.Where(x => x.code1 == busi.code1 && !String.IsNullOrWhiteSpace(x.code_name2)).Count() > 0)
+                              {
+                                <i class="fa fa-caret-right fa-fw"></i>
+                                foreach (var sub_busi in Model.businessList.Where(x => x.code1 == busi.code1 && !String.IsNullOrWhiteSpace(x.code_name2)))
+                                {
+                                  <label class="badge badge-lg badge-secondary">
+                                    @sub_busi.code_name2
+                                  </label>
+                                }
+
+                              }
+
+
+                            </li>
+                          }
+                          bef_busi_code = busi.code1;
+                        }
+                      }
+                      else
+                      {
+                        <li class="list-group-item p-5">
+                          <i class="fa fa-database fa-fw"></i>
+                          No Industry Data.
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                </div>
+                <div class="col-xxl-6 user-background card mb-1">
+                  <div class="card-block p-5">
+                    <div class="card-title">
+                      <i class="fa fa-share-alt fa-fw"></i>
+                      <span>Job</span>
+                    </div>
+                    <style>
+                      .text-on-pannel {
+                        background: #fff none repeat scroll 0 0;
+                        height: auto;
+                        margin-left: 15px;
+                        padding: 3px 5px;
+                        position: absolute;
+                        margin-top: -47px;
+                        border: 1px solid #337ab7;
+                        border-radius: 0px;
+                      }
+
+                      .legend-panel {
+                        margin-top: 27px !important;
+                      }
+
+                      .legend-panel-body {
+                        margin-top: 30px !important;
+                      }
+                    </style>
+                    <ul class="list-group list-group-full mb-5">
+
+
+                      @if (Model.jobList.Count > 0)
+                      {
+                        double bef_job_code = 0;
+                        foreach (var job in Model.jobList)
+                        {
+                          if (job.code1 != bef_job_code)
+                          {
+                            <li class="list-group-item p-5 border-0">
+                              <i class="fa fa-minus fa-fw"></i>
+
+                              <label class="badge badge-lg badge-primary">
+                                @job.code_name1
+                              </label>
+                              @if (Model.jobList.Where(x => x.code1 == job.code1 && !String.IsNullOrWhiteSpace(x.code_name2)).Count() > 0)
+                              {
+                                <i class="fa fa-caret-right fa-fw"></i>
+                                foreach (var sub_job in Model.jobList.Where(x => x.code1 == job.code1 && !String.IsNullOrWhiteSpace(x.code_name2)))
+                                {
+                                  <label class="badge badge-lg badge-secondary">
+                                    @sub_job.code_name2
+                                  </label>
+                                }
+
+                              }
+
+
+                            </li>
+                          }
+                          bef_job_code = job.code1;
+                        }
+                      }
+                      else
+                      {
+                        <li class="list-group-item p-5">
+                          <i class="fa fa-database fa-fw"></i>
+                          No Job Data.
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+
+            </div>
+          </div>
+
+          <hr />
+          @if (!string.IsNullOrWhiteSpace(Model.data.kor_foreign_name))
+          {
+            <p class="profile-job">
+              <i class="fa fa-language fa-fw" aria-hidden="true" title="Language skill"></i> @(Model.data.kor_foreign_name + "/" + Model.data.abilityDesc)
+            </p>
+          }
+          <p class="pb-0">
+            <div class="py-0 h5">
+              <i class="fa fa-folder-open fa-fw" aria-hidden="true" title="Resume Files"></i> Upload Resume Files
+              @if (Model.data.is_external_lock != 1)
+              {
+                if (AppIdentity.user_seq != 386)
+                {
+                  <label class="float-right ml-10 checkbox-inline" title="삭제 할 이력서가 있을 경우 잠금을 해제해 주세요">
+                    <input type="checkbox" id="switch-resume-remove" data-size="mini" data-toggle="toggle" data-off="<i class='fa fa-lock'></i> Remove Lock" data-on="<i class='fa fa-unlock'></i> Remove Unlock">
+                  </label>
+                }
+                if (AppIdentity.ua_seq <= 3)
+                {
+
+
+                  <label class="float-right mr-10 checkbox-inline" title="삭제이력서 보기">
+                    <input type="checkbox" id="switch-remove-show" data-size="mini" data-toggle="toggle" data-off="<i class='fa fa-eye-slash'></i> Hide Deleted" data-on="<i class='fa fa-eye'></i> Show Deleted">
+                  </label>
+                }
+
+              }
+            </div>
+            @if (Model.data.is_external_lock == 1)
+            {
+              <div class="border-danger border bg-danger p-10">
+                파일을 업로드/다운로드 하시려면 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오.
+              </div>
+            }
+            else
+            {
+              <div id="resumeBody" class="removal-lock removal-hide">
+
+              </div>
+            }
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xxl-4">
+        <div class="card">
+          <div class="card-block">
+            <h5 class="card-title">
+              <i class="fas fa-history "></i>
+              후보자 메모 (Memo) <span class="red-600">(※ 유니코써치 내부 컨설턴트 참조용)</span>
+            </h5>
+            @using (Html.BeginForm("CreateCandidateActivity", "Candidate", FormMethod.Get, new { @id = "CreateActivityForm" }))
+            {
+              <div class="row my-1">
+
+                <div class="col-12 text-center border border-info p-10 bd-gray-700">
+                  <b>&lt;작성 방법&gt;</b> ①이직사유 ②이직 시 고려사항 ③성향 ④연봉(현재/희망) ⑤근무가능지역
+                </div>
+
+              </div>
+              <div class="row">
+                <div class="col-12 form-group">
+                  <textarea class="form-control" id="memo" name="memo" rows="3" placeholder="후보자 관련정보 (이력,이직/지원사유,급여,성향,진행상황 및 기타 참고사항)"></textarea>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-12">
+                  <button type="submit" id="btnCreateActivity" class="btn btn-primary btn-sm w-full">Post</button>
+                </div>
+              </div>
+
+            }
+            <hr />
+            <div id="activityBody">
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+@section scripts{
+  <script src="~/Libs/bootstrap-toggle/js/bootstrap-toggle.min.js"></script>
+
+  @if (Model.data.attention_type > 0 || (Model.data.caution_type == 6 && ViewBag.hire_in_year == true) || Model.data.is_confidential == 1 || Model.data.is_inactive == 1)
+  {
+    <script>
+
+      function ModalCandInfo() {
+        $('#modal_candidate_warning').modal({
+          backdrop: 'static',
+          keyboard: false
+        });
+
+
+        $("#div_candidate_info").addClass("after_modal_appended");
+        $('.modal-backdrop').appendTo('#div_candidate_info');
+        $('#modal_candidate_warning').css("position", "absolute");
+        $('#modal_candidate_warning').css("padding-left", "13px");
+        $('#modal_candidate_warning').css("padding-top", "60px");
+        $('#modal_candidate_warning').css("z-index", "1400");
+        $('.modal-backdrop').css("position", "absolute");
+        $('.modal-backdrop').css("z-index", "1300");
+        $('body').removeClass("modal-open");
+        $('body').css("padding-right", "");
+
+        $('#chk_modal_candidate_warning').click(function () {
+          if ($(this).prop("checked")) {
+            $('#btn_modal_candidate_warning').removeClass("d-none");
+          } else {
+            $('#btn_modal_candidate_warning').removeClass("d-none").addClass("d-none");
+          }
+        })
+      }
+      ModalCandInfo();
+    </script>
+  }
+  <script type="text/javascript">
+    function GetOfflimitData() {
+      ajxCall({
+        url: "@Url.Action("OfflimitCheckList", "Partial")",
+        type: "POST",
+        dataType: 'json',
+        loading: false,
+        suc: function (json) {
+
+          //$('#btnCreateMemo').prop("disabled", false);
+          //$('#btnCreateMemo').removeClass("disabled");
+
+          if (json.ok) {
+            CheckOfflimit(json.list);
+          }
+          else {
+            ErrorAlert("Offlimit Check Error : " + json.message);
+          }
+        },
+        err: function (jqXHR, textStatus, errorThrown) {
+
+          ErrorAlert("Offlimit Check Failed");
+        }
+      });
+    }
+
+    function CheckOfflimit(list) {
+      //console.log(list);
+      $('.offlimit-chk-0').each(function () {
+        var company = $(this).text().toLowerCase().trim();
+        if (company != "지멘스" && company != "siemens" && company != "한화" && company != "LG" && company != "엘지") {
+          var fil = list.filter(item => item.name_all.toLowerCase().indexOf(company) >= 0 || (item.kor_name.length > 2 && company.toLowerCase().indexOf(item.kor_name) >= 0) || (item.eng_name.length > 2 && company.toLowerCase().indexOf(item.eng_name) >= 0))
+          //console.log(company, fil);
+          if (fil.length > 0) {
+            //console.log(fil[0]);
+            if (fil[0].offlimit == 1) {
+              $(this).append('<span class="badge badge-danger" title="' + fil[0].kor_name + ' (전 임직원 컨택 금지)">OFFLIMIT</span>');
+            } else if (fil[0].offlimit == 2) {
+              $(this).append('<span class="badge badge-warning" title="' + fil[0].kor_name + ' (유니코에 의해 채용된 임직원 컨택 금지)">OFFLIMIT</span>');
+            } else if (fil[0].offlimit == 3) {
+              $(this).append('<span class="badge badge-outline badge-warning" title="' + fil[0].kor_name + ' (계약서 내 오프리밋 조항은 없지만 고객사의 요청 등)">[계약서 미표기] OFFLIMIT</span>');
+            }
+
+          }
+        }
+      })
+
+    }
+
+    GetOfflimitData();
+
+
+    function openCandidateExternalLock(c_seq) {
+      alertify.confirm()
+      .set({
+        'labels': { ok: 'OK', cancel: 'Cancel' },
+        'onok': function (e) {
+          if (saveElementOpenLogToServer('@AppIdentity.user_seq', c_seq, 'candidate', 'candidate', '', '')) {
+            location.href = "@Html.Raw(ViewContext.HttpContext.Request.Url.AbsoluteUri)";
+          }
+          else {
+            return;
+          }
+        },
+        'oncancel': function () {
+          return;
+        }
+      })
+      .setHeader('후보자 연락처 확인')
+      .setting({
+        message: "해당 후보자의 연락처를 확인하시겠습니까?<br />확인 시 연락처 확인 기록이 서버에 저장되며, 24시간 이내 동일정보는 별도 확인 없이 조회가 가능합니다."
+      })
+      .show();
+    }
+
+        function openCandidateExternalLockToHref(c_seq, rtn_url) {
+            alertify.confirm()
+            .set({
+                'labels': { ok: 'OK', cancel: 'Cancel' },
+                'onok': function (e) {
+
+                    if (saveElementOpenLogToServer('@AppIdentity.user_seq', c_seq, 'candidate', 'candidate', '', '')) {
+                        if (rtn_url) {
+                            location.href = rtn_url;
+                        } else {
+                            location.href = "@Html.Raw(ViewContext.HttpContext.Request.Url.AbsoluteUri)";
+                        }
+                    }
+                    else {
+                        return;
+                    }
+
+                },
+                'oncancel': function () {
+                    return;
+                }
+            })
+            .setHeader('후보자 수정화면 이동 안내')
+            .setting({
+              message: "해당 후보자의 정보 수정화면으로 이동하시겠습니까?<br />확인 시 연락처 확인 기록이 서버에 저장되며, 24시간 이내 동일정보는 별도 확인 없이 조회가 가능합니다."
+            })
+            .show();
+        }
+
+
+        $('.btn-li-more').click(function () {
+            $(this).closest('ul').addClass('more');
+        })
+
+        $('.btn-li-collapse').click(function () {
+            $(this).closest('ul').removeClass('more');
+        })
+
+        $('#switch-resume-remove').change(function () {
+            $('#resumeBody').removeClass('removal-lock')
+            if (!$(this).prop('checked')) {
+                $('#resumeBody').addClass('removal-lock')
+            }
+        })
+
+        $('#switch-remove-show').change(function () {
+          var show_remove = 0
+          if ($(this).prop('checked')) {
+            show_remove = 1
+          }
+
+          callResumeList('@Model.data.c_seq', show_remove);
+        })
+
+
+  var candidate_validate_opt = {
+    rules: {
+      memo: {
+        required:true
+      }
+    },
+    messages: {
+      memo: {
+        required: "메모내용은 필수 입력 항목 입니다."
+      }
+    },
+    submitHandler: function (form) {
+      var c_seq  = "@Model.data.c_seq"
+      //form 전송을 위한 데이터 생성.
+      //기본정보
+      var Activity = {
+          c_seq: c_seq,
+          memo: $("#memo").val(),
+          ca_date : $("#ca_date").val()
+      };
+
+      var formURL = $("#CreateActivityForm").attr("action");
+      ajxCall({
+          url: formURL,
+          type: "POST",
+          dataType: 'json',
+          data: {
+              data : Activity
+          },
+        loading: true,
+        loading_target: '#CreateActivityForm',
+
+          suc: function (json) {
+
+              //$('#btnCreateMemo').prop("disabled", false);
+              //$('#btnCreateMemo').removeClass("disabled");
+
+              if (json.ok) {
+                  $("#memo").val("");
+                  $("#ca_date").val();
+                  callActivityList(c_seq, 1)
+              }
+              else {
+                  ErrorAlert(json.message);
+              }
+          },
+          err: function (jqXHR, textStatus, errorThrown) {
+
+              ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+          }
+      });
+    }
+  }
+
+  var valid_memo_option = $.extend({}, valid_option, candidate_validate_opt);
+
+  var validator_memo = $("#CreateActivityForm").validate(valid_memo_option);
+
+
+
+
+        //후보자 활동내역 Partial View
+        function callActivityList(c_seq, page) {
+
+            if(page == null || page == undefined)
+                page = 1;
+
+            $.ajax({
+                url: '@Url.Action("CandidateActivityList", "Candidate")',
+                data: {
+                    c_seq: c_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#activityBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#activityBody');
+                if (page == 1) {
+                    $('#activityBody').html(view);
+                } else {
+                    $('#activityBody').append(view);
+                }
+            })
+            .always(function () {
+                hideLoading('#activityBody');
+            });
+        }
+
+        function callResumeList(c_seq, show_remove) {
+            if ($('#resumeBody').length == 0) {
+                return;
+            }
+            $.ajax({
+                url: '@Url.Action("CandidateResumeList", "Candidate")',
+                data: {
+                  c_seq: c_seq,
+                  show_remove: show_remove
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#resumeBody');
+                }
+            })
+            .done(function (view) {
+                 hideLoading('#resumeBody');
+                $('#resumeBody').html(view);
+
+            })
+            .always(function () {
+                 hideLoading('#resumeBody');
+            });
+        }
+
+        //주의요망사항
+  function CandidateContactModal(c_seq) {
+            //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+          if ($('#CandidateContactModal').length > 0) {
+            $('#CandidateContactModal').parent().remove();
+            }
+            $('body').append($('<div>').load('/Modal/CandidateContactModal.html?v0.0.2', function () {
+                ajxCall({
+                  url: '@Url.Action("CandidateContactCreate", "Candidate")',
+                  data: {
+                    c_seq: c_seq
+                  },
+                  dataType: 'html',
+                  type: 'GET',
+                  loading: true,
+                  suc: function (view) {
+                    $("#CandidateContactModal .modal-body").html(view)
+                    $('#CandidateContactModal').modal('show');
+                  },
+                  err: function (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    $('#CandidateContactModal').modal('hide');
+                  }
+                })
+            }));
+  }
+
+        //주의요망사항
+        function CreateAttentionModal(c_seq) {
+            //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+            if ($('#CandidateAttentionModal').length > 0) {
+              $('#CandidateAttentionModal').parent().remove();
+            }
+            $('body').append($('<div>').load('/Modal/CandidateAttentionModal.html?v0.0.1', function () {
+                ajxCall({
+                  url: '@Url.Action("CandidateAttentionCreate", "Candidate")',
+                  data: {
+                    c_seq: c_seq
+                  },
+                  dataType: 'html',
+                  type: 'GET',
+                  loading: true,
+                  suc: function (view) {
+                    $("#CandidateAttentionModal .modal-body").html(view)
+                    $('#CandidateAttentionModal').modal('show');
+                  },
+                  err: function (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    $('#CandidateAttentionModal').modal('hide');
+                  }
+                })
+            }));
+  }
+
+  //inactive사항
+        function CreateInactiveModal(c_seq) {
+            //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+          if ($('#CandidateInactiveModal').length > 0) {
+            $('#CandidateInactiveModal').parent().remove();
+            }
+          $('body').append($('<div>').load('/Modal/CandidateInactiveModal.html?v0.0.1', function () {
+                ajxCall({
+                  url: '@Url.Action("CandidateInactiveCreate", "Candidate")',
+                  data: {
+                    c_seq: c_seq
+                  },
+                  dataType: 'html',
+                  type: 'GET',
+                  loading: true,
+                  suc: function (view) {
+                    $("#CandidateInactiveModal .modal-body").html(view)
+                    $('#CandidateInactiveModal').modal('show');
+                  },
+                  err: function (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    $('#CandidateInactiveModal').modal('hide');
+                  }
+                })
+            }));
+  }
+
+  function CreateConfiModal(c_seq) {
+            //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+    if ($('#CandidateConfiModal').length > 0) {
+      $('#CandidateConfiModal').parent().remove();
+            }
+    $('body').append($('<div>').load('/Modal/CandidateConfiModal.html?v0.0.1', function () {
+                ajxCall({
+                  url: '@Url.Action("CandidateConfiCreate", "Candidate")',
+                  data: {
+                    c_seq: c_seq
+                  },
+                  dataType: 'html',
+                  type: 'GET',
+                  loading: true,
+                  suc: function (view) {
+                    $("#CandidateConfiModal .modal-body").html(view)
+                    $('#CandidateConfiModal').modal('show');
+                  },
+                  err: function (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    $('#CandidateConfiModal').modal('hide');
+                  }
+                })
+            }));
+        }
+
+        //My List 등록(confirm)
+        function CreateMyListConfirm(c_seq) {
+            //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+            if ($('#MyCandidateModifyModal').length > 0) {
+                $('#MyCandidateModifyModal').parent().remove();
+            }
+            $('body').append($('<div>').load('/Modal/MyCandidateModal.html?v0.0.0', function () {
+                $.ajax({
+                    url: '@Url.Action("MyCandidateAdd", "Candidate")',
+                    data: {
+                        c_seq: c_seq
+                    },
+                    dataType: 'html',
+                    type: 'GET',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (view) {
+                    hideLoading();
+
+                    $("#MyCandidateModifyModal .modal-body").html(view)
+                    $('#MyCandidateModifyModal').modal('show');
+
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    $('#MyCandidateModifyModal').modal('hide');
+                });
+            }));
+        }
+
+  function PopMyProjectList(c_seq) {
+    //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+    if ($('#CandidateMyProjectModal').length > 0) {
+      $('#CandidateMyProjectModal').parent().remove();
+    }
+
+    $('body').append($('<div>').load('/Modal/CandidateMyProjectModal.html?v0.0.0', function () {
+      $.ajax({
+        url: '@Url.Action("SearchMyProject", "Candidate")',
+        data: {
+          search: {
+            except_c_seq: c_seq,
+            searchTxt: ""
+          }
+        },
+        dataType: 'html',
+        type: 'post',
+        beforeSend: function () {
+          showLoading();
+        }
+      })
+        .done(function (view) {
+          hideLoading();
+          $("#CandidateMyProjectModal .modal-body").html(view)
+          $('#CandidateMyProjectModal').modal('show');
+        })
+        .fail(function (e) {
+          hideLoading();
+          ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+          $('#CandidateMyProjectModal').modal('hide');
+        });
+    }));
+
+  }
+        //관심후보 등록을 위한 프로젝트 검색
+  function PopupProject(c_seq) {
+    PopMyProjectList(c_seq);
+    return;
+
+        }
+
+        //후보자 주의 요망사항 업데이트
+        function saveCautionType() {
+
+            $.ajax({
+               url: '@Url.Action("UpdateCandidateCautionType", "Candidate")',
+               data: {
+                   c_seq: '@Model.data.c_seq'
+                   ,
+                   caution_type: $("#data_caution_type :selected").val()
+                },
+                dataType: 'json',
+                type: 'POST',
+               beforeSend: function ()
+               {
+                   showLoading();
+               }
+            })
+            .done(function (json) {
+                hideLoading();
+                if (json.ok) {
+                    NormalAlert(json.message);
+                    var caution_type = $("#data_caution_type :selected").val();
+                    var caution_text = $("#data_caution_type :selected").text();
+
+                    $('#caution_alert').empty();
+                    if (caution_type > 0) {
+                        var alert_bar = "<div class='alert dark " + (caution_type == 6 ? "alert-success" : "alert-warning") + " alert-dismissible' role='alert' >Warning : " + caution_text + "</div>";
+                        $('#caution_alert').append(alert_bar).hide().fadeIn();
+                    }
+                } else {
+                    ErrorAlert(json.message);
+                }
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+
+        callActivityList('@Model.data.c_seq', 1)
+        callResumeList('@Model.data.c_seq', 0)
+
+       function privacyReload() {
+         callActivityList('@Model.data.c_seq', 1)
+  }
+  </script>
+
+}

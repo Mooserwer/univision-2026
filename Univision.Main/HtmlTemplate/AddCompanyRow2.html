@@ -1,0 +1,80 @@
+﻿<li>
+  <div id='company_row_{0}' class='panel border border-primary companyRow mb-10 pb-5'>
+    <div class='panel-body pt-10 pb-5'>
+      <div class='drag_handle position-absolute' style='top:5px;left:10px;cursor:cell;'><i class='fa fa-arrows-alt-v' aria-hidden='true'></i></div>
+      <a class="panel-action fas fa-times position-absolute" style="top:5px;right:10px;" aria-hidden="true" href="javascript:void(0);" onclick="DeleteRow(this)"></a>
+      <div class='row'>
+        <div class='form-group col-md-4'>
+          <input type='hidden' id='g_seq_{0}' name='g_seq' value=''>
+          <input type='hidden' id='cc_seq_{0}' name='cc_seq' value=''>
+          <input type='text' id='company_name_{0}' name='company_name' value='' class='form-control form-control-sm find_company_autocomplete' placeholder='회사명'>
+        </div>
+        <div class='form-group col-md-3'>
+          <input type='text' id='division_name_{0}' name='division_name' value='' class='form-control form-control-sm' placeholder='부서 / 직급명'>
+        </div>
+        <div class='form-group col-md-3'>
+          <div class='input-group input-group-sm'>
+            <input type='text' id='join_dt_{0}' name='join_dt' class='form-control' value='' placeholder='입사년월' onkeyUp='return CalculationExperience(event, this)' maxlength='7'>
+            <div class='input-group-text px-3'>
+              ~
+            </div>
+            <input type='text' id='leave_dt_{0}' name='leave_dt' class='form-control' value='' placeholder='퇴사년월' onkeyUp='return CalculationExperience(event, this)' maxlength='7'>
+          </div>
+        </div>
+        <div class='form-group col-md-2'>
+          <div class='checkbox-custom checkbox-custom-sm checkbox-default mt-5'>
+            <input type='checkbox' id='is_work_{0}' name='is_work' value='1'>
+            <label for='is_work_{0}' class="small">재직중</label>
+          </div>
+        </div>
+      </div>
+      <div class='row more_educomp_info'>
+        <div class='form-group rpCodeDiv col-md-4'>
+          <select id='p_code_{0}' name='p_code' class='form-control form-control-sm'>
+            <option value='0'>[SELECT POSITION]</option>
+            <option value='110'>프리랜서(비정규 전문직)</option>
+            <option value='100'>신입사원급</option>
+            <option value='90'>경력사원급</option>
+            <option value='80'>대리급</option>
+            <option value='70'>과장급</option>
+            <option value='60'>차장급</option>
+            <option value='50'>부장급</option>
+            <option value='40'>본부장/지사장</option>
+            <option value='30'>임원급</option>
+            <option value='20'>최고재무경영자</option>
+            <option value='10'>최고 경영자</option>
+          </select>
+        </div>
+        <!--
+        <div class='form-group col-md-4'>
+            <input type='text' id='position_str_" + company_row_cnt + "' name='position_str' value='' class='form-control form-control-sm' placeholder='직급명'>
+        </div>
+        -->
+        <div class='form-group col-md-3'>
+          <div class='input-group input-group-sm'>
+            <input type='number' id='annual_income_{0}' name='annual_income' value='' class='form-control text-right' placeholder='연봉' step='1'>
+            <span class='input-group-addon'>만원</span>
+          </div>
+        </div>
+
+
+      </div>
+      <!--
+      <div class='row more_company_info'>
+          <div class='form-group col'>
+              <textarea id='exp_comment_{0}' name='exp_comment' class='form-control form-control-sm' placeholder='Comment'></textarea>
+          </div>
+      </div>
+      -->
+    </div>
+    <div class="text-right">
+      <span class='text-secondary small btn_educomp_more cur_hand pr-10' title="show addtional Information">
+        <i class="fa fa-plus-square"></i> 경력 추가정보 입력
+      </span>
+
+      <span class='text-secondary small btn_educomp_collapse cur_hand pr-10' title="hide addtional Information">
+        <i class="fa fa-minus-square"></i> 경력 추가정보 숨김
+      </span>
+    </div>
+  </div>
+</li>

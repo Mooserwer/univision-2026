@@ -1,0 +1,336 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientListViewModel
+@{
+    /**/
+
+    /**/
+
+    Layout = null;
+}
+
+
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+</style>
+
+
+<script type="text/javascript">
+    var positionList = [
+        { level: 100, text: "신입사원급" },
+        { level: 90, text: "경력사원급" },
+        { level: 80, text: "대리급" },
+        { level: 70, text: "과장급" },
+        { level: 60, text: "차장급" },
+        { level: 50, text: "부장급" },
+        { level: 40, text: "본부장/지사장" },
+        { level: 30, text: "임원급" },
+        { level: 20, text: "최고재무경영자" },
+        { level: 10, text: "최고 경영자" }
+    ]
+
+    $(document).ready(function () {
+
+        //부모창에 feeTypeRate가 있다면.
+        if (feeTypeB.length > 0) {
+           
+            //수수료 테이블 초기화.
+            $("#positionTable").find(".positionRowi").remove();
+
+            var appendHtml = "";
+            var cnt = 0;
+
+            feeTypeB.forEach(function (data) {
+
+                appendHtml += "<tr class='d-flex positionRowi'>";
+                appendHtml += "<td class='col-md-7 tbw60'>";
+                appendHtml += "<select name='positionS' id='positionS' class='form-control col-md-5' style='min-width:120px;'>";
+
+                positionList.forEach(function (row) {
+
+                    if (row.level > data.positionS) {
+                        return true;
+                    }
+
+                    var selectTxt = data.positionS == row.level ? "selected" : "";
+                    appendHtml += "<option value='" + row.level + "' " + selectTxt + ">" + row.text + "</option > ";
+                });
+
+                appendHtml += "</select>";
+                appendHtml += " ~ ";
+                appendHtml += "<select name='positionE' id='positionE' class='form-control col-md-5' style='min-width:120px;'>";
+
+                positionList.forEach(function (row) {
+
+                    if (row.level > data.positionE) {
+                        return true;
+                    }
+
+                    var selectTxt = data.positionE == row.level ? "selected" : "";
+                    appendHtml += "<option value='" + row.level + "' " + selectTxt + ">" + row.text + "</option > ";
+                });
+
+                appendHtml += "</select>";
+                appendHtml += "</td>";
+                appendHtml += "<td class='col-md-2 tbw15'>";
+                appendHtml += "<input type='number' class='form-control text-right col-md-12' name='positionPer' min='0' value='" + data.positionPer + "'/>";
+                appendHtml += "</td>";
+                appendHtml += "<td class='col-md-3 tbw25'>";
+                appendHtml += "<button type='button' class='btn btn-sm btn-success' onclick='positionAdd(this);'>+</button> ";
+                if (cnt != 0) {
+                    appendHtml += "<button type='button' class='btn btn-warning btn-sm' onclick='positionDel(this);'>-</button>"
+                }
+                appendHtml += "</td>";
+                appendHtml += "</tr>";
+
+                cnt++;
+            });
+
+            $("#positionTable").append(appendHtml.toString());
+
+        }
+
+        $("#SaveFee").click(function () {
+
+            var isOk = true;
+
+            //부모창의 feeTypeRate변수 초기화.
+            feeTypeB = [];
+
+            //detail 창에 보여줄 txt
+            var feeValueTxt = "직급별 수수료 : ";
+
+            //현재 설정한 수수료율 row each
+            $(".positionRowi").each(function () {
+                
+
+                var positionS = $(this).find("select[name='positionS'] :checked");
+                var positionE = $(this).find("select[name='positionE'] :checked");
+                var positionPer = $(this).find("input[name='positionPer']").val();
+
+                if (parseInt($(positionS).val()) <= parseInt($(positionE).val())) {
+                    ErrorAlert("올바른 직급 범위를 선택하세요.");
+                    isOk = false;
+                    return false;
+                }
+
+                var currentRow = {
+                    positionS: $(positionS).val(),
+                    positionE: $(positionE).val(),
+                    positionPer: positionPer
+                };
+
+                feeValueTxt += $(positionS).text() + " ~ " + $(positionE).text() + " - " + positionPer + "% / ";
+
+                feeTypeB.push(currentRow);
+            });
+
+            if (isOk) {
+                $("#feeValue").val(feeValueTxt);
+                $.fancybox.close();
+            }
+        });
+    });
+
+
+    function positionAdd(obj) {
+
+        var nowStart = parseInt($(obj).closest("tr").find("select[name='positionS']").val());
+        var nowEnd = parseInt($(obj).closest("tr").find("select[name='positionE']").val());
+
+        if (nowStart <= nowEnd) {
+            ErrorAlert("올바른 직급 범위를 선택하세요.")
+            return false;
+        }
+
+        var nextStart = nowEnd - 10;
+        if (nextStart == 0) {
+            ErrorAlert("최고경영자 이상의 직급별 수수료율을 추가할 수 없습니다.")
+            return false;
+        }
+
+        var nextEnd = nextStart - 10;
+
+        var per = parseInt($(obj).closest("tr").find("input[name='positionPer']").val());
+        if (isNaN(per) || per == null) {
+            $(obj).closest("tr").find("input[name='positionPer']").focus();
+            $(obj).closest("tr").find("input[name='positionPer']").select();
+            ErrorAlert("수수료율을 입력해주세요.")
+            return false;
+        }
+
+        if (per > 100 || per < 0) {
+            ErrorAlert("수수료율은 0~100 사이로 입력해주세요.");
+            $(obj).closest("tr").find("input[name='positionPer']").focus();
+            $(obj).closest("tr").find("input[name='positionPer']").select();
+            return false;
+        }
+
+        var appendHtml = "";
+        appendHtml += "<tr class='d-flex positionRowi'>";
+        appendHtml += "<td class='col-md-7 tbw60'>";
+        appendHtml += "<select name='positionS' id='positionS' class='form-control col-md-5' style='min-width:120px;'>";
+
+        positionList.forEach(function (row) {
+
+            if (row.level > nextStart) {
+                return true;
+            }
+
+            var selectTxt = nextStart == row.level ? "selected" : "";
+            appendHtml += "<option value='" + row.level + "' " + selectTxt + ">" + row.text + "</option > ";
+        });
+
+        appendHtml += "</select>";
+        appendHtml += " ~ ";
+        appendHtml += "<select name='positionE' id='positionE' class='form-control col-md-5' style='min-width:120px;'>";
+
+        positionList.forEach(function (row) {
+
+            if (row.level > nextEnd) {
+                return true;
+            }
+
+            var selectTxt = nextEnd == row.level ? "selected" : "";
+            appendHtml += "<option value='" + row.level + "' " + selectTxt + ">" + row.text + "</option > ";
+        });
+
+        appendHtml += "</select>";
+        appendHtml += "</td>";
+        appendHtml += "<td class='col-md-2 tbw15'>";
+        appendHtml += "<input type='number' class='form-control text-right col-md-12' name='positionPer' min='0' value='0'/>";
+        appendHtml += "</td>";
+        appendHtml += "<td class='col-md-3 tbw25'>";
+        appendHtml += "<button type='button' class='btn btn-sm btn-success' onclick='positionAdd(this);'>+</button> ";
+        appendHtml += "<button type='button' class='btn btn-warning btn-sm' onclick='positionDel(this);'>-</button>"
+        appendHtml += "</td>";
+        appendHtml += "</tr>";
+
+        $(obj).closest('tr').after(appendHtml.toString());
+    }
+
+    function positionDel(obj) {
+        var temp = parseInt($(obj).closest("tr").prev().find("input[name='positionE']").val()) + 1;
+        $(obj).closest("tr").next().find("input[name='positionS']").val(temp);
+        $(obj).parent().parent().remove();
+    }
+</script>
+
+
+<div id="CreateFees" class="form-inline" style="overflow-x:hidden">
+    <div class="sts14" style="width:100%">
+        <div class="col-md-12 no-right-space mb-10">
+            <div style="max-height:300px; overflow-y:auto; overflow-x:hidden">
+                <input type="hidden" name="c_seq" id="c_seq" value="@ViewBag.cSeq" />
+                <input type="hidden" name="cc_seq" id="cc_seq" value="@ViewBag.ccSeq" />
+
+                <table class="table table-borderless" id="positionTable">
+                    <thead>
+                        <tr class="d-flex">
+                            <th class="col-md-7 tbw60">Range of Position</th>
+                            <th class="col-md-2 tbw15">Percent</th>
+                            <th class="col-md-3 tbw25">+ / -</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.positionList.Count > 0)
+                        {
+                            var num = 1;
+                            foreach (var data in Model.positionList)
+                            {
+                                <tr class="d-flex positionRowi">
+                                    <td class="col-md-7 tbw60">
+                                        <select name="positionS" id="positionS" class="form-control col-md-5" style="min-width:120px;">
+                                            <option value="100" @(data.start_code_seq == 100 ? "selected" : "")>신입사원급</option>
+                                            <option value="90" @(data.start_code_seq == 90 ? "selected" : "")>경력사원급</option>
+                                            <option value="80" @(data.start_code_seq == 80 ? "selected" : "")>대리급</option>
+                                            <option value="70" @(data.start_code_seq == 70 ? "selected" : "")>과장급</option>
+                                            <option value="60" @(data.start_code_seq == 60 ? "selected" : "")>차장급</option>
+                                            <option value="50" @(data.start_code_seq == 50 ? "selected" : "")>부장급</option>
+                                            <option value="40" @(data.start_code_seq == 40 ? "selected" : "")>본부장/지사장</option>
+                                            <option value="30" @(data.start_code_seq == 30 ? "selected" : "")>임원급</option>
+                                            <option value="20" @(data.start_code_seq == 20 ? "selected" : "")>최고재무경영자</option>
+                                            <option value="10" @(data.start_code_seq == 10 ? "selected" : "")>최고 경영자</option>
+                                        </select>
+                                        ~
+                                        <select name="positionE" id="positionE" class="form-control col-md-5" style="min-width:120px;">
+                                            <option value="100" @(data.end_code_seq == 100 ? "selected" : "")>신입사원급</option>
+                                            <option value="90" @(data.end_code_seq == 90 ? "selected" : "")>경력사원급</option>
+                                            <option value="80" @(data.end_code_seq == 80 ? "selected" : "")>대리급</option>
+                                            <option value="70" @(data.end_code_seq == 70 ? "selected" : "")>과장급</option>
+                                            <option value="60" @(data.end_code_seq == 60 ? "selected" : "")>차장급</option>
+                                            <option value="50" @(data.end_code_seq == 50 ? "selected" : "")>부장급</option>
+                                            <option value="40" @(data.end_code_seq == 40 ? "selected" : "")>본부장/지사장</option>
+                                            <option value="30" @(data.end_code_seq == 30 ? "selected" : "")>임원급</option>
+                                            <option value="20" @(data.end_code_seq == 20 ? "selected" : "")>최고재무경영자</option>
+                                            <option value="10" @(data.end_code_seq == 10 ? "selected" : "")>최고 경영자</option>
+                                        </select>
+                                    </td>
+                                    <td class="col-md-2 tbw15">
+                                        @Html.TextBox("positionPer", data.rate, new { @class = "form-control text-right col-md-12", @type = "number" })
+                                    </td>
+                                    <td class="col-md-3 tbw25">
+
+                                        <button type="button" class="btn btn-sm btn-success" onclick="positionAdd(this);">+</button>
+                                        @if (num != 1)
+                                        {
+                                            <button type="button" class="btn btn-warning btn-sm" onclick="positionDel(this);">-</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            num = num + 1;
+                        }
+                        else
+                        {
+                            <tr class="d-flex positionRowi">
+                                <td class="col-md-7 tbw60">
+                                    <select name="positionS" id="positionS" class="form-control col-md-5" style="min-width:120px;">
+                                        <option value="100">신입사원급</option>
+                                        <option value="90">경력사원급</option>
+                                        <option value="80">대리급</option>
+                                        <option value="70">과장급</option>
+                                        <option value="60">차장급</option>
+                                        <option value="50">부장급</option>
+                                        <option value="40">본부장/지사장</option>
+                                        <option value="30">임원급</option>
+                                        <option value="20">최고재무경영자</option>
+                                        <option value="10">최고 경영자</option>
+                                    </select>
+                                    ~
+                                    <select name="positionE" id="positionE" class="form-control col-md-5" style="min-width:120px;">
+                                        <option value="90">경력사원급</option>
+                                        <option value="80">대리급</option>
+                                        <option value="70">과장급</option>
+                                        <option value="60">차장급</option>
+                                        <option value="50">부장급</option>
+                                        <option value="40">본부장/지사장</option>
+                                        <option value="30">임원급</option>
+                                        <option value="20">최고재무경영자</option>
+                                        <option value="10">최고 경영자</option>
+                                    </select>
+                                </td>
+                                <td class="col-md-2 tbw15">
+                                    @Html.TextBox("positionPer", "0", new { @class = "form-control text-right col-md-12", @type = "number" })
+                                </td>
+                                <td class="col-md-3 tbw25">
+                                    <button type="button" class="btn btn-sm btn-success" onclick="positionAdd(this);">+</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-md-12 no-right-space" style="text-align:right;">
+            @*<button type="button" id="SaveFee" class="btn btn-primary btn-sm CreateFee">등록</button>*@
+            <button type="button" id="SaveFee" class="btn btn-primary btn-sm">등록</button>
+        </div>
+
+    </div>
+</div>

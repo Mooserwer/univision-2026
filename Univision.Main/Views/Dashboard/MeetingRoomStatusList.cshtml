@@ -1,0 +1,43 @@
+﻿@model List<Univision.Core.Models.DTO.meeting_room>
+
+@{
+    ViewBag.Title = "MeetingRoomStatusList";
+    Layout = null;
+}
+
+<div class="table-responsive">
+    <table id="default-table " class="table sts17 ">
+        <thead>
+            <tr>
+                @if (Model.Count > 0)
+                {
+                    foreach (var data in Model)
+                    {
+                        <th class="@data.floor ">@data.title</th>
+                    }
+                }
+                else
+                {
+                    <th class="f17">회의실이 없습니다.</th>
+                }
+
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                @if (Model.Count > 0)
+                {
+                    foreach (var data in Model)
+                    {
+                        <td class="@(data.status.Contains("Unavailable") ? "unavailable" : "available") ">@data.status</td>
+                    }
+                }
+                else
+                {
+                    <th class="f17">회의실이 없습니다.</th>
+                }
+
+            </tr>
+        </tbody>
+    </table>
+</div>

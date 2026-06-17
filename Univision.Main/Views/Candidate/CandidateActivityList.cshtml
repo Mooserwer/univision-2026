@@ -1,0 +1,497 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.CandidateActivityList
+@using Univision.Security
+@{
+  int expend_history_key = 0;
+}
+<style>
+  .highlight_memo_search {
+    background: #00FF00;
+    padding: 1px;
+    border: #00CC00 dotted 1px;
+  }
+</style>
+<ul id="memo_list" class="list-group active_list">
+  <div class="row mb-3">
+    <div class="col">
+      <input type="text" id="memo_search_text" name="memo_search_text" class="form-control form-control-sm" placeholder="메모장 검색(Filter)" />
+    </div>
+  </div>
+  @if (Model.activityList.Count > 0)
+  {
+    int num = (Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage + 1;
+    foreach (var data in Model.activityList)
+    {
+      <li class="list-group-item px-3 py-15 can_activities border-0" id="can_activity_list_@data.seq">
+        <div class="media border p-10 shadow @(data.table_type == "AG" ? (data.agree_dt != null ? "border-primary" : "border-info") :"")" style="border-radius:3px;">
+          <div class="media-body">
+            <h5 class="mt-0 mb-5">
+              @data.create_name
+              <small>- @Utils.ConvertDateTimeToString(data.create_dt)</small>
+              @if (!string.IsNullOrWhiteSpace(data.file_directory))
+              {
+                <span class="float-right">
+                  <a href="@data.file_directory" title="첨부파일 다운로드" download>
+                    <i class="fas fa-file"></i>
+                  </a>
+                </span>
+              }
+
+              @if (data.table_type == "CA" && (data.create_seq == AppIdentity.user_seq || AppIdentity.ua_seq <= 2))
+              {
+                <span class="float-right can_memo_btn">
+                  <a class="mr-5" href="javascript:void(0);" id="btn_memo_modi_@data.seq" onclick="memoModify('@data.seq', this)" title="메모 수정">
+                    <i class="fas fa-pen"></i>
+                  </a>
+                  <a class="mr-5" href="javascript:void(0);" onclick="memoDeleteConfirm('@data.c_seq', '@data.seq')" title="메모 삭제">
+                    <i class="fas fa-trash red-600"></i>
+                  </a>
+                </span>
+              }
+              else if (data.table_type == "PH")
+              {
+                <span class="float-right">
+                  @if (data.create_seq == AppIdentity.user_seq || AppIdentity.ua_seq < 3)
+                  {
+                    <a class="mr-5" href="javascript:void(0);" onclick="ProjectProgressCreate(@data.p_seq, @data.c_seq)" title="진행사항 추가">
+                      <i class="fas fa-plus green-500"></i>
+                    </a>
+                  }
+                  <a class="mr-5" href="javascript:void(0);" onclick="PopOtherCandidate('@data.p_seq', '@data.c_seq')" title="해당 프로젝트의 다른 후보자">
+                    <i class="fas fa-users"></i>
+                  </a>
+                  @if (data.pjt_recan_his_cnt > 1)
+                  {
+
+
+                    <a class="mr-5 expend_btn_@expend_history_key" href="javascript:void(0);" onclick="morePjtHis('@data.p_seq', '@data.c_seq', '#can_activity_list_@data.seq')" title="해당 프로젝트의 진행내역">
+                      <i class="fas fa-list-alt"></i>
+                    </a>
+                    expend_history_key++;
+                  }
+                </span>
+              }
+
+            </h5>
+            @if (data.p_seq != null && data.p_seq != 0)
+            {
+              int progress = 0;
+              string progressClass = "";
+
+              <small>
+                Project :
+                <a href="@Url.Action("ProjectDetail", "Project", new { p_seq = data.p_seq })">
+                  [@data.client_name]
+                  @{
+                    string badgeClass = "";
+                    switch (data.pjt_status)
+                    {
+                      case 1:
+                        badgeClass = "badge-primary";
+                        break;
+                      case 2:
+                        badgeClass = "badge-warning";
+                        break;
+                      case 3:
+                        badgeClass = "badge-danger";
+                        break;
+                      case 4:
+                        badgeClass = "badge-info";
+                        break;
+                      case 5:
+                        badgeClass = "badge-success";
+                        break;
+                    }
+                  }
+
+                  <span class="badge @badgeClass">@(Utils.ReturnProjectStatusTxt(data.pjt_status))</span>
+                  @data.pjt_title
+                </a>
+              </small>
+              switch (data.state)
+              {
+                case ProjectHistoryStateCode.interest:
+                case ProjectHistoryStateCode.fail:
+                case ProjectHistoryStateCode.selfdrop:
+                case ProjectHistoryStateCode.no_intrest:
+                  progress = 0;
+                  progressClass = "";
+                  break;
+
+                case ProjectHistoryStateCode.recommand:
+                case ProjectHistoryStateCode.paper:
+                  progress = 25;
+                  progressClass = "progress-bar-warning";
+                  break;
+
+                case ProjectHistoryStateCode.interview:
+                case ProjectHistoryStateCode.interviewOk:
+                  progress = 50;
+                  progressClass = "progress-bar-info";
+                  break;
+
+                case ProjectHistoryStateCode.hireReady:
+                  progress = 75;
+                  progressClass = "progress-bar-primary";
+                  break;
+
+                case ProjectHistoryStateCode.hireOk:
+                  progress = 100;
+                  progressClass = "progress-bar-success";
+                  break;
+              }
+
+              <div class="progress mb-10" data-labeltype="percentage" data-goal="-40" data-plugin="progress">
+                <div class="progress-label position-absolute h-p100 w-full text-dark text-center" style="line-height:15px;font-size:.858rem;">@(progress)% - @(Utils.ReturnProjectHistoryStateTxt(data.state)) ( @Utils.ConvertDateTimeToString(data.ca_date) )</div>
+                <div class="progress-bar @progressClass" aria-valuemin="-100" aria-valuemax="0" aria-valuenow="-80" role="progressbar" style="width: @(progress)%;">
+
+                </div>
+              </div>
+              <small>
+                @if (!String.IsNullOrEmpty(data.position_str) || !String.IsNullOrEmpty(data.position_nm))
+                {
+                  <text>- Position : @data.position_str </text>
+
+                  if (!String.IsNullOrEmpty(data.position_nm))
+                  {
+                    <text>[@data.position_nm]</text>
+                  }
+                }
+              </small>
+              if (data.ann_income > 0)
+              {
+                <br />
+                <small>
+                  - Salary : [@Utils.ConvertMoneyToString(data.ann_income) @data.ann_currency_cd]
+                  @if (data.ann_currency_cd != "KRW")
+                  {
+                    <text>[원화 환산 예상액 : @Utils.ConvertMoneyToString(data.ann_income_won)원]</text>
+                  }
+                </small>
+              }
+
+
+            }
+
+            <div class="profile-brief">
+              @if (!String.IsNullOrEmpty(data.memo))
+              {
+                @Html.Raw(data.memo.Replace("\r\n", "\n").Replace("\n", "<br />").Replace("{{{", "<span class='font-weight-900'>").Replace("}}}", "</span>"))
+              }
+              @if (data.table_type == "AG")
+              {
+                if (data.agree_dt != null)
+                {
+                  <span class="badge badge-primary">[동의완료]</span>
+                }
+                else
+                {
+                  <span class="badge badge-info">[동의 전]</span>
+                }
+                if (data.client_seq > 0)
+                {
+                  <br /><span class="pl-10">- 고객사 : @data.client_name</span>
+                }
+                <br /><span class="small pl-10">- 발송완료 : @Utils.ConvertDateTimeToString(data.send_dt)</span>
+                if (data.agree_dt != null)
+                {
+                  <br /><span class="small pl-10">- 동의완료 : @Utils.ConvertDateTimeToString(data.agree_dt)</span>
+                }
+
+              }
+            </div>
+            <div class="pjt-memo-history p-0">
+
+            </div>
+          </div>
+        </div>
+      </li>
+    }
+
+  }
+  <div class="py-0 btn-memo-more col-12 text-center">
+    <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(Model.activityList.Count - 10))</span>
+  </div>
+  <div class="py-0 btn-memo-collapse col-12 text-center">
+    <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse
+  </div>
+</ul>
+<script type="text/javascript">
+  function ProjectProgressCreate(p_seq, c_seq) {
+
+        $.ajax({
+            url: '@Url.Action("ProjectProgressCreate_CAND", "Project")',
+            data: {
+                p_seq: p_seq
+                ,
+                c_seq: c_seq
+            },
+            dataType: 'html',
+            type: 'GET',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+
+            $.fancybox.open({
+                'content':json,
+                'width': '530',
+                'height': 'auto',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': "일정확인/추가",
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+
+    function PopOtherCandidate(p_seq, c_seq) {
+
+
+            $.ajax({
+                url: '@Url.Action("CanProjectProgressList", "Candidate")',
+                data: {
+                    p_seq : p_seq,
+                    c_seq: c_seq
+                },
+                dataType: 'html',
+                type: 'post',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (view) {
+                hideLoading();
+                $.fancybox.open({
+                    'content':view,
+                    'autoDimensions':true,
+                    'type': 'iframe',
+                    width: 350,
+                    scrolling : 'auto',
+                    'autoSize': false,
+                    fitToView: true,
+                    'title': '<small>이 프로젝트에 함께 포함된 후보자</small>',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                //$('#ProjectProgressListModal').modal('hide');
+            });
+
+    }
+
+    function morePjtHis(p_seq, c_seq, loading_div_id) {
+        $.ajax({
+            url: '@Url.Action("CanProjectProgressHistoryList", "Candidate")',
+            data: {
+                p_seq: p_seq
+                ,c_seq : c_seq
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function () {
+
+                showLoading(loading_div_id);
+            }
+        })
+        .done(function (view) {
+            hideLoading(loading_div_id);
+            $(loading_div_id).find('.pjt-memo-history').html(view);
+
+        })
+        .always(function () {
+            hideLoading(loading_div_id);
+        });
+    }
+
+    $('.btn-memo-more').click(function () {
+        $(this).closest('.active_list').addClass('more');
+    })
+
+    $('.btn-memo-collapse').click(function () {
+        $(this).closest('.active_list').removeClass('more');
+    })
+
+    function memoModify(ca_seq, obj) {
+
+        var memoDiv = $(obj).closest(".media-body").find(".profile-brief");
+        var appendHtml = "<textarea name='candidateMemo' class='form-control candidateMemo' rows=4 ca_seq='" + ca_seq + "'>" + memoDiv.html().replace(/\<br\>/g, "\r\n").trim() + "</textarea>";
+        appendHtml += "<span class='origintxt d-none'>" + memoDiv.html().trim() + "</span>";
+        appendHtml += "<div class='text-right mt-5'>";
+        appendHtml += "<button type='button' class='btn btn-sm btn-primary' onclick='memoModifyConfirm(this, \""+ca_seq+"\")'>수정</button>";
+        appendHtml += "<button type='button' class='btn btn-sm btn-danger ml-5' onclick='memoModifyCancel(this, \""+ca_seq+"\")'>취소</button>";
+
+        appendHtml += "</div>";
+
+        memoDiv.html(appendHtml.toString());
+
+        $("#btn_memo_modi_"+ca_seq).css("display", "none");
+    }
+
+    function memoModifyCancel(obj, seq) {
+        //var memoObj = $(obj).closest(".profile-brief").find(".candidateMemo");
+        var memoObj = $(obj).closest(".profile-brief").find(".origintxt");
+        $(obj).closest(".profile-brief").html($(memoObj).html());
+        $("#btn_memo_modi_"+seq).css("display", "");
+    }
+
+    function memoModifyConfirm(obj, seq) {
+
+        var memoObj = $(obj).closest(".profile-brief").find(".candidateMemo");
+        //debugger;
+        var ca_seq = memoObj.attr("ca_seq");
+        var memo = encodeURIComponent($(memoObj).val());
+
+        alertify.confirm()
+                .set({
+                    'labels': { ok: '확인', cancel: '취소' },
+                    'onok': function () {
+
+                        $.ajax({
+                            url: '@Url.Action("ModifyCandidateActivity", "Candidate")',
+                            type: "POST",
+                            dataType: 'json',
+                            data: {
+                                ca_seq: ca_seq,
+                                memo: memo
+                            },
+                            beforeSend: function () {
+                                showLoading('#activityBody');
+                            },
+                            success: function (json) {
+                                hideLoading('#activityBody');
+                                if (json.ok) {
+                                    NormalAlert(json.message);
+
+                                    //메모를 되돌림.
+                                    $(obj).closest(".profile-brief").html($(memoObj).val().replace(/(?:\r\n|\r|\n)/g, '<br>'));
+                                    $("#btn_memo_modi_"+seq).css("display", "");
+                                }
+                                else {
+                                    ErrorAlert(json.message);
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                hideLoading('#activityBody');
+                                ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                            }
+                        });
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>메모내용 수정')
+                .setting({
+                    message: "메모내용을 수정하시겠습니까?"
+                }).show();
+
+    }
+
+    function memoDeleteConfirm(c_seq, ca_seq) {
+        alertify.confirm()
+                .set({
+                    'labels': { ok: '확인', cancel: '취소' },
+                    'onok': function () {
+
+                        $.ajax({
+                            url: '@Url.Action("DeleteCandidateMemo", "Candidate")',
+                            type: "POST",
+                            dataType: 'json',
+                            data: {
+                                ca_seq: ca_seq
+                            },
+                            beforeSend: function () {
+                                showLoading('#activityBody');
+                            },
+                            success: function (json) {
+                                hideLoading('#activityBody');
+                                if (json.ok) {
+                                    NormalAlert(json.message);
+                                    callActivityList(c_seq, 1)
+                                }
+                                else {
+                                    ErrorAlert(json.message);
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                hideLoading('#activityBody');
+                                ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                            }
+                        });
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>메모내용 삭제')
+                .setting({
+                    message: "메모내용을 삭제하시겠습니까?"
+                }).show();
+    }
+
+    $('#memo_search_text').keyup(function (e) {
+        if ($(this).val() == "") {
+            $('#memo_list').removeClass('active_list').addClass('active_list');
+            $(".can_activities").each(function (){
+                $(this).css("display", "");
+            });
+        } else {
+           $('#memo_list').addClass('active_list').removeClass('active_list');
+           var search_string = $(this).val();
+
+           $(".can_activities").each(function (){
+            $(this).css("display", "none");
+          });
+
+           $(".can_activities").filter(function( index ) {
+            return $(this).find(".media-body").text().indexOf(search_string) > 0;
+           }).css("display", "");
+
+            //replaceText(search_string);
+        }
+    });
+
+    function replaceText(searchword) {
+
+        $("can_activities").find(".highlight_memo_search").removeClass("highlight_memo_search");
+
+        var custfilter = new RegExp(searchword, "ig");
+        var repstr = "" + searchword + "";
+
+        if (searchword != "") {
+            $('can_activities').each(function() {
+                $(this).html($(this).html().replace(custfilter, repstr));
+            })
+        }
+  }
+
+  $('.expend_btn_0').click();
+</script>

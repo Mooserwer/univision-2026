@@ -1,0 +1,195 @@
+﻿@model Univision.Core.Models.DTO.Response.MyList.ReceiptCocardModel
+@{
+  Layout = null;
+  int total_money = 0;
+}
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/dropify/dropify.min599c.css?v4.0.4">
+<style>
+  .dropify-wrapper {
+    padding: 0px 15px 0px 15px;
+    box-sizing: border-box;
+  }
+</style>
+@using (Html.BeginForm("CreateCocardReceipt", "MyList", FormMethod.Post, new { @id = "ReceiptCreateForm", @class = "form-horizontal" }))
+{
+  @Html.HiddenFor(x => x.r_seq)
+  @Html.HiddenFor(x => x.ra_seq)
+  <div class="panel custom1">
+    <header class="panel-heading">
+      <h3 class="panel-title">
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label">카드 구분: </label>
+          <div class="col-md-9">
+            <input type="text" class="form-control form-control-plaintext border-0" value="@Model.card_no" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label">사용월: </label>
+          <div class="col-md-9">
+            <input type="text" class="form-control form-control-plaintext border-0" value="@Model.r_month" autocomplete="off">
+          </div>
+        </div>
+      </h3>
+    </header>
+    <div class="panel-body">
+      <div class="table-responsive">
+
+        <table class="block_table table table-striped tablesaw-columntoggle mb-0" style="table-layout:fixed">
+          <colgroup>
+            <col>
+            <col>
+            <col>
+            <col>
+          </colgroup>
+          <thead class="text-center">
+            <tr>
+              <th class="hidden-sm-down" style="width:50px;">#</th>
+              <th class="hidden-sm-down" style="width:95px;">사용일</th>
+              <th class="" style="width:200px;">가맹점(업종)</th>
+              <th class="hidden-sm-down" style="width:150px;">사용금액</th>
+              <th class="">비고</th>
+            </tr>
+          </thead>
+          <tbody class="text-center" style="vertical-align:middle;" id="CardBody">
+            @if (Model.list.Count > 0)
+            {
+              int cnt = 1;
+              foreach (var data in Model.list)
+              {
+                total_money += data.confirm_money.Value;
+                <tr data="@data.rad_seq">
+                  <td class="hidden-sm-down text-right">
+                    @cnt
+                  </td>
+                  <td class="hidden-sm-down">
+                    @Utils.ConvertDateTimeToString(data.conf_date)
+                  </td>
+                  <td class="text-truncate text-left" title="@data.store_name (@data.store_type)">
+                    @data.store_name
+                    (@data.store_type)
+                    <span class="d-md-none d-sm-inline-block">
+                      <br />
+                      [@Utils.ConvertMoneyToString(data.confirm_money)]
+                      - @Utils.ConvertDateTimeToString(data.conf_date)
+                    </span>
+                  </td>
+                  <td class="text-right hidden-sm-down">
+                    @Utils.ConvertMoneyToString(data.confirm_money)
+                  </td>
+                  <td>
+                    <input type="hidden" name="rad_seq" value="@data.rad_seq" />
+                    <input type="text" name="comment1" class="form-control" value="@data.comment1" autocomplete="off" required>
+                  </td>
+                </tr>
+                cnt++;
+              }
+
+            }
+
+          </tbody>
+          <tfoot>
+            <tr class="table-primary">
+              <td class="hidden-sm-down"></td>
+              <td class="">합계</td>
+              <td class="hidden-sm-down">
+              </td>
+              <td class="hidden-sm-down">
+              </td>
+              <td class="text-right">
+                @Utils.ConvertMoneyToString(total_money)
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  <div class="modal-footer float-left">
+    <button type="button" id="BtnReceiptSave" class="btn btn-primary">제출하기</button>
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기(Close)</button>
+  </div>
+}
+<script type="text/javascript">
+
+  $(document).ready(function () {
+    StopEnterSubmit();
+
+
+    $("#BtnReceiptSave").click(function () {
+      var is_input_all = true;
+      var data = {
+        r_seq: $('#r_seq').val(),
+        ra_seq: $('#ra_seq').val(),
+        list: []
+      }
+      $('#CardBody').find('tr').each(function () {
+        var vrad_seq = $(this).attr('data')
+        var vcomment1 = $(this).find('input[name=comment1]').val()
+
+        if (vcomment1 == "") {
+          is_input_all = false;
+        }
+
+        var val = {
+          rad_seq: vrad_seq,
+          comment1: vcomment1
+        };
+
+        data.list.push(val);
+
+      });
+      if (!is_input_all) {
+        ErrorAlert("사용내역의 모든 비고를 입력해주십시오.");
+        return false;
+      }
+
+      alertify.confirm()
+        .set({
+          'labels': { ok: '확인', cancel: '취소' },
+          'onok': function () {
+            //$("#ReceiptCreateForm").submit();
+            
+
+            SubmitCoCard(data)
+
+          },
+          'oncancel': function () {
+
+            return;
+          },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>' + "@Model.r_type_name 제출하기")
+        .setting({
+          message: "@Model.r_type_name (@Model.r_month)를 제출 하시겠습니까?",
+        })
+        .show();
+    });
+
+  });
+
+  function SubmitCoCard(data) {
+    ajxCall({
+      type: 'POST',
+      url: $("#ReceiptCreateForm").attr("action"),
+      data: data,
+      dataType: 'json',
+      loading: true,
+      loading_target: '#ReceiptCreateForm',
+      suc: function (json) {
+        if (json.ok) {
+          alertify.alert("제출완료", json.message, function () {
+            location.href = "/MyList/ReceiptList";
+          });
+        }
+        else {
+          ErrorAlert(json.message);
+        }
+      },
+      err: function (e) {
+        ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.\n' + e.message);
+      }
+    });
+  }
+
+</script>

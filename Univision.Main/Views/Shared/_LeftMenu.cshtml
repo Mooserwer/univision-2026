@@ -1,0 +1,540 @@
+﻿@{
+  Layout = null;
+
+  /// <summary>
+  ///
+  /// </summary>
+  /// <param name="current_ctrler">현재 컨트롤러 명</param>
+  /// <param name="match_ctrler">원하는 컨트롤러 명(, 구분으로 복수 입력)</param>
+  /// <returns></returns>
+  string GetLeftMenuActiveCtrler(string current, string match, string rtn_str = "active open")
+  {
+    string[] ctrler_arr;
+    string result = String.Empty;
+    if (match.IndexOf(',') > 0)
+    {
+      ctrler_arr = match.Split(',');
+    }
+    else
+    {
+      ctrler_arr = new string[1];
+      ctrler_arr[0] = match;
+    }
+
+    foreach (string ctrl in ctrler_arr)
+    {
+      if (ctrl == current)
+      {
+        result = rtn_str;
+        break;
+      }
+    }
+
+
+    return result;
+  }
+
+  string actionName = ViewContext.RouteData.Values["action"].ToString().ToLower();
+  string controllerName = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+
+}
+<style>
+  .site-menubar-fold .site-menu > .site-menu-item.active > a .site-menu-title {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  .site-menubar-fold .site-menu > .site-menu-item.active > a .site-menu-icon {
+    visibility: visible;
+    opacity: 1;
+  }
+</style>
+<div class="site-menubar">
+  <div class="site-menubar-body">
+    <div>
+      <div>
+        <ul class="site-menu" data-plugin="menu">
+          <!-- Client -->
+          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(controllerName, "client")">
+            <a href="javascript:void(0)">
+              <i class="site-menu-icon wb-briefcase" aria-hidden="true"></i>
+              <span class="site-menu-title" data-link="@Url.Action("ClientList", "Client")" alt="Client List 메뉴로 바로 이동합니다.">CLIENT</span>
+              <span class="site-menu-arrow" title="하위 메뉴를 확장/축소합니다."></span>
+            </a>
+            <ul class="site-menu-sub">
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "clientlist,clientdetail,clientmodify")">
+                <a href="@Url.Action("ClientList", "Client")">
+                  <span class="site-menu-title">List <small>(조회)</small></span>
+                </a>
+              </li>
+              @*PMS 오픈 관련 등록기능 제한*@
+              @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+        {*@
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "clientcreate")">
+                <a href="@Url.Action("ClientCreate", "Client")">
+                  <span class="site-menu-title">Registration <small>(등록)</small></span>
+                </a>
+              </li>
+              @*}*@
+              <!--
+      <li class="site-menu-item has-sub">
+          <a href="@Url.Action("AttentionList", "Client")">
+              <span class="site-menu-title">관심고객사</span>
+          </a>
+      </li>
+          -->
+
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "activitylist")">
+                <a href="@Url.Action("ActivityList", "Client")">
+                  <span class="site-menu-title">History <small>(활동내역)</small></span>
+                </a>
+              </li>
+
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "dormantlist")">
+                <a href="@Url.Action("DormantList", "Client")">
+                  <span class="site-menu-title">Dormant <small>(휴면 고객)</small></span>
+                </a>
+              </li>
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "offlimitlist")">
+                <a href="@Url.Action("OfflimitList", "Client")">
+                  <span class="site-menu-title">Off-limit<small></small></span>
+                </a>
+              </li>
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "contactlist")">
+                <a href="@Url.Action("ContactList", "Client")">
+                  <span class="site-menu-title">Contact List <small>(담당자 조회)</small></span>
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Candidate -->
+          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(controllerName, "candidate")">
+            <a href="javascript:void(0)">
+              <i class="site-menu-icon wb-users" aria-hidden="true"></i>
+              <span class="site-menu-title" data-link="@Url.Action("CandidateList", "Candidate")" alt="Candidate Search 메뉴로 바로 이동합니다.">CANDIDATE</span>
+              <span class="site-menu-arrow" title="하위 메뉴를 확장/축소합니다."></span>
+            </a>
+            <ul class="site-menu-sub">
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatelist,candidatedetail")">
+                <a href="@Url.Action("CandidateList", "Candidate")">
+                  <span class="site-menu-title">Search <small>(통합검색)</small></span>
+                </a>
+              </li>
+              @*PMS 오픈 관련 등록기능 제한*@
+              @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+        {*@
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatecreate")">
+                <a href="@Url.Action("CandidateCreate", "Candidate")">
+                  <span class="site-menu-title">Registration <small>(등록)</small></span>
+                </a>
+              </li>
+
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidateai")">
+                <a href="@Url.Action("CandidateAi", "Candidate")">
+                  <span class="site-menu-title"><span class="badge badge-pill badge-success">ai</span> AI등록 </span>
+                </a>
+              </li>
+
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatemailai")">
+                <a href="@Url.Action("CandidateMailAi", "Candidate")">
+                  <span class="site-menu-title"><span class="badge badge-pill badge-primary">ai</span> AI등록(메일연동)</span>
+                </a>
+              </li>
+
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "temporarycandidatelist")">
+                <a href="@Url.Action("TemporaryCandidateList", "Candidate")">
+                  <span class="site-menu-title">
+                    Temp Saved <small>(임시저장)</small>
+                  </span>
+                </a>
+              </li>
+              @*}*@
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatecontactlist")">
+                <a href="@Url.Action("CandidateContactList", "Candidate")">
+                  <span class="site-menu-title">Contact List</span>
+                </a>
+              </li>
+              @*
+        <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "simplecandidatelist")">
+            <a href="@Url.Action("SimpleCandidateList", "Candidate")">
+                <span class="site-menu-title">Simple Reg. <small>(간편등록)</small></span>
+            </a>
+        </li>
+              *@
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatehistorylist")">
+                <a href="@Url.Action("CandidateHistoryList", "Candidate")">
+                  <span class="site-menu-title">History <small>(진행내역)</small></span>
+                </a>
+              </li>
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "mycandidatelist")">
+                <a href="@Url.Action("MyCandidateList", "Candidate")">
+                  <span class="site-menu-title">MyList <small>(즐겨찾기)</small></span>
+                </a>
+              </li>
+
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "privacyagreelist")">
+                <a href="@Url.Action("PrivacyAgreeList", "Candidate")">
+                  <span class="site-menu-title">개인정보 제3자 제공 동의</span>
+                </a>
+              </li>
+
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "sharecandidatelist,sharecandidatecreate,sharecandidatedetail")">
+                <a href="@Url.Action("ShareCandidateList", "Candidate")">
+                  <span class="site-menu-title">후보 추천드려요</span>
+                </a>
+              </li>
+
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "directorlist,directordetail,directorcreate")">
+                <a href="@Url.Action("DirectorList", "Candidate")">
+                  <span class="site-menu-title">C-Level Search <small>(임원조회)</small></span>
+                </a>
+              </li>
+
+            </ul>
+          </li>
+
+          <!-- Project -->
+          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(controllerName, "project")">
+            <a href="javascript:void(0)">
+              <i class="site-menu-icon wb-file" aria-hidden="true"></i>
+              <span class="site-menu-title" data-link="@Url.Action("NewMyProjectList", "Project")" alt="My Project 메뉴로 바로 이동합니다.">PROJECT</span>
+              <span class="site-menu-arrow" title="하위 메뉴를 확장/축소합니다."></span>
+            </a>
+            <ul class="site-menu-sub">
+
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "newmyprojectlist,projectdetail")">
+                <a href="@Url.Action("NewMyProjectList", "Project")">
+                  <span class="site-menu-title">My Project</span>
+                </a>
+              </li>
+              @*PMS 오픈 관련 등록기능 제한*@
+              @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+        {*@
+              <li class="site-menu-item has-sub has-sub @GetLeftMenuActiveCtrler(actionName, "projectcreate")">
+                <a href="javascript:void(0)">
+                  <span class="site-menu-title" data-link="@Url.Action("ProjectCreate", "Project")">Registration <small>(등록)</small></span>
+                  <span class="site-menu-arrow"></span>
+                </a>
+                <ul class="site-menu-sub">
+                  <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "projectcreate")">
+                    <a href="@Url.Action("ProjectCreate", "Project")">
+                      <span class="site-menu-title">- Recruitment <small>(채용프로젝트)</small></span>
+                    </a>
+                  </li>
+                  <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "projectrepcreate")">
+                    <a href="@Url.Action("ProjectRepCreate", "Project")">
+                      <span class="site-menu-title">- Consulting <small>(컨설팅프로젝트)</small></span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              @*}*@
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "mykeyprojectlist")">
+                <a href="@Url.Action("MyKeyProjectList", "Project")">
+                  <span class="site-menu-title">Key Project</span>
+                </a>
+              </li>
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "myinvoicelist")">
+                <a href="@Url.Action("MyInvoiceList", "Project")">
+                  <span class="site-menu-title">Invoices</span>
+                </a>
+              </li>
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "newallprojectlist")">
+                <a href="@Url.Action("NewAllProjectList", "Project")">
+                  <span class="site-menu-title">Unico All <small>(전체프로젝트)</small> </span>
+                </a>
+              </li>
+
+
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "shareprojectlist")">
+                <a href="@Url.Action("ShareProjectList", "Project")">
+                  <span class="site-menu-title">Sourcing/Floating <small>(후보 소싱 부탁 드려요)</small></span>
+                </a>
+              </li>
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "coworkprojectlist")">
+                <a href="@Url.Action("CoWorkProjectList", "Project")">
+                  <span class="site-menu-title">Find SM <small>(Searching Manager 찾아요)</small></span>
+                </a>
+              </li>
+              <!--
+      <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "inorder")">
+          <a href="@Url.Action("InorderList", "Project")">
+              <span class="site-menu-title">Inorder</span>
+          </a>
+      </li>
+      -->
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "worksheet")">
+                <a href="@Url.Action("WorkSheet", "Project")">
+                  <span class="site-menu-title">Worksheet</span>
+                </a>
+              </li>
+              @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0) || Univision.Security.AppIdentity.isExternal != 1)
+              {
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "weeklyreport")">
+                  <a href="@Url.Action("WeeklyReport", "Project")">
+                    <span class="site-menu-title">Weekly Report</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </li>
+          <!-- Statistics -->
+
+          <li class="site-menu-item @GetLeftMenuActiveCtrler(controllerName+actionName, "scheduleschedulelist")">
+            <a href="@Url.Action("ScheduleList", "Schedule")" title="켈린더">
+              <i class="site-menu-icon wb-calendar" aria-hidden="true"></i>
+              <span class="site-menu-title">CALENDAR</span>
+            </a>
+          </li>
+          @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+          {
+            <li class="site-menu-item @GetLeftMenuActiveCtrler(controllerName+actionName, "schedulevacationlist")">
+              <a href="@Url.Action("VacationList", "Schedule")" title="출근현황">
+                <i class="site-menu-icon wb-check" aria-hidden="true"></i>
+                <span class="site-menu-title">금일 출근현황</span>
+              </a>
+            </li>
+          }
+          <li class="site-menu-item @GetLeftMenuActiveCtrler(controllerName, "meetingroom")">
+            <a href="@Url.Action("MeetingRoomView", "MeetingRoom")" title="미팅룸 예약">
+              <i class="site-menu-icon wb wb-book" aria-hidden="true"></i>
+              <span class="site-menu-title">MEETING ROOM</span>
+            </a>
+          </li>
+          @if (Univision.Security.AppIdentity.ua_seq < 6)
+          {
+            <!-- Board -->
+            <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(controllerName, "board")">
+              <a href="javascript:void(0)">
+                <i class="site-menu-icon wb-grid-4" aria-hidden="true"></i>
+                <span class="site-menu-title" data-link="@Url.Action("InternalList", "Board")" title="[유니코 내부] 메뉴로 바로 이동합니다.">문서/양식/규정</span>
+                <span class="site-menu-arrow" title="하위 메뉴를 확장/축소합니다."></span>
+              </a>
+              <ul class="site-menu-sub">
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "allboardlist,AllBoardlistdetail")">
+                  <a href="@Url.Action("AllBoardlist", "Board")">
+                    <span class="site-menu-title">전체검색</span>
+                  </a>
+                </li>
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "internallist,internaldetail,internalcreate")">
+                  <a href="@Url.Action("InternalList", "Board")">
+                    <span class="site-menu-title">유니코 내부</span>
+                  </a>
+                </li>
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "externallist,externaldetail,externalcreate")">
+                  <a href="@Url.Action("ExternalList", "Board")">
+                    <span class="site-menu-title">고객사 및 후보자</span>
+                  </a>
+                </li>
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "librarylist,librarydetail,librarycreate")">
+                  <a href="@Url.Action("LibraryList", "Board")">
+                    <span class="site-menu-title">자료실</span>
+                  </a>
+                </li>
+
+                @*
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "noticelist,noticedetail,noticecreate")">
+              <a href="@Url.Action("NoticeList", "Board")">
+                  <span class="site-menu-title">Notice <small>(공지사항)</small></span>
+              </a>
+          </li>
+          @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0) || Univision.Security.AppIdentity.isExternal != 1)
+          {
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "documentlist,documentdetail,documentcreate")">
+                  <a href="@Url.Action("DocumentList", "Board")">
+                      <span class="site-menu-title">Document <small>(문서양식)</small></span>
+                  </a>
+              </li>
+          }
+          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "knowledgelist,knowledgedetail,knowledgecreate")">
+              <a href="@Url.Action("KnowledgeList", "Board")">
+                  <span class="site-menu-title">Market Insight <small>(업계동향)</small></span>
+              </a>
+          </li>
+          <!--
+          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "educationlist,educationdetail,educationcreate")">
+              <a href="@Url.Action("EducationList", "Board")">
+                  <span class="site-menu-title">Education <small>(교육자료)</small></span>
+              </a>
+          </li>
+              -->
+          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "feeboardlist,feeboarddetail,feeboardcreate")">
+              <a href="@Url.Action("FreeBoardList", "Board")">
+                  <span class="site-menu-title">Free Board <small>(자유게시판)</small></span>
+              </a>
+          </li>
+                *@
+              </ul>
+            </li>
+          }
+
+
+
+          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(controllerName, "statistics")">
+            <a href="javascript:void(0)">
+              <i class="site-menu-icon wb-stats-bars" aria-hidden="true"></i>
+              <span class="site-menu-title" data-link="@Url.Action("UnivisionActivity", "Statistics")" title="유니비전GPI 메뉴로 바로 이동합니다.">STATISTICS</span>
+              <span class="site-menu-arrow" title="하위 메뉴를 확장/축소합니다."></span>
+            </a>
+            <ul class="site-menu-sub">
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "univisionactivity")">
+                <a href="@Url.Action("UnivisionActivity", "Statistics")">
+                  <span class="site-menu-title">유니비전 GPI</span>
+                </a>
+              </li>
+              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "monthlykpi")">
+                <a href="@Url.Action("MonthlyKPI", "Statistics")">
+                  <span class="site-menu-title">전직원 월별 GPI</span>
+                </a>
+              </li>
+              @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              {
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "monthlycandidateregstatus")">
+                  <a href="@Url.Action("MonthlyCandidateRegStatus", "Statistics")">
+                    <span class="site-menu-title">이력서등록통계 *</span>
+                  </a>
+                </li>
+              }
+              @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              {
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "projectactivity")">
+                  <a href="@Url.Action("ProjectActivity", "Statistics")">
+                    <span class="site-menu-title">주간 과정지표 *</span>
+                  </a>
+                </li>
+              }
+              @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              {
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "keyprojectlist")">
+                  <a href="@Url.Action("KeyProjectList", "Statistics")">
+                    <span class="site-menu-title">Key프로젝트 현황 *</span>
+                  </a>
+                </li>
+              }
+              @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              {
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "weeklyprojectlist")">
+                  <a href="@Url.Action("WeeklyProjectList", "Statistics")">
+                    <span class="site-menu-title">매출 프로젝트 현황 *</span>
+                  </a>
+                </li>
+              }
+              @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              {
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "negoprojectlist")">
+                  <a href="@Url.Action("NegoProjectList", "Statistics")">
+                    <span class="site-menu-title">처우 현황 *</span>
+                  </a>
+                </li>
+              }
+              @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              {
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "projectstatuslist")">
+                  <a href="@Url.Action("ProjectStatusList", "Statistics")">
+                    <span class="site-menu-title">컨설턴트별 추천/면접 현황 *</span>
+                  </a>
+                </li>
+              }
+              @*
+        @if (Univision.Security.AppIdentity.ua_seq <= 4 && Univision.Security.AppIdentity.ua_seq > 0)
+        {
+            <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "periodsalesteam")">
+                <a href="@Url.Action("PeriodSalesTeam", "Statistics")">
+                    <span class="site-menu-title">기간별 매출통계- 팀</span>
+                </a>
+            </li>
+        }
+        <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "periodsalespersonal")">
+            <a href="@Url.Action("PeriodSalesPersonal", "Statistics")">
+                <span class="site-menu-title">기간별 매출통계- 개인</span>
+            </a>
+        </li>
+        @if (Univision.Security.AppIdentity.ua_seq <= 4 && Univision.Security.AppIdentity.ua_seq > 0)
+        {
+            <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "yearlysalesteam")">
+                <a href="@Url.Action("YearlySalesTeam", "Statistics")">
+                    <span class="site-menu-title">년도별 매출통계- 팀</span>
+                </a>
+            </li>
+        }
+        <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "yearlysalespersonal")">
+            <a href="@Url.Action("YearlySalesPersonal", "Statistics")">
+                <span class="site-menu-title">년도별 매출통계- 개인</span>
+            </a>
+        </li>
+        <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "saleshistory")">
+            <a href="@Url.Action("SalesHistory", "Statistics")">
+                <span class="site-menu-title">매출내역</span>
+            </a>
+        </li>
+              *@
+              @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0) || Univision.Security.AppIdentity.isExternal != 1)
+              {
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "clientprojecthistory")">
+                  <a href="@Url.Action("ClientProjectHistory", "Statistics")">
+                    <span class="site-menu-title">고객사별 프로젝트 현황 *</span>
+                  </a>
+                </li>
+
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "businessprojecthistory")">
+                  <a href="@Url.Action("BusinessProjectHistory", "Statistics")">
+                    <span class="site-menu-title">산업별 프로젝트 현황 *</span>
+                  </a>
+                </li>
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "jobprojecthistory")">
+                  <a href="@Url.Action("JobProjectHistory", "Statistics")">
+                    <span class="site-menu-title">직무별 프로젝트 현황 *</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </li>
+          @if (Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0 && Univision.Security.AppIdentity.isExternal != 1)
+          {
+            <li class="site-menu-item">
+              <a href="javascript:openUrl('@Url.Action("MakeupAi", "nGPT")')">
+                <i class="site-menu-icon wb-download" aria-hidden="true"></i>
+                <span class="site-menu-title" title="AI 메이크업(새창)"><span class="badge badge-success">New</span> AI  메이크업</span>
+              </a>
+            </li>
+          }
+          <li class="site-menu-item">
+            <a href="javascript:openUrl('@Url.Action("PDFtoWord", "nGPT")')">
+              <i class="site-menu-icon wb-download" aria-hidden="true"></i>
+              <span class="site-menu-title" title="PDF를 워드로 변환(새창)"> <span class="badge badge-danger">Beta</span> PDF to Word</span>
+            </a>
+          </li>
+          @*
+    @if (Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0 && Univision.Security.AppIdentity.isExternal != 1)
+    {
+      <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(controllerName, " statisticsadmin")">
+        <a href="javascript:void(0)">
+          <i class="site-menu-icon wb-stats-bars" aria-hidden="true"></i>
+          <span class="site-menu-title" data-link="@Url.Action(" PeriodSalesAll", "StatisticsAdmin" )" title="기간별 매출통계(전체) 메뉴로 바로 이동합니다.">Statistics-All</span>
+          <span class="site-menu-arrow" title="하위 메뉴를 확장/축소합니다."></span>
+        </a>
+        <ul class="site-menu-sub">
+          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, " periodsalesall")">
+            <a href="@Url.Action(" PeriodSalesAll", "StatisticsAdmin" )">
+              <span class="site-menu-title">기간별 매출통계- 전체</span>
+            </a>
+          </li>
+
+          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, " yearlysalesall")">
+            <a href="@Url.Action(" YearlySalesAll", "StatisticsAdmin" )">
+              <span class="site-menu-title">년도별 매출통계- 전체</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+    }
+          *@
+        </ul>
+
+
+      </div>
+    </div>
+  </div>
+
+</div>

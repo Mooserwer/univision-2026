@@ -1,0 +1,467 @@
+﻿@model Univision.Main.Models.Project.ShareProjectBoardListModel
+@using Univision.Security;
+<div class="card-block project-comments ">
+    <h4 class="mb-10">
+        <i class="fas fa-comment"></i>
+        Comments
+    </h4>
+    @using (Html.BeginForm("CreateProjectBoard", "Project", FormMethod.Post, new { @id = "BoardCreateForm" }))
+    {
+        @Html.HiddenFor(x => x.p_seq)
+        <div class="col-md-12" style="display:flex">
+            @Html.TextBox("contents", "", new { @class = "form-control form-control col-md-10", @placeholder = "댓글달기" })
+            <button type="submit" class="btn btn-primary" style="padding-left:10px;">
+                등록
+            </button>
+        </div>
+    }
+
+    <div class="comments">
+        @if (Model.list.Count > 0)
+        {
+            foreach (var data in Model.list)
+            {
+                <div class="comment media">
+                    <div class="pr-15">
+
+                    </div>
+                    <div class="comment-body media-body">
+                        <div class="comment-title">
+                            <div class="comment-meta float-right">
+                                <span>@Utils.ConvertDateTimeToString(data.modify_dt)</span>
+                            </div>
+                            <a href="javascript:void(0)" class="comment-author">
+                                @data.create_user_name
+                            </a>
+                        </div>
+                        <div class="comment-content">
+                            <p>
+                                @data.contents
+                            </p>
+                            @if (AppIdentity.user_seq == data.create_user)
+                            {
+                                <button type="button" class="btn btn-pure btn-default icon wb-edit p-0 btn-edit" onclick="ModifyCommentRow(@data.p_seq, @data.psb_seq, '@data.contents', this)"></button>
+                                <button type="button" class="btn btn-pure btn-default icon wb-trash p-0 btn-trash" onclick="DeleteComment(@data.p_seq, @data.psb_seq)"></button>
+                            }
+                        </div>
+                        <div class="comment-actions text-left">
+                            @{
+                                int replyCnt = data.replyList.Count;
+
+                            }
+                            <a href="javascript:void(0)" role="button" onclick="toggleReplyList(this)" class="replyBtn">Reply(@replyCnt)</a>
+                        </div>
+
+                        <div class="comment-body media-body replyList animation-slide-top" style="padding-left:20px; animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+
+                            @if (data.replyList.Count > 0)
+                            {
+                                foreach (var reply in data.replyList)
+                                {
+                                    <div class="comment-title">
+                                        <div class="comment-meta float-right">
+                                            <span>@Utils.ConvertDateTimeToString(reply.modify_dt)</span>
+                                        </div>
+                                        <i class="fas fa-long-arrow-alt-right"></i>
+                                        @reply.create_user_name
+
+                                    </div>
+                                    <div class="comment-content" style="padding-left:15px;">
+                                        <p>@reply.contents</p>
+                                        @if (AppIdentity.user_seq == reply.create_user)
+                                        {
+                                            <button type="button" class="btn btn-pure btn-default icon wb-edit p-0 btn-edit" onclick="ModifyCommentReplyRow(@reply.p_seq, @reply.psb_seq, @reply.psr_seq, '@data.contents', this)"></button>
+                                            <button type="button" class="btn btn-pure btn-default icon wb-trash p-0 btn-trash" onclick="DeleteCommentReply(@reply.p_seq, @reply.psb_seq, @reply.psr_seq)"></button>
+                                        }
+                                    </div>
+                                }
+                            }
+
+                            @if (Model.amList.Select(x => x.uv_seq).ToArray().Contains(AppIdentity.user_seq))
+                            {
+                                <div class="col-md-10 reply" style="display:flex">
+                                    @Html.TextBox("reply_contents", "", new { @class = "form-control" })
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="CreateCommentReply(@data.p_seq, @data.psb_seq, this)">Reply</button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+
+            }
+        }
+
+        <div class="mt-10">
+            @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                         ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                         x => String.Format("javascript:callBoardList({0}, {1})", Model.p_seq, x))
+        </div>
+
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        //페이지 로드시, 대댓글 닫아놓기.
+        toggleReplyList($(".replyBtn"))
+
+        $("#BoardCreateForm").ajaxForm({
+            dataType: 'json',
+            beforeSubmit: function () {
+                showLoading('#commentList');
+            },
+            success: function (json) {
+                hideLoading('#commentList');
+                if (json.ok) {
+                    NormalAlert(json.message);
+                    callBoardList(@Model.p_seq, @Model.PagingInfo.CurrentPage)
+                }
+                else {
+                    alert(json.message)
+                }
+            },
+            error: function () {
+                hideLoading('#commentList');
+            }
+        });
+    });
+
+    function toggleReplyList(obj) {
+        $(obj).closest(".comment").find(".replyList").toggle();
+
+    }
+
+    //코멘트 수정 아이콘 클릭시,
+    function ModifyCommentRow(p_seq, psb_seq, contents, obj) {
+
+        $(obj).prev().remove();
+
+        var html = "<input type='text' class='form-control' id='comment_contents' name='comment_contents' value='" + contents + "' />"
+
+        $(obj).closest(".comment-content").prepend(html);
+
+        $(obj).attr("onclick", "ModifyComment(" + p_seq + ", " + psb_seq + ", this)");
+        $(obj).removeClass("p-0");
+        $(obj).removeClass("wb-edit");
+        $(obj).addClass("wb-pencil");
+
+        var delBtn = $(obj).next();
+
+        $(delBtn).attr("onclick", "CancelCommentRow(" + p_seq + ", " + psb_seq + ", '" + contents + "', this)");
+        $(delBtn).removeClass("p-0");
+        $(delBtn).removeClass("wb-trash");
+        $(delBtn).addClass("wb-refresh");
+
+    }
+
+    //코멘트 댓글 수정 아이콘 클릭시
+    function ModifyCommentReplyRow(p_seq, psb_seq, psr_seq, contents, obj) {
+
+        $(obj).prev().remove();
+
+        var html = "<input type='text' class='form-control' id='reply_contents' name='reply_contents' value='" + contents + "' />"
+
+        $(obj).closest(".comment-content").prepend(html);
+
+        $(obj).attr("onclick", "ModifyCommentReply(" + p_seq + ", " + psb_seq + ", " + psr_seq + ", this)");
+        $(obj).removeClass("p-0");
+        $(obj).removeClass("wb-edit");
+        $(obj).addClass("wb-pencil");
+
+        var delBtn = $(obj).next();
+
+        $(delBtn).attr("onclick", "CancelCommentReplyRow(" + p_seq + ", " + psb_seq + ", " + psr_seq + ", '" + contents + "', this)");
+        $(delBtn).removeClass("p-0");
+        $(delBtn).removeClass("wb-trash");
+        $(delBtn).addClass("wb-refresh");
+
+    }
+
+    //코멘트 수정 취소 아이콘 클릭시
+    function CancelCommentRow(p_seq, psb_seq, contents, obj) {
+
+        $(obj).closest(".comment-content").find("#comment_contents").remove();
+
+        var html = "<p>" + contents + "</p>"
+
+        $(obj).closest(".comment-content").prepend(html);
+
+        var modifyBtn = $(obj).prev();
+
+        $(modifyBtn).attr("onclick", "ModifyCommentRow(" + p_seq + ", " + psb_seq + ", '" + contents + "', this)");
+        $(modifyBtn).addClass("wb-edit");
+        $(modifyBtn).removeClass("wb-pencil");
+        $(modifyBtn).addClass("p-0");
+
+        $(obj).attr("onclick", "DeleteCommentReply(" + p_seq + ", " + psb_seq + ")");
+        $(obj).addClass("wb-trash");
+        $(obj).removeClass("wb-refresh");
+        $(obj).addClass("p-0");
+    }
+
+    //코멘트 댓글 수정 취소 아이콘 클릭시
+    function CancelCommentReplyRow(p_seq, psb_seq, psr_seq, contents, obj) {
+
+        $(obj).closest(".comment-content").find("#reply_contents").remove();
+
+        var html = "<p>" + contents + "</p>"
+
+        $(obj).closest(".comment-content").prepend(html);
+
+        var modifyBtn = $(obj).prev();
+
+        $(modifyBtn).attr("onclick", "ModifyCommentReplyRow(" + p_seq + ", " + psb_seq + ", " + psr_seq + ", '" + contents + "', this)");
+        $(modifyBtn).addClass("wb-edit");
+        $(modifyBtn).removeClass("wb-pencil");
+        $(modifyBtn).addClass("p-0");
+
+        $(obj).attr("onclick", "DeleteCommentReply(" + p_seq + ", " + psb_seq + ", " + psr_seq + ")");
+        $(obj).addClass("wb-trash");
+        $(obj).removeClass("wb-refresh");
+        $(obj).addClass("p-0");
+    }
+
+    //코멘트 수정
+    function ModifyComment(p_seq, psb_seq, obj) {
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+
+                    var url = $("#BoardCreateForm").attr("action");
+
+                    $.ajax({
+                       url: url,
+                        data: {
+                            p_seq: p_seq
+                            ,
+                            psb_seq: psb_seq
+                            ,
+                            contents: $(obj).closest(".comment-content").find("#comment_contents").val()
+                        },
+                        dataType: 'json',
+                        type: 'POST',
+                       beforeSend: function ()
+                       {
+                           showLoading('#commentList');
+                       }
+                    })
+                    .done(function (json) {
+                        hideLoading('#commentList');
+                        if (json.ok) {
+
+                            NormalAlert(json.message);
+                            callBoardList(@Model.p_seq, @Model.PagingInfo.CurrentPage)
+
+                        } else {
+                            ErrorAlert(json.message);
+                        }
+                    })
+                    .fail(function (e) {
+                        hideLoading('#commentList');
+                        ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    });
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>코멘트 수정')
+            .setting({
+                message: "해당 코멘트를 수정하시겠습니까?",
+            })
+            .show();
+    }
+
+    //코멘트 댓글 등록
+    function CreateCommentReply(p_seq, psb_seq, obj) {
+        $.ajax({
+           url: '@Url.Action("CreateProjectBoardReply", "Project")',
+            data: {
+                p_seq: p_seq
+                ,
+                psb_seq: psb_seq
+                ,
+                contents: $(obj).closest(".reply").find("#reply_contents").val()
+            },
+            dataType: 'json',
+            type: 'POST',
+           beforeSend: function ()
+           {
+               showLoading('#commentList');
+           }
+        })
+        .done(function (json) {
+            hideLoading('#commentList');
+            if (json.ok) {
+
+                NormalAlert(json.message);
+                callBoardList(@Model.p_seq, @Model.PagingInfo.CurrentPage)
+
+            } else {
+                ErrorAlert(json.message);
+            }
+        })
+        .fail(function (e) {
+            hideLoading('#commentList');
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+
+    //코멘트 댓글 수정
+    function ModifyCommentReply(p_seq, psb_seq, psr_seq, obj) {
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+
+                    $.ajax({
+                       url: '@Url.Action("CreateProjectBoardReply", "Project")',
+                        data: {
+                            p_seq: p_seq
+                            ,
+                            psb_seq: psb_seq
+                            ,
+                            psr_seq: psr_seq
+                            ,
+                            contents: $(obj).closest(".comment-content").find("#reply_contents").val()
+                        },
+                        dataType: 'json',
+                        type: 'POST',
+                       beforeSend: function ()
+                       {
+                           showLoading('#commentList');
+                       }
+                    })
+                    .done(function (json) {
+                        hideLoading('#commentList');
+                        if (json.ok) {
+
+                            NormalAlert(json.message);
+                            callBoardList(@Model.p_seq, @Model.PagingInfo.CurrentPage)
+
+                        } else {
+                            ErrorAlert(json.message);
+                        }
+                    })
+                    .fail(function (e) {
+                        hideLoading('#commentList');
+                        ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    });
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>코멘트 댓글 수정')
+            .setting({
+                message: "해당 코멘트 댓글을 수정하시겠습니까?",
+            })
+            .show();
+    }
+
+    //코멘트 삭제
+    function DeleteComment(p_seq, psb_seq) {
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+                    $.ajax({
+                       url: '@Url.Action("DeleteProjectBoard", "Project")',
+                        data: {
+                            p_seq: p_seq
+                            ,
+                            psb_seq: psb_seq
+                        },
+                        dataType: 'json',
+                        type: 'POST',
+                       beforeSend: function ()
+                       {
+                           showLoading('#commentList');
+                       }
+                    })
+                    .done(function (json) {
+                        hideLoading('#commentList');
+                        if (json.ok) {
+
+                            NormalAlert(json.message);
+                            callBoardList(@Model.p_seq, @Model.PagingInfo.CurrentPage)
+
+                        } else {
+                            ErrorAlert(json.message);
+                        }
+                    })
+                    .fail(function (e) {
+                        hideLoading('#commentList');
+                        ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    });
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>코멘트 삭제')
+            .setting({
+                message: "해당 코멘트를 삭제하시겠습니까?",
+            })
+            .show();
+    }
+
+    //코멘트 댓글 삭제
+    function DeleteCommentReply(p_seq, psb_seq, psr_seq) {
+        alertify.confirm()
+            .set({
+                'labels': { ok: '확인', cancel: '취소' },
+                'onok': function () {
+                    $.ajax({
+                       url: '@Url.Action("DeleteProjectBoardReply", "Project")',
+                        data: {
+                            p_seq: p_seq
+                            ,
+                            psb_seq: psb_seq
+                            ,
+                            psr_seq: psr_seq
+                        },
+                        dataType: 'json',
+                        type: 'POST',
+                       beforeSend: function ()
+                       {
+                           showLoading('#commentList');
+                       }
+                    })
+                    .done(function (json) {
+                        hideLoading('#commentList');
+                        if (json.ok) {
+
+                            NormalAlert(json.message);
+                            callBoardList(@Model.p_seq, @Model.PagingInfo.CurrentPage)
+
+                        } else {
+                            ErrorAlert(json.message);
+                        }
+                    })
+                    .fail(function (e) {
+                        hideLoading('#commentList');
+                        ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                    });
+                },
+                'oncancel': function () {
+
+                    return;
+                },
+            })
+            .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>코멘트 댓글 삭제')
+            .setting({
+                message: "해당 코멘트 댓글을 삭제하시겠습니까?",
+            })
+            .show();
+    }
+
+</script>

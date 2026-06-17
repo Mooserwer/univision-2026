@@ -1,0 +1,110 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientFileList
+@{
+    Layout = null;
+}
+    <link rel="stylesheet" href="~/Libs/remark/global/vendor/dropify/dropify.min599c.css?v4.0.4">
+<style>
+    .dropify-wrapper {
+        padding: 0px 15px 0px 15px;
+        box-sizing: border-box;
+    }
+</style>
+
+@using (Html.BeginForm("CreateClientFile", "Client", FormMethod.Post, new { @id = "FileCreateForm" }))
+{
+    @Html.HiddenFor(x => x.c_seq)
+    <div class="row no-right-space">
+        <div class="col-md-12 form-group">
+            <label class="form-control-label" for="biz_type">
+                <b>카테고리</b>
+            </label>
+            <select class="form-control col-md-7" id="cf_type" name="cf_type">
+                <option value="0">선택</option>
+                <option value="1">사업자등록증</option>
+                <option value="4">계약서</option>
+                <option value="2">조직도</option>
+                <option value="3">기타</option>
+            </select>
+        </div>
+
+        <div class="col-md-12 form-group">
+            <label class="form-control-label" for="biz_type">
+                <b>업로드 파일</b>
+            </label>
+            <input type="file" id="files" name="files" class="dropify" data-plugin="dropify" data-default-file="" data-height="100" data-errors-position="outside" />
+        </div>
+        <div class="col-md-12" style="text-align:right;">
+            <button type="button" id="BtnFileSave" class="btn btn-primary">등록</button>
+        </div>
+    </div>
+}
+
+<script src="~/Libs/remark/global/vendor/dropify/dropify.min599c.js?v4.0.4"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        StopEnterSubmit();
+
+        $('.dropify').dropify({
+            messages: {
+                'default': 'Drag and drop a file here or click',
+                'replace': 'Drag and drop or click to replace',
+                'remove': 'Remove',
+                'error': '오류가 발생 했습니다. 다시 시도해주세요.'
+            }
+        });
+
+        $("#BtnFileSave").click(function () {
+
+            if ($("#cf_type").val() == "0") {
+                ErrorAlert("카테고리를 선택 하세요.");
+                return false;
+            }
+
+            if ($("#files")[0].files.length == 0) {
+                ErrorAlert("파일을 등록하세요.");
+                return false;
+            }
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            $("#FileCreateForm").submit();
+                        },
+                        'oncancel': function () {
+
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>' + "관련 파일 등록")
+                    .setting({
+                        message: "관련 파일을 등록 하시겠습니까?",
+                    })
+                    .show();
+        });
+
+        $("#FileCreateForm").ajaxForm({
+            dataType: 'json',
+            beforeSubmit: function () {
+                showLoading('#FileCreateForm');
+            },
+            success: function (json) {
+                hideLoading('#FileCreateForm');
+                if (json.ok) {
+                    NormalAlert(json.message);
+                    callFileList('@Model.c_seq', 1);
+                    $.fancybox.close();
+                }
+                else {
+                    ErrorAlert(json.message);
+                }
+            },
+            error: function () {
+                hideLoading('#FileCreateForm');
+            }
+        });
+
+    });
+
+</script>

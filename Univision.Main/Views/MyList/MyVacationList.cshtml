@@ -1,0 +1,547 @@
+﻿@model Univision.Main.Models.Vacation.MyVacationModel
+
+@{
+  ViewBag.Title = "MyVacationList";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+
+  string vc_text = String.Empty;
+  double total_vacation = 0;
+  string tr_bg = String.Empty;
+}
+<style>
+  .custom1 a:active, .custom1 a:link, .custom1 a:any-link {
+    text-decoration: none;
+    color: white;
+  }
+
+  @@media (max-width:500px) {
+    .table.table-vacation-status-list thead th:nth-of-type(2), .table.table-vacation-status-list thead th:nth-of-type(7), .table.table-vacation-status-list thead th:nth-of-type(6) {
+      display: none
+    }
+
+    .table.table-vacation-status-list tbody td:nth-of-type(2), .table.table-vacation-status-list tbody td:nth-of-type(7), .table.table-vacation-status-list tbody td:nth-of-type(6) {
+      display: none
+    }
+  }
+</style>
+<link rel="stylesheet" href="~/Libs/lightpick/css/lightpick.css" type="text/css" />
+<div class="page-content container-fluid">
+  <div class="row">
+    <div class="col-6">
+      @using (Html.BeginForm("MyVacationList", "MyList", FormMethod.Get, new { @id = "searchForm" }))
+      {
+        <div class="form-group custom5">
+          <div class="input-group w-500 mr-20 st">
+            <div class="form-group custom4">
+              @Html.DropDownListFor(x => x.search.searchYear, new SelectList(Model.yearList, "key", "value"), new { @class = "form-control w-100 dd" })
+              @Html.HiddenFor(x => x.search.vacationType)
+            </div>
+
+            @if (Univision.Security.AppIdentity.ua_seq == 4 || Univision.Security.AppIdentity.ua_seq == 1 || Univision.Security.AppIdentity.user_seq == 215)
+            {
+
+              var userList = new SelectList(Model.userList, "uv_seq", "name").ToList();
+              <div class="form-group custom4">
+                @Html.DropDownListFor(x => x.search.uv_seq, userList, new { @class = "form-control dd" })
+              </div>
+              if (Univision.Security.AppIdentity.user_seq != Model.search.uv_seq)
+              {
+                <div class="form-group custom4">
+                  <input type="button" class="btn btn-sm btn-primary set-my-vacation" value="내 휴가로 이동" />
+                </div>
+              }
+            }
+            else
+            {
+              @Html.Hidden("search.uv_seq", Univision.Security.AppIdentity.user_seq)
+            }
+
+          </div>
+        </div>
+      }
+
+    </div>
+    <div class="col-6 text-right">
+      @if (Model.search.uv_seq == Univision.Security.AppIdentity.user_seq)
+      {
+        <a href="javascript:modalVacationCreate();" class="btn btn-sm btn-primary" id="btn-add-vacation">Request Vacation</a>
+      }
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title">
+            @Model.search.searchYear 년도 잔여 휴가 현황
+            @Html.HiddenFor(x => x.status.cur_va_num)
+            @Html.HiddenFor(x => x.status.cur_use_all)
+          </h3>
+        </header>
+        <div class="panel-body">
+          <div class="table-responsive">
+            <table id="default-table" class="table table-hover table-vacation-status-list" style="table-layout:fixed;">
+              <thead>
+              <th class="text-truncate text-center" title="발생연차">발생연차</th>
+              <th class="text-truncate text-center" title="차감연차 전체 (연차 + 출근미등록)">차감연차전체 (승인전)</th>
+              <th class="text-truncate text-center" title="사용연차">사용연차 (승인전)</th>
+              <th class="text-truncate text-center" title="출근미등록">출근미등록</th>
+              <th class="text-truncate text-center" title="남은연차 (발생연차 - 차감연차 전체)">남은연차</th>
+              <th class="text-truncate text-center" title="미차감휴가 (경조사, 예비군 훈련 등)">미차감휴가</th>
+              <th class="text-truncate text-center" title="외근">외근</th>
+              </thead>
+              <tbody>
+              <td class="text-right">@Model.status.va_num</td>
+              <td class="text-right"><a href="#" title="클릭하면 해당 휴가 내역을 볼 수 있습니다." class="searchVtype text-primary" vacation-type="0">@Model.status.use_total (@Model.status.use_total_ready)</a></td>
+              <td class="text-right"><a href="#" title="클릭하면 해당 휴가 내역을 볼 수 있습니다." class="searchVtype text-info" vacation-type="1">@Model.status.use_vacation (@Model.status.use_vacation_ready)</a></td>
+              <td class="text-right"><a href="#" title="클릭하면 해당 휴가 내역을 볼 수 있습니다." class="searchVtype text-info" vacation-type="2">@Model.status.use_not_shown</a></td>
+              <td class="text-right">@(Model.status.va_num - Model.status.use_total)</td>
+              <td class="text-right"><a href="#" title="클릭하면 해당 휴가 내역을 볼 수 있습니다." class="searchVtype text-info" vacation-type="99">@Model.status.use_etc</a></td>
+              <td class="text-right"><a href="#" title="클릭하면 해당 휴가 내역을 볼 수 있습니다." class="searchVtype text-info" vacation-type="7">@Model.status.use_work</a></td>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title">
+            @Model.search.searchYear 년도 휴가 사용 내역
+          </h3>
+        </header>
+        <div class="panel-body">
+          <div class="table-responsive">
+            <table id="default-table" class="table table-hover table-vacation-list" style="table-layout:fixed;min-width:800px;">
+              <thead>
+                <tr>
+                  <th class="text-truncate text-center" title="휴가구분">휴가구분</th>
+                  <th class="text-truncate text-center" title="신청일">신청일</th>
+                  <th class="text-truncate text-center" title="휴가기간">휴가기간</th>
+                  <th class="text-truncate text-center" title="사용일수">일수</th>
+                  <th class="text-truncate text-center" title="내용">내용</th>
+                  <th class="text-truncate text-center" title="부서장승인">부서장 승인</th>
+                  <th class="text-truncate text-center" title="경영지원팀 승인">경영지원팀 승인</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (Model.list.Count > 0)
+                  {
+                    foreach (var data in Model.list)
+                    {
+                      total_vacation += data.vacation_number.Value;
+
+                      if (data.v_type == 1)
+                      {
+                        tr_bg = "";
+                      }
+                      else if (data.v_type == 2)
+                      {
+                        tr_bg = "bg-red-200";
+                      }
+                      else
+                      {
+
+                        tr_bg = "bg-blue-200";
+                      }
+                    <tr class="@tr_bg">
+                      <td class="text-truncate" title="@data.type_name">
+                        @data.type_name
+                      </td>
+                      <td>
+                        @Utils.ConvertDateTimeToString(data.request_date)
+                      </td>
+                      @{
+                        vc_text = Utils.ConvertDateTimeToString(data.start_date);
+
+                        if (data.start_date != data.end_date)
+                        {
+                          vc_text += " ~ " + Utils.ConvertDateTimeToString(data.end_date);
+                        }
+              }
+                      <td class="text-center text-truncate" title="@vc_text">
+                        @vc_text
+                      </td>
+                      <td class="text-right" title="@data.vacation_detail">
+                        @data.vacation_number
+                      </td>
+                      <td class="text-truncate" title="@data.comment">
+                        @data.comment
+                      </td>
+
+                      <td>
+                        @if (data.leader_confirm == 1)
+                        {
+                @data.leader_name <i class="fa fa-check text-success"></i>
+
+                <br /><span class="small">(@Utils.ConvertDateTimeToString(data.leader_date))</span>
+                        }
+                        else if (data.leader_confirm == -1)
+              {
+                @data.leader_name <i class="fa fa-minus text-danger"></i>
+
+                <br /><span class="text-danger">(반려)</span>
+                        }
+                        else
+              {
+                @data.leader_name
+                <br /><text>(승인대기)</text>
+                        }
+                      </td>
+                      <td>
+                        @if (data.is_confirm == 1)
+                        {
+                @data.confirm_name <i class="fa fa-check text-success"></i>
+
+                <br /><span class="small">(@Utils.ConvertDateTimeToString(data.confirm_date))</span>
+                        }
+                        else if (data.is_confirm == -1)
+              {
+                @data.confirm_name <i class="fa fa-minus text-danger"></i>
+
+                <br /><span class="text-danger">(반려)</span>
+                        }
+                        else
+              {
+                @data.confirm_name
+                <br /><text>(승인대기)</text>
+                        }
+                      </td>
+                      @*
+                        <td>
+                            @if (data.s_leader_confirm == 1)
+                            {
+                                @data.s_leader_name <i class="fa fa-check text-success"></i>
+                                <br /><span class="small">(@Utils.ConvertDateTimeToString(data.s_leader_date))</span>
+                            }
+                            else if (data.s_leader_confirm == -1)
+                            {
+                                @data.confirm_name <i class="fa fa-minus text-danger"></i>
+                                <br /><span class="text-danger">(반려)</span>
+                            }
+                            else
+                            {
+                                @data.s_leader_name
+                                <br /><text>(승인대기)</text>
+                            }
+                        </td>
+                      *@
+                    </tr>
+                  }
+                }
+                else
+                {
+                  <tr>
+                    <td colspan="6">
+                      휴가 내역이 없습니다.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+
+                  <th class="text-truncate text-center" colspan="2" title="TOTAL">TOTAL</th>
+                  <th class="text-truncate text-right">@total_vacation</th>
+                  <th class="text-truncate text-right" colspan="4">&nbsp;</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+@section scripts {
+  <script src="~/Scripts/validation/jquery.validate.min.js"></script>
+  <script src="~/Scripts/validation/valid_option.js"></script>
+  <script src="~/Libs/fullcalendar_cus/js/moment.min.js"></script>
+  <script src="~/Libs/Lightpick/moment.holiday.js?2026"></script>
+  <script src="~/Libs/Lightpick/lightpick.js"></script>
+  <script type="text/javascript">
+
+    
+        $('.dd').on('change', function () {
+            $('#searchForm').submit();
+        });
+
+        $('.searchVtype').click(function (e) {
+            e.preventDefault();
+            $('#search_vacationType').val($(this).attr('vacation-type'));
+            $('#searchForm').submit();
+        })
+
+    $('.set-my-vacation').click(function (e) {
+      e.preventDefault();
+      $('#search_uv_seq').val('@Univision.Security.AppIdentity.user_seq');
+      $('#searchForm').submit();
+    })
+
+    var cur_va_num = $('#status_cur_va_num').val();
+    var cur_use_all = $('#status_cur_use_all').val();
+    var cur_remain = cur_va_num - cur_use_all;
+
+        var enumerateDaysBetweenDates = function (startDate, endDate) {
+            var dates = [];
+            var currDate = moment(startDate).startOf('day');
+            var lastDate = moment(endDate).startOf('day');
+            do {
+                //console.log(currDate.toDate(), currDate.holiday());
+                if (currDate.day() > 0 && currDate.day() < 6 && !currDate.holiday()) {
+                    dates.push(currDate.clone());
+                }
+            } while (currDate.add(1, 'days').diff(lastDate) <= 0);
+
+            return dates;
+        };
+
+
+
+        function modalVacationCreate() {
+            //Modal 템플릿이 있고, 모달창이 열려있으면 넘어감
+            if ($('#modal_vacation_create').length > 0) {
+                $('#modal_vacation_create').parent().remove();
+            }
+
+            $('body').append($('<div>').load('/Modal/VacationCreateModal.html?v1.1.2', function () {
+                //console.log($('#btn_vacation_modal_submit'));
+                var picker = new Lightpick({
+                    firstDay : 7,
+                    format: "YYYY-MM-DD",
+                    numberOfColumns: 2,
+                    numberOfMonths: 2,
+                    field: document.getElementById('vd_dv_start'),
+                    secondField: document.getElementById('vd_dv_end'),
+                    selectForward: true,
+                    singleDate: false,
+                    onSelect: function (start, end) {
+                        if (start && end) {
+                            document.getElementById('vacation_detail').innerHTML = "";
+                            var dates = enumerateDaysBetweenDates(start, end);
+                            document.getElementById('vd_dn_total_period').readOnly = false;
+                            document.getElementById('vd_dn_total_period').value = dates.length;
+                            document.getElementById('vd_dn_total_period').readOnly = true;
+                            dates.forEach(function (date) {
+                                var str_date = date.format("YYYY-MM-DD");
+
+                                v_detail = "<div class='col-md-3 col-12 text-center vacation_days'>";
+                                v_detail += "  <span  class='badge badge-lg border'>";
+                                v_detail += "    <input type='hidden' name='vd_dv_date' value='" + str_date + "'>";
+                                v_detail += "    <input type='hidden' name='vd_dv_date_day' value='1'>";
+                                v_detail += "    <input type='hidden' name='vd_dv_date_gubun' value='0'>";
+                                v_detail += "    " + str_date;
+                                v_detail += "    &nbsp;&nbsp;&nbsp;";
+                                v_detail += "    <a href='#' class='text-dark' onclick='javascript:setVacationDay(this);' title='클릭 시 오전,오후,전일 전환'>(전일)</a>";
+                                v_detail += "    &nbsp;&nbsp;&nbsp;";
+                                v_detail += "    <a href='#' class='text-danger' onclick='javascript:RemoveVacationDay(this);'title='일정 삭제'>";
+                                v_detail += "      <i class='fa fa-times pointer' aria-hidden='true'></i>";
+                                v_detail += "    </a>";
+                                v_detail += "  </span>";
+                                v_detail += "</div>";
+
+                                document.getElementById('vacation_detail').innerHTML += v_detail;
+                                CalcVacationDetail();
+                            });
+
+                        }
+                        $('#frm_modal_vacation_create').valid();
+                    }
+                });
+                $('#vd_dv_gubun').change(function () {
+                  $('#vd_dt_comment').attr("placeholder", "사유를 기재해 주세요.");
+                  $('#v_cur_remain').removeClass("d-none").addClass("d-none");
+                  $('#vd_dn_cur_remain').val(0);
+                    if ($(this).val() == 1) {
+                      $('#v_type_comment').html("** 연차 : 사용 시 할당된 연차에서 차감됩니다.")
+                      $('#vd_dn_cur_remain').val(cur_use_all);
+                      $('#v_cur_remain').removeClass("d-none");
+                    }
+                    else if ($(this).val() == 3) {
+                        $('#v_type_comment').html("** 유급병가 조건<br/>&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;캘린더데이 최대 14일까지 사용<br/>&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;진단서 또는 입원확인서 PDF메일 송부 또는 사본제출<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(제출처 : 경영지원팀)")
+                    }
+                    else if ($(this).val() == 4) {
+                        $('#v_type_comment').html("** 결혼 5일, 결혼/장례 3~5일 _상세내역은 경조금 지급 기준 참조")
+                    }
+                    else if ($(this).val() == 5) {
+                        $('#v_type_comment').html("** 예비군 출석 확인증 PDF 메일송부 또는 사본 제출(제출처 : 경영지원팀)")
+                    }
+                    else if ($(this).val() == 7) {
+                        $('#v_type_comment').text("고객사 미팅 시 ‘고객사 및 담당자명, 목적, 일정, 위치’ / 후보자 미팅 시 ‘후보자명, 진행 프로젝트명 또는 목적, 일정, 위치’ 를 입력해주세요.")
+                        $('#vd_dt_comment').attr("placeholder", "고객사 미팅 시 ‘고객사 및 담당자명, 목적, 일정, 위치’ / 후보자 미팅 시 ‘후보자명, 진행 프로젝트명 또는 목적, 일정, 위치’ 를 입력해주세요.");
+                    }
+                    else if ($(this).val() == 11) {
+                        $('#v_type_comment').html("** Shift 근무 (주 1회)")
+                    }
+                    else if ($(this).val() == 12) {
+                        $('#v_type_comment').html("** 무급")
+                    }
+                    else if ($(this).val() == 13) {
+                        $('#v_type_comment').html("** 장기근속자 특별휴가(5, 7, 10, 15, 20, 25년) 사용 시 선택")
+                    } else {
+                        $('#v_type_comment').html("")
+                    }
+
+                });
+
+
+                $('#frm_modal_vacation_create').validate();
+                $('.btn_vacation_modal_submit').click(fVacationSubmit);
+                $('#modal_vacation_create').modal('show');
+
+                $('#vd_dv_gubun').change(CalcVacationDetail);
+            }));
+        }
+
+
+
+
+        function CalcVacationDetail() {
+            var gubun = $('#vd_dv_gubun').val();
+            var str_date_list = "";
+            var start, end, count = 0;
+            $('#vacation_detail').find('input[name=vd_dv_date]').each(function () {
+                if (!start) start = $(this).val();
+                end = $(this).val();
+
+                str_date_list += ((str_date_list != "" ? ", " : "") + $(this).val().substr(5, 5).replace("-", "/"));
+            });
+
+            $('#vacation_detail').find('input[name=vd_dv_date_day]').each(function () {
+                count += parseFloat($(this).val());
+            });
+
+            if (gubun == '출근미등록' && str_date_list != "") {
+                str_date_list = "출근미등록(" + str_date_list + ")";
+                $('#vd_dt_comment').val(str_date_list);
+            }
+
+            if (start && end) {
+                $('#vacation_dv_start').val(start);
+                $('#vacation_dv_end').val(end);
+            } else {
+                $('#vacation_dv_start').val("");
+                $('#vacation_dv_end').val("");
+            }
+            document.getElementById('vd_dn_total_period').readOnly = false;
+            document.getElementById('vd_dn_total_period').value = count;
+            document.getElementById('vd_dn_total_period').readOnly = true;
+          if (gubun == 1) {
+            document.getElementById('vd_dn_cur_remain').readOnly = false;
+            document.getElementById('vd_dn_cur_remain').value = cur_remain - count;
+            document.getElementById('vd_dn_cur_remain').readOnly = true;
+          } else {
+            document.getElementById('vd_dn_cur_remain').readOnly = false;
+            document.getElementById('vd_dn_cur_remain').value = 0;
+            document.getElementById('vd_dn_cur_remain').readOnly = true;
+          }
+            
+        }
+        function RemoveVacationDay(obj) {
+            $(obj).closest('div.vacation_days').remove();
+            CalcVacationDetail();
+        }
+
+        function setVacationDay(obj) {
+            var text = $(obj).text();
+            var text_class
+            var day;
+            var gubun;
+            if (text == "(전일)") {
+                text = "오전";
+                day = 0.5;
+                gubun = 1
+                text_class = "text-success"
+            } else if (text == "(오전)") {
+                text = "오후";
+                day = 0.5;
+                gubun = 2
+                text_class = "text-primary"
+            } else {
+                text = "전일";
+                day = 1;
+                gubun = 0
+                text_class = "text-dark"
+            }
+            $(obj).text("(" + text + ")");
+            $(obj).removeClass().addClass(text_class);
+            $(obj).closest('div.vacation_days').find('input[name=vd_dv_date_day]').val(day)
+            $(obj).closest('div.vacation_days').find('input[name=vd_dv_date_gubun]').val(gubun)
+
+            CalcVacationDetail();
+        }
+
+
+        var fVacationSubmit = function (){
+
+          document.getElementById('vd_dn_total_period').readOnly = false;
+          var myForm = $('#frm_modal_vacation_create');
+          document.getElementById('vd_dn_total_period').readOnly = true;
+
+            if (!myForm.valid()) {
+                ErrorAlert("필수 항목을 입력 후 진행하여 주십시오.<br/><small>[Please fill out required.]</small>");
+                return;
+            }
+
+            if (myForm.find('#vd_dn_total_period').val() <= 0) {
+                ErrorAlert("총 사용일수가 0보다 커야합니다.");
+                return;
+            }
+
+            var vacation_data = {
+                data : {
+                    v_type: myForm.find('#vd_dv_gubun').val()
+                    , comment: myForm.find('#vd_dt_comment').val()
+                    , start_date: myForm.find('#vd_dv_start').val()
+                    , end_date: myForm.find('#vd_dv_end').val()
+                    , vacation_number: myForm.find('#vd_dn_total_period').val()
+                    , cur_remain: myForm.find('#vd_dn_cur_remain').val()
+                }
+                , detail_list : []
+            }
+            myForm.find('#vacation_detail').find('.vacation_days').each(function () {
+                var vacation_detail = {
+                    v_type : $(this).find('input[name="vd_dv_date_gubun"]').val()
+                    , v_date : $(this).find('input[name="vd_dv_date"]').val()
+                    , v_period : $(this).find('input[name="vd_dv_date_day"]').val()
+                }
+                vacation_data.detail_list.push(vacation_detail);
+            });
+            ConfirmAlert('Confirm!', '신청하시겠습니까?', function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("MyVacationCreate", "MyList")',
+                    data: vacation_data,
+                    dataType: 'json',
+                    beforeSend: function () {
+                        showLoading();
+                    },
+                    success: function (data) {
+                        hideLoading();
+                        if (!data.ok) {
+                            //fget_alert();
+                            ErrorAlert(data.rtn_msg);
+                            return;
+                        }
+                        NormalAlert("신청완료", function () {
+                            location.href = "@Url.Action("MyVacationList", "MyList")";
+                        });
+                    },
+                    error: function () {
+                        hideLoading();
+                    }
+                });
+            });
+        }
+
+
+
+  </script>
+
+}

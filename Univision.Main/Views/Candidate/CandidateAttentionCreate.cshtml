@@ -1,0 +1,95 @@
+﻿@model Univision.Core.Models.DTO.candidate
+
+@{
+  Layout = null;
+}
+
+@using (Html.BeginForm("UpdateCandidateAttentionType", "Candidate", FormMethod.Post, new { @id = "CreateAttentionForm", @autocomplete = "off" }))
+{
+  @Html.HiddenFor(x => x.c_seq, new { @id = "attention_c_seq" })
+  <div class="row"><div class="col text-danger">* 기밀유지가 필요하지 않으며 컨택은 가능하나, 특정 사유로 주의가 필요한 경우</div></div>
+  <div class="row">
+    <div class="col-8 form-group">
+      @Html.LabelFor(x => x.attention_type, "Attention Type <주의요망 구분>", new { @class = "form-control-label" })
+      @Html.DropDownListFor(x => x.attention_type, new SelectList(CandidateAttentionType.CandidateAttentionTypes, "Key", "Value"), new { @class = "form-control form-control-sm " })
+    </div>
+  </div>
+  <div class="row mb-10 attiontion_detail_row @((Model.attention_type ?? 0)== 0 ? "d-none" : "")">
+    <div class="col-12 col-md-12 form-group">
+      @Html.LabelFor(x => x.attention_remark, "내용 <Details>", new { @class = "form-control-label" })
+      @Html.TextAreaFor(x => x.attention_remark, new { @class = "form-control", @placeholder = "상세내용을 입력해 주십시오.", @rows = 5 })
+    </div>
+    <div class="col-12 form-group text-right">
+      Lastest Update : @Utils.ConvertDateTimeToString(Model.attention_date) [ @Model.attention_name ]
+    </div>
+  </div>
+  <div class="row">
+    <div class="col text-right">
+      <button type="button" class="btn btn-sm btn-primary w-150" id="btnAttSave" title="등록"><i class="icon wb-check"></i> SUBMIT</button>
+    </div>
+  </div>
+
+}
+
+<script type="text/javascript">
+
+  var candidate_att_validate_opt = {
+    rules: {
+      attention_remark: {
+        required: function () {
+          return $('#attention_type').val() > 0;
+        }
+      }
+    },
+    messages: {
+      attention_remark: {
+        required: "사유를 입력해 주십시오."
+      }
+    },
+    submitHandler: function (form) {
+      var request_data = {
+        c_seq: $("#attention_c_seq").val(),
+        type: $("#attention_type").val(),
+        remark: $("#attention_remark").val()
+      }
+      ConfirmAlert('주의요망 설정 ', '해당 후보자의 주의요망사항을 저장하시겠습니까?', function () {
+        ajxCall({
+          type: 'POST',
+          url: $("#CreateAttentionForm").attr("action"),
+          data: request_data,
+          dataType: 'json',
+          loading: true,
+          loading_target: '#CreateAttentionForm',
+          suc: function (json) {
+            NormalAlert(json.message, function () {
+              location.href = location.href;
+            });
+          },
+          err: function (e) {
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.\n' + e.message);
+          }
+        })
+      });
+    }
+  }
+
+  var valid_att_option = $.extend({}, valid_option, candidate_att_validate_opt);
+
+  var validator_att = $("#CreateAttentionForm").validate(valid_att_option);
+
+  $("#attention_type").change(function () {
+    if ($(this).val() == 0) {
+      $("#attention_remark").val("");
+      $(".attiontion_detail_row").removeClass("d-none").addClass("d-none");
+    } else {
+      $(".attiontion_detail_row").removeClass("d-none");
+    }
+    validator_confi.element('#attention_remark');
+  })
+
+  StopEnterSubmit();
+  $("#btnAttSave").click(function () {
+    $('#CreateAttentionForm').submit();
+  });
+
+</script>

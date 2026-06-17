@@ -1,0 +1,437 @@
+﻿@model Univision.Main.Models.Project.ProjectInvoiceCreateModel
+@using Univision.Security
+<style>
+</style>
+
+@Html.HiddenFor(x => x.p_seq)
+@Html.HiddenFor(x => x.pii_seq)
+
+<div class="panel" style="margin-bottom:10px !important;">
+  <div class="panel-heading">
+    <h3 class="panel-title" style="padding: 10px 30px 5px 30px">
+      <i class="fas fa-newspaper"></i>
+      기본정보
+    </h3>
+    <div class="panel-actions">
+      <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+    </div>
+  </div>
+  <div class="panel-body" style="padding: 5px 10px 5px 10px;">
+    <div class="row no-side-space form-group mb-5">
+      <div class="col-md-4 tbw50">
+        <label class="form-control-label text-secondary" for="candidate_name">후보자명</label>
+        <p class="form-control-plaintext">
+          @Model.candidate_name
+        </p>
+      </div>
+      <div class=" col-md-4 tbw50">
+        <label class="form-control-label text-secondary" for="join_dt">입사일자</label>
+        <p class="form-control-plaintext">
+          @Utils.ConvertDateTimeToString(Model.join_dt)
+        </p>
+      </div>
+      <div class="col-md-4 tbw50">
+        <label class="form-control-label text-secondary" for="expire_guarantee">보증기간</label>
+        <p class="form-control-plaintext">
+          @Utils.ConvertDateTimeToString(Model.expire_guarantee)
+        </p>
+      </div>
+    </div>
+
+    <div class="row no-side-space form-group mb-5">
+
+      <div class="col-md-4 tbw50">
+        <label class="form-control-label text-secondary" for="billing_dt">빌링 요청일자</label>
+        <p class="form-control-plaintext">
+          @Utils.ConvertDateTimeToString(Model.billing_dt)
+        </p>
+      </div>
+      <div class="col-md-4 tbw50">
+        <label class="form-control-label text-secondary" for="annual_income">연봉</label>
+        <p class="form-control-plaintext">
+          @(Utils.ConvertMoneyToString(Model.ann_income)) @Model.bill_currency_cd
+        </p>
+      </div>
+      @if (Model.billing_type != 1)
+      {
+        <div class="col-md-2 feeDiv tbw50">
+          <label class="form-control-label text-secondary" for="fee_rate">수수료율</label>
+          <p class="form-control-plaintext">
+            @(Model.fee_rate) %
+          </p>
+        </div>
+      }
+      <div class="col-md-2 feeChkDiv ">
+        <label class="form-control-label sts13" for="billing_type">&nbsp;</label>
+        <span class="input-group">
+          <div class="checkbox-custom checkbox-primary">
+            <input type="checkbox" id="billing_type" name="billing_type" value="1" disabled @(Model.billing_type == 1 ? "checked" : "") />
+            <label for="billing_type">정액</label>
+          </div>
+        </span>
+      </div>
+    </div>
+    <div class="row no-side-space form-group mb-5 ">
+      <div class="col-md-5 tbw50">
+        <label class="form-control-label text-secondary" for="billing_money">빌링액</label>
+        <div class="input-group input-group-sm">
+          <p class="form-control-plaintext">
+            @(Utils.ConvertMoneyToString(Model.billing_total)) [@(Model.bill_currency_cd)]
+            @if (Model.bill_currency_cd != "KRW")
+            {
+              <br /><span class="text-primary">(원화 환산 예상액 : 약 @Utils.ConvertMoneyToString(Model.billing_won) 원)</span>
+            }
+          </p>
+        </div>
+      </div>
+      <div class="col-md-2 tbw50">
+        <label class="form-control-label text-secondary" for="vat_type">VAT 포함여부</label>
+        @{
+          string vat_type = "";
+          if (Model.vat_type == 0)
+          {
+            vat_type = "VAT포함";
+          }
+          else if (Model.vat_type == 1)
+          {
+            vat_type = "VAT별도";
+          }
+          else if (Model.vat_type == 3)
+          {
+            vat_type = "면세";
+          }
+          else
+          {
+            vat_type = "영세율";
+          }
+        }
+        <p class="form-control-plaintext">
+          @vat_type
+        </p>
+      </div>
+
+      <div class="col-md-5">
+        <label class="form-control-label text-secondary" for="billing_money_">공급가 / 부가세</label>
+        <div class="input-group input-group-sm">
+          <p class="form-control-plaintext">
+            @(Utils.ConvertMoneyToString(Model.billing_amt)) [@(Model.bill_currency_cd)]
+            /
+            @(Utils.ConvertMoneyToString(Model.billing_vat)) [@(Model.bill_currency_cd)]
+          </p>
+        </div>
+      </div>
+      @if (Model.retainer_amt > 0 && (Model.invoice_type == 0 || Model.invoice_type == 2))
+      {
+        <div class="col-md-5">
+          <label class="form-control-label text-secondary" for="retainer_amt">선수금</label>
+          <div class="input-group input-group-sm">
+            <p class="form-control-plaintext">
+              @(Utils.ConvertMoneyToString(Model.retainer_amt)) [@(Model.bill_currency_cd)]
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>
+
+<!-- 매출배분 시작 -->
+<div class="panel" style="margin-bottom:10px !important;">
+  <div class="panel-heading">
+    <h3 class="panel-title" style="padding: 10px 30px 5px 30px">
+      <i class="fas fa-won-sign"></i>
+      Fee sharing
+    </h3>
+    <div class="panel-actions">
+      <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+    </div>
+  </div>
+  <div class="panel-body" id="salesList" name="salesList" style="padding: 5px 10px 5px 10px;">
+
+    @if (Model.chargeList.Count > 0)
+    {
+      foreach (var data in Model.chargeList)
+      {
+        <div class="chargeRow pb-5">
+          <div class="row form-inline no-side-space col-md-12">
+            <div class="col-md-2 text-center tbw20">
+              <p class="form-control-plaintext">
+                @(data.name)
+              </p>
+            </div>
+            <div class="col-md-2 text-center tbw20">
+              <p class="form-control-plaintext">
+                @(data.sales_rate) %
+              </p>
+            </div>
+            <div class="col-md-3 text-center tbw45">
+              <p class="form-control-plaintext">
+                @(Utils.ConvertMoneyToString(data.sales_money)) @Model.bill_currency_cd
+              </p>
+            </div>
+            <div class="col-md-5 tbw15">
+              <p class="form-control-plaintext">
+                @(data.comments)
+              </p>
+            </div>
+          </div>
+        </div>
+
+      }
+    }
+
+  </div>
+</div>
+<!-- 매출배분 끝 -->
+<!-- 수신정보 시작 -->
+<div class="panel" style="margin-bottom:10px !important;">
+  <div class="panel-heading">
+    <h3 class="panel-title" style="padding: 10px 30px 5px 30px">
+      <i class="fas fa-envelope-open-text"></i>
+      Client &amp; Invoice
+    </h3>
+    <div class="panel-actions">
+      <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+    </div>
+  </div>
+  <div class="panel-body" style="padding: 5px 10px 5px 10px;" id="invoiceClientBody">
+    <div class="row no-side-space form-group mb-5">
+      <div class=" col-md-4 tbw50">
+        <label class="form-control-label text-secondary" for="client_name">고객사명</label>
+        <p class="form-control-plaintext">
+          @(Model.client_name)
+        </p>
+      </div>
+      <div class="col-md-4 tbw50">
+        <label class="form-control-label text-secondary" for="ceo">대표자명</label>
+        <p class="form-control-plaintext">
+          @(Model.ceo)
+        </p>
+      </div>
+      <div class="col-md-4 tbw50">
+        <label class="form-control-label text-secondary" for="billing_dt">사업자번호</label>
+        <p class="form-control-plaintext">
+          @(Utils.ConvertBusinessLicenseFormat(Model.biz_code))
+        </p>
+      </div>
+    </div>
+
+    <div class="row no-side-space form-group mb-5">
+      <div class=" col-md-12">
+        <label class="form-control-label text-secondary" for="addr">주소</label>
+        <p class="form-control-plaintext">
+          @(Model.addr)
+        </p>
+      </div>
+    </div>
+
+    <div class="row no-side-space form-group mb-5">
+      <div class=" col-md-4 tbw50 ">
+        <label class="form-control-label text-secondary" for="client_contact_name">Contact</label>
+        <p class="form-control-plaintext">
+          @Model.client_contact_name
+        </p>
+      </div>
+      <div class="col-md-4 tbw50 ">
+        <label class="form-control-label text-secondary" for="client_contact_tel">Contact Tel.</label>
+        <p class="form-control-plaintext">
+          @Model.client_contact_tel
+        </p>
+      </div>
+      <div class="col-md-4">
+        <label class="form-control-label text-secondary" for="client_contact_email">Contact Email</label>
+        <p class="form-control-plaintext">
+          @Model.client_contact_email
+        </p>
+      </div>
+    </div>
+
+    <div class="row no-side-space form-group mb-5">
+      <div class=" col-md-4 tbw50">
+        <label class="form-control-label text-secondary" for="client_etax_name">Tax Name</label>
+        <p class="form-control-plaintext">
+          @Model.client_etax_name
+        </p>
+      </div>
+      <div class="col-md-4 tbw50">
+        <label class="form-control-label text-secondary" for="client_etax_tel">Tax Tel.</label>
+        <p class="form-control-plaintext">
+          @Model.client_etax_tel
+        </p>
+      </div>
+      <div class="col-md-4">
+        <label class="form-control-label text-secondary" for="client_etax_email">Tax Email</label>
+        <p class="form-control-plaintext">
+          @Model.client_etax_email
+        </p>
+      </div>
+    </div>
+
+    <div class="row no-side-space form-group mb-5">
+      <div class="col-md-4">
+        <label class="form-control-label text-secondary" for="is_open_name">후보자명 표시</label>
+        <div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="is_open_nameY" name="is_open_name" value="1" disabled @(Model.is_open_name == 1 ? "checked" : "")>
+            <label for="is_open_nameY">Yes</label>
+          </div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="is_open_nameN" name="is_open_name" value="0" disabled @(Model.is_open_name == 0 ? "checked" : "")>
+            <label for="is_open_nameN">No</label>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-control-label text-secondary" for="invoice_lang">인보이스 언어</label>
+        <div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="korInvoice" name="invoice_lang" value="0" disabled @(Model.invoice_lang == 0 ? "checked" : "")>
+            <label for="korInvoice">국문</label>
+          </div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="engInvoice" name="invoice_lang" value="1" disabled @(Model.invoice_lang == 1 ? "checked" : "")>
+            <label for="engInvoicesn">영문</label>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-control-label text-secondary" for="is_open_annual_income">후보자 연봉,Fee rate 표시</label>
+        <div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="is_open_annual_incomeY" name="is_open_annual_income" value="1" disabled @(Model.is_open_annual_income == 1 ? "checked" : "")>
+            <label for="korInvoice">Yes</label>
+          </div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="is_open_annual_incomeN" name="is_open_annual_income" value="0" disabled @(Model.is_open_annual_income == 0 ? "checked" : "")>
+            <label for="engInvoicesn">No</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row no-side-space form-group mb-5">
+      <div class="col-md-4">
+        <label class="form-control-label text-secondary" for="is_po_noY">PO No. 필요</label>
+        <div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="is_po_noY" name="is_po_no" value="1" disabled @(Model.is_po_no == 1 ? "checked" : "")>
+            <label for="is_po_noY">Yes</label>
+          </div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="is_po_noN" name="is_po_no" value="0" disabled @(Model.is_po_no == 0 ? "checked" : "")>
+            <label for="is_po_noN">No</label>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <label class="form-control-label text-secondary" for="invoice_type">인보이스 종류</label>
+        <div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="Contingency" name="invoice_type" value="0" disabled @(Model.invoice_type == 0 ? "checked" : "")>
+            <label for="Contingency"><small>Contingency</small></label>
+          </div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="Retainer" name="invoice_type" value="1" disabled @(Model.invoice_type == 1 ? "checked" : "")>
+            <label for="Retainer"><small>Retainer</small></label>
+          </div>
+          <div class="radio-custom radio-default radio-inline sts22">
+            <input type="radio" id="Balance" name="invoice_type" value="2" disabled @(Model.invoice_type == 2 ? "checked" : "")>
+            <label for="Balance"><small>Retainer Balance</small></label>
+          </div>
+          <div class="radio-custom radio-default radio-inline">
+            <input type="radio" id="Other" name="invoice_type" value="3" disabled @(Model.invoice_type == 3 ? "checked" : "")>
+            <label for="Other"><small>Other</small></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 수신정보 끝 -->
+
+<div class="panel" style="margin-bottom:10px !important;">
+  <div class="panel-body" style="padding: 5px 10px 5px 10px;">
+    <div class="row no-side-space form-group mb-5">
+      <div class="col-md-12">
+        <label class="form-control-label text-secondary" for="remarks">비고</label>
+        <p class="form-control-plaintext">
+          @Html.Raw(Model.remarks)
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row col-md-12 no-side-space">
+  <div class="col-md-6">
+
+  </div>
+  <div class="col-md-6 vertical-align text-right">
+    <div class="vertical-align-bottom">
+      <button type="button" class="btn btn-sm btn-warning" id="btnInvoiceDelete">삭제</button>
+    </div>
+  </div>
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        //인보이스 삭제.
+        $("#btnInvoiceDelete").click(function () {
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+
+                            $.ajax({
+                               url: '@Url.Action("ProjectInvoiceDelete", "Project")',
+                               data: {
+                                   pii_seq: $("#pii_seq").val()
+                               },
+                               dataType: 'json',
+                               type: 'POST',
+                               beforeSend: function ()
+                               {
+                                   showLoading();
+                               }
+                            })
+                            .done(function (json) {
+                                hideLoading();
+                                if (json.ok) {
+                                    NormalAlert(json.message);
+                                    $("#InvoiceCreateModal .modal-body").empty();
+                                    $('#InvoiceCreateModal').modal('toggle');
+
+                                    callProjectProgress(@Model.p_seq, 0, 1);
+                                    callProjectInvoiceList(@Model.p_seq, 1)
+                                } else {
+                                    ErrorAlert(json.message);
+                                }
+                            })
+                            .fail(function (e) {
+                                hideLoading();
+                                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                            });
+                        },
+                        'oncancel': function () {
+
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>인보이스 삭제')
+                    .setting({
+                        message: "인보이스를 삭제 하시겠습니까?",
+                    })
+                .show();
+
+
+
+        });
+
+    });
+
+</script>

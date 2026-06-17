@@ -1,0 +1,145 @@
+﻿@model Univision.Main.Models.Project.SearchProjectTargetSchoolModel
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+</style>
+
+<div class="form-inline mb-10">
+    <select id="gubun" name="gubun" class="form-control">
+        <option value="고등학교" @(Model.gubun == "고등학교" ? "checked" : "")>고등학교</option>
+        <option value="전문대학" @(Model.gubun == "전문대학" ? "checked" : "")>전문대</option>
+        <option value="대학(4년제)" @(Model.gubun == "대학(4년제)" ? "checked" : "")>대학교</option>
+        <option value="대학원" @(Model.gubun == "대학원" ? "checked" : "")>대학원</option>
+    </select>
+    <div class="input-group col-md-9 no-side-space">
+        @Html.TextBoxFor(x => x.school_name, new { @class = "form-control", @placeholder = "학교 이름" })
+        <button type="button" class="btn btn-primary" onclick="FancyBoxSearchAndPageMove(1);"><i class="fas fa-search" aria-hidden="true"></i></button>
+    </div>
+</div>
+<div class="panel" style="margin-bottom:0px !important;">
+    <div class="panel-body" style="padding: 5px 10px 5px 10px; max-height:500px; overflow-y:auto">
+        <table class="table table-borderless table-hover">
+            <thead class="text-center">
+                <tr>
+                    <th>
+                        구분
+                    </th>
+                    <th>
+                        학교명
+                    </th>
+                    <th style="max-width:450px;">주소</th>
+                </tr>
+            </thead>
+            <tbody class="text-center" style="vertical-align:middle;">
+                @if (Model.list.Count > 0)
+                {
+                    foreach (var data in Model.list)
+                    {
+                        <tr style="cursor:pointer" onclick="selectSchool('@data.sc_seq', '@data.school_name', '@data.campus_name')">
+                            <td>
+                                @data.gubun
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(data.campus_name))
+                                {
+                                    <text>[@data.campus_name]</text>
+                                }
+                                @data.school_name
+                            </td>
+                            <td class="text-left" style="max-width:450px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                                @data.adres
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="3">데이터가 없습니다.</td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+        @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                    ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                    x => String.Format("javascript:FancyBoxSearchAndPageMove({0})", x))
+    </div>
+    
+</div>
+
+<div class="text-right mt-10">
+    <button type="button" id="btnPopConfirm" class="btn btn-primary">등록</button>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+    });
+
+    function selectSchool(sc_seq, school_name, campus_name) {
+
+        $("#target_school").val(sc_seq);
+
+
+        var appendHtml = "<span>";
+        if (campus_name != "") {
+            appendHtml += "[" + campus_name + "] ";
+        }
+        appendHtml += school_name;
+        appendHtml += "</span>";
+
+        $("#schoolDiv").html(appendHtml.toString());
+       
+        $.fancybox.close();
+    }
+
+    //FancyBox 팝업 내의 페이지 이동.
+    function FancyBoxSearchAndPageMove(page) {
+        
+        $.ajax({
+            url: '@Url.Action("SearchProjectTargetSchool", "Project")',
+            data: {
+                gubun : $("#gubun").val()
+                ,school_name: $("#school_name").val()
+                ,page: page
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function () {
+
+            }
+        })
+        .done(function (view) {
+
+            $.fancybox({
+                'content': view,
+                'width': $(".fancybox-outer").width(),
+                'height': $(".fancybox-outer").height(),
+                'autoDimensions': false,
+                'type': 'iframe',
+                'autoSize': false,
+                'title': $(".fancybox-title").text(),
+                helpers: {
+                    title: {
+                        type: 'inside',
+                        position: 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .always(function () {
+
+        });
+    }
+
+</script>

@@ -1,0 +1,130 @@
+﻿
+@{
+  int p_seq = ViewBag.p_seq;
+}
+
+@using (Html.BeginForm("ShareProjectCreate", "Project", FormMethod.Post, new { @id = "ShareCreateForm" }))
+{
+  @Html.HiddenFor(x => p_seq)
+
+  <div class="row">
+    <div class="form-group col-md-12">
+      <label class="form-control-label">Comment <span class="label-reqired">*</span></label>
+      @Html.TextArea("share_comments", "", new { @class = "form-control", rows = 5 })
+    </div>
+  </div>
+  <div class="row">
+    <div class="form-group col-md-5">
+      <label class="form-control-label">Fee Share <span class="label-reqired">*</span></label>
+      <div class="input-group input-group-sm">
+        @Html.TextBox("share_fee_rate", "", new { @class = "form-control text-right", @type = "number" })
+        <span class="input-group-addon">
+          %
+        </span>
+      </div>
+    </div>
+  </div>
+  <!--
+  <div class="row no-side-space ">
+      <div class="form-group col-md-12">
+          <label class="form-control-label">비공개 정보</label>
+          @Html.TextArea("secret_info", "", new { @class = "form-control", rows=2 })
+      </div>
+  </div>
+  -->
+  <div class="row">
+    <div class="col">
+      <button type="submit" class="btn btn-sm btn-primary float-right" id="btnPopSave" title="공유하기">Submit</button>
+    </div>
+  </div>
+}
+
+
+<script src="~/Libs/remark/global/vendor/dropify/dropify.min599c.js?v4.0.4"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        StopEnterSubmit();
+
+        BindDatePicker($("#schedule_date"));
+
+        //유효성 검사 및 폼 전송
+        $("#ProgressCreateForm").formValidation({
+            framework: "bootstrap4",
+            button: {
+                selector: "#btnPopSave",
+                disabled: "disabled"
+            },
+            submitHandler: function () {
+
+            },
+            icon: null,
+            fields: {
+                share_comments: {
+                    validators: {
+                        notEmpty: {
+                            message: "Comment 는 필수 입력 항목입니다."
+                        }
+                    }
+                },
+                share_fee_rate: {
+                    validators: {
+                        notEmpty: {
+                            message: "Fee Share는 필수 입력 항목입니다."
+                        },
+                        integer: {
+                            message: "Fee Share는 숫자만 입력 가능합니다."
+                        }
+                    }
+                }/*,
+
+                secret_info: {
+                    validators: {
+                        notEmpty: {
+                            message: "비공개 정보는 필수 입력 항목입니다."
+                        }
+                    }
+                }
+                */
+            },
+            err: {
+                clazz: "invalid-feedback"
+            },
+            control: {
+                valid: "is-valid",
+                invalid: "is-invalid"
+            },
+            row: {
+                invalid: "has-danger"
+            }
+        });
+
+        $("#ShareCreateForm").ajaxForm({
+            dataType: 'json',
+            beforeSubmit: function () {
+                showLoading();
+            },
+            success: function (json) {
+                hideLoading();
+                if (json.ok) {
+
+                    $(callShareBtn).removeClass("btn-primary");
+                    $(callShareBtn).addClass("btn-danger");
+                    $(callShareBtn).text("취소");
+                    $(callShareBtn).attr("onclick", "cancelShareProject(this, " + @p_seq + ")");
+
+                    NormalAlert(json.message);
+                    $.fancybox.close();
+                }
+                else {
+                    alert(json.message)
+                }
+            },
+            error: function () {
+                hideLoading();
+            }
+        });
+    });
+
+</script>

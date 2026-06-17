@@ -1,0 +1,230 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.BusiJobStatisticsListModel
+
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+
+<div class="page-content container-fluid">
+
+    @using (Html.BeginForm("JobProjectHistory", "Statistics", FormMethod.Get, new { @id = "SearchForm" }))
+    {
+        <!-- row -->
+        <div class="row">
+
+            @Html.HiddenFor(x => x.search.orderOption)
+            @Html.HiddenFor(x => x.search.orderTxt)
+            <!-- block -->
+            <div class="col-xl-5">
+                <div class="form-group custom5">
+                    <div class="col-xl-4 p-0">
+                        <select class="form-control" id="search_searchOption" name="search.searchOption">
+                            <option value="CB1.code_name1" @(Model.search.searchOption == "CB1.code_name1" ? "selected" : "")>대분류</option>
+                            <option value="CB2.code_name2" @(Model.search.searchOption == "CB2.code_name2" ? "selected" : "")>중분류</option>
+                        </select>
+                    </div>
+                    <div class="col-xl-4 p-0 ml-5">
+                        @Html.TextBoxFor(x => x.search.searchTxt, new { @class = "form-control", @placeholder = "검색어를 입력하세요." })
+                    </div>
+                </div>
+            </div>
+            <!-- // block -->
+            <div class="col-xl-5 custom4 " style="text-align:right">
+                <div class="form-group custom5">
+                    <div class=" p-0 " style="text-align:right;width:30%;">
+                        <h5>등록일 :</h5>
+                    </div>
+                    <div class=" p-0 ml-5">
+
+                        <div class="input-group">
+                            @Html.TextBoxFor(x => x.search.startDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete="off" })
+                            <span class="input-group-addon">
+                                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                            </span>
+                            &nbsp;~&nbsp;
+                            @Html.TextBoxFor(x => x.search.endDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete="off" })
+                            <span class="input-group-addon">
+                                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                            </span>
+                        </div>
+
+                        @*<div class="input-daterange" data-plugin="datepicker">
+                            <div class="input-group">
+                                <span class="input-group-addon">
+                                    <i class="icon wb-calendar" aria-hidden="true"></i>
+                                </span>
+                                @Html.TextBoxFor(x => x.search.startDt, new { @class = "form-control" })
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-addon">to</span>
+                                @Html.TextBoxFor(x => x.search.endDt, new { @class = "form-control" })
+                            </div>
+                        </div>*@
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-2">
+                <div class="form-group custom4 sts50">
+                    <div class="col-xl-6 p-0">
+                        <button type="submit" id="btnSearch" class="btn btn-raised btn-primary btn-block">검색</button>
+                    </div>
+                    <div class="col-xl-6 p-0 ml-3">
+                        <button type="button" id="btnReset" class="btn btn-raised btn-default btn-block">초기화</button>
+                    </div>
+                </div>
+            </div>
+            <!-- block -->
+        </div>
+        <!-- //row -->
+    }
+    <!-- row -->
+    <div class="row">
+        <div class="col-xl-12 border_t">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        직무별 프로젝트 현황
+                    </h3>
+                </header>
+                <div class="h-600" data-plugin="scrollable">
+                    <div data-role="container" style="padding:0 !important; margin:0 !important;">
+                        <div data-role="content" style="padding:0 !important; margin:0 !important;">
+                            <div class="table-responsive">
+                                <table id="default-table" class="table table-hover ">
+                                    <colgroup>
+                                        <col style="width:30%;">
+                                        <col style="width:30%;">
+                                        <col style="width:8%;">
+                                        <col style="width:8%;">
+                                        <col style="width:8%;">
+                                        <col style="width:16%;">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>대분류</th>
+                                            <th>중분류</th>
+                                            <th>
+                                                전체
+                                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "A.allCnt", Model.search.orderOption) colSort" orderTxt="A.allCnt"></i>
+                                            </th>
+                                            <th>
+                                                성공
+                                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "A.successCnt", Model.search.orderOption) colSort" orderTxt="A.successCnt"></i>
+                                            </th>
+                                            <th>
+                                                실패
+                                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "A.failCnt", Model.search.orderOption) colSort" orderTxt="A.failCnt"></i>
+                                            </th>
+                                            <th>
+                                                매출액
+                                                <i class="fas @Utils.ReturnOrderOptionCalss(Model.search.orderTxt, "A.billing_money", Model.search.orderOption) colSort" orderTxt="A.billing_money"></i>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model.list.Count > 0)
+                                        {
+                                            foreach (var data in Model.list)
+                                            {
+                                                <tr>
+                                                    <td>@data.code_name1</td>
+                                                    <td>@data.code_name2</td>
+                                                    <td>@data.allCnt</td>
+                                                    <td>@data.successCnt</td>
+                                                    <td>@data.failCnt</td>
+                                                    <td>@Utils.ConvertMoneyToString(data.billing_money)</td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="6">직무별 프로젝트가 없습니다.</td>
+                                            </tr>
+                                        }
+
+                                        <tr class="sum">
+                                            <td colspan="2">합계</td>
+                                            <td>@Model.SumAll</td>
+                                            <td>@Model.SumSuccess</td>
+                                            <td>@Model.SumFail</td>
+                                            <td>@Utils.ConvertMoneyToString(Model.SumMoney)</td>
+                                        </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- // row -->
+
+
+</div>
+
+@section scripts {
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            BindDatePicker($(".jDatePicker"));
+
+            $("#btnReset").click(function () {
+
+                $("#search_searchOption option:eq(0)").prop("selected", true)
+                $("#search_searchTxt").val("");
+                $("#search_startDt").val("");
+                $("#search_endDt").val("");
+                $("#search_orderTxt").val("A.code_name2");
+                $("#search_orderOption").val("ASC");
+
+                $(".colSort").each(function () {
+                    $(this).removeClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $(this).addClass("fa-sort");
+                });
+
+                $("#btnSearch").click();
+            });
+
+            $(".colSort").click(function () {
+
+                $(".colSort").not(this).each(function () {
+
+                    $(this).removeClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $(this).addClass("fa-sort");
+                });
+
+                $(this).removeClass("fa-sort");
+
+                if ($(this).hasClass("fa-sort-up")) {
+                    $(this).addClass("fa-sort-down");
+                    $(this).removeClass("fa-sort-up");
+                    $("#search_orderTxt").val($(this).attr("orderTxt"));
+                    $("#search_orderOption").val("DESC");
+                }
+                else {
+                    $(this).addClass("fa-sort-up");
+                    $(this).removeClass("fa-sort-down");
+                    $("#search_orderTxt").val($(this).attr("orderTxt"));
+                    $("#search_orderOption").val("ASC");
+                }
+
+                $("#btnSearch").click();
+            });
+
+
+
+        });
+
+    </script>
+
+}

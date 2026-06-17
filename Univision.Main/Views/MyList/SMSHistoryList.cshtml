@@ -1,0 +1,216 @@
+﻿@model Univision.Main.Models.MyList.SMSHistoryListViewModel
+
+@{
+    ViewBag.Title = "SMSList";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+    <div class="page-content container-fluid">
+        <div class="row">
+            <div class="col-xl-12">
+                @using (Html.BeginForm("SMSHistoryList", "MyList", FormMethod.Get, new { @id = "searchForm" }))
+                {
+                    <div class="form-group custom5">
+
+                        <div class="w-200 pr-20 st">
+                            <select class="form-control dd" id="search_searchOption" name="search.searchOption">
+                                <option value="SH.receive_number" @(Model.search.searchOption == "SH.receive_number" ? "selected" : "") >수신번호</option>
+                                <option value="SH.send_number" @(Model.search.searchOption == "SH.send_number" ? "selected" : "")>발신번호</option>
+                                <option value="SH.contents" @(Model.search.searchOption == "SH.contents" ? "selected" : "")>내용</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group w-300 mr-20 st">
+                            @Html.TextBoxFor(x => x.search.searchTxt, new { @class = "form-control", @placeholder = "Search..." })
+                            <span class="input-group-btn">
+                                <button type="submit" class="btn btn-primary" id="btnSearch"><i class="icon wb-search" aria-hidden="true"></i></button>
+                            </span>
+                        </div>
+
+                        <div class="input-group w-300 ed">
+                            <button type="button" class="btn btn-block btn-success" data-toggle="modal" data-target="#smsModal" onclick="openSmsSendModal('')">발송</button>
+                        </div>
+
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="panel custom1">
+                    <header class="panel-heading">
+                        <h3 class="panel-title">
+                            SMS 발송 내역
+                        </h3>
+                    </header>
+                    <div class="panel-body">
+                        <div class="table-responsive">
+                            <table id="default-table" class="table table-hover"  style="table-layout:fixed;">
+                                <colgroup>
+                                    <col style="width:15%">
+                                    <col style="width:15%">
+                                    <col style="width:30%">
+                                    <col style="width:10%">
+                                    <col style="width:15%">
+                                    <col style="width:10%">
+                                    
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>발신번호</th>
+                                        <th>수신번호</th>
+                                        <th>내용</th>
+                                        <th>전송요청 일자</th>
+                                        <th>전송요청 상태</th>
+                                        <th>수신결과</th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.list.Count > 0)
+                                    {
+                                        int i = 0;
+                                        foreach (var data in Model.list)
+                                        {
+                                    <tr>
+                                        <td class="text-truncate" title="@Utils.ConvertPhoneToString(data.send_number)">@Utils.ConvertPhoneToString(data.send_number)</td>
+                                        <td class="text-truncate" title="@Utils.ConvertPhoneToString(data.receive_number)">@Utils.ConvertPhoneToString(data.receive_number)</td>
+                                        <td class="text-truncate ali_l">
+                                            <a href="javascript:void(0);" onclick="openSmsDetailModal('@Utils.ConvertPhoneToString(data.send_number)', '@Utils.ConvertPhoneToString(data.receive_number)', 'sms_content_@(i)')">
+                                                <span id="sms_content_@(i)">@data.contents</span>
+                                                @Utils.Truncate(data.contents, 30)
+                                            </a>
+                                        </td>
+                                        <td class="text-truncate" title="@Utils.ConvertDateTimeHourToString2(data.create_dt)">@Utils.ConvertDateTimeHourToString2(data.create_dt)</td>
+                                        <td class="text-center text-truncate" title="@data.send_desc">@data.send_name</td>
+                                        <td class="text-center text-truncate" title="@data.report_desc">@data.report_name</td>
+                                        
+                                    </tr>
+                                            i++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="7">
+                                                SMS 발송 내역이 없습니다.
+                                            </td>
+                                        </tr>
+                                    }
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="panel-footer">
+                        @Html.PageAjaxLinks(Model.PagingInfo,
+                         ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                         x => Url.Action("SMSHistoryList", new
+                         {
+                             page = x
+                         }))
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 문자내역 보기 모달 -->
+        <div class="modal fade show sms" role="dialog" id="smsDetailModal">
+            <div class="modal-dialog modal-simple smspop">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div class="icondemo-wrap vertical-align" data-name="message">
+                            <div class="icondemo vertical-align-middle">
+                                <i class="icon ml-message" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <h4 class="modal-title" id="smsDetailModalLabel">문자 내역</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="smsDetailModalBody">
+                        <div class="row">
+                            <div class="col-xl-12 form-group">
+                                <div class="col-xl-12 row tit">
+                                    <div class="icondemo-wrap vertical-align " data-name="message">
+                                        <div class="icondemo vertical-align-middle">
+                                            <i class="icon fa-envelope-o" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+                                    <h5>발신번호 (보내는사람)</h5>
+                                </div>
+
+                                <div class="cont">
+                                    <p class="form-control-plaintext send_num">
+
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-xl-12 form-group">
+                                <div class="col-xl-12 row tit">
+                                    <div class="icondemo-wrap vertical-align" data-name="message">
+                                        <div class="icondemo vertical-align-middle">
+                                            <i class="icon fa-envelope-open-o" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+                                    <h5>수신번호 (받는사람)</h5>
+                                </div>
+                                <div class="cont2 row">
+                                    <p class="form-control-plaintext receive_num">
+
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-12 form-group">
+                                <div class="col-xl-12 row tit">
+                                    <div class="icondemo-wrap vertical-align" data-name="message">
+                                        <div class="icondemo vertical-align-middle">
+                                            <i class="icon wb-order" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+                                    <h5>내용입력</h5>
+                                </div>
+                                <div class="cont2">
+                                    <p class="form-control-plaintext sms_contents">
+
+                                    </p>
+
+                                </div>
+                                <div class="cont3">
+                                    <div class="col-md-12 float-right custom5">
+                                        <button class="btn btn-primary btn-outline ed" data-dismiss="modal" type="button">확인</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- 문자내역 보기 모달 -->
+
+    </div>
+
+@section scripts {
+ 
+    <script type="text/javascript">
+
+        //문자 상세 내역
+        function openSmsDetailModal(send_number, receive_number, msg_id) {
+
+            $("#smsDetailModal .modal-body .send_num").text(send_number);
+            $("#smsDetailModal .modal-body .receive_num").text(receive_number);
+
+            $("#smsDetailModal .modal-body .sms_contents").text($('#' + msg_id).text());
+            
+            $("#smsDetailModal").modal('toggle');
+        }
+
+    </script>
+    
+}

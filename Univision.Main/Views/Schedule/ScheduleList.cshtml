@@ -1,0 +1,367 @@
+﻿
+@{
+  ViewBag.Title = "CalendarList";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/fullcalendar/fullcalendar.min599c.css?v4.0.4">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/apps/calendar.min599c.css?v4.0.4">
+
+<style>
+  /*.page-aside {
+        width:200px;
+    }
+
+    .page-aside-left .page-aside+.page-main {
+        margin-left: 200px;
+    }*/
+  .fc-today-button {
+    height: auto !important;
+    padding: 8px 14px !important;
+    font-size: 14px !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    background-image: none !important;
+    text-transform: capitalize !important;
+    background-color: #f6f8f8 !important;
+    border-color: #e4eaec !important;
+    outline: 0 !important;
+  }
+
+  @@media (max-width: 1280px) {
+    .calendar-container {
+      padding: 5px !important;
+    }
+  }
+
+  @@media (max-width: 600px) {
+    .calendar-container {
+      padding: 5px !important;
+    }
+  }
+</style>
+
+<div class="page-aside">
+  <div class="page-aside-switch">
+    <i class="icon wb-chevron-left" aria-hidden="true"></i>
+    <i class="icon wb-chevron-right" aria-hidden="true"></i>
+  </div>
+  <div class="page-aside-inner page-aside-scroll">
+    <div data-role="container">
+      <div data-role="content">
+        <section class="page-aside-section">
+          <h5 class="page-aside-title">CALENDAR LIST</h5>
+          <div class="list-group has-actions">
+
+            <div class="list-group-item calendar-event active" data-title="all" filter="">
+              <div class="list-content">
+                <span class="item-right allCnt">0</span>
+                <span class="list-text">
+                  <i class="wb-medium-point dark-600 mr-10" aria-hidden="true"></i>전체
+                </span>
+              </div>
+            </div>
+
+            <div class="list-group-item calendar-event" data-title="personal" filter="@ScheduleType.personal">
+              <div class="list-content">
+                <span class="item-right personalCnt">0</span>
+                <span class="list-text">
+                  <i class="wb-medium-point blue-600 mr-10" aria-hidden="true"></i>개인
+                </span>
+              </div>
+            </div>
+
+            <div class="list-group-item calendar-event" data-title="company" filter="@ScheduleType.company">
+              <div class="list-content">
+                <span class="item-right companyCnt">0</span>
+                <span class="list-text">
+                  <i class="wb-medium-point green-600 mr-10" aria-hidden="true"></i>회사
+                </span>
+              </div>
+            </div>
+
+            <div class="list-group-item calendar-event" data-title="team" filter="@ScheduleType.team">
+              <div class="list-content">
+                <span class="item-right teamCnt">0</span>
+                <span class="list-text">
+                  <i class="wb-medium-point cyan-600 mr-10" aria-hidden="true"></i>팀
+                </span>
+              </div>
+            </div>
+
+            <div class="list-group-item calendar-event" data-title="share" filter="@ScheduleType.share">
+              <div class="list-content">
+                <span class="item-right shareCnt">0</span>
+                <span class="list-text">
+                  <i class="wb-medium-point orange-600 mr-10" aria-hidden="true"></i>공유
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="page-aside-section">
+          <h5 class="page-aside-title">Filters</h5>
+          <div class="list-group calendar-list">
+            <a class="list-group-item calendar-sub-event active" href="javascript:void(0)" filter="0">
+              <i class="wb-medium-point dark-600 mr-10" aria-hidden="true"></i>전체
+            </a>
+            <a class="list-group-item calendar-sub-event" href="javascript:void(0)" filter="@ScheduleSubType.vacation">
+              <i class="wb-medium-point dark-600 mr-10" aria-hidden="true"></i>휴가
+            </a>
+            <a class="list-group-item calendar-sub-event" href="javascript:void(0)" filter="@ScheduleSubType.normal">
+              <i class="wb-medium-point dark-600 mr-10" aria-hidden="true"></i>일반
+            </a>
+            <a class="list-group-item calendar-sub-event" href="javascript:void(0)" filter="@ScheduleSubType.client">
+              <i class="wb-medium-point dark-600  mr-10" aria-hidden="true"></i>고객사
+            </a>
+            <a class="list-group-item calendar-sub-event" href="javascript:void(0)" filter="@ScheduleSubType.candidate">
+              <i class="wb-medium-point dark-600 mr-10" aria-hidden="true"></i>후보자(프로젝트)
+            </a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="page-main">
+  <div class="calendar-container">
+    <div id="calendar" class="sts52"></div>
+
+    <!--AddEvent Dialog -->
+    <div class="modal fade" id="calendarViewModal" aria-hidden="true" aria-labelledby="calendarViewModal" role="dialog" tabindex="-1">
+
+    </div>
+    <!-- End AddEvent Dialog -->
+  </div>
+</div>
+
+
+@section scripts {
+
+  <script src="~/Libs/remark/global/vendor/fullcalendar/fullcalendar.min599c.js?v4.0.4"></script>
+
+  <script type="text/javascript">
+    var isLoadingFilter = false;
+    var isLoadingSubFilter = false;
+
+    $(document).ready(function () {
+      var body = document.body;
+      body.classList.add("app-calendar");
+      body.classList.add("page-aside-left");
+
+      var date = moment($("#calendar").fullCalendar("getDate")).format("YYYY-MM-DD");
+
+      var myOptions = {
+        header: {
+          left: null,
+          center: "prev,title,next",
+          right: "today,month,agendaWeek,agendaDay"
+        },
+        height: $(window).height()*0.87,
+        defaultDate: date,
+        selectable: true,
+        selectHelper: true,
+        selectOverlap: false,
+        unselectAuto: true,
+        unselectCancel: '.popover, #resvModal',
+        unselect : function(){
+          closePopovers(); //
+        },
+        editable: !0,
+        eventLimit: true,
+        eventOrder: 'title',
+        events: {
+          url: '@Url.Action("ScheduleEventList", "Schedule")',
+          method: 'GET',
+          async: false,
+        },
+        dayClick: function (date, jsEvent, view) {
+
+          popScheduleView(null, moment(date).format("YYYY-MM-DD"));
+          //if (view.name == "month" || view.name == "basicWeek" ){
+          //    $('#calendar').fullCalendar('changeView', 'agendaDay', date.format());
+          //}
+        },
+        eventClick: function (evt) {
+          if (evt.id > 0) {
+            popScheduleView(evt, ""); // 이벤트 클릭시 팝업
+          }
+          
+        },
+        eventRender: function (evt, element, view) { // 이벤트 그려주기
+
+          //console.log(element, evt);
+          if (evt.id) {
+            var shareTxt = evt.type == '@ScheduleType.share' ? '<br/>' + evt.attend_cnt + '명과 공유 중' : '';
+            element.popover({
+              title: evt.title,
+              content: evt.title + '<br/>' + evt.contents + shareTxt + '<br/>' + moment(evt.start).format("YYYY-MM-DD HH:mm") + ' ~ ' + (moment(evt.end).isValid() ? moment(evt.end).format("YYYY-MM-DD HH:mm") : "") ,
+              trigger: 'hover',
+              placement: 'auto',
+              html: true,
+              container: 'body'
+            });
+          }
+
+          if (evt.id && view.name == "agendaDay") {
+            //console.log(element);
+            element.find('.fc-time').css('background-color', '#777');
+            element.find('.fc-time').append('<span class="float-right pr-1">' + evt.title + '</span>');
+
+          } else if (view.name == "listWeek") {
+            //console.log(element);
+            element.find('.fc-list-item-title ').prepend(evt.title + '&nbsp;&nbsp;');
+            element.find('.fc-list-item-title ').append(' - ' + evt.title);
+
+          }
+        },
+        eventAfterAllRender: function (evt, element, view) {
+          $.ajax({
+            url: '@Url.Action("AllScheduleCount", "Schedule")',
+            data: {
+              start: moment(evt.start).format("YYYY-MM-DD"),
+              end: moment(evt.end).format("YYYY-MM-DD")
+            },
+            dataType: 'json',
+            type: 'GET',
+            beforeSend: function ()
+            {
+
+            }
+          })
+          .done(function (json) {
+            $(".allCnt").text(json.allCnt);
+            $(".personalCnt").text(json.personalCnt);
+            $(".companyCnt").text(json.companyCnt);
+            $(".teamCnt").text(json.teamCnt);
+            $(".shareCnt").text(json.shareCnt);
+          })
+          .fail(function (xhr) {
+            //JSErrorHandler(xhr);
+            ErrorAlert('캘린더 리스트 카운트 정보 로드 중 오류가 발생 했습니다.');
+          });
+
+        },
+        windowResize: function (view) {
+
+          var width = $(window).outerWidth(),
+              height = $(window).height()*0.87,
+              options = Object.assign({}, myOptions);
+
+          options.events = view.calendar.clientEvents(), options.aspectRatio = width < 667 ? .5 : 1.35, options.height = height, $("#calendar").fullCalendar("destroy"), $("#calendar").fullCalendar(options)
+        },
+        droppable: !0
+      }
+
+      $("#calendar").fullCalendar(myOptions);
+
+      //필터 이벤트 처리
+      $(".calendar-event").click(function () {
+        if (!isLoadingFilter) {
+
+          isLoadingFilter = true;
+
+          var filter;
+          var startDt = $('#calendar').fullCalendar('getView').start;
+          var endDt = $('#calendar').fullCalendar('getView').end;
+
+          $(".calendar-event").not(this).each(function () {
+          $(this).removeClass("active");
+          });
+
+          $(this).addClass("active");
+
+          filter = {
+            type: 'GET',
+            data: { type: $(this).attr("filter"), start: startDt, end: endDt },
+            url: '@Url.Action("ScheduleEventList", "Schedule")',
+            async: false,
+          };
+
+          $('#calendar').fullCalendar('removeEvents');
+          $('#calendar').fullCalendar('addEventSource', filter);
+
+          isLoadingFilter = false;
+        }
+
+      });
+
+      //
+      $(".calendar-sub-event").click(function () {
+
+        if (!isLoadingSubFilter) {
+          isLoadingSubFilter = true;
+
+          var mainType = $(".calendar-event.active").attr("filter");
+          var thisType = $(this).attr("filter");
+
+          var filter;
+          var startDt = $('#calendar').fullCalendar('getView').start;
+          var endDt = $('#calendar').fullCalendar('getView').end;
+
+          $(".calendar-sub-event").not(this).each(function () {
+            $(this).removeClass("active");
+          });
+
+          $(this).addClass("active");
+
+          filter = {
+            type: 'GET',
+            data: { type: mainType, sub_type: thisType, start: startDt, end: endDt },
+            url: '@Url.Action("ScheduleEventList", "Schedule")',
+            async: false,
+          };
+
+
+          $('#calendar').fullCalendar('removeEvents');
+          $('#calendar').fullCalendar('addEventSource', filter);
+
+          isLoadingSubFilter = false;
+        }
+      });
+
+    });
+
+    function popScheduleView(event_obj, date) {
+      var id = 0;
+      if (event_obj != null) {
+        id = event_obj.id;
+      }
+
+      $.ajax({
+        url: '@Url.Action("ScheduleView", "Schedule")',
+        data: {
+          s_seq: id,
+          date: date
+        },
+        dataType: 'html',
+        type: 'GET',
+        beforeSend: function ()
+        {
+          $(".page").isLoading({
+            text: "Loading",
+            position: "overlay"
+          });
+        }
+      })
+      .done(function (view) {
+        $(".page").isLoading("hide");
+
+        $("#calendarViewModal").html(view)
+        $('#calendarViewModal').modal('toggle');
+
+      })
+      .fail(function (xhr) {
+        JSErrorHandler(xhr);
+        ErrorAlert('스케줄 팝업 로드 중, 오류가 발생 했습니다.');
+      });
+    }
+
+    function closePopovers() {
+      //팝오버 닫기
+      $('.popover').not(this).popover('hide');
+    }
+
+  </script>
+}

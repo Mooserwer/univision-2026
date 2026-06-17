@@ -1,0 +1,93 @@
+﻿@model Univision.Main.Models.Invoice.InvoiceCreateModel
+@{
+  ViewBag.Title = "성공 인보이스 발행";
+  Layout = "~/Views/Shared/_Layout_Invoice.cshtml";
+
+
+}
+
+<style>
+  .ckbox {
+    display: inline-block !important;
+  }
+
+  .share_row .form-control-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+  }
+
+  .flex-tx-right {
+    justify-content: flex-end;
+  }
+
+  .top-head {
+    top: 0em;
+    position: sticky;
+    z-index: 999;
+    /*background-color: #112447 !important;*/
+  }
+</style>
+
+
+
+@Html.HiddenFor(x => x.p_seq)
+@Html.HiddenFor(x => x.client_seq)
+@Html.HiddenFor(x => x.pii_seq)
+@Html.HiddenFor(x => x.join_dt)
+@Html.HiddenFor(x => x.pjt_type)
+
+
+<div class="slim-pageheader no_print">
+  <ol class="breadcrumb slim-breadcrumb"></ol>
+  <h6 class="slim-pagetitle"><span class="tx-primary font-weight-bold">성공 인보이스 (Contengency Invoice)</span> 발행정보 입력</h6>
+</div>
+
+
+@Html.Partial("PartialInvoiceCreate1_Lang", Model)
+
+@Html.Partial("PartialInvoiceCreate2_Cand", Model)
+
+@Html.Partial("PartialInvoiceCreate3_Client", Model)
+
+@Html.Partial("PartialInvoiceCreate4_Contact", Model)
+
+@Html.Partial("PartialInvoiceCreate5_Fee", Model)
+
+@Html.Partial("PartialInvoiceCreate6_Content", Model)
+
+
+
+
+<div class="card card-invoice mg-t-10 mg-x-10 bd bd-indigo" style="display:none;">
+  <div class="no_print card-header bg-dark bd-0 d-flex align-items-center justify-content-between pd-y-5">
+    <h6 class="mg-b-0 tx-14 tx-white tx-normal no_print">미리보기</h6>
+    <div class="card-option tx-24 no_print">
+      <a href="javascript:GenerateInvoicePrint();" class="tx-gray-600 hover-white mg-l-10"><i class="icon ion-ios-refresh-empty lh-0"></i></a>
+    </div><!-- card-option -->
+  </div>
+  <div id="inv-step-preview" class="card-body bd bd-indigo">
+
+  </div><!-- card-body -->
+</div>
+
+
+
+@section scripts {
+
+  <script>
+    window.url_invoice_submit = "@Url.Action("InvoiceContengencySubmit", "Invoice")"
+    window.url_search_invoice_tax_contact = "@Url.Action("SearchProjectTaxContact", "Invoice")";
+    window.url_search_invoice_contact = "@Url.Action("SearchProjectContact", "Invoice")";
+    window.url_invoice_new_etax_submit = "@Url.Action("ProjectNewTaxContactSubmit", "Invoice")";
+    window.url_invoice_new_contact_submit = "@Url.Action("ProjectNewContactSubmit", "Invoice")";
+    window.url_add_invoice_share_user = '@Url.Action("AddInvoiceShareUser", "Invoice")'
+    window.url_exchange_partial = "@Url.Action("FindExchangeApi", "Partial")";
+    window.url_contract_detail = "@Url.Action("InvoiceContractDetail", "Client")";
+    window.url_temp_invoice_create = "@Url.Action("TempInvoiceCreate", "Invoice")";
+    window.retainer_amt = "@Model.retainer_amt";
+    window.guarantee_day = "@Model.guarantee_day";
+  </script>
+  <script src="~/Scripts/Invoice/invoice-common.js?v20250425"></script>
+  <script src="~/Scripts/Invoice/invoice-contengency-create.js?v20250512-211"></script>
+}

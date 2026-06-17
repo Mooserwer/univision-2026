@@ -1,0 +1,1327 @@
+﻿@model Univision.Main.Models.Client.ClientCreateModel
+@using Univision.Security
+
+@{
+  ViewBag.Title = "고객사 상세보기";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/bootstrap-tokenfield/bootstrap-tokenfield.min599c.css?v4.0.4">
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_cus.css?v=1533562669">
+<style>
+
+  .job_list {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 250px;
+    display: inline-block;
+  }
+
+  .placeDiv span {
+    font-size: 15px;
+  }
+
+
+
+  .catRow {
+    margin-top: 3px;
+  }
+
+  #normalInfo .form-group {
+    margin-bottom: 10px !important;
+  }
+
+  #normalInfo .form-control-label {
+    margin-bottom: 0px !important;
+    padding-bottom: 0px !important;
+  }
+
+  .card {
+    margin-right: 10px;
+  }
+
+  .no-top-line {
+    border-top: 0px !important;
+  }
+
+  .schoolRow .form-group {
+    margin-bottom: 10px !important;
+  }
+
+  /*#companyBody .panel {
+        border: 1px solid black;
+        border-radius: 5px;
+        padding: 10px;
+    }*/
+  .dropify-wrapper {
+    padding: 0px 15px 0px 15px;
+    box-sizing: border-box;
+  }
+
+  .extend-box {
+    position: absolute !important;
+    top: 1.9em;
+    right: 1em;
+  }
+
+  .no-school-selected .shared-field, .no-school-selected .highschool-field, .no-school-selected .univ-field,
+  .high_list .univ-field, .univ_list .highschool-field {
+    display: none !important;
+  }
+  /*
+    .high_list .shared-field, .high_list .highschool-field {
+        display:"" !important;
+    }
+    .univ_list .shared-field, univ_list .univ-field {
+        display:"" !important;
+    }
+    */
+
+  .font-weight-bold {
+    font-weight: bold !important;
+  }
+</style>
+
+
+
+<div class="page-content">
+  @using (Html.BeginForm("ClientCreate", "Client", FormMethod.Post, new { @id = "CreateForm" }))
+  {
+    @Html.HiddenFor(x => x.c_seq)
+    @Html.HiddenFor(x => x.cc_seq)
+    @Html.Hidden("uploadFolder")
+
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+      <div class="panel-heading bg-grey-200">
+        <h3 class="panel-title">
+          <i class="fas fa-building"></i>
+          고객사 상세정보 (Client Information)
+        </h3>
+        <div class="panel-actions">
+          @if (Model.is_external_lock == 1)
+          {
+            <button type="button" id="btnUnlock" class="btn btn-primary mr-10" onclick="openClientExternalLock('@Model.c_seq');" title="Unlock private information">
+              <i class="fas fa-unlock-alt"></i> 개인정보 확인
+            </button>
+            @*PMS 오픈 관련 등록기능 제한*@
+            if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+            {
+              <a href="javascript:void(0)" id="btnModify" class="btn btn-success" onclick="openClientExternalLockToHref('@Model.c_seq', '@Url.Action("ClientCreate", "Client", new { @c_seq = Model.c_seq })')" title="Modify Client information">
+                <i class="icon wb-edit"></i> 정보 수정
+              </a>
+            }
+          }
+          else
+          {
+            @*PMS 오픈 관련 등록기능 제한*@
+            if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+            {
+              <a href="@Url.Action("ClientCreate", "Client", new { @c_seq = Model.c_seq })" id="btnModify" class="btn btn-success" title="Modify Client information">
+                <i class="icon wb-edit"></i>
+                정보 수정
+              </a>
+            }
+          }
+          @if (Model.log_cnt > 0)
+          {
+            <a href="@Url.Action("ClientDetailLog", "Log", new { @c_seq = Model.c_seq })" id="btnHisotry" class="btn btn-sm btn-default">Log</a>
+          }
+          <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+        </div>
+      </div>
+      <div id="projectInfo" class="panel-body">
+        <div class="row">
+          <div class="form-group col-md-6">
+            <label class="form-control-label text-secondary" for="kor_name" title="고객사명">Client Name</label>
+            <input type="hidden" id="g_seq" name="g_seq">
+
+            <h5>
+              @Model.kor_name
+              <small>@(!String.IsNullOrEmpty(Model.eng_name) ? "(" + Model.eng_name + ")" : "")</small>
+            </h5>
+            @if (!String.IsNullOrEmpty(Model.offlimit_keyword))
+            {
+              <h6 class="text-secondary small">
+                #@Model.offlimit_keyword.Replace(", ", " #")
+              </h6>
+            }
+            @*@Html.TextBoxFor(x => x.kor_name, new { @class = "form-control", @autocomplete = "off", @readonly = "readonly" })*@
+
+          </div>
+          <div class="form-group col-md-3 col-6">
+            <label class="form-control-label text-secondary" for="ceo" title="대표자명">CEO</label>
+            <h5>
+              @Model.ceo &nbsp;
+            </h5>
+          </div>
+          <div class="form-group col-md-3 col-6">
+            <label class="form-control-label text-secondary" for="biz_code" title="사업자등록번호">Business No.</label>
+            <h5>
+              @if (@Model.biz_code.Length == 10)
+              {
+                @(Model.biz_code.Substring(0, 3) + "-" + Model.biz_code.Substring(3, 2) + "-" + Model.biz_code.Substring(5));
+              }
+              else
+              {
+                @Model.biz_code;
+              }
+            </h5>
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-9">
+            <label class="form-control-label text-secondary" for="addr1" title="고객사 소재지(주소)">Invoice Address</label>
+            <h5>
+              @Model.addr1 &nbsp;
+              @if (Model.is_foreign == 1)
+              {
+                <span class="badge badge-primary badge-sm badge-lg">Foreign Address</span>
+              }
+            </h5>
+
+          </div>
+          <div class="form-group col-3">
+            <label class="form-control-label text-secondary" for="country_name" title="본사 주소가 해외에 있을 경우 본사가 위치한 국가">HQ Country</label>
+            <h5>
+              [@Model.country_name] &nbsp;
+            </h5>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="form-group col-md-3 col-6">
+            <label class="form-control-label text-secondary" for="title" title="외국계/국내 기업 여부">Foreign / Domestic</label>
+            <h5>
+              @if (Model.is_foreign_invest == 1)
+              {
+                <span class="badge badge-info badge-lg" title="외국계 기업">Foreign (외국계 기업)</span>
+              }
+              else
+              {
+                <span class="badge badge-primary badge-lg" title="국내기업">Domestic (국내기업)</span>
+              } &nbsp;
+            </h5>
+          </div>
+          <div class="form-group col-md-3 col-6">
+            <label class="form-control-label text-secondary" for="title" title="계약여부">Contract</label>
+            <h5>
+              @if (Model.is_contract == 1)
+              {
+                <span class="badge badge-success badge-lg" title="계약">계약 (Yes)</span>
+              }
+              else
+              {
+                <span class="badge badge-warning badge-outline badge-lg" title="미계약">미계약 (No)</span>
+              } &nbsp;
+            </h5>
+          </div>
+
+          <div class="form-group col-md-3 col-6">
+            <label class="form-control-label text-secondary" for="title" title="인오더(회사오더)여부">Inorder<small>(회사오더)</small></label>
+            <h5>
+              @if (Model.is_inorder == 1)
+              {
+                <span class="badge badge-success-slim badge-lg" title="Inorder">Inorder<small>(회사오더)</small></span>
+              }
+              else if (Model.is_inorder == 2)
+              {
+                <span class="badge badge-info-slim badge-lg" title="All-In-One">All-In-One<small>(리멤버)</small></span>
+              }
+              else if (Model.is_inorder == 3)
+              {
+                <span class="badge badge-indigo-slim badge-lg" title="BD Manager 고객사">BD Manager</span>
+              }
+              else
+              {
+                <span class="badge badge-warning-slim badge-lg" title="BD">BD</span>
+              } &nbsp;
+            </h5>
+          </div>
+          <div class="form-group col-md-3 col-6">
+            <label class="form-control-label text-secondary" for="title" title="고객사 임직원 컨택 금지 조항 여부">Off-limit<small></small></label>
+            <h5 id="client-offlimit-label">
+              @if (Model.offlimit == 1)
+              {
+                <span class="badge badge-danger badge-lg" title="offlimit : 고객사 전 임직원 컨택 금지 조항">OFF-LIMIT<small></small></span>
+              }
+              else if (Model.offlimit == 2)
+              {
+                <span class="badge badge-warning badge-lg" title="offlimit : 유니코에 의해 채용된 임직원 컨택 금지 조항">OFF-LIMIT<small></small></span>
+              }
+              else if (Model.offlimit == 3)
+              {
+                <span class="badge badge-outline badge-warning  badge-lg" title="계약서 내 오프리밋 조항은 없지만 고객사의 요청 등">[계약서 미표기] OFF-LIMIT<small></small></span>
+              }
+              else
+              {
+                <span class="badge badge-dark badge-outline badge-lg">No (해당없음)</span>
+              } &nbsp;
+            </h5>
+          </div>
+          <div class="form-group col-6 col-md-6">
+            <label class="form-control-label text-secondary" for="title">AM <i class="fa fa-info-circle text-info" title="프로젝트 수주 시 AM으로 등록합니다. 기존 AM(AM1)이 휴면 상태(Dormant)인 경우, 삭제할 수 있습니다"></i></label>
+            <p class="form-control-plaintext">
+              @if (Model.amList.Count > 0)
+              {
+                foreach (var am in Model.amList)
+                {
+                  <span class="category mr-5">
+                    <span class="badge badge-outline badge-lg badge-default bg-white" am_seq="@am.uv_seq">
+                      @am.am_name
+                    </span>
+                  </span>
+                }
+              } &nbsp;
+            </p>
+          </div>
+
+          <div class="form-group col-6 col-md-6">
+            <label class="form-control-label text-secondary" for="title" title="PE Portfolio사">PE Portfolio사</label>
+            <h5>
+              @if (Model.is_portfolio == 1)
+              {
+                <span class="badge badge-info badge-lg" title="PE Portfolio">PE Portfolio</span>
+              }
+              else
+              {
+                <span class="badge badge-secondary badge-lg" title="No">해당없음</span>
+              } &nbsp;
+            </h5>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="form-group col-6 col-md-3 tbw50">
+            <label class="form-control-label text-secondary" for="biz_type" title="업태">업태 (Business Type)</label>
+            <h5>
+              @Model.biz_type &nbsp;
+            </h5>
+          </div>
+          <div class="form-group col-md-3 tbw50">
+            <label class="form-control-label text-secondary" for="biz_category" title="종목">종목 (Business Item)</label>
+            <h5>
+              @Model.biz_category &nbsp;
+            </h5>
+          </div>
+          <div class="form-group col-md-6">
+            <label class="form-control-label text-secondary" for="company_name" title="산업">산업 (Industry) <i class="fa fa-info-circle text-info" title="해당 고객사에 등록된 산업이 프로젝트 작성 시 산업 항목에 자동으로 입력 됩니다."></i></label>
+
+
+            <h5>
+              @Html.HiddenFor(x => x.busiCode1, new { @class = "busiCode1" })
+              @Html.HiddenFor(x => x.busiCode2, new { @class = "busiCode2" })
+              @if (!String.IsNullOrEmpty(Model.business_name2))
+              {
+                <span class="badge badge-outline badge-lg badge-primary">@(Model.business_name1 + " > " + Model.business_name2) </span>
+              }&nbsp;
+            </h5>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="form-group col-md-3 tbw50">
+            <label class="form-control-label text-secondary" for="fix_title" title="프로젝트 고정 타이틀">Project Title Heading <i class="fa fa-info-circle text-info" title="해당 고객사에 등록된 고정 타이틀이 프로젝트 작성 시 산업항목에 구인제목에 자동으로 입력 됩니다."></i></label>
+            <h5>
+              @Model.fix_title &nbsp;
+            </h5>
+          </div>
+          <div class="form-group col-md-3 tbw50">
+            <label class="form-control-label text-secondary" for="homepage" title="홈페이지 주소" style="word-break: break-all;">Homepage</label>
+            @*@Html.TextBoxFor(x => x.homepage, new { @class = "form-control form-control-sm", @autocomplete = "off", @placeholder = "http://exam.net", @readonly = "readonly" })*@
+            <br />
+            <h5 style="word-break: break-all;">
+              @{
+                var url = Model.homepage;
+
+                if (string.IsNullOrWhiteSpace(url))
+                {
+                  url = "javascript:void(0);";
+                }
+                else
+                {
+                  if (!url.Contains("http://") && !url.Contains("https://"))
+                  {
+                    url = "http://" + url;
+                  }
+                }
+              }
+              <a href="@url" target="_blank">
+                @Model.homepage
+              </a>
+              @if (!String.IsNullOrEmpty(@Model.homepage))
+              {
+                <a href="javascript:funcCopy('@(Model.homepage)')" class="text-secondary">
+                  <i class="fa fa-copy" aria-hidden="true" title="Copy"></i>
+                </a>
+              }
+              &nbsp;
+            </h5>
+          </div>
+          <div class="form-group col-md-3 tbw50">
+            <label class="form-control-label text-secondary" for="employee_number" title="사원 수">사원 수 (Number of Employees)</label>
+            <h5>
+              @Utils.ConvertMoneyToString(Model.employee_number) &nbsp;
+              @if (Model.employee_number.HasValue && Model.employee_number > 0)
+              {
+                <text>명</text>
+              }
+            </h5>
+          </div>
+          <div class="form-group col-md-3 tbw50">
+            <label class="form-control-label text-secondary" for="sales_amount" title="연간 매출액">연간 매출액 (Sales Amount)</label>
+            <h5>
+              @Utils.ConvertMoneyToString(Model.sales_amount) &nbsp;
+              @if (Model.sales_amount.HasValue && Model.sales_amount > 0)
+              {
+                <text>억원</text>
+              }
+            </h5>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col text-right">
+            @if (Model.modify_dt == Model.create_dt)
+            {
+              @("Registration date : " + Utils.ConvertDateTimeHourToString(Model.create_dt));
+            }
+            else
+            {
+              @("Last modified date : " + Utils.ConvertDateTimeHourToString(Model.modify_dt));
+              <span class="text-secondary small pl-10">
+                @("Registration date : " + Utils.ConvertDateTimeHourToString(Model.create_dt))
+              </span>
+
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  <!--기본정보-->
+  @{
+    int project_pageSize = 5;
+    if (HttpContext.Current.Request.Cookies.AllKeys.Contains("CL_PJT_PAGE_SIZE"))
+    {
+      project_pageSize = Convert.ToInt32(Request.Cookies["CL_PJT_PAGE_SIZE"].Value);
+    }
+  }
+  <!--프로젝트-->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading bg-grey-200">
+      <h3 class="panel-title" title="프로젝트 현황">
+        <i class="fas fa-briefcase"></i>
+        PROJECT
+      </h3>
+      <div class="panel-actions">
+        <div class="form-inline">
+          <select id="project_state" name="project_state" class="form-control w-150" onchange="javascript:callProjectList(@Model.c_seq, 1)">
+            <option value="0">[전체 상태]</option>
+            <option value="1">진행</option>
+            <option value="2">보류</option>
+            <option value="3">종료/실패</option>
+            <option value="4">완료</option>
+            <option value="5">성공</option>
+
+          </select>
+          <select id="project_pageSize" name="project_pageSize" class="form-control w-150" onchange="javascript: callProjectList(@Model.c_seq, 1);fSetSelectCookie('CL_PJT_PAGE_SIZE', this);" ">
+            <option value="5" @(project_pageSize == 5 ? "selected" : "")>5건 씩 보기</option>
+            <option value="10" @(project_pageSize == 10 ? "selected" : "")>10건 씩 보기</option>
+            <option value="15" @(project_pageSize == 15 ? "selected" : "")>15건 씩 보기</option>
+            <option value="20" @(project_pageSize == 20 ? "selected" : "")>20건 씩 보기</option>
+            <option value="50" @(project_pageSize == 50 ? "selected" : "")>50건 씩 보기</option>
+            <option value="100" @(project_pageSize == 100 ? "selected" : "")>100건 씩 보기</option>
+          </select>
+
+          <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+        </div>
+      </div>
+    </div>
+    <div id="projectBody" class="panel-body pt-10">
+
+    </div>
+  </div>
+  <!--프로젝트-->
+  <!--활동내역-->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading bg-grey-200">
+      <h3 class="panel-title" title="고객사 메모">
+        <i class="fas fa-hiking"></i>
+        고객사 메모 (BD Activity &amp; Client communication)
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus popup-ajax" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+        @*<a href="javascript:void(0)" id="btnHisotry" class="btn btn-sm btn-default" onclick="openActivity(@Model.c_seq)">Update History</a>*@
+      </div>
+    </div>
+
+    <div id="activityBody" class="panel-body pt-10">
+
+    </div>
+  </div>
+  <!--활동내역-->
+  <!--Contact-->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title  py-10" title="Contact List">
+        <i class="fas fa-user-alt"></i>
+        Contact (채용 및 인보이스 담당자)
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="contactBody" class="panel-body">
+
+    </div>
+  </div>
+  <!--Contact-->
+  <!--세금계산서 담당자-->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title  py-10">
+        <i class="fas fa-credit-card"></i>
+        E-Tax information (세금계산서 담당자)
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+
+    <div id="taxBody" class="panel-body">
+
+    </div>
+  </div>
+  <!--세금계산서 담당자-->
+  <!--관련파일-->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title  py-10">
+        <i class="fas fa-file-alt"></i>
+        Files
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div class="panel-body">
+      @if (Model.is_external_lock == 1)
+      {
+        <div class="border-danger border bg-danger p-10">
+          파일을 업로드/다운로드 하시려면 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.
+        </div>
+      }
+      else
+      {
+        <div id="fileBody">
+
+        </div>
+      }
+
+    </div>
+  </div>
+  <!--관련파일-->
+  <!--오퍼레터 모음-->
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title  py-10">
+        <i class="fas fa-file-alt"></i>
+        오퍼레터 모음 (프로젝트 입사 확정 시 업로드된 파일)
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div class="panel-body">
+      @if (Model.is_external_lock == 1)
+      {
+        <div class="border-danger border bg-danger p-10">
+          파일을 업로드/다운로드 하시려면 개인정보 확인 버튼을 눌러 해제 후 진행하여 주십시오.
+        </div>
+      }
+      else
+      {
+        <div id="offerletterBody">
+
+        </div>
+      }
+
+    </div>
+  </div>
+  <!--관련파일-->
+  <!--계약-->
+
+  <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <i class="fas fa-handshake"></i>
+        Contract <small>[계약 정보]</small>
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div id="contractInfo" class="panel-body">
+
+
+      <div class="row d-none">
+        <div class="form-group w-p100" style="text-align:right;">
+
+
+          <button type="submit" id="ContractSaveBtn" class="btn btn-sm btn-primary" onclick="ContractSaveBtn(@Model.c_seq, @Model.cc_seq);">계약저장</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!--계약-->
+</div>
+
+
+
+@section scripts{
+
+  <script src="~/Libs/remark/global/vendor/bootstrap-tokenfield/bootstrap-tokenfield.min599c.js?v4.0.4"></script>
+  <script src="~/Libs/remark/global/js/Plugin/bootstrap-tokenfield.min599c.js?v4.0.4"></script>
+  <script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
+
+  <script type="text/javascript">
+
+        var callJobObj;
+        var callBusiObj;
+        var callRankObj;
+        //var callContractfileList;
+        var code2Arr = []; //placePopup 에서 사용하는 전역변수.
+        var AM_Arr = [];
+
+        var jobCodeArr = []; //jobbusinessApi 에서 사용
+        var busiCodeArr = []; //jobbusinessApi 에서 사용
+        var feeTypeA = [];
+        var feeTypeB = [];
+
+        $(document).ready(function () {
+
+            BindDatePicker($(".jDatePicker"));
+
+            $("input[name='fee_type']").change(function () {
+                if ($(this).val() == "@Model.fee_type") {
+                    $("#feeValue").val("@Model.feeValue");
+                } else {
+                    $("#feeValue").val("");
+                }
+
+                if ($(this).val() == "C") {
+                    $("#feeSettingBtn").css("display", "none");
+                    $("#fix_fee_rate").removeAttr("readonly");
+                }
+                else {
+                    $("#feeSettingBtn").css("display", "inline");
+                    $("#fix_fee_rate").val("0");
+                    $("#fix_fee_rate").attr("readonly", "readonly");
+                }
+            });
+
+            $("#fix_fee_rate").change(function () {
+
+                $("#feeValue").val("고정 수수료 : " + $(this).val() + "%");
+
+            });
+
+            //폼 유효성 검사
+            $("#contractForm").formValidation({
+                framework: "bootstrap4",
+                button: {
+                    selector: "#ContractSaveBtn",
+                    disabled: "disabled"
+                },
+                submitHandler: function () {
+                },
+                icon: null,
+                fields: {
+                    contract_date: {
+                        validators: {
+                            notEmpty: {
+                                message: "계약일을 입력하세요."
+                            }
+                        }
+                    },
+                    deposit_limit: {
+                        validators: {
+                            notEmpty: {
+                                message: "입금일을 입력하세요."
+                            }
+                        }
+                    },
+                    feeValue: {
+                        validators: {
+                            notEmpty: {
+                                message: "수수료율을 설정하세요."
+                            }
+                        }
+                    }
+                },
+                err: {
+                    clazz: "invalid-feedback"
+                },
+                control: {
+                    valid: "is-valid",
+                    invalid: "is-invalid"
+                },
+                row: {
+                    invalid: "has-danger"
+                }
+            })
+            //validation 성공시, ajax submit.
+            //ajax submit 사용하지 않을 경우, on 부분은 삭제해도 됨.
+            .on('success.form.fv', function (e) {
+                //기본 submit 이벤트 취소.
+                e.preventDefault();
+
+                var contract = {
+                    c_seq: $("#c_seq").val(),
+                    cc_seq: $("#cc_seq").val(),
+                    contract_date: $("#contract_date").val(),
+                    deposit_limit: $("#deposit_limit").val(),
+                    fee_type: $("input:radio[name=fee_type]:checked").val(),
+                    guarntee_type: $("input:radio[name=guarntee_type]:checked").val(),
+                    is_construct_debut: $("input:radio[name=is_construct_debut]:checked").val(),
+                    contract_comment: $("#contract_comment").val(),
+                    fix_fee_rate: $("#fix_fee_rate").val()
+                };
+
+                var annualIncomeList = [];
+                var positionRateList = [];
+                //연봉별
+                if (contract.fee_type == "A") {
+
+                    feeTypeA.forEach(function (row) {
+                        var annual = {
+                            Currency_Name: row.currency_name,
+                            start_income:row.incomSamt,
+                            end_income:row.incomEamt,
+                            percentage:row.incomPer
+                        }
+                        annualIncomeList.push(annual);
+                    });
+                }
+                //직급별
+                else if (contract.fee_type == "B") {
+
+                    feeTypeB.forEach(function (row) {
+                        var position = {
+                            start_code_seq: row.positionS,
+                            end_code_seq: row.positionE,
+                            rate: row.positionPer
+                        }
+                        positionRateList.push(position);
+                    });
+                }
+                debugger;
+                $.ajax({
+                   url: '@Url.Action("ClientContractCreate", "Client")',
+                   data: {
+                       model: {
+                           contract: contract,
+                           annualIncomeList: annualIncomeList,
+                           positionRateList: positionRateList
+                       }
+                   },
+                   dataType: 'json',
+                   type: 'POST',
+                   beforeSend: function ()
+                   {
+                       showLoading('#contractInfo');
+                   }
+                })
+                .done(function (json) {
+                    hideLoading('#contractInfo');
+
+                    if (json.ok) {
+                        NormalAlert("계약 정보를 저장했습니다.", function () { location.reload(); });
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    hideLoading('#contractInfo');
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+        });
+
+        function openClientExternalLock(c_seq) {
+            alertify.confirm()
+            .set({
+                'labels': { ok: 'OK', cancel: 'Cancel' },
+                'onok': function (e) {
+
+                    if (saveElementOpenLogToServer('@Univision.Security.AppIdentity.user_seq', c_seq, 'client', 'client', '', '')) {
+                        location.href = "@Html.Raw(ViewContext.HttpContext.Request.Url.AbsoluteUri)";
+                    }
+                    else {
+                        return;
+                    }
+
+                },
+                'oncancel': function () {
+                    return;
+                }
+            })
+            .setHeader('고객사 개인정보 확인')
+            .setting({
+              message: "해당 고객사의 개인정보를 확인하시겠습니까?<br />확인 시 개인정보 확인 기록이 서버에 저장되며, 24시간 이내 동일정보는 별도 확인 없이 조회가 가능합니다."
+            })
+            .show();
+        }
+
+        function openClientExternalLockToHref(c_seq, rtn_url) {
+            alertify.confirm()
+            .set({
+                'labels': { ok: 'OK', cancel: 'Cancel' },
+                'onok': function (e) {
+
+                    if (saveElementOpenLogToServer('@Univision.Security.AppIdentity.user_seq', c_seq, 'client', 'client', '', '')) {
+                        if (rtn_url) {
+                            location.href = rtn_url;
+                        } else {
+                            location.href = "@Html.Raw(ViewContext.HttpContext.Request.Url.AbsoluteUri)";
+                        }
+                    }
+                    else {
+                        return;
+                    }
+
+                },
+                'oncancel': function () {
+                    return;
+                }
+            })
+            .setHeader('고객사 수정화면 이동 안내')
+            .setting({
+              message: "해당 고객사의 정보 수정화면으로 이동하시겠습니까?<br />확인 시 개인정보 확인 기록이 서버에 저장되며, 24시간 이내 동일정보는 별도 확인 없이 조회가 가능합니다."
+            })
+            .show();
+        }
+
+        function feeSetting(c_seq, cc_seq) {
+
+            var fee_type = $("input:radio[name=fee_type]:checked").val();
+
+            if (fee_type == "A") {
+                ContractFeeA(c_seq, cc_seq);
+            }
+            else if (fee_type == "B") {
+                ContractFeeB(c_seq, cc_seq);
+            }
+        }
+
+        //update history 버튼
+        function openClientLogDetail(c_seq) {
+            try {
+                 $.ajax({
+                    url: '@Url.Action("ClientDetailSummary", "Log")',
+                    data: {
+                        c_seq: c_seq
+                    },
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (html) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':html,
+                        'width': '800',
+                        'height': '400',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': 'Update History',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.A');
+                });
+
+            } catch (e) {
+                  ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.A');
+            }
+        }
+        function ContractFeeA(c_seq, cc_seq) {
+
+            $.ajax({
+                url: '@Url.Action("PopfeeTypeA", "Client")',
+                data: {
+                    c_seq: c_seq
+                   ,cc_seq: cc_seq
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (json) {
+                hideLoading();
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '500',
+                    'height': '400',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': '연봉별 수수료 반영율',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading();
+
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+
+        function ContractFeeB(c_seq, cc_seq) {
+
+            $.ajax({
+                url: '@Url.Action("PopfeeTypeB", "Client")',
+                data: {
+                    c_seq: c_seq
+                   ,cc_seq: cc_seq
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (json) {
+                hideLoading();
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '550',
+                    'height': '400',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': '직급별 수수료 반영율',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading();
+
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        }
+
+        function ContractFeeC(c_seq, cc_seq) {
+            $.ajax({
+                url: '@Url.Action("PopfeeTypeC", "Client")',
+                data: {
+                    c_seq: c_seq
+                    , cc_seq: cc_seq
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (json) {
+                hideLoading();
+                $.fancybox.open({
+                    'content':json,
+                    'width': '350',
+                    'height': '150',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': '고정 수수료 반영율',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.C');
+            });
+        }
+
+
+        function callContractfileList(c_seq) {
+
+            if ($("#contractfileBody").length == 0)
+                return;
+
+            $.ajax({
+                url: '@Url.Action("ContractFileList", "Client")',
+                data: {
+                    c_seq: c_seq
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#contractfileBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#contractfileBody');
+                $('#contractfileBody').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#contractfileBody');
+            });
+        }
+
+        function callMyProjectList(searchTxt, state, orderTxt, orderOption, excelDown, page) {
+
+            $.ajax({
+                url: '@Url.Action("ClientProjectList", "Client")',
+                data: {
+                    'search.searchTxt': searchTxt
+                    , 'search.state': state
+                    , 'search.orderTxt': orderTxt
+                    , 'search.orderOption': orderOption
+                    , 'search.excelDown': excelDown
+                    , page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#myProject');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#myProject');
+                $('#myProject').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#myProject');
+            });
+        }
+
+
+
+        function callProjectList(c_seq, page) {
+
+            if(page == null || page == undefined)
+              page = 1;
+
+          var pageSize = $('#project_pageSize').val();
+          var state = $('#project_state').val();
+
+          if (pageSize == null || pageSize == undefined)
+            pageSize = 5;
+
+          if (state == "" || state == null || state == undefined)
+            state = 0;
+
+
+            $.ajax({
+                url: '@Url.Action("ClientProjectList", "Client")',
+                data: {
+                  c_seq: c_seq
+                  , pjt_page_size: pageSize
+                  , pjt_state : state
+                  ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#projectBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#projectBody');
+                $('#projectBody').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#projectBody');
+            });
+        }
+
+        function callContractDetail(c_seq) {
+
+            $.ajax({
+                url: '@Url.Action("ClientContractDetail", "Client")',
+                data: {
+                    c_seq: c_seq
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#contractInfo');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#contractInfo');
+                $('#contractInfo').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#contractInfo');
+            });
+        }
+
+        function callActivityList(c_seq, type, page) {
+          if (!page) {
+            page = 1;
+          }
+
+          if (!type) {
+            type = 0;
+          }
+
+            $.ajax({
+                url: '@Url.Action("ClientNewActivityList", "Client")',
+                data: {
+                  c_seq: c_seq,
+                  type: type,
+                  page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#activityBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#activityBody');
+                $('#activityBody').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#activityBody');
+            });
+        }
+
+
+        function callContactList(c_seq, page) {
+
+            if(page == null || page == undefined)
+                page = 1;
+
+            $.ajax({
+                url: '@Url.Action("ClientContactList", "Client")',
+                data: {
+                    c_seq: c_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#contactBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#contactBody');
+                $('#contactBody').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#contactBody');
+            });
+        }
+
+        function callTaxList(c_seq, page) {
+
+            if(page == null || page == undefined)
+                page = 1;
+
+            $.ajax({
+                url: '@Url.Action("ClientTaxList", "Client")',
+                data: {
+                    c_seq: c_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#taxBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#taxBody');
+                $('#taxBody').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#taxBody');
+            });
+        }
+
+        function callFileList(c_seq, page) {
+
+            if ($('#fileBody').length == 0)
+                return;
+
+            if(page == null || page == undefined)
+                page = 1;
+
+            $.ajax({
+                url: '@Url.Action("ClientFileList", "Client")',
+                data: {
+                    c_seq: c_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#fileBody');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#fileBody');
+                $('#fileBody').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#fileBody');
+            });
+    }
+
+    function callOfferletterList(c_seq, page) {
+
+            if ($('#offerletterBody').length == 0)
+                return;
+
+            if(page == null || page == undefined)
+                page = 1;
+
+            $.ajax({
+                url: '@Url.Action("ClientOfferletterList", "Client")',
+                data: {
+                    c_seq: c_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                  showLoading('#offerletterBody');
+                }
+            })
+            .done(function (view) {
+              hideLoading('#offerletterBody');
+              $('#offerletterBody').html(view);
+
+            })
+            .always(function () {
+              hideLoading('#offerletterBody');
+            });
+        }
+
+        function removeBadge(obj) {
+
+            $(obj).closest(".category").remove();
+            $('#CreateForm').formValidation('revalidateField', 'AMDiv');
+            $('#CreateForm').formValidation('revalidateField', 'Searcher');
+        }
+
+        function openClientContractList(c_seq) {
+            $.ajax({
+                url: '@Url.Action("ListClientContractLog", "Log")',
+                data: {
+                    c_seq: c_seq
+                    , cc_seq: cc_seq
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (json) {
+                hideLoading();
+                $.fancybox.open({
+                    'content':json,
+                    'width': '350',
+                    'height': '150',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': '고정 수수료 반영율',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.C');
+            });
+        }
+
+        callProjectList('@Model.c_seq', 1);
+        callActivityList('@Model.c_seq', 0, 1);
+        callContactList('@Model.c_seq', 1);
+        callTaxList('@Model.c_seq', 1);
+    callFileList('@Model.c_seq', 1);
+    callOfferletterList('@Model.c_seq', 1);
+        callContractDetail('@Model.c_seq');
+        callContractfileList('@Model.c_seq', 1);
+
+      var pop_help_title = "Off-limit 관리항목 항목."
+      var pop_help_txt = `고객사 Off-limit 여부를 설정하는 항목이 추가되었습니다.
+  <br/>계약서 상 "고객사 임직원 컨택 금지 조항"이 포함된 경우 설정하여 주세요.
+  <br/>- 고객사 전 임직원 컨택 금지 시 : <span class="badge badge-danger">전 임직원</span>
+  <br/>- 유니코에 의해 채용된 임직원 컨택 금지 시 : <span class="badge badge-warning">유니코채용직원</span>
+  <br/><span class="text-danger">더불어 해당고객사에 재직중인 임직원은 컨택하지 않도록 주의해야합니다.</span> `;
+
+      //popover_help('client-detail-offlimit2', '#client-offlimit-label', pop_help_title, pop_help_txt);
+  </script>
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ServiceConfiguration serviceName="Univision.Cloud" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceConfiguration" osFamily="6" osVersion="*" schemaVersion="2015-04.2.6">
+  <Role name="Univision.Main">
+    <Instances count="1" />
+    <ConfigurationSettings>
+      <Setting name="StorageConnectionString" value="DefaultEndpointsProtocol=https;AccountName=wooyoung;AccountKey=YOUR_AZURE_STORAGE_ACCOUNT_KEY" />
+      <Setting name="storageConnectionString-1" value="DefaultEndpointsProtocol=https;AccountName=wooyoung;AccountKey=YOUR_AZURE_STORAGE_ACCOUNT_KEY;EndpointSuffix=core.windows.net" />
+    </ConfigurationSettings>
+  </Role>
+</ServiceConfiguration>

@@ -1,0 +1,146 @@
+﻿@model Univision.Main.Models.Project.SearchProjectAMModel
+@{
+    string bindObj = ViewBag.bindObj;
+}
+
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+</style>
+
+<div class="form-inline mb-10 stss02">
+    @{
+
+        var deptList = new SelectList(Model.deptList, "ud_seq", "ud_name").ToList();
+        deptList.Insert(0, new SelectListItem { Value = "0", Text = "팀 선택" });
+    }
+    @Html.DropDownListFor(x => x.ud_seq, deptList, new { @class = "form-control col-md-3" })
+    <div class="input-group no-side-space sts03">
+        @Html.TextBoxFor(x => x.searchTxt, new { @class = "form-control", @placeholder = "AM 이름" })
+        <button type="button" id="btnPopSearch" class="btn btn-primary" onclick="FancyBoxSearch();"><i class="fas fa-search" aria-hidden="true"></i></button>
+    </div>
+</div>
+
+
+<div class="panel sts02" style="margin-bottom:0px !important;">
+    <div class="panel-body" style="padding: 5px 10px 5px 10px; overflow-y:auto">
+        <table class="table table-borderless table-hover">
+            <thead class="text-center">
+                <tr>
+                    <th class="tbw60">이름</th>
+                    <th class="tbw40">직급</th>
+                    <th class="hidden-sm-down">연락처</th>
+                    <th class="hidden-sm-down">팀명</th>
+                </tr>
+            </thead>
+            <tbody class="text-center" style="vertical-align:middle;">
+                @if (Model.list.Count > 0)
+                {
+                    foreach (var data in Model.list)
+                    {
+                        <tr onclick="selectUser('@data.uv_seq', '@data.name')" class="cur_hand">
+                            <td>
+                                @data.name
+                            </td>
+                            <td>
+                                @data.rank_name
+                            </td>
+                            <td class="hidden-sm-down">
+                                @data.hp
+                            </td>
+                            <td class="hidden-sm-down">
+                                @data.ud_name
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4">데이터가 없습니다.</td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("#searchTxt").keydown(function (e) {
+            if (e.keyCode == 13)
+                $("#btnPopSearch").click();
+            else
+                return;
+        });
+
+        $("input:checkbox[name='uv_seq']").each(function () {
+            if (AM_Arr.indexOf($(this).val()) > -1) {
+                $(this).prop("checked", true);
+            }
+        });
+
+    });
+
+    //FancyBox 팝업 내의 페이지 이동.
+    function FancyBoxSearch() {
+
+        $.ajax({
+            url: '@Url.Action("SelectOneUser", "Partial")',
+            data: {
+                bindObj: "@bindObj",
+                ud_seq: $("#ud_seq").val()
+                ,searchTxt: $("#searchTxt").val()
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function () {
+
+            }
+        })
+        .done(function (view) {
+
+            $.fancybox({
+                'content': view,
+                'width': $(".fancybox-outer").width(),
+                'height': $(".fancybox-outer").height(),
+                'autoDimensions': false,
+                'type': 'iframe',
+                'autoSize': false,
+                'title': $(".fancybox-title").text(),
+                helpers: {
+                    title: {
+                        type: 'inside',
+                        position: 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .always(function () {
+
+        });
+    };
+
+    function selectUser(uv_seq, uv_name) {
+        debugger;
+        var obj = $("@bindObj");
+        obj.find(".user_seq").val(uv_seq);
+        obj.find(".user_name").text(uv_name);
+        obj.find(".user_name").removeClass("red-600");
+
+        $.fancybox.close();
+    }
+
+</script>

@@ -1,0 +1,288 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.NegoProjectListModel
+@using Univision.Security
+
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
+
+<div class="page-content container-fluid">
+
+  <!-- row -->
+  @using (Html.BeginForm("NegoProjectList", "Statistics", FormMethod.Get, new { @id = "SearchForm" }))
+  {
+  <div class="row">
+    <div class="col">
+      <div class="panel custom1">
+        <!-- // block -->
+        <div class="panel-body p-10">
+          <div class="row">
+            <div class="col-md-5 form-group">
+              <div class="input-group input-group-sm">
+                <span class="input-group-addon">
+                  <h5>기간 :</h5>
+                </span>
+                @Html.TextBoxFor(x => x.search.startDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                <span class="input-group-addon">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                </span>
+                <sapn class="input-group-addon bg-transparent border-0"> ~ </sapn>
+                @Html.TextBoxFor(x => x.search.endDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+                <span class="input-group-addon">
+                  <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                </span>
+
+              </div>
+            </div>
+            <div class="col-md-3 form-group ">
+              <div class="input-group input-group-sm">
+                <select class="form-control" data-val="true" id="search_is_progress_only" name="search.is_progress_only">
+                  <option value="0" @(Model.search.is_progress_only == 0 ? "selected" : "")>전체프로젝트</option>
+                  <option value="1" @(Model.search.is_progress_only == 1 ? "selected" : "")>진행중 프로젝트만</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-3 form-group ">
+              <div class="input-group input-group-sm">
+                <select class="form-control" data-val="true" id="search_is_no_after_only" name="search.is_no_after_only">
+                  <option value="0" @(Model.search.is_no_after_only == 0 ? "selected" : "")>전체상태</option>
+                  <option value="1" @(Model.search.is_no_after_only == 1 ? "selected" : "")>처우 중</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-1">
+              <button type="button" class="btn btn-sm btn-raised btn-primary btn-block" id="table-setdata">검색</button>
+            </div>
+          </div>
+          <!-- block -->
+        </div>
+
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- //row -->
+  <!-- row -->
+  <div class="row" id="key_project_body">
+    <div class="col-xl-12">
+      <div class="panel custom1">
+        <div class="panel-heading">
+          <div class="panel-title">
+            처우 현황
+          </div>
+          <div class="panel-actions w-md-100">
+            <div class="panel-action text-right w-full">
+              <!--<button type="button" class="btn btn-sm btn-raised btn-primary btn-block" id="download-xlsx">Excel</button>-->
+            </div>
+          </div>
+        </div>
+        
+        <div class="panel-body p-10">
+          <div id="nego_project_table" data-role="container">
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- // row -->
+
+
+</div>
+
+@section scripts {
+  <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+  <script type="text/javascript">
+        $(document).ready(function () {
+            BindDatePicker($(".jDatePicker"));
+        });
+
+    function fSetDate(type) {
+      var today = new Date();
+      var today_str = getDateStr(today)
+      $('#search_endDt').val(today_str);
+      if (type == "day") {
+        $('#search_startDt').val(today_str)
+
+      } else if (type == "week") {
+        $('#search_startDt').val(dateAdd(today_str, -7, "d"))
+      } else if (type == "month") {
+        $('#search_startDt').val(dateAdd(today_str, -1, "m"))
+      }
+    }
+
+    function getDateStr(date) {
+      // GET YYYY, MM AND DD FROM THE DATE OBJECT
+      var yyyy = date.getFullYear().toString();
+      var mm = (date.getMonth() + 1).toString();
+      var dd = date.getDate().toString();
+
+      // CONVERT mm AND dd INTO chars
+      var mmChars = mm.split('');
+      var ddChars = dd.split('');
+
+      // CONCAT THE STRINGS IN YYYY-MM-DD FORMAT
+      return yyyy + '-' + (mmChars[1] ? mm : "0" + mmChars[0]) + '-' + (ddChars[1] ? dd : "0" + ddChars[0]);
+
+    }
+
+    function dateAdd(sDate, v, t) {
+      var yy = parseInt(sDate.substr(0, 4), 10);
+      var mm = parseInt(sDate.substr(5, 2), 10);
+      var dd = parseInt(sDate.substr(8), 10);
+
+      if (t == "d") {
+        d = new Date(yy, mm - 1, dd + v);
+      } else if (t == "m") {
+        d = new Date(yy, mm - 1 + v, dd);
+      } else if (t == "y") {
+        d = new Date(yy + v, mm - 1, dd);
+      } else {
+        d = new Date(yy, mm - 1, dd + v);
+      }
+
+      yy = d.getFullYear();
+      mm = d.getMonth() + 1; mm = (mm < 10) ? '0' + mm : mm;
+      dd = d.getDate(); dd = (dd < 10) ? '0' + dd : dd;
+
+      return '' + yy + '-' + mm + '-' + dd;
+    }
+
+    var table = new Tabulator("#nego_project_table", {
+      height: "500px",
+      layout: "fitDataFill",
+      frozenRows: 0,
+      columns: [
+        { formatter: "rownum", hozAlign: "center", width: 40 },
+        {
+          title: "", field: "p_seq", formatter: "link", formatterParams: {
+            label: "[상세화면]",
+            urlPrefix: "@Url.Action("ProjectDetail", "Project")?p_seq=",
+            target: "_blank",
+          }
+        },
+        //{ title: "이름", field: "key_user_name", sorter: "string", hozAlign: "left", headerFilter: "input", editor: false, frozen: true, },
+        //{ title: "Key등록일자", field: "key_create_dt", sorter: "string", hozAlign: "center" },
+
+        //{ title: "부서", field: "ud_name", sorter: "string", hozAlign: "left", headerFilter: "input", frozen: true, },
+        //{ title: "월", field: "mon", sorter: "string", hozAlign: "center", width:100},
+        //{ title: "종료/재진행사유", field: "status_comment", sorter: "string", width: 100 },
+
+        //{ title: "프로젝트코드", field: "p_seq", sorter: "number", hozAlign: "right", editor: false, frozen: true },
+
+        //{ title: "종료/재진행사유", field: "status_comment", sorter: "string", width: 100 },
+        { title: "고객사명", field: "client_name", sorter: "string", width: 200, headerFilter: "input" },
+        { title: "구인제목", field: "title", sorter: "string", headerFilter: "input", width: 300, },
+        { title: "프로젝트상태", field: "pjt_status_str", sorter: "string", hozAlign: "center", headerFilter: "list", headerFilterParams: { valuesLookup: true, clearable: true } },
+        { title: "AM", field: "am_names", sorter: "string", headerFilter: "input" },
+        { title: "SM", field: "searcher_names", sorter: "string", headerFilter: "input" },
+        {
+          title: "예상매출(원화)", field: "exp_sales", formatter: "money", sorter: "number", hozAlign: "right",
+
+          //topCalcParams:{decimal:".",thousand:",",negativeSign:true,precision:false,},
+          formatterParams: { decimal: ".", thousand: ",", negativeSign: true, precision: false, },
+          //accessorDownload: numberConvert
+          bottomCalc: "sum",
+          //topCalcParams:{decimal:".",thousand:",",negativeSign:true,precision:false,},
+          bottomCalcFormatter: "money",
+          bottomCalcFormatterParams: { decimal: ".", thousand: ",", negativeSign: true, precision: false, },
+        },
+        
+        
+        { title: "후보자명", field: "recan_name", sorter: "string", headerFilter: "input" },
+        {
+          title: "상태", field: "recan_status", sorter: "string", width: 150, headerFilter: "input", formatter: function (cell, formatterParams) {
+            var recan_status = cell.getValue();
+            var recan_status2 = cell.getData().recan_status2;
+            if (recan_status2 != "")
+              return recan_status + '->' + recan_status2
+            else
+              return recan_status + "(진행중)";
+         }},
+        { title: "상태일자", field: "recan_schedule_dt", sorter: "string", headerFilter: "input" },
+        {
+          title: "예상연봉", field: "exp_salary", formatter: "money", sorter: "number", hozAlign: "right",
+
+          //topCalcParams:{decimal:".",thousand:",",negativeSign:true,precision:false,},
+          formatterParams: { decimal: ".", thousand: ",", negativeSign: true, precision: false, },
+          //accessorDownload: numberConvert
+        },
+        { title: "금액단위", field: "currency_cd", sorter: "string", hozAlign: "center", headerFilter: "input" },
+        {
+          title: "수수료율", field: "fee_rate", sorter: "number", hozAlign: "right",
+          formatter: function (cell, formatterParams) {
+            var fee_rate = cell.getValue();
+            return fee_rate + " %";
+          }
+          //topCalcParams:{decimal:".",thousand:",",negativeSign:true,precision:false,},
+
+          //accessorDownload: numberConvert
+        },
+        { title: "상태내용", field: "recan_memo", sorter: "string", headerFilter: "input" },
+        /*
+        { title: "(재)진행일", field: "open_dt", sorter: "string", hozAlign: "center", width: 100 },
+        { title: "종료일자", field: "close_dt", sorter: "string", hozAlign: "center", width: 100 },
+        { title: "잠재후보", field: "interest_cnt", sorter: "number", hozAlign: "center", width: 80 },
+        { title: "추천", field: "recommend_cnt", sorter: "number", hozAlign: "center", width: 80 },
+        { title: "면접", field: "interview_cnt", sorter: "number", hozAlign: "center", width: 80 },
+        { title: "협상/검증", field: "nego_cnt", sorter: "number", hozAlign: "center", width: 80 }
+        */
+
+
+
+      ],
+      /*
+      rowFormatter: function (row) {
+        if (row.getData().pjt_status == 5) {
+          row.getElement().classList.add("bg-success");
+        } else if (row.getData().pjt_status == 4) {
+          row.getElement().classList.add("bg-info");
+        } else if (row.getData().pjt_status == 3 ) {
+          row.getElement().classList.add("bg-danber");
+        } else if (row.getData().pjt_status == 2) {
+          row.getElement().classList.add("bg-waning");
+        }
+      },*/
+      ajaxURL: "@Url.Action("NegoProjectListAjx", "Statistics")",
+      ajaxConfig: "POST",
+      ajaxContentType: "json",
+      ajaxParams: function () {
+        return {
+          startDt: document.getElementById('search_startDt').value,
+          endDt: document.getElementById('search_endDt').value,
+          is_progress_only: document.getElementById('search_is_progress_only').value,
+          is_no_after_only: document.getElementById('search_is_no_after_only').value,
+        } //ajax parameters
+      },
+      ajaxResponse: function (url, params, response) {
+        //url - the URL of the request
+        //params - the parameters passed with the request
+        //response - the JSON object returned in the body of the response.
+
+        return response.list; //return the tableData property of a response json object
+      },
+      pagination: "local",
+      paginationSize: 200,
+      paginationSizeSelector: [10, 20, 30, 50, 100, 200],
+      paginationCounter: "rows",
+
+    });
+    document.getElementById("table-setdata").addEventListener("click", function () {
+      table.setData("@Url.Action("NegoProjectListAjx", "Statistics")");
+    });
+
+    document.getElementById("download-xlsx").addEventListener("click", function () {
+
+      var range = document.getElementById('search_startDt').value.replace(/\-/gi, "") + "_" + document.getElementById('search_endDt').value.replace(/\-/gi, "")
+      table.download("xlsx", "kpi_" + range+".xlsx", { sheetName: "kpi" });
+    });
+
+
+
+
+  </script>
+
+}

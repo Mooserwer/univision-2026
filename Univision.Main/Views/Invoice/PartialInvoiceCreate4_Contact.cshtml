@@ -1,0 +1,180 @@
+﻿@model Univision.Main.Models.Invoice.InvoiceCreateModel
+
+@using (Html.BeginForm("", "", FormMethod.Post, new { @id = "frmInvoiceStep4" }))
+{
+
+  <div class="card mg-t-10 mg-x-10 bd bd-indigo no_print">
+    <div class="card-header bg-dark tx-white tx-medium tx-bold bd-0 top-head">
+      인보이스 담당자 및 세금계산서 담당자 지정
+    </div>
+    <div class="card-body part_show_inv_step4" style="display:none;">
+      <div class="row">
+        <div class="col-12">
+          <label class="section-title">인보이스 담당자 </label>
+        </div>
+        <div class="col-6 col-md-4">
+          @Html.HiddenFor(x => x.cc_seq)
+          <div class="form-group">
+            <label class="form-control-label">담당자명: <span class="tx-danger">*</span></label>
+            <div class="input-group">
+              @Html.TextBoxFor(x => x.client_contact_name, new { @class = "form-control", @autocomplete = "off", @placeholder = "담당자명", @readonly = "readonly" })
+              <span class="input-group-btn part_contract_select_mode">
+                <button class="btn btn-info bd bd-l-0" type="button" id="btn_pop_contact">찾기</button>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="form-group">
+            <label class="form-control-label">이메일: <span class="tx-danger">*</span></label>
+            @Html.TextBoxFor(x => x.client_contact_email, new { @class = "form-control", @autocomplete = "off", @placeholder = "이메일", @readonly = "readonly" })
+          </div>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="form-group">
+            <label class="form-control-label">연락처 (휴대폰):</label>
+            @Html.TextBoxFor(x => x.client_contact_tel2, new { @class = "form-control", @autocomplete = "off", @placeholder = "휴대폰", @readonly = "readonly" })
+          </div>
+
+        </div>
+
+
+      </div>
+      <div class="row part_contract_input_mode" style="display:none;">
+        <div class="col-6 col-md-4">
+          <div class="form-group">
+            <label class="form-control-label">직급: <span class="tx-danger">*</span></label>
+            @Html.TextBoxFor(x => x.client_contact_pos, new { @class = "form-control", @autocomplete = "off", @placeholder = "직급", @readonly = "readonly" })
+          </div>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="form-group">
+            <label class="form-control-label">부서: <span class="tx-danger">*</span></label>
+            @Html.TextBoxFor(x => x.client_contact_div, new { @class = "form-control", @autocomplete = "off", @placeholder = "부서", @readonly = "readonly" })
+          </div>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="form-group">
+            <label class="form-control-label">추가 연락처: </label>
+            @Html.TextBoxFor(x => x.client_contact_tel, new { @class = "form-control", @autocomplete = "off", @placeholder = "연락처", @readonly = "readonly" })
+          </div>
+        </div>
+
+        <div class="col-6 col-md-4">
+          <div class="form-group">
+            <label class="form-control-label">성별 : <span class="tx-danger">*</span></label>
+            <div class="form-inline">
+              <label class="rdiobox pd-r-10">
+                <input type="radio" id="client_contact_gender_m" name="client_contact_gender" value="1" @(Model.client_contact_gender == 1 ? "checked" : "") class="">
+                <span>남</span>
+              </label>
+              <label class="rdiobox pd-r-10">
+                <input type="radio" id="client_contact_gender_f" name="client_contact_gender" value="2" @(Model.client_contact_gender == 2 ? "checked" : "") class="">
+                <span>여</span>
+              </label>
+              <label class="rdiobox">
+                <input type="radio" id="client_contact_gender_u" name="client_contact_gender" value="3" @(Model.client_contact_gender == 3 ? "checked" : "") class="">
+                <span>모름</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 tx-right pd-t-20">
+          <button type="button" id="btn_new_contact_submit" class="btn btn-primary">완료</button>
+          <button type="button" id="btn_new_contact_reset" class="btn btn-danger">취소</button>
+        </div>
+      </div>
+      <div class="row client_contract_select_mode-nouse" style="display:none;">
+        <div class="col-12 tx-right pd-t-10">
+          <button id="btn_new_contract" type="button" class="btn btn-primary">신규 담당자 입력 (New Contact)</button>
+        </div>
+      </div>
+      @if (Model.pre_invoice != null)
+      {
+        if (!String.IsNullOrEmpty(Model.pre_invoice.client_contact_name))
+        {
+          <div class="row">
+            <div class="col">
+              <div class="alert alert-info pd-5">
+                <i class="fa fa-info-circle"></i>
+                직전 인보이스 담당자명 : <b>[@Model.pre_invoice.client_contact_name]</b>
+              </div>
+            </div>
+          </div>
+
+        }
+      }
+      <hr />
+      <div class="row">
+        <div class="col-12">
+          <label class="section-title">계산서 담당자 정보 확인</label>
+        </div>
+        <div class="col-6 col-md-4">
+          @Html.HiddenFor(x => x.ctc_seq)
+          <div class="form-group">
+            <label class="form-control-label">담당자명: <span class="tx-danger">*</span></label>
+            <div class="input-group">
+              @Html.TextBoxFor(x => x.client_etax_name, new { @class = "form-control", @autocomplete = "off", @placeholder = "담당자명", @readonly = "readonly" })
+              <span class="input-group-btn part_etax_select_mode">
+                <button class="btn btn-info bd bd-l-0" type="button" id="btn_pop_etax">찾기</button>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="form-group">
+            <label class="form-control-label">발행 이메일: <span class="tx-danger">*</span></label>
+            @Html.TextBoxFor(x => x.client_etax_email, new { @class = "form-control", @autocomplete = "off", @placeholder = "발행 이메일", @readonly = "readonly" })
+          </div>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="form-group">
+            <label class="form-control-label">휴대폰번호:</label>
+            @Html.TextBoxFor(x => x.client_etax_tel2, new { @class = "form-control", @autocomplete = "off", @placeholder = "휴대폰번호", @readonly = "readonly" })
+          </div>
+        </div>
+
+      </div>
+      <div class="row part_etax_input_mode" style="display:none;">
+        <div class="col-6 col-md-4">
+          <div class="form-group">
+            <label class="form-control-label">발행 연락처: </label>
+            @Html.TextBoxFor(x => x.client_etax_tel, new { @class = "form-control", @autocomplete = "off", @placeholder = "발행 연락처", @readonly = "readonly" })
+          </div>
+
+        </div>
+        <div class="col-12 tx-right pd-t-20">
+          <button type="button" id="btn_new_etax_submit" class="btn btn-primary">완료</button>
+          <button type="button" id="btn_new_etax_reset" class="btn btn-danger">취소</button>
+        </div>
+      </div>
+      <div class="row client_etax_select_mode-nouse" style="display:none;">
+        <div class="col-12 tx-right pd-t-10">
+          <button id="btn-new-etax" type="button" class="btn btn-primary">신규 계산서 담당자 입력 (New tax manager)</button>
+        </div>
+      </div>
+      @if (Model.pre_invoice != null)
+      {
+        if (!String.IsNullOrEmpty(Model.pre_invoice.etax_name))
+        {
+          <div class="row">
+            <div class="col">
+              <div class="alert alert-info pd-5">
+                <i class="fa fa-info-circle"></i>
+                직전 인보이스 계산서 담당자명 : <b>[@Model.pre_invoice.etax_name]</b>
+              </div>
+            </div>
+          </div>
+
+        }
+      }
+      <div class="row pd-t-25">
+        <div class="col-12 tx-right">
+          <button type="button" id="btn_chk_step4" class="btn btn btn-indigo">다음(Next)</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+}

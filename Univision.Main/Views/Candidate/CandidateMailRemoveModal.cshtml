@@ -1,0 +1,77 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.MailResumeData
+
+@{
+  Layout = null;
+}
+<div>
+
+  <div class="pb-20">
+
+
+    <div class="card border">
+      <div class="card-header card-header-transparent card-header-bordered">
+        삭제 사유를 선택해주세요.
+      </div>
+      <div class="card-block">
+        <p class="card-text">
+          <h5>제목 : @Model.dv_subject</h5>
+          </p>
+        <p class="card-text">
+          <button class="btn btn-sm btn-block btn-danger btn-outline" onclick="fConfirmMailRemove('@Model.dv_timestamp', 'Y', '이미 등록');">(삭제) 이미 등록한 후보자입니다.</button>
+          <button class="btn btn-sm btn-block btn-danger btn-outline" onclick="fConfirmMailRemove('@Model.dv_timestamp', 'Y', 'Confidential');">(삭제) Confidential 후보자입니다.</button>
+          <button class="btn btn-sm btn-block btn-danger btn-outline" onclick="fConfirmMailRemove('@Model.dv_timestamp', 'Y', '이력서 아님');">(삭제) 이력서가 아닙니다.</button>
+          <button class="btn btn-sm btn-block btn-warning btn-outline" onclick="fConfirmMailRemove('@Model.dv_timestamp', 'N', '보류');">(숨김) 빠른 등록이 필요하지 않은 후보자입니다.(추후 DB매니저가 등록)</button><br />
+        </p>
+
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<div class="text-right">
+  <button type="button" class="btn btn-default" data-dismiss="modal">취소</button>
+</div>
+
+
+<script type="text/javascript">
+  function fCandidateGpt(type) {
+    var form_gpt_proc = document.form_gpt_proc;
+
+    var resume_cnt = (form_gpt_proc.resume_cnt ? form_gpt_proc.resume_cnt.value : 0);
+    if (resume_cnt > 0) {
+      var resume_check = true
+
+      for (var i = 1; i <= resume_cnt; i++) {
+        if (document.getElementById("resume_" + i).value == "") {
+          resume_check = false;
+          break;
+        }
+      }
+
+      if (!resume_check) {
+        ErrorAlert("모든 이력서의 이력서 구분을 선택 후 진행하여 주십시오.");
+        return;
+      }
+    }
+
+    var timestamp = form_gpt_proc.new_mail_key.value;
+
+    window.open("", "candidate" + timestamp);
+
+    if (type == 0)
+      form_gpt_proc.c_seq.value = 0;
+    else
+      form_gpt_proc.c_seq.value = form_gpt_proc.dv_cd_no.value
+
+    form_gpt_proc.action = "/candidate/CandidateCreateFromMailAi";
+    form_gpt_proc.target = "candidate" + timestamp
+
+    //console.log(form_gpt_proc);
+    form_gpt_proc.submit();
+
+    $('#CandidateGptModal').modal('hide');
+
+  }
+</script>

@@ -1,0 +1,197 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientListViewModel
+
+@{
+    Layout = null;
+}
+<style>
+    .panel-body .input-search .form-control {
+        border-radius: 2px;
+    }
+
+    .panel-body .form-control-label {
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+    }
+
+    .panel-body .form-group {
+        margin-bottom: 3px;
+    }
+
+    .panel {
+        margin-bottom: 1rem;
+    }
+
+    .table thead th {
+        font-weight: bold;
+    }
+</style>
+<script>
+    $(document).ready(function () {
+
+    });
+</script>
+
+
+<div class="page-content">
+    <!--검색 Form -->
+    @using (Html.BeginForm("PopClient", "Client", FormMethod.Get, new { @id = "searchForm" }))
+    {
+        <!-- 검색 패널 시작 -->
+        <div class="panel panel-primary panel-line">
+            <div class="panel-body">                
+
+                <div class="panel-actions float-left">                    
+                    <div class="panel-action input-search">
+                        <label>
+                            <select name="search.SelectOption" id="search_SelectOption" class="form-control form-control-sm" style="width:150px;">
+                                <option value="" @(Model.search.SelectOption == "" ? "selected" : "")>선택</option>
+                                <option value="name" @(Model.search.SelectOption == "name" ? "selected" : "")>업체명</option>
+                                <option value="ceo" @(Model.search.SelectOption == "ceo" ? "selected" : "")>대표자명</option>
+                                <option value="biz_code" @(Model.search.SelectOption == "biz_code" ? "selected" : "")>사업자번호</option>
+                                <option value="contact" @(Model.search.SelectOption == "contact" ? "selected" : "")>Contact명</option>
+                                <option value="writer" @(Model.search.SelectOption == "writer" ? "selected" : "")>등록자</option>
+                                <option value="am" @(Model.search.SelectOption == "am" ? "selected" : "")>AM명</option>
+                            </select>
+                        </label>
+                    </div>
+
+
+                    <div class="panel-action input-search">
+                        <button type="submit" class="input-search-btn">
+                            <i class="icon wb-search" aria-hidden="true"></i>
+                            &nbsp;&nbsp;
+                        </button>
+
+                        <input type="text" class="form-control w-100" name="search.SearchString" id="search_SearchString" placeholder="" value="@Model.search.SearchString">
+                    </div>
+
+                    <div class="panel-action input-search">
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" name="search.myclient" id="search_myClient" value="Y" @(Model.search.myClient == "Y" ? "checked" : "") />
+                            <label for="inputChecked">My</label>
+                        </div>
+                    </div>
+                    
+                </div>
+
+            </div>
+            
+        </div>
+        <!-- 검색 패널 끝 -->
+    }
+
+    <div class="panel panel-primary panel-line">
+        <div class="panel-body">
+            <table class="table table-borderless">
+                <thead class="text-center">
+                    <tr>
+                        <th style="text-align:center;vertical-align:middle">No</th>
+                        <th style="text-align:center;vertical-align:middle">고객사명</th>
+                        <th style="text-align:center;vertical-align:middle">대표자명</th>
+                        <th style="text-align:center;vertical-align:middle">사업자<br />번호</th>
+                    </tr>
+                </thead>
+                <tbody class="text-center" style="vertical-align:middle;">
+                    @if (Model.list.Count > 0)
+            {
+                int num = 1;
+                foreach (var data in Model.list)
+                {
+                    <tr>
+                        <td>@(num++)</td>
+                        <td>
+                            <a href="@Url.Action("PopActivity", "Client", new { c_seq = data.c_seq})">
+                                @data.kor_name
+                            </a>
+                        </td>
+                        <td>@data.ceo</td>
+                        <td>@data.biz_code</td>
+                    </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="15" style="text-align:center;height:200px;vertical-align:middle;"><b>No Data.</b></td>
+        </tr>
+}
+                </tbody>
+            </table>
+
+            @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                  ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                  x => String.Format("javascript:FancyBoxSearchAndPageMove({0})", x))
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    function selectCompany(c_seq, kor_name, main_contract, main_contract_name, main_contract_dept) {
+
+        $("#c_seq").val(c_seq);
+        $("#company_name").val(kor_name);
+
+        var appendHtml = "<span class='category mr-5'>";
+        appendHtml += "<span class='badge badge-outline badge-default bg-white cur_hand badge-lg'  am_seq='" + main_contract +"'>";
+        appendHtml += "[" + main_contract_dept + "] " + main_contract_name;
+        appendHtml += "<i class='far fa-times-circle' onclick='removeBadge(this)'></i>";
+        appendHtml += "</span>";
+        appendHtml += "</span>";
+
+        $("#AMDiv").html(appendHtml.toString());
+
+        //유효성 검사 다시.
+        $('#CreateForm').formValidation('revalidateField', 'c_seq');
+        $('#CreateForm').formValidation('revalidateField', 'company_name');
+        $('#CreateForm').formValidation('revalidateField', 'AMDiv');
+
+        $.fancybox.close();
+    }
+
+    //FancyBox 팝업 내의 페이지 이동.
+    function FancyBoxSearchAndPageMove(page) {
+        if (page == null || page == undefined)
+            page = 1;
+
+        $.ajax({
+            url: '@Url.Action("PopClient", "Client")',
+            data: {
+                searchTxt: $("#searchTxt").val()
+                , page: page
+            },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function () {
+
+            }
+        })
+        .done(function (view) {
+
+            $.fancybox({
+                'content': view,
+                'width': $(".fancybox-outer").width(),
+                'height': $(".fancybox-outer").height(),
+                'autoDimensions': false,
+                'type': 'iframe',
+                'autoSize': false,
+                'title': $(".fancybox-title").text(),
+                helpers: {
+                    title: {
+                        type: 'inside',
+                        position: 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+
+        })
+        .always(function () {
+
+        });
+    }
+
+</script>

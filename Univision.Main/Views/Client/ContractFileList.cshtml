@@ -1,0 +1,319 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ContractFileList
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_cus.css?v=1533562669">
+<style>
+    .dropify-wrapper {
+        padding: 0px 15px 0px 15px;
+        box-sizing: border-box;
+    }
+</style>
+
+<div class="row" id="fileInfo">
+    <div class="form-group col-md-4">
+        <div id="draft_file" class="dropzone h-full text-left">
+            <label for="draft_file" class="form-control-label">1st Contract</label>
+            <div class="row py-2">
+                <div class="col">
+                    <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+                </div>
+            </div>
+            <div class="file_rst row py-2" id="draft_file_rst">
+                
+                @{
+                    var draftContractList = Model.contractFileList.Where(x => x.file_type == "C").ToList();
+                }
+
+                @if  (draftContractList.Count == 0)
+                {
+                    @*<button type="button" id="ContractSaveBtn" class="btn btn-danger" onclick="ContractSaveBtn();">계약서 초안 작성하기</button>*@
+                }
+
+                else
+                {
+                    foreach (var data in draftContractList)
+                    {
+                        <div class="py-0 file_div col-12">
+                            <input type="hidden" name="cf_seq" value="@data.cf_seq">
+                            <input type="hidden" name="file_origin_path" value="'@data.file_origin_path">
+                            <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.cf_seq, @type = "contract" })" class="file_info text-left text-truncate cur_hand badge badge-secondary link-resume" title="@data.file_path // @Utils.ConvertDateTimeToString(data.create_dt)">
+                                <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                                @data.file_path
+                                <small>[@Utils.ConvertDateTimeToString(data.create_dt)]</small>
+                            </a>
+                            <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:10%;" onclick="RemoveCandidate(this);">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    }
+
+                    @*<div class="py-0 btn-more col-12 text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(draftContractList.Count - 2))</span></div>
+                    <div class="py-0 btn-collapse col-12 text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </div>*@
+                }
+                
+            </div>
+        </div>
+    </div>
+    <div class="form-group col-md-4">
+        <div id="modify_file" class="dropzone h-full text-left">
+            <label for="modify_file" class="form-control-label">Makeup Contract</label>
+            <div class="row py-2">
+                <div class="col">
+                    <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+                </div>
+            </div>
+            <div class="file_rst row py-2" id="modify_file_rst">
+                
+                @{
+                    var modifyContractList = Model.contractFileList.Where(x => x.file_type == "D").ToList();
+                }
+
+                @if (modifyContractList.Count > 0)
+                {
+                    foreach (var data in modifyContractList)
+                    {
+                        <div class="py-0 file_div col-12">
+                            <input type="hidden" name="cf_seq" value="@data.cf_seq">
+                            <input type="hidden" name="file_origin_path" value="'@data.file_origin_path">
+                            <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.cf_seq, @type = "contract" })" class="file_info text-left text-truncate cur_hand badge badge-secondary link-resume" title="@data.file_path // @Utils.ConvertDateTimeToString(data.create_dt)">
+                                <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                                @data.file_path
+                                <small>[@Utils.ConvertDateTimeToString(data.create_dt)]</small>
+                            </a>
+                            <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:10%;" onclick="RemoveCandidate(this);">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    }
+
+                    @*<div class="py-0 btn-more col-12 text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(modifyContractList.Count - 2))</span></div>
+                    <div class="py-0 btn-collapse col-12 text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </div>*@
+                }
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group col-md-4">
+        <div id="final_file" class="dropzone h-full text-left">
+            <label for="final_file" class="form-control-label">Final Contract</label>
+            <div class="row py-2">
+                <div class="col">
+                    <div class="dz-message"><small>[Drop files here or click to upload]</small></div>
+                </div>
+            </div>
+            <div class="file_rst row py-2" id="final_file_rst">
+                
+                @{
+                    var finalContractList = Model.contractFileList.Where(x => x.file_type == "F").ToList();
+                }
+
+                @if (finalContractList.Count > 0)
+                {
+                    foreach (var data in finalContractList)
+                    {
+                        <div class="py-0 file_div col-12">
+                            <input type="hidden" name="cf_seq" value="@data.cf_seq">
+                            <input type="hidden" name="file_origin_path" value="'@data.file_origin_path">
+                            <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.cf_seq, @type = "contract" })" class="file_info text-left text-truncate cur_hand badge badge-secondary link-resume" title="@data.file_path // @Utils.ConvertDateTimeToString(data.create_dt)">
+                                <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+                                @data.file_path
+                                <small>[@Utils.ConvertDateTimeToString(data.create_dt)]</small>
+                            </a>
+                            <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:10%;" onclick="RemoveCandidate(this);">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    }
+
+                    @*<div class="py-0 btn-more col-12 text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More <span class="more_cnt">(@(finalContractList.Count - 2))</span></div>
+                    <div class="py-0 btn-collapse col-12 text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </div>*@
+                }
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+    <script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
+    <script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>
+
+    <script type="text/javascript">
+    $('.btn-more').click(function () {
+        $(this).closest('.file_rst').addClass('more');
+    })
+
+    $('.btn-collapse').click(function () {
+        $(this).closest('.file_rst').removeClass('more');
+    })
+
+    //파일업로드================================
+        if ($('.dropzone').length > 0) {
+            var draftDropzone = new Dropzone("div#draft_file", {
+                url: "@Url.Action("CreateContractFile", "Client")",
+                method: "post",
+                params: {
+                    "c_seq": @Model.c_seq,
+                    "file_type": "C",
+                    "uploadFolder": "@ViewBag.uploadFolder"
+                }
+            });
+
+            var modifyDropzone = new Dropzone("div#modify_file", {
+                url: "@Url.Action("CreateContractFile", "Client")",
+                method: "post",
+                params: {
+                    "c_seq": @Model.c_seq,
+                    "file_type": "D",
+                    "uploadFolder": "@ViewBag.uploadFolder"
+                }
+            });
+
+            var finalDropzone = new Dropzone("div#final_file", {
+                url: "@Url.Action("CreateContractFile", "Client")",
+                method: "post",
+                params: {
+                    "c_seq": @Model.c_seq,
+                    "file_type": "F",
+                    "uploadFolder": "@ViewBag.uploadFolder"
+                }
+            });
+
+            draftDropzone.on("success", function (file, response) {
+                if (response.ok) {
+                    file_html = MakeHtmlFileList(response.result);
+                    $('#draft_file_rst').prepend($(file_html).hide().fadeIn(1000));
+                    $('#draft_file_rst').find('.more_cnt').text("("+($('#draft_file_rst div.file_div').length - 2) +")")
+                    this.removeFile(file);
+                } else {
+                    ErrorAlert("[ERROR]" + response.message);
+                }
+
+            });
+
+
+            modifyDropzone.on("success", function (file, response) {
+                if (response.ok) {
+                    file_html = MakeHtmlFileList(response.result);
+                    $('#modify_file_rst').prepend($(file_html).hide().fadeIn(1000));
+                    $('#modify_file_rst').find('.more_cnt').text("("+($('#modify_file_rst div.file_div').length - 2 ) + ")")
+                    this.removeFile(file);
+                } else {
+                    ErrorAlert("[ERROR]" + response.message);
+                }
+
+            });
+
+
+            finalDropzone.on("success", function (file, response) {
+                if (response.ok) {
+                    //dropzone_files.push(response.result);
+                    file_html = MakeHtmlFileList(response.result);
+                    $('#final_file_rst').prepend($(file_html).hide().fadeIn(1000));
+                    $('#final_file_rst').find('.more_cnt').text("("+($('#final_file_rst div.file_div').length - 2 ) + ")")
+                    this.removeFile(file);
+                } else {
+                    ErrorAlert("[ERROR]" + response.message);
+                }
+
+            });
+
+        }
+        function MakeHtmlFileList(obj_file) {
+            var cols = ""
+            if(obj_file.file_path && obj_file.file_path != ''){
+                var icon_str = "";
+
+                if (obj_file.file_extension == ".pdf") {
+                  icon_str = "far fa-fw fa-file-pdf text-primary"
+                } else if ( obj_file.file_extension == ".jpg" || obj_file.file_extension == ".png" || obj_file.file_extension == ".gif" || obj_file.file_extension == ".bmp" ){
+                  icon_str = "far fa-fw fa-file-image text-primary";
+                } else if ( obj_file.file_extension == ".doc" || obj_file.file_extension == ".docx" ){
+                  icon_str = "far fa-fw fa-file-word text-primary";
+                } else if ( obj_file.file_extension == ".xls" || obj_file.file_extension == ".xlsx"  ){
+                  icon_str = "far fa-fw fa-file-excel text-primary";
+                } else if ( obj_file.file_extension == ".ppt" || obj_file.file_extension == ".pptx"){
+                  icon_str = "far fa-fw fa-file-powerpoint text-primary";
+                } else {
+                  icon_str = "fa fa-fw fa-file-alt text-light";
+                }
+
+                cols += '<div class="py-0 file_div col-12">' //'+obj_file.col+'
+                cols += '  <input type="hidden" name="file_origin_path" value="' + obj_file.file_origin_path + '">'
+                cols += '  <input type="hidden" name="file_path" value="' + obj_file.file_path + '">'
+                cols += '  <input type="hidden" name="file_type" value="' + obj_file.file_type + '">'
+                cols += '  <input type="hidden" name="file_extension" value="' + obj_file.file_extension + '">'
+                cols += '  <a href="'+obj_file.file_dir+'" class="file_info text-left text-truncate cur_hand badge badge-secondary link-resume" title="'+obj_file.file_path+'" download';
+                cols += '  >';
+                cols += '    <i class="' + icon_str + '" aria-hidden="true"></i> ' + obj_file.file_path;
+                cols += '    <small>[' + ToJavaScriptDate(obj_file.create_dt) + ']</small>';
+                cols += '  </a>'
+                cols += '  <a href="javascript:void(0);" class="ml-3 text-truncate badge badge-danger cur_hand btn-resume-remove" style="width:10%;" onclick="RemoveCandidate(this);">';
+                cols += '   <i class="fa fa-trash" aria-hidden="true"></i>';
+                cols += '  </a>';
+                cols += '</div>';
+
+            }
+            return cols;
+        }
+
+        function ToJavaScriptDate(value) {
+            var pattern = /Date\(([^)]+)\)/;
+            var results = pattern.exec(value);
+            var dt = new Date(parseFloat(results[1]));
+            return (dt.getFullYear() + "-" + dt.getMonth() + 1) + "-" + dt.getDate();
+    }
+
+        function RemoveCandidate(obj) {
+
+            alertify.confirm()
+                .set({
+                    'labels': { ok: 'OK', cancel: 'Cancel' },
+                    'onok': function () {
+                        DeleteContractFile(obj)
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('Remove file')
+                .setting({
+                    message: "Are you sure want to delete this file?",
+                })
+                .show();
+        }
+
+        
+        function DeleteContractFile(obj) {
+            cf_seq = $(obj).closest('.file_div').find("input[name=cf_seq]").val();
+            $.ajax({
+                    url: '@Url.Action("DeleteContractFile", "Client")',
+                    data: {
+                       cf_seq: cf_seq
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                    beforeSend: function () {
+                        showLoading('#contractfileBody');
+                    
+                    }
+                })
+                .done(function (json) {
+                    hideLoading('#contractfileBody');
+                    if (json.ok) {
+                        parent = $(obj).closest(".file_rst");
+                        parent.find('.more_cnt').text("(" + (parseInt(parent.find('div.file_div').length) - 2) + ")")
+                        $(obj).closest('.file_div').remove();
+                        
+
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    hideLoading('#contractfileBody');
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+        }
+
+    </script>

@@ -1,0 +1,859 @@
+﻿@model Univision.Main.Models.Project.ProjectInvoiceCreateModel
+
+<style>
+</style>
+
+@using (Html.BeginForm("ProjectRepInvoiceCreate", "Project", FormMethod.Post, new { @id = "InvoiceCreateForm" }))
+{
+  @Html.HiddenFor(x => x.pii_seq)
+
+  <div class="panel" style="margin-bottom:10px !important;">
+    <div class="panel-heading">
+      <h3 class="panel-title" style="padding: 10px 30px 5px 30px">
+        <i class="fas fa-newspaper"></i>
+        기본정보
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div class="panel-body" style="padding: 5px 10px 5px 10px;">
+      <div class="row">
+        <div class="col-md-4">
+          <label class="form-control-label" for="billing_dt">빌링요청일자<span class="label-reqired">*</span></label>
+          <div class="input-group input-group-sm">
+            @Html.TextBox("billing_dt", Utils.ConvertDateTimeToString(Model.billing_dt.HasValue ? Model.billing_dt : Model.join_dt), new { @class = "form-control jDatePicker", @autocomplete = "off" })
+            <span class="input-group-addon">
+              <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+            </span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-control-label" for="expire_guarantee">보증기간 </label>
+          <div class="input-group input-group-sm">
+            @Html.TextBox("expire_guarantee", Utils.ConvertDateTimeToString(Model.expire_guarantee), new { @class = "form-control jDatePicker", @autocomplete = "off" })
+            <span class="input-group-addon">
+              <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-5">
+        <div class="col-md-6 bill_exch">
+          <label class="form-control-label" for="billing_money">빌링액<span class="label-reqired">*</span></label>
+          <input type="hidden" id="billing_type" name="billing_type" value="1" />
+          <div class="input-group input-group-sm">
+            @{
+              double billing_money = (double)Model.ann_income * ((double)Model.fee_rate * 0.01);
+            }
+            @Html.TextBox("billing_money", Utils.ConvertMoneyToString(billing_money), new { @class = "form-control text-right w-75 fee_change", @autocomplete = "off" })
+
+            <select name="bill_currency_cd" id="bill_currency_cd" class="form-control form-control-sm w-25 fee_change">
+              <option value="">[금액단위 선택]</option>
+              <option value="KRW" @(Model.bill_currency_cd == "KRW" ? "selected" : "")>KRW(원)</option>
+              <option value="USD" @(Model.bill_currency_cd == "USD" ? "selected" : "")>USD(달러)</option>
+              <option value="HKD" @(Model.bill_currency_cd == "HKD" ? "selected" : "")>HKD(홍콩달러)</option>
+              <option value="JPY" @(Model.bill_currency_cd == "JPY" ? "selected" : "")>JPY(엔화)</option>
+              <option value="SGD" @(Model.bill_currency_cd == "SGD" ? "selected" : "")>SGD(싱가폴 달러)</option>
+              <option value="GBP" @(Model.bill_currency_cd == "GBP" ? "selected" : "")>GBP(파운드)</option>
+              <option value="DEM" @(Model.bill_currency_cd == "DEM" ? "selected" : "")>DEM(마르크)</option>
+              <option value="FRF" @(Model.bill_currency_cd == "FRF" ? "selected" : "")>FRF(프랑스 프랑)</option>
+              <option value="CHF" @(Model.bill_currency_cd == "CHF" ? "selected" : "")>CHF(스위스 프랑)</option>
+              <option value="EUR" @(Model.bill_currency_cd == "EUR" ? "selected" : "")>EUR(유로)</option>
+              <option value="CNY" @(Model.bill_currency_cd == "CNY" ? "selected" : "")>CNY(위안)</option>
+              <option value="AUD" @(Model.bill_currency_cd == "AUD" ? "selected" : "")>AUD(호주달러)</option>
+              <option value="NZD" @(Model.bill_currency_cd == "NZD" ? "selected" : "")>NZD(뉴질랜드달러)</option>
+              <option value="CAD" @(Model.bill_currency_cd == "CAD" ? "selected" : "")>CAD(캐나다달러)</option>
+              <option value="THB" @(Model.bill_currency_cd == "THB" ? "selected" : "")>THB(태국 밧)</option>
+              <option value="TWD" @(Model.bill_currency_cd == "TWD" ? "selected" : "")>TWD(신타이완달러)</option>
+              <option value="VND" @(Model.bill_currency_cd == "VND" ? "selected" : "")>VND(베트남 동)</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <label class="form-control-label" for="vat_type">VAT 포함</label>
+          <div class="input-group input-group-sm">
+            <select name="vat_type" id="vat_type" class="form-control form-control-sm fee_change">
+              <option value="1" @(Model.vat_type == 1 ? "selected" : "")>VAT별도</option>
+              <option value="3" @(Model.vat_type == 3 ? "selected" : "")>면세</option>
+              <option value="0" @(Model.vat_type == 0 ? "selected" : "")>VAT포함</option>
+              <option value="2" @(Model.vat_type == 2 ? "selected" : "")>영세율(0%)</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-control-label" for="billing_money">원화 환산 예상액</label>
+          <div class="input-group input-group-sm">
+            @Html.TextBox("billing_won", Utils.ConvertMoneyToString(Model.billing_won), new { @class = "form-control text-right", @placeholder = "기능 준비 중 입니다.", @autocomplete = "off", @readonly = "readonly" })
+            <span class="input-group-addon">
+              WON
+            </span>
+          </div>
+
+        </div>
+      </div>
+      <div class="row mb-5">
+        <div class="col-md-4">
+          <div class="input-group input-group-sm">
+            <span class="input-group-addon">
+              총금액
+            </span>
+            @Html.TextBoxFor(x => x.billing_total, new { @class = "form-control text-right", @readonly = "true" })
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="input-group input-group-sm">
+            <span class="input-group-addon">
+              공급가
+            </span>
+            @Html.TextBoxFor(x => x.billing_amt, new { @class = "form-control text-right", @readonly = "true" })
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="input-group input-group-sm">
+            <span class="input-group-addon">
+              VAT
+            </span>
+            @Html.TextBoxFor(x => x.billing_vat, new { @class = "form-control text-right", @readonly = "true" })
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 매출배분 시작 -->
+  <div class="panel" style="margin-bottom:10px !important;">
+    <div class="panel-heading">
+      <h3 class="panel-title" style="padding: 10px 30px 5px 30px">
+        <i class="fas fa-won-sign"></i>
+        Fee sharing
+        <input type="hidden" id="inv_total_share_per" value="0" />
+        <input type="hidden" id="inv_total_share_amt" value="0" />
+        <br />
+        <small id="total_share_per">
+          (0%)
+        </small>
+
+      </h3>
+      <div class="panel-actions">
+        <div class="checkbox-custom checkbox-custom-sm checkbox-primary">
+          <input type="checkbox" id="share_money_type" value="1" />
+          <label for="share_money_type">정액분배</label>
+        </div>
+      </div>
+    </div>
+    <div class="panel-body" id="salesList" name="salesList" style="padding: 5px 10px 5px 10px;">
+
+      @if (Model.chargeList.Count > 0)
+      {
+        foreach (var data in Model.chargeList)
+        {
+          <div class="chargeRow pb-5">
+            <div class="row form-inline no-side-space col-md-12">
+              <div class="col-md-2 text-center">
+                @Html.HiddenFor(x => data.uv_seq)
+                @Html.HiddenFor(x => data.ud_seq)
+                @Html.HiddenFor(x => data.name)
+                @data.name
+              </div>
+              <div class="col-md-2">
+                <div class="input-group input-group-sm">
+                  @Html.TextBox("charge_fee_rate", data.sales_rate, new { @class = "form-control text-right fee_change", @type = "number", @autocomplete = "off", @max = 100, @min = 0, @step = "0.01" })
+                  <span class="input-group-addon">
+                    %
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="input-group input-group-sm">
+                  @Html.TextBox("charge_amt", data.sales_money, new { @class = "form-control text-right fee_change", @readonly = "@readonly", @autocomplete = "off" })
+
+                </div>
+              </div>
+              <div class="col">
+                @Html.TextBox("charge_comments", data.comments, new { @class = "form-control form-control-sm", @placeholder = "Comment" })
+              </div>
+              <div class="col-md-1 text-right">
+                <button type="button" class="btn btn-xs btn-danger share_remove" title="Remove"><i class="fas fa-times"></i></button>
+              </div>
+            </div>
+          </div>
+
+        }
+      }
+
+    </div>
+    <div class="panel-footer text-center">
+      <button type="button" class="btn btn-xs btn-outline btn-success" id="btnAddCharge">
+        <i class="fas fa-plus"></i>
+        Add Consultant
+      </button>
+    </div>
+  </div>
+  <!-- 매출배분 끝 -->
+
+  <!-- 수신정보 시작 -->
+  <div class="panel" style="margin-bottom:10px !important;">
+    <div class="panel-heading">
+      <h3 class="panel-title" style="padding: 10px 30px 5px 30px">
+        <i class="fas fa-envelope-open-text"></i>
+        Client &amp; Invoice
+      </h3>
+      <div class="panel-actions">
+        <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+      </div>
+    </div>
+    <div class="panel-body" style="padding: 5px 10px 5px 10px;">
+      <div class="row no-side-space form-group mb-5">
+        <div class=" col-md-4">
+          <label class="form-control-label" for="client_name">고객사명</label><span class="label-reqired">*</span>
+          @Html.TextBoxFor(x => x.client_name, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+        <div class="col-md-4">
+          <label class="form-control-label" for="ceo">대표자명</label>
+          @Html.TextBoxFor(x => x.ceo, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+        <div class="col-md-4">
+          <label class="form-control-label" for="biz_code">사업자번호</label>
+          @Html.TextBoxFor(x => x.biz_code, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+      </div>
+
+      <div class="row no-side-space form-group mb-5">
+        <div class="col-md-12">
+          <label class="form-control-label" for="addr">주소</label>
+          @Html.TextBoxFor(x => x.addr, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+      </div>
+      <div class="row no-side-space form-group mb-5">
+        <div class=" col-md-4">
+          <label class="form-control-label" for="client_contact_name">Contact</label><span class="label-reqired">*</span>
+          @Html.TextBox("client_contact_name", Model.client_contact_name, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+        <div class="col-md-4">
+          <label class="form-control-label" for="client_contact_tel">Contact Tel.</label>
+          @Html.TextBox("client_contact_tel", Model.client_contact_tel, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+        <div class="col-md-4">
+          <label class="form-control-label" for="client_contact_email">Contact Email</label>
+          @Html.TextBox("client_contact_email", Model.client_contact_email, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+      </div>
+      <div class="row no-side-space form-group mb-5">
+        <div class=" col-md-4">
+          <label class="form-control-label" for="client_etax_name">Tax Name</label><span class="label-reqired">*</span>
+          @Html.TextBox("client_etax_name", Model.client_etax_name, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+        <div class="col-md-4">
+          <label class="form-control-label" for="client_etax_tel">Tax Tel.</label>
+          @Html.TextBox("client_etax_tel", Model.client_etax_tel, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+        <div class="col-md-4">
+          <label class="form-control-label" for="client_etax_email">Tax Email</label>
+          @Html.TextBox("client_etax_email", Model.client_etax_email, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+        </div>
+      </div>
+
+      <div class="row no-side-space form-group mb-5">
+        <input type="hidden" id="is_open_nameN" name="is_open_name" value="0">
+        <input type="hidden" id="is_open_annual_incomeN" name="is_open_annual_income" value="0">
+        <div class="col-md-4">
+          <label class="form-control-label" for="invoice_lang">인보이스 언어</label>
+          <div>
+            <div class="radio-custom radio-default radio-inline">
+              <input type="radio" id="korInvoice" name="invoice_lang" value="0" checked @(Model.invoice_lang == 0 ? "checked" : "")>
+              <label for="korInvoice">국문</label>
+            </div>
+            <div class="radio-custom radio-default radio-inline">
+              <input type="radio" id="engInvoice" name="invoice_lang" value="1" @(Model.invoice_lang == 1 ? "checked" : "")>
+              <label for="engInvoicesn">영문</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-control-label" for="is_po_noY">PO No. 필요</label>
+          <div>
+            <div class="radio-custom radio-default radio-inline">
+              <input type="radio" id="is_po_noY" name="is_po_no" value="1" checked @(Model.is_po_no == 1 ? "checked" : "")>
+              <label for="is_po_noY">Yes</label>
+            </div>
+            <div class="radio-custom radio-default radio-inline">
+              <input type="radio" id="is_po_noN" name="is_po_no" value="0" @(Model.is_po_no == 0 ? "checked" : "")>
+              <label for="is_po_noN">No</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-control-label" for="invoice_type">인보이스 종류</label>
+          <div>
+            <div class="radio-custom radio-default radio-inline">
+              <input type="radio" id="Other" name="invoice_type" value="3" checked>
+              <label for="Other"><small>Consulting</small></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 수신정보 끝 -->
+
+  <div class="panel" style="margin-bottom:10px !important;">
+    <div class="panel-body" style="padding: 5px 10px 5px 10px;">
+      <div class="row no-side-space form-group mb-5">
+        <div class="col-md-12">
+          <label class="form-control-label" for="remarks">Comment</label><span class="label-reqired">*</span>
+          @Html.TextAreaFor(x => x.remarks, new { @class = "form-control", @name = "remarks", @rows = "3" })
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row col-md-12 no-side-space">
+    <div class="col-md-12 no-side-space">
+      <span class="ml-5 noEngCompany" style="color:red; font-size:11px; display:none"> * 고객사 정보에 영문명이 없습니다. 영문고객사 입력 하실 경우 입력하신 정보가 고객사 정보에 업데이트 됩니다.</span>
+    </div>
+    <div class="col-md-12 mb-5 form-inline">
+      <div class="checkbox-custom checkbox-primary border-primary pr-10">
+        <input type="checkbox" id="is_success" name="is_success" value="1" checked>
+        <label for="is_success" style="">인보이스 발행 후 프로젝트 성공으로 변경</label>
+      </div>
+      <label for="is_success" style="">
+        <i class="fas fa-question-circle" title="인보이스 발행 후 바로 프로젝트 상태를 성공으로 변경합니다."></i>
+      </label>
+    </div>
+    <div class="col-md-6">
+      <div class="checkbox-custom checkbox-primary">
+        <input type="checkbox" id="invoiceOk" value="1" />
+        <label for="invoiceOk">상기 사항을 확인 했습니다.</label><span class="label-reqired">*</span>
+      </div>
+    </div>
+    <div class="col-md-6 vertical-align text-right">
+      <div class="vertical-align-bottom">
+        <button type="submit" class="btn btn-sm btn-primary" id="btnPopSave" disabled>인보이스 요청</button>
+      </div>
+    </div>
+  </div>
+
+
+}
+
+
+<script type="text/javascript">
+  window.url_exchange_partial = "@Url.Action("FindExchangeApi", "Partial")";
+  $("#billing_money,#ann_income,#bill_currency_cd").change(function () {
+    var cur_cd = $("#bill_currency_cd").val();
+    if (cur_cd != "" && cur_cd != "KRW") {
+      ajxCall({
+        url: window.url_exchange_partial,
+        data: {
+          currency: cur_cd
+        },
+        type: 'POST',
+        loading: true,
+        loading_target: ".bill_exch",
+        bef: function () {
+        },
+        suc: function (rst) {
+          if (rst && rst.ok) {
+            if (rst.data && rst.data.ex_seq > 0) {
+              var per_won = rst.data.per_won;
+              var per_rate = rst.data.ex_rate;
+              var org_money = uncomma2($('#billing_money').val())
+              var result_won = ((org_money * per_won) / per_rate).toFixed(2);
+              $('#billing_won').val(comma2(result_won.toString()))
+            }
+          }
+        }
+      })
+    } else {
+      $('#billing_won').val($('#billing_money').val())
+    }
+
+
+  });
+</script>
+<script type="text/javascript">
+    var chargeArr = [];
+    var isEngCompanySave = false;
+
+    var clientValidator = {
+        validators: {
+            selector: '#client_name',
+            callback: {
+                message: "고객사명을 입력하세요.",
+                callback: function (input) {
+
+                    var fv = $("#InvoiceCreateForm").data("formValidation");
+
+                    let isEmpty = true;
+                    var is_eng = $("input:radio[name='invoice_lang']:checked").val() == "1" ? true : false;
+
+                    if (is_eng && input != "")
+                        isEmpty = false;
+                    else if (input != "")
+                        isEmpty = false;
+
+                    if (!isEmpty) {
+                        // Update the status of callback validator for all fields
+                        fv.updateStatus('client_name', 'Valid', 'callback');
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+    };
+    var salesValidator = {
+        validators: {
+            selector: '#salesList',
+            callback: {
+                message: "매출배분 비율의 총 합은 100%가 되어야 합니다.",
+                callback: function (input) {
+
+                    var fv = $("#InvoiceCreateForm").data("formValidation");
+
+                    var feeRate = 0;
+
+                    $(".chargeRow").each(function () {
+                        feeRate += parseInt($(this).find("#charge_fee_rate").val());
+                    })
+
+                    let isEmpty = true;
+
+                    if (feeRate <= 100) {
+                        isEmpty = false;
+                    }
+
+                    if (!isEmpty) {
+                        // Update the status of callback validator for all fields
+                        fv.updateStatus('salesList', 'Valid', 'callback');
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+    };
+
+
+    $(document).ready(function () {
+        StopEnterSubmit();
+
+        BindDatePicker($(".jDatePicker"));
+
+        //빌링액 변경시
+      $("#InvoiceCreateForm #billing_money").bind('keyup', function (event) {
+        removeChar2(event);
+        inputNumberFormat2(this);
+      });
+
+      $("#InvoiceCreateForm #billing_money").bind('keydown', function () {
+        inputNumberFormat2(this);
+      });
+
+        //인보이스 내용 확인 체크시
+        $("#invocieOk").click(function () {
+            if ($(this).prop("checked")) {
+                $("#btnPopSave").prop("disabled", false);
+            } else {
+                $("#btnPopSave").prop("disabled", true);
+            }
+
+        });
+
+        $("input:radio[name='invoice_lang']").change(function () {
+
+            var clientKorName = '@Model.client_name';
+            var clientEngName = '@Model.client_eng_name';
+
+            //영문 인보이스 요청
+            if ($(this).val() == "1") {
+
+
+                //고객사 영문 명이 비어있을 경우, 입력 요청.
+                if (clientEngName.trim() == "") {
+                    $("#client_name").removeAttr("readonly");
+                    $("#client_name").val("");
+                    $(".noEngCompany").css("display", "block");
+                    isEngCompanySave = true;
+                }
+                else {
+                    $("#client_name").val(clientEngName);
+                }
+            }
+            //한글 인보이스 요청
+            else {
+                $("#candidate_name").val(candiKorName);
+                $("#candidate_name").attr("readonly", "readonly");
+                $(".noEngCandidate").css("display", "none");
+                isEngCandiSave = false;
+
+                $("#client_name").val(clientKorName);
+                $("#client_name").attr("readonly", "readonly");
+                $(".noEngCompany").css("display", "none");
+                isEngCompanySave = false;
+            }
+        })
+
+        //매출배분 추가 버튼 클릭시,
+        $("#btnAddCharge").click(function () {
+
+            chargeArr = [];
+            $("#salesList").find("input[name='data.uv_seq']").each(function(){
+                chargeArr.push($(this).val());
+            });
+
+            $.ajax({
+                url: '@Url.Action("AddProjectInvoiceCharge", "Project")',
+                data: {
+
+                },
+                dataType: 'html',
+                type: 'GET',
+                beforeSend: function ()
+                {
+                    showLoading();
+                }
+            })
+            .done(function (json) {
+                hideLoading();
+
+                $.fancybox.open({
+                    'content':json,
+                    'width': '550',
+                    'height': '385',
+                    'autoDimensions':false,
+                    'type':'iframe',
+                    'autoSize': false,
+                    'title': '담당자 목록',
+                    helpers: {
+                        title : {
+                            type: 'inside',
+                            position : 'top'
+                        },
+                        overlay: {
+                            closeClick: false
+                        }
+                    }
+                });
+            })
+            .fail(function (e) {
+                hideLoading();
+                ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+            });
+        });
+
+        //유효성 검사 및 폼 전송
+        $("#InvoiceCreateForm").formValidation({
+            framework: "bootstrap4",
+            button: {
+                selector: "#btnPopSave",
+                disabled: "disabled"
+            },
+            submitHandler: function () {
+
+            },
+            icon: null,
+            fields: {
+                billing_dt: {
+                    validators: {
+                        notEmpty: {
+                            message: "빌링 날짜는 필수 입력 항목 입니다."
+                        }
+                    }
+                },
+                billing_money: {
+                    validators: {
+                        notEmpty: {
+                            message: "빌링금액은 필수 입력 항목 입니다."
+                        }
+                    }
+                },
+                remarks: {
+                    validators: {
+                        notEmpty: {
+                            message: "Comment 를 입력하여 주십시오."
+                        }
+                    }
+                }
+            },
+            err: {
+                clazz: "invalid-feedback"
+            },
+            control: {
+                valid: "is-valid",
+                invalid: "is-invalid"
+            },
+            row: {
+                invalid: "has-danger"
+            }
+        })
+        //validation 성공시, ajax submit.
+        //ajax submit 사용하지 않을 경우, on 부분은 삭제해도 됨.
+        .on('success.form.fv', function (e) {
+            //기본 submit 이벤트 취소.
+            e.preventDefault();
+
+            console.log($("#invoiceOk").prop("checked"))
+            if (!$("#invoiceOk").prop("checked")) {
+                ErrorAlert("인보이스 사항을 모두 확인 하셨으면, 상기 사항 동의에 체크 해주세요.");
+                $("#invoice").focus();
+                $("#btnPopSave").removeClass("disabled").removeAttr("disabled");
+                return false;
+            }
+          if ($("#share_money_type:checked").val() == "1") {
+            var tamt = uncomma2($("#billing_amt").val());
+            if (parseInt($("#inv_total_share_amt").val()) != tamt) {
+              ErrorAlert("매출배분 금액 합은 '" + $("#billing_amt").val()+"'여야 합니다.");
+              $("#btnPopSave").removeClass("disabled").removeAttr("disabled");
+              return false;
+            }
+          } else {
+            if (parseInt($("#inv_total_share_per").val()) != 100) {
+              ErrorAlert("매출배분은 100%여야 합니다.");
+              $("#btnPopSave").removeClass("disabled").removeAttr("disabled");
+              return false;
+            }
+          }
+
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+
+                            var currentData = {
+                                pii_seq: $("#pii_seq").val(),
+                                p_seq: @Model.p_seq,
+                              billing_dt: $("#billing_dt").val(),
+                              billing_money: uncomma2($("#billing_money").val()),
+                              billing_total: uncomma2($("#billing_total").val()),
+                              billing_amt: uncomma2($("#billing_amt").val()),
+                              billing_vat: uncomma2($("#billing_vat").val()),
+                              billing_won: uncomma2($("#billing_won").val()),
+                                fee_rate : 0,
+                                bill_currency_cd: $("#bill_currency_cd").val(),
+                                vat_type: $("#vat_type").val(),
+                                billing_type: $("#billing_type").is(":checked") ? $("#billing_type").val() : 0,
+                                expire_guarantee: $("#expire_guarantee").val(),
+                                is_open_name: 0,
+                                is_open_annual_income: 0,
+                                invoice_lang: $("input[name=invoice_lang]:checked").val(),
+                                invoice_type: $("input[name=invoice_type]:checked").val(),
+                                is_po_no: $("input[name=is_po_no]:checked").val(),
+                                remarks: $("#remarks").val(),
+
+
+                                isEngCompanySave: isEngCompanySave,
+                                client_seq: $("#client_seq").val(),
+                                client_name: $("#client_name").val(),
+                                client_ceo: $("#ceo").val(),
+                                client_biz_code: $("#biz_code").val(),
+                                client_addr1: $("#addr").val(),
+
+                                client_contact_name : $("#client_contact_name").val(),
+                                client_contact_tel : $("#client_contact_tel").val(),
+                                client_contact_email : $("#client_contact_email").val(),
+                                client_etax_name : $("#client_etax_name").val(),
+                                client_etax_tel : $("#client_etax_tel").val(),
+                                client_etax_email : $("#client_etax_email").val(),
+                                chargeList: []
+                            };
+
+                            //매출배분 담당자 List
+                            $("#salesList").find(".chargeRow").each(function () {
+                                var chargeData = {
+                                    p_seq: @Model.p_seq,
+                                    uv_seq: $(this).find("input[name='data.uv_seq']").val(),
+                                    ud_seq: $(this).find("input[name='data.ud_seq']").val(),
+                                    name : $(this).find("input[name='data.name']").val(),
+                                    sales_rate: $(this).find("input[name='charge_fee_rate']").val(),
+                                  sales_money: uncomma2($(this).find("input[name='charge_amt']").val()),
+                                    comments: $(this).find("input[name='charge_comments']").val(),
+                                };
+
+                                currentData.chargeList.push(chargeData);
+                            });
+
+                            var formURL = $("#InvoiceCreateForm").attr("action");
+                            $.ajax({
+                                url: formURL,
+                                type: "POST",
+                                dataType: 'json',
+                                data: {
+                                    data : currentData,
+                                    is_success: $('#is_success:checked').val()
+                                },
+                                beforeSend: function () {
+                                    showLoading();
+                                },
+                                success: function (json) {
+                                    hideLoading();
+                                    if (json.ok) {
+                                        NormalAlert("인보이스 발행 요청 했습니다.");
+                                        if (json.is_success_ok) {
+                                            location.href = "@Url.Action("ProjectRepDetail", "Project", new { p_seq = Model.p_seq })";
+                                        } else {
+                                            $('#InvoiceCreateModal').modal("toggle");
+                                            callProjectInvoiceList(@Model.p_seq, 1);
+                                        }
+                                    }
+                                    else {
+                                        ErrorAlert(json.message);
+                                    }
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    hideLoading();
+                                    ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.");
+                                }
+                            });
+                        },
+                        'oncancel': function () {
+                            $("#btnPopSave").removeClass("disabled").removeAttr("disabled");
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>인보이스 발행 요청')
+                    .setting({
+                        message: "인보이스 발행 요청 후엔 수정할 수 없습니다.\n인보이스 발행 요청 하시겠습니까?",
+                    })
+                    .show();
+        });
+    });
+
+    $('.share_remove').click(function () {
+        $(this).closest('.chargeRow').remove();
+        changeTotalFee();
+    });
+
+    $('.fee_change').change(changeTotalFee);
+
+    function changeTotalFee() {
+
+
+        var billing_money = parseInt(uncomma($("#InvoiceCreateForm #billing_money").val()));
+        if ($("#InvoiceCreateForm #vat_type").val() == 1) {
+          var billing_amt = billing_money;
+          var billing_vat = (billing_money * 0.1);
+        } else if ($("#InvoiceCreateForm #vat_type").val() == 0) {
+          var billing_vat_cal = (billing_money / 1.1);
+          var billing_amt = Math.round((billing_vat_cal / 10) * 10, 0);
+          var billing_vat = billing_money - billing_amt
+        } else {
+          var billing_amt = billing_money;
+          var billing_vat = 0;
+        }
+        $('#InvoiceCreateForm #billing_total').removeAttr("readonly");
+        $('#InvoiceCreateForm #billing_amt').removeAttr("readonly");
+        $('#InvoiceCreateForm #billing_vat').removeAttr("readonly");
+        $('#InvoiceCreateForm #billing_total').val(comma(billing_amt + billing_vat));
+        $('#InvoiceCreateForm #billing_amt').val(comma(billing_amt));
+        $('#InvoiceCreateForm #billing_vat').val(comma(billing_vat));
+        $('#InvoiceCreateForm #billing_total').attr("readonly", "readonly");
+        $('#InvoiceCreateForm #billing_amt').attr("readonly", "readonly");
+        $('#InvoiceCreateForm #billing_vat').attr("readonly", "readonly");
+
+      if ($("#share_money_type:checked").val() != "1") {
+        var rate = 0;
+
+        $("input[name='charge_fee_rate']").each(function () {
+          var fee = parseFloat($(this).val());
+          var share_money = comma(Math.round(billing_amt * (fee * 0.01)))
+
+          $(this).closest(".row").find("input[name='charge_amt']").val(share_money);
+        });
+
+
+      } else {
+        var amt = 0;
+
+        $("input[name='charge_amt']").each(function () {
+          var camt = parseInt($(this).val());
+          var share_fee = Math.round(camt / billing_amt * 100)
+
+          $(this).closest(".row").find("input[name='charge_fee_rate']").val(share_fee);
+        });
+
+
+      }
+
+      changeChargeFee();
+    }
+    //매출배분 수수료 변경
+    function changeChargeFee() {
+      var money = 0;
+      var rate = 0;
+      if ($("#share_money_type:checked").val() == "1") {
+        billing_amt = uncomma($('#billing_amt').val());
+        $("input[name='charge_amt']").each(function () {
+          money += parseFloat($(this).val());
+          /*
+          if (money > billing_amt) {
+            ErrorAlert("매출 배분 금액은 '"+comma(billing_amt)+"'를 초과할 수 없습니다.");
+            $('#inv_total_share_amt').val(money);
+            $('#total_share_per').removeClass('text-danger').addClass('text-danger');
+            $('#total_share_per').text("(" + comma(money) + ") - 배분 금액은 '" + comma(billing_amt) +"'를 초과할 수 없습니다.")
+            return false;
+          }
+          */
+        });
+        $('#inv_total_share_amt').val(money);
+        if (money < billing_amt || isNaN(money)) {
+          $('#total_share_per').removeClass('text-danger').addClass('text-danger');
+          $('#total_share_per').text("(" + comma(money) + ") - 매출 금액의 합은 '" + comma(billing_amt) + "'가 되어야합니다.")
+        } else if (money > billing_amt) {
+          $('#total_share_per').removeClass('text-danger').addClass('text-danger');
+          $('#total_share_per').text("(" + comma(money) + ") - 배분 금액은 '" + comma(billing_amt) + "'를 초과할 수 없습니다.")
+        } else {
+          $('#total_share_per').removeClass('text-danger')
+          $('#total_share_per').text("(" + comma(money) + ")")
+        }
+      } else {
+        $("input[name='charge_fee_rate']").each(function () {
+          rate += parseFloat($(this).val());
+
+          if (rate > 100) {
+            ErrorAlert("매출 배분 수수료율은 100%를 초과할 수 없습니다.");
+            $('#inv_total_share_per').val(rate);
+            $('#total_share_per').removeClass('text-danger').addClass('text-danger');
+            $('#total_share_per').text("(" + rate + "%) - 매출 배분 수수료율은 100%를 초과할 수 없습니다.")
+            return false;
+          }
+        });
+        $('#inv_total_share_per').val(rate);
+        if (rate < 100 || isNaN(rate)) {
+          $('#total_share_per').removeClass('text-danger').addClass('text-danger');
+          $('#total_share_per').text("(" + rate + "%) - 매출 배분 수수료율합은 100%가 되어야합니다.")
+        } else {
+          $('#total_share_per').removeClass('text-danger')
+          $('#total_share_per').text("(" + rate + "%)")
+        }
+      }
+
+
+  }
+
+  function SetShareMoneyType() {
+    if ($("#share_money_type:checked").val() == "1") {
+      $(".chargeRow").each(function () {
+
+        $(this).find("#charge_amt").removeAttr("readonly");
+        //$(this).find("#charge_amt").attr("readonly", "readonly");
+        $(this).find("#charge_fee_rate").attr("readonly", "readonly");
+      })
+    } else {
+      $(".chargeRow").each(function () {
+        $(this).find("#charge_fee_rate").removeAttr("readonly");
+        $(this).find("#charge_amt").attr("readonly", "readonly");
+        //$(this).find("#charge_fee_rate").closest("div").css("display", "");
+      })
+    }
+
+    changeChargeFee();
+  }
+
+  $('#share_money_type').click(SetShareMoneyType);
+
+  changeTotalFee();
+  $("#bill_currency_cd").change()
+</script>

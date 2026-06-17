@@ -1,0 +1,192 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ClientProjectList
+
+@if (Model.projectList.Count > 0)
+{
+  <div class="row">
+    <div class="col-6 form-inline">
+
+    </div>
+    <div class="col-6 text-right">
+      @*<button class="btn btn-sm btn-success" id="btnExcel">엑셀 다운로드</button>*@
+      @*PMS 오픈 관련 등록기능 제한*@
+      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      {
+        <a href="@Url.Action("ProjectCreate", "Project", new { c_seq = Model.c_seq })" class="btn btn-primary" title="채용(Recruitment) 프로젝트 등록">
+          <i class="icon wb-plus"></i>
+          채용(Recruitment) 프로젝트
+        </a>
+        <a href="@Url.Action("ProjectRepCreate", "Project", new { c_seq = Model.c_seq })" class="btn btn-info" title="컨설팅(Consulting) 프로젝트 등록">
+          <i class="icon wb-plus"></i>
+          컨설팅(Consulting) 프로젝트
+        </a>
+      }
+    </div>
+  </div>
+
+  <div class="">
+    <table class="block_table table table-striped table-hover mt-15" style="table-layout:fixed;">
+      <thead class="text-center">
+        <tr>
+          <th title="프로젝트 구분" style="min-width:50px;" class="hidden-sm-down">Type</th>
+          <th title="구인제목" class="w-p20 tbw60">Title</th>
+          <th class="hidden-sm-down" style="min-width:60px;" title="프로젝트 상태">Status</th>
+
+          <th class="hidden-sm-down" title="산업(Industry)/직무(Job Function)">산업/직무</th>
+          <th class="tbw20" style="min-width:50px;">AM</th>
+          <th class="tbw20" style="min-width:50px;">SM</th>
+
+          <th class="hidden-sm-down" title="등록일">Reg.Date</th>
+          <th class="hidden-sm-down">관심/추천/면접/협상</th>
+          <th class="hidden-sm-down"><i class="fa fa-cog"></i></th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        @{
+          int num = (Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage + 1;
+          foreach (var data in Model.projectList)
+          {
+            <tr>
+              @{
+                string badgeClass = "";
+                string typeName = "";
+                string typeNameLong = "";
+                string typeBG = "";
+                switch (data.pjt_status)
+                {
+                  case 1:
+                    badgeClass = "badge-info";
+                    break;
+                  case 2:
+                    badgeClass = "badge-warning";
+                    break;
+                  case 3:
+                    badgeClass = "badge-danger";
+                    break;
+                  case 4:
+                    badgeClass = "badge-primary";
+                    break;
+                  case 5:
+                    badgeClass = "badge-success";
+                    break;
+                }
+
+                switch (data.pjt_type)
+                {
+                  case 1:
+                    typeName = "채용";
+                    typeNameLong = "채용(Recruitment) 프로젝트";
+                    typeBG = "badge-primary";
+                    break;
+                  default:
+                    typeName = "컨설팅";
+                    typeNameLong = "컨설팅(Consulting) 프로젝트";
+                    typeBG = "badge-info";
+                    break;
+                }
+              }
+              <td class="work-status text-truncate hidden-sm-down" style="width:5% !important">
+                <span class="badge font-size-12 @typeBG" title="@typeNameLong">@typeName</span>
+              </td>
+              <td class="text-left" title="@data.title">
+                <div class="text-truncate s2">
+                  @if (data.pjt_type == 1)
+                  {
+                    <a href="@Url.Action("ProjectDetail", "Project", new { p_seq = data.p_seq })" target="_blank">@data.title</a>
+                  }
+                  else
+                  {
+                    <a href="@Url.Action("ProjectRepDetail", "Project", new { p_seq = data.p_seq })" target="_blank">@data.title</a>
+                  }
+
+                </div>
+              </td>
+              <td class="work-status text-truncate hidden-sm-down" style="width:5% !important">
+                <span class="badge font-size-12 @badgeClass">@(Utils.ReturnProjectStatusTxt(data.pjt_status))</span>
+              </td>
+              @*<td>
+                    @data.status_comment
+                </td>*@
+
+              <td class="text-center text-truncate hidden-sm-down" title="@data.business_names2">
+                @if (!String.IsNullOrEmpty(data.business_names2))
+                {
+                  <text>[</text> @(data.business_names1 + " > " + data.business_names2) <text>]</text>
+                }
+                @if (!String.IsNullOrEmpty(data.job_names2))
+                {
+                  <br /><text>[</text> @(data.job_names1 + " > " + data.job_names2) <text>]</text>
+                }
+              </td>
+
+              @*<td style="text-align:left;">
+                    @if (data.assign_task.Length > 100)
+                    {
+                        <a href="@Url.Action("ProjectDetail", "Project", new { p_seq = data.p_seq})">@Html.Raw(data.assign_task.Substring(1, 100))</a>   <text><font color="red">   ...more</font></text>
+                    }
+                    else
+                    {
+                        @Html.Raw(data.assign_task)
+                    }
+                </td>*@
+              <td class="text-center text-truncate " title="@data.director">
+                @data.director
+              </td>
+              <td class="text-center text-truncate " title="@data.uv_name">
+                @data.uv_name
+              </td>
+              <td class="text-center text-truncate hidden-sm-down" title="@Utils.ConvertDateTimeToString(data.create_dt)">
+                @Utils.ConvertDateTimeToString(data.create_dt)
+              </td>
+              <td class="text-center text-truncate hidden-sm-down">
+                <span class="text-dark" title="관심등록">@data.interest_cnt</span>
+                <span class="text-warning pl-5" title="추천">@data.recommend_cnt</span>
+                <span class="text-primary pl-5" title="면접">@data.interview_cnt</span>
+                <span class="text-info pl-5" title="협상검증">@data.nego_cnt</span>
+              </td>
+
+              <td class="hidden-sm-down text-truncate">
+                @*PMS 오픈 관련 등록기능 제한*@
+                @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+                {
+                  <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = data.p_seq, @c_seq = data.c_seq, @type = "pjtCopy" })" class="btn btn-xs btn-outline-info mb-3" title="이 프로젝트 복사">
+                    <i class="icon wb-copy"></i>
+                    Copy
+                  </a>
+                }
+              </td>
+            </tr>
+          }
+        }
+
+      </tbody>
+    </table>
+  </div>
+  @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                               ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                               x => String.Format("javascript:callProjectList({0}, {1})", Model.c_seq, x))
+}
+else
+{
+  <div class="card">
+    <div class="card-block text-center">
+      <h4 class="card-title">등록된 프로젝트가 없습니다.<small>[No project data]</small></h4>
+      @*PMS 오픈 관련 등록기능 제한*@
+      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      {
+        <p class="card-text">
+          "New Project" 버튼을 눌러 프로젝트를 생성하실 수 있습니다.
+        </p>
+        <a href="@Url.Action("ProjectCreate", "Project", new { c_seq = Model.c_seq })" class="btn btn-sm btn-primary" title="채용(Recruitment) 프로젝트 등록">
+          <i class="icon wb-plus"></i>
+          New Project(Recruitment)
+        </a>
+        <a href="@Url.Action("ProjectRepCreate", "Project", new { c_seq = Model.c_seq })" class="btn btn-sm btn-info" title="컨설팅(Consulting) 프로젝트 등록">
+          <i class="icon wb-plus"></i>
+          New Project(Consulting)
+        </a>
+      }
+    </div>
+  </div>
+}
+
+

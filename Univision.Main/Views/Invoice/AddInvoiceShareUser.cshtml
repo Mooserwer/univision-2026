@@ -1,0 +1,181 @@
+﻿@model Univision.Main.Models.Project.SearchProjectSearcherModel
+
+<div class="card">
+  <div class="card-body">
+
+    <div class="row">
+      <div class="col-12">
+        @{
+
+          var deptList = new SelectList(Model.deptList, "ud_seq", "ud_name").ToList();
+          deptList.Insert(0, new SelectListItem { Value = "0", Text = "부서" });
+        }
+        <div class="input-group">
+          <span class="input-group-append">
+            @Html.DropDownListFor(x => x.ud_seq, deptList, new { @class = "form-control" })
+          </span>
+          @Html.TextBoxFor(x => x.searchTxt, new { @class = "form-control", @placeholder = "이름" })
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-primary" onclick="SearchConsultant();">
+              <i class="fa fa-search" aria-hidden="true"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="card-body" style="max-height:287px; overflow-y:auto">
+
+    <div class="table-responsive" style="min-width:400px;">
+      <table class="table table-primary table-bordered">
+        <thead class="text-center">
+          <tr>
+            <th class="wd-10p">선택</th>
+            <th class="wd-40p">이름</th>
+            <th class="wd-50p">팀명</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (Model.list.Count > 0)
+          {
+            foreach (var data in Model.list)
+            {
+              <tr>
+                <td class="text-center">
+
+
+                  <input type="checkbox" id="@data.uv_seq" name="share_uv_seq" value="@data.uv_seq" dept-cd="@data.ud_seq" rank=" @data.rank_name" dept="@data.ud_name" uv_name="@data.name" gubun="@data.gubun">
+
+                </td>
+                <td>
+                  @data.name&nbsp;<small>@data.rank_name</small>
+                </td>
+                <td class="tx-left">
+                  @data.ud_name
+                </td>
+              </tr>
+            }
+          }
+          else
+          {
+            <tr>
+              <td colspan="4">데이터가 없습니다.</td>
+            </tr>
+          }
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+  <div class="row">
+    <div class="col-12 pd-t-20">
+      <button type="button" id="btn-pop-user-confirm" class="btn btn-primary wd-100p">선택한 사용자 추가</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script type="text/javascript">
+
+  $(document).ready(function () {
+
+    $("input:checkbox[name='share_uv_seq']").each(function () {
+      if (share_arr.indexOf($(this).val()) > -1) {
+        $(this).prop("checked", true);
+      }
+    })
+
+    $("#btn-pop-user-confirm").click(function (event) {
+      var sb = new StringBuilder();
+      $("input:checkbox[name='share_uv_seq']").each(function () {
+        //이미 추가된 항목이면 패스
+        if (share_arr.indexOf($(this).val()) > -1) {
+          //만일 체크 해제된 항목이라면 본문에서도 지워줌.
+          if (!$(this).is(":checked")) {
+            var unChkVal = $(this).val();
+            $("#share_list").find("input[name='data.uv_seq']").each(function () {
+              if ($(this).val() == unChkVal) {
+                $(this).closest(".share_row").remove();
+              }
+            });
+          }
+          return;
+        }
+
+        if ($(this).is(":checked")) {
+          sb.append("<div class='row no-gutters share_row pd-5 bd-1 bd mg-b-5'>");
+          sb.append("  <label class='col-2 form-control-label'>");
+          sb.append("    <input type='hidden' id='data_uv_seq' name='data.uv_seq' value='" + $(this).val() + "' />");
+          sb.append("    <input type='hidden' id='data_ud_seq' name='data.ud_seq' value='" + $(this).attr("dept-cd") + "' />");
+          sb.append("    <input type='hidden' id='data_uv_seq' name='data.name' value='" + $(this).attr("uv_name") + "' />");
+          sb.append("    "+ $(this).attr("uv_name"));
+          sb.append("  </label>");
+          sb.append("  <div class='col-2 form-control-label'>");
+          sb.append("    <div class='input-group input-group-sm'>");
+          sb.append("      <input class='form-control form-control-sm tx-right share_fee_input' type='number' name='share_fee_rate' value='0' placeholder='백분율' max='100'>");
+          sb.append("      <span class='input-group-append'>");
+          sb.append("        <span class='input-group-text'>%</span>");
+          sb.append("      </span>");
+          sb.append("    </div>");
+          sb.append("  </div>");
+          sb.append("  <div class='col-3 form-control-label'>");
+          sb.append("    <input class='form-control form-control-sm tx-right share_fee_input money_input' type='text' name='share_amt' value='0' readonly='readonly' placeholder='분배금액'>");
+          sb.append("  </div>");
+          sb.append("  <div class='col-4 form-control-label'>");
+          sb.append("    <input class='form-control form-control-sm' type='text' name='share_comments' value='' placeholder='Comment'>");
+          sb.append("  </div>");
+          sb.append("  <div class='col-1 form-control-label flex-tx-right'>");
+          sb.append("    <button type='button' class='btn btn-sm btn-outline-light btn-icon' onclick='removeShareRow(this);'>");
+          sb.append("      <div class='tx-20'><i class='icon ion-android-close'></i></div>");
+          sb.append("    </button>");
+          sb.append("  </div>");
+          sb.append("</div>");
+        }
+      });
+
+      var $chargeRow = $(sb.toString())
+      
+      $chargeRow.find('.share_fee_input').change(TotalFeeChange);
+      $chargeRow.find('.money_input').bind('keyup', function (event) {
+        removeChar2(event);
+        inputNumberFormat2(this);
+      });
+
+      $chargeRow.find('.money_input').bind('keydown', function () {
+        inputNumberFormat2(this);
+      });
+
+      $("#share_list").append($chargeRow);
+      //$('#CreateForm').formValidation('revalidateField', 'Searcher');
+      StopEnterSubmit();
+      try {
+        SetShareMoneyType();
+      } catch {
+
+      }
+      
+      
+      $("#btn-pop-user-confirm").closest(".modal").find(".close").click();
+    });
+  });
+
+  //FancyBox 팝업 내의 페이지 이동.
+  function SearchConsultant() {
+    ajxCall({
+      url: window.url_add_invoice_share_user,
+      data: {
+        ud_seq: $("#ud_seq").val()
+        , searchTxt: $("#searchTxt").val()
+      },
+      dataType: 'html',
+      type: 'GET',
+      suc: function (html) {
+        $("#modal-base").find(".modal-body").html(html);
+      }
+    })
+  }
+
+</script>

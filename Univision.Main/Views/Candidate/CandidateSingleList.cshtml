@@ -1,0 +1,518 @@
+﻿@model Univision.Core.Models.DTO.candidate
+@{
+    int cookie_can_view_list = 0;
+
+    if (HttpContext.Current.Request.Cookies.AllKeys.Contains("CAND_VIEW_LIST"))
+    {
+        cookie_can_view_list = Convert.ToInt32(Request.Cookies["CAND_VIEW_LIST"].Value);
+    }
+}
+
+@if (cookie_can_view_list == 0)
+{
+    <div class="media">
+        <div class="media-body w-full text-left">
+            <h4 class="mt-0 mb-5">
+                <a href="javascript:openCandidate('@Model.c_seq')">
+                    @Html.Raw(Model.kor_name)
+                </a>
+                <a href="@Url.Action("CandidateDetail", "Candidate", new { c_seq = Model.c_seq })" target="candidate_@Model.c_seq" title="새창에서 열기">
+                    <i class="fa fa-external-link-alt"></i>
+                </a>
+                <small>
+                    @Utils.YearSeparate(Model.birth_date)
+                    @if (Model.is_confidential == 1)
+                    {
+                        <label class="badge badge-sm badge-danger">Confidential</label>
+                    }
+                    @if (Model.is_inactive == 1)
+                    {
+                        <label class="badge badge-sm badge-warning">Inactive</label>
+                    }
+                    <span class="text-danger">
+                        @Utils.Get1ToString(Model.ex_birthdate, "[추정]")
+                    </span>
+                    (@Utils.ReturnGenderTxt(Model.gender))
+                </small>
+                @if (Model.is_external_lock == 1)
+                {
+                    <a class="btn btn-sm badge badge-primary" href="javascript:openCandidateExternalLock('@Model.c_seq');" title="Unlock private information">
+                        <i class="fas fa-unlock-alt"></i> 연락처 확인
+                    </a><br />
+                }
+            <small>
+                [Reg. : @Utils.ConvertDateTimeToString(Model.create_dt) / <span class="text-secondary">Update : @Utils.ConvertDateTimeToString(Model.modify_dt)</span>]
+                <a class="btn btn-sm" href="javascript:PopMemoList('@Model.c_seq', '@Html.Raw(Model.kor_name.Replace("'", "\\\'"))', '@Utils.ReturnGenderTxt(Model.gender)', ' @Utils.YearSeparate(Model.birth_date) @Utils.Get1ToString(Model.ex_birthdate, "[추정]")');" title="Memo List">
+                    <i class="fas fa-list"></i>
+                </a>
+            </small>
+
+                @if (!string.IsNullOrWhiteSpace(Model.kor_file_ext) || !string.IsNullOrWhiteSpace(Model.eng_file_ext))
+                {
+                    <span class="d-block d-md-none"></span>
+                    if (!string.IsNullOrWhiteSpace(Model.kor_file_ext))
+                    {
+
+                        if (Model.is_external_lock == 1)
+                        {
+
+                            <a class="badge badge-sm badge-outline badge-dark" href="javascript:ErrorAlert('파일을 다운로드 받으려면 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오.');" title="국문이력서 - 파일을 다운로드 받으려면 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오." download>
+                                <i class="fas @Utils.ReturnFileExtensionClass(Model.kor_file_ext)"></i> Resume(Kor)
+                            </a>
+
+                        }
+                        else
+                        {
+
+                            <a class="badge badge-sm badge-outline badge-primary" href="javascript:void(0)" onclick="DownloadFile(@Model.kor_cr_seq, 'canResume')" title="국문이력서">
+                                <i class="fas @Utils.ReturnFileExtensionClass(Model.kor_file_ext)"></i> Resume(Kor)
+                            </a>
+
+                        }
+
+                    }
+                    if (!string.IsNullOrWhiteSpace(Model.eng_file_ext))
+                    {
+
+                        if (Model.is_external_lock == 1)
+                        {
+
+                            <a class="badge badge-sm badge-outline badge-dark" href="javascript:ErrorAlert('파일을 다운로드 받으려면 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오.');" title="영문이력서 - 파일을 다운로드 받으려면 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오." download>
+                                <i class="fas @Utils.ReturnFileExtensionClass(Model.eng_file_ext)"></i> Resume(Eng)
+                            </a>
+
+                        }
+                        else
+                        {
+
+                            <a class="badge badge-sm badge-outline badge-info" href="javascript:void(0)" onclick="DownloadFile(@Model.eng_cr_seq, 'canResume')" title="영문이력서">
+                                <i class="fas @Utils.ReturnFileExtensionClass(Model.eng_file_ext)"></i> Resume(Eng)
+                            </a>
+
+                        }
+                    }
+                }
+            </h4>
+            <p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-12">
+                                <i class="fa fa-at fa-fw" aria-hidden="true" title="E-mail"></i>
+                                @if (Model.is_external_lock == 1)
+                                {
+                                    <span class="text-secondary" title="이메일주소를 확인 하시려며 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                                        @Model.email1
+                                    </span>
+                                }
+                                else
+                                {
+                                    @Model.email1
+                                }
+                            </div>
+                            <div class="col-12">
+                                <i class="fa fa-mobile-alt fa-fw" aria-hidden="true" title="Phone"></i>
+                                @if (Model.is_external_lock == 1)
+                                {
+                                    <span class="text-secondary" title="전화번호를 확인 하시려며 해당 후보자의 연락처 확인 버튼을 눌러 해제 후 진행하여 주십시오.">
+                                        @Model.phone
+                                        @(!String.IsNullOrEmpty(Model.phone) ? " / " + @Model.cell_phone : @Model.cell_phone)
+                                    </span>
+                                }
+                                else
+                                {
+                                    @Model.phone
+                                    @(!String.IsNullOrEmpty(Model.phone) ? " / " + @Model.cell_phone : @Model.cell_phone)
+                                }
+                            </div>
+                            <div class="col-12 text-truncate" title="@Model.school_name.Replace("<span class='bg-warning'>", "").Replace("</span>", "") / @Model.category1_name / @Html.Raw(Model.major_name)">
+                                <i class="fa fa-graduation-cap fa-fw" aria-hidden="true" title="School(학교)"></i> @Html.Raw(Model.school_name) /
+                                @(!String.IsNullOrEmpty(Model.category1_name) ? "[" + Model.category1_name + "]" : "")
+                                @Html.Raw(!String.IsNullOrEmpty(Model.major_name) ? Model.major_name : "")
+                            </div>
+                            @if (Model.is_external_lock != 1 && (!string.IsNullOrWhiteSpace(Model.sns_link1) || !string.IsNullOrWhiteSpace(Model.sns_link2) || !string.IsNullOrWhiteSpace(Model.sns_link3)))
+                            {
+
+                                <div class="col-12">
+                                    @if (!string.IsNullOrWhiteSpace(Model.sns_link1))
+                                    {
+                                        <i class="fab @(Utils.ReturnFALinkClass(Model.sns_link1)) fa-fw" aria-hidden="true" title="URL"></i>
+                                        <a href="@Model.sns_link1" target="_blank">@Model.sns_link1</a>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(Model.sns_link2))
+                                    {
+                                        <br />
+                                        <i class="fab @(Utils.ReturnFALinkClass(Model.sns_link2)) fa-fw" aria-hidden="true" title="URL"></i>
+                                        <a href="@Model.sns_link2" target="_blank">@Model.sns_link2</a>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(Model.sns_link3))
+                                    {
+                                        <br />
+                                        <i class="fab @(Utils.ReturnFALinkClass(Model.sns_link3)) fa-fw" aria-hidden="true" title="URL"></i>
+                                        <a href="@Model.sns_link3" target="_blank">@Model.sns_link3</a>
+                                    }
+                                </div>
+
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row">
+                            @{
+                                string all_company = String.Empty;
+                                if (!String.IsNullOrEmpty(Model.all_company))
+                                {
+                                    all_company = Model.all_company.Replace("\n", " ← ");
+                                }
+                            }
+                            <div class="col-12 text-truncate" title="@all_company.Replace("<span class='bg-warning'>", "").Replace("</span>", "")">
+
+                                <i class="fa fa-city fa-fw" aria-hidden="true" title="Company(회사/경력)"></i>
+                                @Html.Raw(all_company)
+                                @*[@Utils.ReturnWorkCodeTxt(Model.is_work)]*@
+                            </div>
+                            <div class="col-12 text-truncate" title="@Model.busiName">
+                                <i class="fa fa-industry fa-fw" aria-hidden="true" title="Business(산업)"></i>
+                                @if (!string.IsNullOrWhiteSpace(Model.busiName))
+                                {
+                                    string[] businessList = Model.busiName.Split('\n');
+                                    if (businessList.Length > 0)
+                                    {
+                                        int busi_cnt = 0;
+                                        foreach (var business in businessList)
+                                        {
+                                            busi_cnt++;
+                                            <text>[@business]</text>
+                                            @*<label class="badge badge-outline badge-dark">
+                                                    @business
+                                                </label>*@
+                                            if (busi_cnt >= 2)
+                                            {
+                                                break;
+                                            }
+                                        }
+
+                                    }
+                                }
+                            </div>
+                            <div class="col-12 text-truncate" title="@Model.jobName">
+                                <i class="fa fa-share-alt fa-fw" aria-hidden="true" title="Job(직무)"></i>
+                                @if (!string.IsNullOrWhiteSpace(Model.jobName))
+                                {
+                                    string[] jobList = Model.jobName.Split('\n');
+                                    if (jobList.Length > 0)
+                                    {
+                                        int job_cnt = 0;
+                                        foreach (var job in jobList)
+                                        {
+                                            job_cnt++;
+                                            <text>[@job]</text>
+                                            @*
+                                                <label class="badge badge-outline badge-dark">
+                                                    @job
+                                                </label>
+                                            *@
+                                            if (job_cnt >= 2)
+                                            {
+                                                break;
+                                            }
+                                        }
+
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </p>
+            @{
+                if (!string.IsNullOrWhiteSpace(Model.keyword))
+                {
+                    string[] keywordList = Model.keyword.Split(',');
+                    if (keywordList.Length > 0)
+                    {
+                        int key_cnt = 0;
+                        <p class="text-truncate">
+                            <i class="fa fa-key fa-fw" aria-hidden="true" title="Keyword"></i>
+
+                            @foreach (var keyword in keywordList)
+                            {
+                                key_cnt++;
+                                if (!string.IsNullOrWhiteSpace(keyword))
+                                {
+                                    <label class="badge badge-outline badge-info">
+                                        @Html.Raw(keyword)
+                                    </label>
+                                    if (key_cnt >= 5) { break; }
+
+                                }
+
+                            }
+
+                        </p>
+                    }
+                }
+            }
+            @{
+                if (!string.IsNullOrWhiteSpace(Model.kor_resume_body))
+                {
+
+                    <p class="text-truncate" title="@Model.kor_resume_body.Replace("<span class='bg-warning'>", "").Replace("</span>", "")">
+                        <i class="fa fa-file fa-fw" aria-hidden="true" title="국문 이력서내용"></i>
+                        <span class="text-primary">[Kor resume]</span> : @Html.Raw(Model.kor_resume_body)
+                    </p>
+                }
+                if (!string.IsNullOrWhiteSpace(Model.eng_resume_body))
+                {
+
+                    <p class="text-truncate" title="@Model.eng_resume_body.Replace("<span class='bg-warning'>", "").Replace("</span>", "")">
+                        <i class="fa fa-file fa-fw" aria-hidden="true" title="영문 이력서내용"></i>
+                        <span class="text-info">[Eng resume]</span> : @Html.Raw(Model.eng_resume_body)
+                    </p>
+                }
+                if (!string.IsNullOrWhiteSpace(Model.memo_str))
+                {
+
+                    <p class="text-truncate" title="@Model.memo_str.Replace("<span class='bg-warning'>", "").Replace("</span>", "")">
+                        <i class="fa fa-sticky-note fa-fw" aria-hidden="true" title="메모(Memo)"></i>
+                        <span class="text-success">[Memo]</span> : @Html.Raw(Model.memo_str)
+                    </p>
+                }
+            }
+
+        </div>
+        <div class="pl-0 pl-sm-20 mt-15 mt-sm-0 align-self-center">
+            <span>
+                @if (Model.cf_seq != 0)
+                {
+                    <!--
+                    <button type="button" class="btn btn-outline btn-danger btn-sm" onclick="DeleteMyListConfirm(this, '@Model.cf_seq', '@Model.c_seq')">
+                        <i class="fa fa-minus" aria-hidden="true"></i> Remove My List
+                    </button>
+                    -->
+                    <button type="button" class="btn btn-outline btn-info btn-sm" onclick="CreateMyListConfirm(this, '@Model.c_seq')">
+                        <i class="fa fa-user-edit" aria-hidden="true"></i> Update My List
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-outline btn-primary btn-sm" onclick="CreateMyListConfirm(this, '@Model.c_seq')">
+                        <i class="fa fa-plus" aria-hidden="true"></i> Add My List
+                    </button>
+                }
+
+            </span>
+            <span>
+                <button type="button" class="btn btn-outline btn-success btn-sm" onclick="PopupProject('@Model.c_seq')">
+                    <i class="fa fa-user-plus" aria-hidden="true"></i>
+                    Add Project
+                </button>
+            </span>
+
+
+        </div>
+    </div>
+}
+
+else
+
+{
+
+
+    <td class="text-center text-truncate">
+        @{
+            string hover_title = String.Empty;
+            hover_title = "<small class='clearfix'>[Reg. : " + Utils.ConvertDateTimeToString(Model.create_dt) + "/ <span class='text-secondary'>Update : " + Utils.ConvertDateTimeToString(Model.modify_dt) + "</span>]</small>";
+
+            if (Model.is_external_lock != 1)
+            {
+                hover_title += "<span class='clearfix'>Tel : " + Model.phone + (!String.IsNullOrEmpty(Model.phone) ? " / " + @Model.cell_phone : @Model.cell_phone) + "</span>";
+                hover_title += "<span class='clearfix'>E-mail : " + Model.email1 + "</span>";
+            }
+            if (Model.project_history != null)
+            {
+                hover_title += @"<p class='clearfix text-truncate'>
+                                                <i class='fa fa-paperclip fa-fw' aria-hidden='true'></i>
+                                                <span class='text-truncate small'>
+                                                    [" + Utils.ConvertDateTimeToString(Model.project_history.ca_date.Value) + " - <b>" + Utils.ReturnProjectHistoryStateTxt(Model.project_history.state) + "</b>]<br/><i class='invisible fa fa-paperclip fa-fw ' aria-hidden='true'></i>" + Model.project_history.memo
+                + @"<br/><i class='invisible fa fa-paperclip fa-fw ' aria-hidden='true'></i><span class='text-truncate text-primary'>[ " + Model.project_history.client_name + "] - " + Model.project_history.pjt_title + @"</span>
+                                                </span>";
+
+
+
+                int progress = 0;
+                string progressClass = String.Empty;
+                string stateName = String.Empty;
+                switch (Model.project_history.state)
+                {
+                    case ProjectHistoryStateCode.interest:
+                    case ProjectHistoryStateCode.fail:
+                        progress = 0;
+                        progressClass = "";
+                        break;
+
+                    case ProjectHistoryStateCode.recommand:
+                    case ProjectHistoryStateCode.paper:
+                        progress = 25;
+                        progressClass = "progress-bar-warning";
+                        break;
+
+                    case ProjectHistoryStateCode.interview:
+                    case ProjectHistoryStateCode.interviewOk:
+                        progress = 50;
+                        progressClass = "progress-bar-info";
+                        break;
+
+                    case ProjectHistoryStateCode.hireReady:
+                        progress = 75;
+                        progressClass = "progress-bar-primary";
+                        break;
+
+                    case ProjectHistoryStateCode.hireOk:
+                        progress = 100;
+                        progressClass = "progress-bar-success";
+                        break;
+                }
+
+                hover_title += @" <div class='progress progress-xs' style='height:2px;margin-bottom:2px;'>
+                                <div class='progress-bar " + progressClass + "' style='width:" + (progress) + @"%;' role='progressbar'>
+                                    <span class='sr-only'>" + (progress) + @"%</span>
+                                </div>
+                            </div>
+        </p>";
+            }
+        }
+
+
+
+        <a href="javascript:openCandidate('@Model.c_seq')" class="clearfix" data-html="true" data-toggle="popover" data-trigger="hover" data-content="@Html.Raw(hover_title)">
+            @Html.Raw(Model.kor_name)
+            <br />
+            <a class="btn btn-sm" href="javascript:PopMemoList('@Model.c_seq', '@Html.Raw(Model.kor_name.Replace("'", "\\\'"))', '@Utils.ReturnGenderTxt(Model.gender)', ' @Utils.YearSeparate(Model.birth_date) @Utils.Get1ToString(Model.ex_birthdate, "[추정]")');" title="Memo List">
+                <i class="fas fa-list"></i>
+            </a>
+        </a>
+        @if (Model.is_confidential == 1)
+        {
+            <label class="badge badge-sm badge-pill badge-danger" title="Confidential">C</label>
+        }
+        @if (Model.is_inactive == 1)
+        {
+            <label class="badge badge-sm badge-warning" title="Inactive">I</label>
+        }
+        @if (Model.caution_type == 6)
+        {
+            <label class="badge badge-sm badge-success" title="유니코에 의한 채용">채용</label>
+        }
+    </td>
+    <td class="text-center">
+        <span class="clearfix">
+            @Utils.YearSeparate(Model.birth_date)
+            <span class="text-danger">
+                @Utils.Get1ToString(Model.ex_birthdate, "[추정]")
+            </span>
+        </span>
+        (@Utils.ReturnGenderTxt(Model.gender))
+    </td>
+    
+        string all_company = String.Empty;
+        string[] all_company_arr = new string[] { };
+        if (!String.IsNullOrEmpty(Model.all_company))
+        {
+            all_company = Model.all_company.Replace("\n", " ← ");
+            all_company_arr = Model.all_company.Split((char)13);
+        }
+    
+    <td class="text-truncate" title="@Html.Raw(all_company.Replace("<span class='bg-warning'>", "").Replace("</span>", ""))">
+        @if (all_company_arr.Length > 0)
+        {
+            int idx = 0;
+            foreach (var company in all_company_arr)
+            {
+                if (idx == 0)
+                {
+                    @Html.Raw("<span class='clearfix'>" + company + "</span>")
+                }
+                else
+                {
+                    @Html.Raw("<span> ← " + company + "</span>")
+                }
+
+                idx++;
+            }
+
+        }
+    </td>
+    <td class="text-truncate" title="@Model.school_name.Replace("<span class='bg-warning'>", "").Replace("</span>", "") / @Model.category1_name / @Html.Raw(Model.major_name)">
+        <span class="clearfix">@Html.Raw(Model.school_name) /</span>
+        <span class="clearfix">
+            @Html.Raw(!String.IsNullOrEmpty(Model.major_name) ? Model.major_name : "")
+            @(!String.IsNullOrEmpty(Model.category1_name) ? "[" + Model.category1_name + "]" : "")
+        </span>
+    </td>
+    <td class="text-truncate" title="@Model.busiName">
+        @if (!string.IsNullOrWhiteSpace(Model.busiName))
+        {
+            string[] businessList = Model.busiName.Split('\n');
+            if (businessList.Length > 0)
+            {
+                int busi_cnt = 0;
+                foreach (var business in businessList)
+                {
+                    busi_cnt++;
+                    <span class="clearfix">- [@business]</span>
+                    if (busi_cnt >= 2)
+                    {
+                        break;
+                    }
+                }
+
+            }
+        }
+    </td>
+    <td class="col-12 text-truncate" title="@Model.jobName">
+
+        @if (!string.IsNullOrWhiteSpace(Model.jobName))
+        {
+            string[] jobList = Model.jobName.Split('\n');
+            if (jobList.Length > 0)
+            {
+                int job_cnt = 0;
+                foreach (var job in jobList)
+                {
+                    job_cnt++;
+                    <span class="clearfix">- [@job]</span>
+                    if (job_cnt >= 2)
+                    {
+                        break;
+                    }
+                }
+
+            }
+        }
+    </td>
+    <td class="text-center">
+        <span>
+            @if (Model.cf_seq != 0)
+            {
+                <button type="button" class="btn btn-outline btn-info btn-xs" onclick="CreateMyListConfirm(this, '@Model.c_seq')">
+                    <i class="fa fa-user-edit" aria-hidden="true"></i> Update My List
+                </button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-outline btn-primary btn-xs" onclick="CreateMyListConfirm(this, '@Model.c_seq')">
+                    <i class="fa fa-plus" aria-hidden="true"></i> Add My List
+                </button>
+            }
+
+        </span>
+        <span>
+            <button type="button" class="btn btn-outline btn-success btn-xs" onclick="PopupProject('@Model.c_seq')">
+                <i class="fa fa-user-plus" aria-hidden="true"></i>
+                Add Project
+            </button>
+        </span>
+    </td>
+
+}

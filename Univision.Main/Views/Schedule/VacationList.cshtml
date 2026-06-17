@@ -1,0 +1,245 @@
+﻿@model Univision.Core.Models.DTO.Response.Schedult.VacationListViewModel
+@{
+  ViewBag.Title = "금일 출근현황";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+
+  int va_count = 0;
+  int sh_count = 0;
+  int hm_count = 0;
+  int ot_count = 0;
+
+  if (Model.list.Count > 0)
+  {
+    va_count = Model.list.Where(x => x.v_type == 1).Count();
+    sh_count = Model.list.Where(x => x.v_type == 11).Count();
+    hm_count = Model.list.Where(x => x.v_type == 10).Count();
+    ot_count = Model.list.Where(x => x.v_type == 7).Count();
+  }
+}
+
+<style>
+  .extend-box {
+    position: absolute !important;
+    top: 1.9em;
+    right: 1em;
+  }
+
+  .panel-body .input-search .form-control {
+    border-radius: 2px;
+  }
+
+  .panel-body .form-control-label {
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+  }
+
+  .panel-body .form-group {
+    margin-bottom: 3px;
+  }
+
+  .panel {
+    margin-bottom: 1rem;
+  }
+
+  .table thead th {
+    font-weight: bold;
+  }
+
+  /*.innertable {
+        border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;
+    }*/
+
+  .innertable tr {
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    /*border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;*/
+  }
+
+    .innertable tr td {
+      width: 100%;
+      border: 0px;
+      border-color: white;
+      background-color: white;
+      empty-cells: show;
+      border-collapse: inherit;
+      padding: initial;
+    }
+
+  @@media (max-width:1500px) {
+    .table.table-client thead th:nth-of-type(1) {
+      display: none
+    }
+
+    .table.table-client tbody td:nth-of-type(1) {
+      display: none
+    }
+
+    .table.table-client thead th:nth-of-type(6) {
+      display: none
+    }
+
+    .table.table-client tbody td:nth-of-type(6) {
+      display: none
+    }
+  }
+
+  @@media (max-width:898px) {
+    .table.table-client thead th:nth-of-type(4) {
+      display: none
+    }
+
+    .table.table-client tbody td:nth-of-type(4) {
+      display: none
+    }
+  }
+
+  @@media (max-width:500px) {
+    .table.table-client thead th:nth-of-type(3) {
+      display: none
+    }
+
+    .table.table-client tbody td:nth-of-type(3) {
+      display: none
+    }
+
+    .table.table-client thead th:nth-of-type(5) {
+      display: none
+    }
+
+    .table.table-client tbody td:nth-of-type(5) {
+      display: none
+    }
+  }
+</style>
+
+<link href="~/Libs/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/user.min599c.css?v4.0.4">
+
+
+<div class="page-user">
+  <div class="page-content">
+    <!--검색 Form -->
+    @using (Html.BeginForm("VacationList", "Schedule", FormMethod.Get, new { @id = "SearchForm" }))
+    {
+      <!-- 검색 패널 시작 -->
+      <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+          <div class="panel-title">
+            <i class="fas fa-search"></i>
+            @ViewBag.Title (@DateTime.Now.ToString("yyyy-MM-dd"))
+            - 찾기는 Ctrl+F로 해주세요
+          </div>
+          <div class="panel-actions">
+            @if (va_count > 0)
+            {
+              <span class="text-warning">[연차 : @va_count]</span>
+            }
+            @if (sh_count > 0)
+            {
+              <span class="text-primary">[Shift : @sh_count]</span>
+            }
+            @if (hm_count > 0)
+            {
+              <span class="text-info">[재택 : @hm_count]</span>
+            }
+            @if (ot_count > 0)
+            {
+              <span class="text-secondary">[외근 : @ot_count]</span>
+            }
+          </div>
+        </div>
+      </div>
+      <!-- 검색 패널 끝 -->
+    }
+
+    <div class="panel">
+      <div class="panel-body">
+        <div class="row">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>부서</th>
+                <th>이름</th>
+                <th>직급</th>
+                <th>내선</th>
+                <th>휴대전화</th>
+                <th>이메일</th>
+                <th>연차여부</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (Model.list.Count > 0)
+              {
+                string old_ud = "";
+                foreach (var data in Model.list)
+                {
+                  string bd_bg= "";
+                  string tr_bg = "";
+                  string tr_border = "";
+                  string ud_name = data.ud_name.IndexOf('[') > 0 ? data.ud_name.Substring(0, data.ud_name.IndexOf('[')) : data.ud_name;
+
+                  if (data.v_type == 1)
+                  {
+                    bd_bg = "warning";
+                    tr_bg = "orange-100";
+                  }
+                  else if (data.v_type == 11)
+                  {
+                    bd_bg = "primary";
+                    tr_bg = "blue-100";
+                  }
+                  else if (data.v_type == 10)
+                  {
+                    bd_bg = "info";
+                    tr_bg = "blue-200";
+                  }
+                  else if (data.v_type == 6 || data.v_type == 7)
+                  {
+                    bd_bg = "secondary";
+                    tr_bg = "blue-grey-200";
+                  }
+
+
+                  if (old_ud != ud_name)
+                  {
+                    tr_border = "border-top:2px solid #666; ";
+                  }
+
+                  <tr class="bg-@(tr_bg)" style="@(tr_border)">
+                    <td class="py-0">@(ud_name) </td>
+                    <td class="py-0">@data.name</td>
+                    <td class="py-0">@data.rank_name</td>
+                    <td class="py-0">@data.tel</td>
+                    <td class="py-0">@data.hp</td>
+                    <td class="py-0"><a href="mailto:@data.email">@data.email</a></td>
+                    <td class="py-0"><span class="badge badge-lg badge-@(bd_bg)">@data.v_type_str</span></td>
+                  </tr>
+
+                  old_ud = ud_name;
+                }
+
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+@section scripts {
+
+
+}

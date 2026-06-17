@@ -1,0 +1,414 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.PeriodSalesModel
+
+@{
+    ViewBag.Title = "PeriodSalesTeam";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!-- charts -->
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/charts/chartjs.min599c.css?v4.0.4">
+
+
+<div class="page-content container-fluid">
+    <!-- row -->
+    <div class="row">
+        <!-- block -->
+        <div class="col-xl-12">
+            <div class="form-inline custom4">
+                @Html.DropDownListFor(x => x.year, new SelectList(Model.yearList, "key", "value"), new { @class = "form-control dd col-md-1" })
+                @Html.DropDownListFor(x => x.ud_seq, new SelectList(Model.divisionList, "ud_seq", "ud_name"), new { @class = "form-control cc" })
+            </div>
+        </div>
+        <!-- block -->
+    </div>
+
+
+    <!-- row -->
+    <div class="row">
+
+        <!-- block -->
+        <div class="col-xl-5">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        월별 매출내역 합산
+                    </h3>
+                </header>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table id="default-table" class="table table-hover" >
+                            <colgroup>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                                <col>
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">년월</th>
+                                    <th colspan="2">예정</th>
+                                    <th colspan="2">확정</th>
+                                </tr>
+                                <tr>
+                                    <th>건수</th>
+                                    <th>매출</th>
+                                    <th>건수</th>
+                                    <th>매출</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.salesMonthlySumList.Count > 0)
+                                {
+                                    foreach (var data in Model.salesMonthlySumList)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @data.billing_dt
+                                            </td>
+                                            <td>
+                                                @Utils.ConvertMoneyToString(data.total_cnt)
+                                            </td>
+                                            <td>
+                                                @Utils.ConvertMoneyToString(data.sales_money)
+                                            </td>
+                                            <td>
+                                                @Utils.ConvertMoneyToString(data.deposit_cnt)
+                                            </td>
+                                            <td>
+                                                @Utils.ConvertMoneyToString(data.deposit_amt)
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3">
+                                            해당 년도에 데이터가 없습니다.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+        <!-- block -->
+        <div class="col-xl-7">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        월별 매출현황 그래프
+                    </h3>
+                </header>
+                <div class="panel-body pd_ex">
+                    <div class="text-center" id="monthlyWrapper">
+                        <canvas id="monthlySalesChart" height="300" width="750"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+
+    </div>
+    <!-- // row -->
+    <!-- row -->
+    <div class="row">
+        <!-- block -->
+        <div class="col-xl-12">
+            <div class="panel custom1">
+                <header class="panel-heading">
+                    <h3 class="panel-title">
+                        팀원별 매출현황 그래프
+                    </h3>
+                    <div class="panel-actions panel-actions-keep" style="width:20%;">
+                        <select name="month" id="month" class="form-control cc">
+                            <option value="1" @(Model.month == 1 ? "selected" : "")>1월</option>
+                            <option value="2" @(Model.month == 2 ? "selected" : "")>2월</option>
+                            <option value="3" @(Model.month == 3 ? "selected" : "")>3월</option>
+                            <option value="4" @(Model.month == 4 ? "selected" : "")>4월</option>
+                            <option value="5" @(Model.month == 5 ? "selected" : "")>5월</option>
+                            <option value="6" @(Model.month == 6 ? "selected" : "")>6월</option>
+                            <option value="7" @(Model.month == 7 ? "selected" : "")>7월</option>
+                            <option value="8" @(Model.month == 8 ? "selected" : "")>8월</option>
+                            <option value="9" @(Model.month == 9 ? "selected" : "")>9월</option>
+                            <option value="10" @(Model.month == 10 ? "selected" : "")>10월</option>
+                            <option value="11" @(Model.month == 11 ? "selected" : "")>11월</option>
+                            <option value="12" @(Model.month == 12 ? "selected" : "")>12월</option>
+                        </select>
+                    </div>
+                </header>
+
+
+                <div class="panel-body pd_ex">
+                    <div class="text-center" id="personalWarpper">
+                        <canvas id="personalChart" height="300" width="450"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- // block -->
+    </div>
+    <!-- // row -->
+    <!-- row -->
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="panel custom1" id="periodSalesList">
+
+            </div>
+        </div>
+    </div>
+    <!-- // row -->
+
+</div>
+
+
+@section scripts {
+    <script src="../Libs/remark/global/vendor/chart-js/Chart.min599c.js?v4.0.4"></script>
+    <script type="text/javascript">
+
+        function AuthControll(ua_seq) {
+            var userDisabled = "";
+
+            switch (ua_seq)
+            {
+                case 1:
+                case 2:
+                case 3:
+                    userDisabled = "";
+                    break;
+                case 4:
+                    userDisabled = "disabled";
+                    break;
+                default:
+                    userDisabled = "disabled";
+                    break;
+                
+            }
+            
+            if (userDisabled != "")
+                $("#ud_seq").attr("disabled", userDisabled);
+        };
+
+        AuthControll(@Univision.Security.AppIdentity.ua_seq);
+
+
+        $(document).ready(function () {
+            monthlySalesChart();
+            divisionUserSalesChart(@Html.Raw(Json.Encode(Model.salesDivisionUserList)));
+            callPeriodSalesTeamList(@Model.year, @Model.ud_seq, 1);
+
+            $("#year").change(function () {
+                location.href = "/Statistics/PeriodSalesTeam?year=" + $(this).val();
+            });
+
+            $("#ud_seq").change(function () {
+                location.href = "/Statistics/PeriodSalesTeam?year=" + $('#year').val() + "&ud_seq=" + $(this).val();
+            });
+
+            $("#month").change(function () {
+
+                $.ajax({
+                    url: '@Url.Action("ChangeDivisionUserSalesChart", "Statistics")',
+                    data: {
+                        year: $("#year").val(),
+                        month: $(this).val(),
+                        ud_seq: $("#ud_seq").val()
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                    beforeSend: function () {
+
+                    },
+                    success: function (json) {
+                        if (json.ok) {
+                            divisionUserSalesChart(json.list)
+                        }
+                        else {
+                            ErrorAlert("팀별 매출현황 그래프를 불러오는 중, 오류가 발생 했습니다.");
+                        }
+
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+
+                        ErrorAlert("팀별 매출현황 그래프를 불러오는 중, 오류가 발생 했습니다.");
+                    }
+                })
+
+            });
+        });
+
+        //하단 리스트
+        function callPeriodSalesTeamList(year, ud_seq, page) {
+
+            $.ajax({
+                url: '@Url.Action("PeriodSalesTeamList", "Statistics")',
+                data: {
+                    year: year,
+                    ud_seq: ud_seq,
+                    page: page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#periodSalesList');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#periodSalesList');
+                $('#periodSalesList').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#periodSalesList');
+            });
+        };
+
+        //월별 매출현황
+        function monthlySalesChart() {
+            
+            var monthlyList = @Html.Raw(Json.Encode(Model.salesMonthlySumList));
+
+            if (monthlyList.length == 0) {
+                $("#monthlyWrapper").html("").html('<div id="monthlySalesChart" height="300px" width="450px">해당 년도에 데이터가 없습니다.</div>');
+            }
+            else {
+                $("#monthlyWrapper").html("").html('<canvas id="monthlySalesChart" height="300px" width="450px"></canvas>');
+
+                // 월별 매출현황 그래프
+                var ctx = document.getElementById('monthlySalesChart').getContext('2d');
+                var options = {
+                    legend: {
+                        display: false
+                    },
+                    maintainAspectRatio: false,
+                    spanGaps: false,
+                    elements: {
+                        line: {
+                            tension: 0.4
+                        }
+                    },
+                    plugins: {
+                        filler: {
+                            propagate: false
+                        }
+                    },
+                    scales: {
+                        xAxes: [{
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 0
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function (tooltipItem, data) {
+                                var value = data.datasets[0].data[tooltipItem.index];
+                                if (parseInt(value) >= 1000) {
+                                    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                } else {
+                                    return value + '원';
+                                }
+                            }
+                        } // end callbacks:
+                    }, //end tooltips
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true,
+                                callback: function (value, index, values) {
+                                    if (parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                    } else {
+                                        return value + '원';
+                                    }
+                                }
+                            }
+                        }]
+                    }
+                };
+                var myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            data: monthlyList.reverse().map(function (e) { return e.sales_money }),
+                            backgroundColor: 'rgba(62,142,247,0.2)',
+                            borderColor: 'rgba(62,142,247, 0.6)',
+                        }],
+                        labels: monthlyList.map(function (e) { return e.billing_dt }),
+                    },
+                    options: Chart.helpers.merge(options, {
+                        title: {
+                            //text: 'fill: ',// + boundary,
+                            display: false
+                        }
+                    })
+                })
+            }
+        };
+
+        //팀별 매출현황
+        function divisionUserSalesChart(divisionUserSalesList) {
+            var list = divisionUserSalesList;
+
+            if (list.length == 0) {
+                $("#personalWarpper").html("").html('<div id="personalChart" height="300px" width="450px">해당 월에 데이터가 없습니다.</div>');
+            }
+            else {
+                $("#personalWarpper").html("").html('<canvas id="personalChart" height="300px" width="450px"></canvas>');
+
+
+                var ctx2 = document.getElementById('personalChart').getContext('2d');
+                var personalChart = new Chart(ctx2, {
+                    type: 'horizontalBar',
+                    data: {
+                        datasets: [{
+                            data: list.map(function (e) { return e.sales_money }),
+                            backgroundColor: 'rgba(17,194,109,0.2)', // '#ff9599','#60cd99','#60a5ff'
+                            borderColor: 'rgba(17,194,109, 0.7)',
+                            borderWidth: 2
+                        }],
+                        labels: list.map(function (e) { return e.name }),
+                    },
+                    options: {
+                        legend: {
+                            display: false
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        tooltips: {
+                            callbacks: {
+                                label: function (tooltipItem, data) {
+                                    var value = data.datasets[0].data[tooltipItem.index];
+                                    if (parseInt(value) >= 1000) {
+                                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                    } else {
+                                        return value + '원';
+                                    }
+                                }
+                            } // end callbacks:
+                        }, //end tooltips
+                        scales: {
+                            xAxes: [{
+                                ticks: {
+                                    beginAtZero: true,
+                                    callback: function (value, index, values) {
+                                        if (parseInt(value) >= 1000) {
+                                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '원';
+                                        } else {
+                                            return value + '원';
+                                        }
+                                    }
+                                }
+                            }]
+                        }
+                    }
+                });
+            }
+        };
+        
+    </script>
+}

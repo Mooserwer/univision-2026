@@ -1,0 +1,1306 @@
+﻿@model Univision.Main.Models.Project.ProjectCreateModel
+@using Univision.Security
+
+@{
+    ViewBag.Title = "공유 프로젝트 상세보기";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string tmp_txt = String.Empty;
+}
+
+<link rel="stylesheet" href="~/Libs/remark/global/vendor/bootstrap-tokenfield/bootstrap-tokenfield.min599c.css?v4.0.4">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/project.min599c.css?4.0.2" />
+
+<style>
+    .placeDiv span {
+        font-size: 15px;
+    }
+
+    .job_list {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        width: 250px;
+        display: inline-block;
+    }
+
+</style>
+
+<div class="page-content">
+    @Html.HiddenFor(x => x.p_seq)
+
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fas fa-share"></i>
+                공유 정보
+
+            </h3>
+            <div class="panel-actions">
+                @if (AppIdentity.ua_seq < 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+                {
+                    if (Model.pjt_status == 1)
+                    {
+
+                        <span class="pr-20">
+                            @if (Model.is_share_pjt == 1)
+                            {
+                                <button type="button" class="btn btn-sm btn-danger" onclick="cancelShareProject(this, @Model.p_seq)" title="공유 취소/마감">Cancel Share</button>
+
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-primary" onclick="shareProject(this, @Model.p_seq)" title="프로젝트 공유하기">Share</button>
+                            }
+                            @if (Model.is_cowork == 1)
+                            {
+                                <button type="button" class="btn btn-sm btn-warning" onclick="cancelShareProject(this, @Model.p_seq)" title="Co-work 취소/마감">Cancel Cowork</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-info" onclick="CoWorkAlram(@Model.p_seq)" title="Co-work 요청">Cowork</button>
+
+                            }
+                        </span>
+
+                    }
+                }
+                <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+            </div>
+        </div>
+        <div id="shareInfo" class="panel-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <label class="form-control-label font-weight-500" for="share_comments">공유사유</label>
+                    <p class="form-control-plaintext border p-5">
+                        @Model.share_comments
+                    </p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label class="form-control-label font-weight-500" for="share_fee_rate">Fee Share</label>
+                    <p class="form-control-plaintext">
+                        @Model.share_fee_rate
+                    </p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label class="form-control-label font-weight-500" for="secret_info">비공개정보</label>
+                    <p class="form-control-plaintext">
+                        @Model.secret_info
+                    </p>
+                </div>
+            </div>
+            <div id="commentList" class="card border border-primary">
+            </div>
+        </div>
+    </div>
+
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fas fa-newspaper"></i>
+                Project Information [Recruitment]
+                @{
+                    string classNm = "";
+                    string txt = "";
+
+                    switch (Model.pjt_status)
+                    {
+                        case 1:
+                            classNm = "badge-primary";
+                            txt = "진행";
+                            break;
+                        case 2:
+                            classNm = "badge-warning";
+                            txt = "보류";
+                            break;
+                        case 3:
+                            classNm = "badge-danger";
+                            txt = "종료";
+                            break;
+                        case 4:
+                            classNm = "badge-info";
+                            txt = "완료";
+                            break;
+                        case 5:
+                            classNm = "badge-success";
+                            txt = "성공";
+                            break;
+
+                    }
+                }
+                <span class="badge @classNm">@txt</span>
+                <span style="font-size:12px; color:black">@Model.status_comment</span>
+            </h3>
+            <div class="panel-actions">
+
+                @if (Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+                {
+                    <button type="button" class="btn btn-sm btn-primary" id="btnPjtState">프로젝트 마감</button>
+                }
+                <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+
+            </div>
+        </div>
+        <div id="projectInfo" class="panel-body">
+            <div class="row">
+                <div class="form-group col-md-4">
+                    <label class="form-control-label" for="company_name">
+                        Client
+                        <span class="label-reqired">*</span>
+                    </label>
+                    @Html.HiddenFor(x => x.c_seq)
+                    <div class="input-group input-group-sm">
+                        @Html.TextBoxFor(x => x.company_name, new { @class = "form-control", @autocomplete = "off", @readonly = "readonly" })
+                    </div>
+                </div>
+                <div class="form-group col-md-8">
+                    <label class="form-control-label" for="title">
+                        Title
+                        <span class="label-reqired">*</span>
+                    </label>
+                    @Html.TextBoxFor(x => x.title, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-4">
+                    <label class="form-control-label" for="AMDiv">
+                        AM
+                        <span class="label-reqired">*</span>
+                    </label>
+                    @{
+                        tmp_txt = "";
+                        if (Model.amList.Count > 0)
+                        {
+                            foreach (var am in Model.amList)
+                            {
+                                tmp_txt += !String.IsNullOrEmpty(tmp_txt) ? "," : "" + @am.name;
+
+                            }
+                        }
+                    }
+                    <input type="text" value="@tmp_txt" class="form-control form-control-sm" readonly />
+
+                </div>
+
+                <div class="form-group col-md-8">
+                    <label class="form-control-label" for="Searcher">
+                        SM
+                        <span class="label-reqired">*</span>
+                    </label>
+                    @{
+                        tmp_txt = "";
+                        if (Model.searcherList.Count > 0)
+                        {
+                            foreach (var searcher in Model.searcherList)
+                            {
+                                tmp_txt += !String.IsNullOrEmpty(tmp_txt) ? "," : "" + searcher.name;
+                            }
+                        }
+
+                    }
+                    <input type="text" value="@tmp_txt" class="form-control form-control-sm" readonly />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label class="form-control-label" for="businessCodeDiv">
+                        Industry  <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i>
+                        <span class="label-reqired">*</span>
+                    </label>
+                    <div class="input-group input-group-sm" id="businessCodeDiv">
+                        @Html.TextBoxFor(x => x.business_name2, new { @class = "form-control longLen", @readonly = "readonly", @placeholder = "산업" })
+                    </div>
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-control-label" for="jobCodeDiv">
+                        Job function  <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i>
+                        <span class="label-reqired">*</span>
+                    </label>
+                    <div class="input-group input-group-sm" id="jobCodeDiv">
+                        @Html.TextBoxFor(x => x.job_name2, new { @class = "form-control longLen", @readonly = "readonly", @placeholder = "직무" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-4">
+                    <label class="form-control-label" for="expected_salary">Salary <span class="label-reqired">*</span></label>
+                    <div class="input-group input-group-sm">
+                        @Html.TextBoxFor(x => x.expected_salary, new { @class = "form-control text-right", @autocomplete = "off", @readonly = "readonly" })
+                        <select name="currency_cd" id="currency_cd" class="form-control form-control-sm" disabled>
+                            <option value="WON" @(Model.currency_cd == "WON" ? "selected" : "")>WON(원)</option>
+                            <option value="USD" @(Model.currency_cd == "USD" ? "selected" : "")>USD(미국달러)</option>
+                            <option value="HKD" @(Model.currency_cd == "HKD" ? "selected" : "")>HKD(홍콩달러)</option>
+                            <option value="YEN" @(Model.currency_cd == "YEN" ? "selected" : "")>YEN(엔화)</option>
+                            <option value="GBP" @(Model.currency_cd == "GBP" ? "selected" : "")>GBP(파운드)</option>
+                            <option value="DEM" @(Model.currency_cd == "DEM" ? "selected" : "")>DEM(마르크)</option>
+                            <option value="FRF" @(Model.currency_cd == "FRF" ? "selected" : "")>FRF(프랑스 프랑)</option>
+                            <option value="CHF" @(Model.currency_cd == "CHF" ? "selected" : "")>CHF(스위스 프랑)</option>
+                            <option value="EUR" @(Model.currency_cd == "EUR" ? "selected" : "")>EUR(유로)</option>
+                            <option value="CNY" @(Model.currency_cd == "CNY" ? "selected" : "")>CNY(위안)</option>
+                            <option value="AUD" @(Model.currency_cd == "AUD" ? "selected" : "")>AUD(호주달러)</option>
+                            <option value="NZD" @(Model.currency_cd == "NZD" ? "selected" : "")>NZD(뉴질랜드달러)</option>
+                            <option value="CAD" @(Model.currency_cd == "CAD" ? "selected" : "")>CAD(캐나다달러)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group col-md-2">
+
+                    <label class="form-control-label" for="fee_rate">Fee rate <span class="label-reqired">*</span></label>
+                    <div class="input-group input-group-sm">
+                        @Html.TextBoxFor(x => x.fee_rate, new { @class = "form-control form-control text-right", @autocomplete = "off", @placeholder = "%", @readonly = "readonly" })
+                        <span class="input-group-addon">%</span>
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="position_seq">
+                        Position
+                        <span class="label-reqired">*</span>
+                    </label>
+                    <select id="position_seq" name="position_seq" class="form-control  form-control-sm" disabled>
+                        <option value="">선택</option>
+                        <option value="110" @(Model.position_seq == 110 ? "selected" : "")>프리랜서(비정규 전문직)</option>
+                        <option value="100" @(Model.position_seq == 100 ? "selected" : "")>신입사원급</option>
+                        <option value="90" @(Model.position_seq == 90 ? "selected" : "")>경력사원급</option>
+                        <option value="80" @(Model.position_seq == 80 ? "selected" : "")>대리급</option>
+                        <option value="70" @(Model.position_seq == 70 ? "selected" : "")>과장급</option>
+                        <option value="60" @(Model.position_seq == 60 ? "selected" : "")>차장급</option>
+                        <option value="50" @(Model.position_seq == 50 ? "selected" : "")>부장급</option>
+                        <option value="40" @(Model.position_seq == 40 ? "selected" : "")>본부장/지사장</option>
+                        <option value="30" @(Model.position_seq == 30 ? "selected" : "")>임원급</option>
+                        <option value="20" @(Model.position_seq == 20 ? "selected" : "")>최고재무경영자</option>
+                        <option value="10" @(Model.position_seq == 10 ? "selected" : "")>최고 경영자</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="expreience_number">
+                        Experience(Year)
+                        <span class="label-reqired">*</span>
+                    </label>
+                    <div class="input-group input-group-sm">
+                        @Html.TextBoxFor(x => x.expreience_number, new { @class = "form-control", @type = "number", @autocomplete = "off", @placeholder = "년 수", @readonly = "readonly" })
+                        <select class="form-control" id="experience_type" name="experience_type" disabled>
+                            <option value="1" @(Model.experience_type == 1 ? "selected" : "")>년 이상</option>
+                            <option value="2" @(Model.experience_type == 2 ? "selected" : "")>년 이하</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label class="form-control-label" for="assign_task">
+                        담당업무
+                        <span class="label-reqired">*</span>
+                    </label>
+                    @Html.TextAreaFor(x => x.assign_task, new { @class = "form-control", @rows = "5", @readonly = "readonly" })
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form-control-label" for="requirement">
+                        자격요건
+                        <span class="label-reqired">*</span>
+                    </label>
+                    @Html.TextAreaFor(x => x.requirement, new { @class = "form-control", @rows = "5", @readonly = "readonly" })
+                </div>
+            </div>
+            <div class="row">
+
+                <div class="form-group col-md-2">
+                    <label class="form-control-label" for="recruit_number">
+                        모집인원
+                    </label>
+                    @Html.TextBoxFor(x => x.recruit_number, new { @class = "form-control form-control-sm", @type = "number", @autocomplete = "off", @readonly = "readonly" })
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="edu_code">Education</label>
+                    <select class="form-control form-control-sm" id="edu_code" name="edu_code" disabled>
+                        <option value="0" @(Model.edu_code == 0 ? "selected" : "")>학력무관</option>
+                        <option value="1" @(Model.edu_code == 1 ? "selected" : "")>고등학교졸업</option>
+                        <option value="2" @(Model.edu_code == 2 ? "selected" : "")>대학졸업(2,3년)</option>
+                        <option value="3" @(Model.edu_code == 3 ? "selected" : "")>대학교졸업(4년)</option>
+                        <option value="4" @(Model.edu_code == 4 ? "selected" : "")>석사졸업</option>
+                        <option value="5" @(Model.edu_code == 5 ? "selected" : "")>박사졸업</option>
+                        <option value="6" @(Model.edu_code == 6 ? "selected" : "")>고등학교졸업이상</option>
+                        <option value="7" @(Model.edu_code == 7 ? "selected" : "")>대학졸업(2,3년)이상</option>
+                        <option value="8" @(Model.edu_code == 8 ? "selected" : "")>대학교졸업(4년)이상</option>
+                        <option value="9" @(Model.edu_code == 9 ? "selected" : "")>석사졸업이상</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="foreign_lang">Language</label>
+                    <div class="input-group input-group-sm">
+                        <select id="foreign_lang" name="foreign_lang" class="form-control form-control-sm" disabled>
+                            <option value="00" @(Model.foreign_lang == "00" ? "selected" : "")>외국어</option>
+                            <option value="01" @(Model.foreign_lang == "01" ? "selected" : "")>중국어</option>
+                            <option value="02" @(Model.foreign_lang == "02" ? "selected" : "")>영어</option>
+                            <option value="03" @(Model.foreign_lang == "03" ? "selected" : "")>불어</option>
+                            <option value="04" @(Model.foreign_lang == "04" ? "selected" : "")>독일어</option>
+                            <option value="05" @(Model.foreign_lang == "05" ? "selected" : "")>일본어</option>
+                            <option value="06" @(Model.foreign_lang == "06" ? "selected" : "")>러시아어</option>
+                            <option value="99" @(Model.foreign_lang == "99" ? "selected" : "")>기타</option>
+                            <option value="07" @(Model.foreign_lang == "07" ? "selected" : "")>스페인어</option>
+                        </select>
+                        <select id="foreign_level" name="foreign_level" class="form-control" disabled>
+                            <option value="0" @(Model.foreign_level == 0 ? "selected" : "")>능력</option>
+                            <option value="1" @(Model.foreign_level == 1 ? "selected" : "")>상</option>
+                            <option value="2" @(Model.foreign_level == 2 ? "selected" : "")>중</option>
+                            <option value="3" @(Model.foreign_level == 3 ? "selected" : "")>하</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="form-control-label" for="place">
+                        Place
+                        <span class="label-reqired">*</span>
+                    </label>
+                    @{
+                        tmp_txt = "";
+                        if (Model.placeList.Count > 0)
+                        {
+                            foreach (var place in Model.placeList)
+                            {
+                                if (place.code1 == place.code2)
+                                {
+                                    tmp_txt += !String.IsNullOrEmpty(tmp_txt) ? "," : "" + "[" + place.area2 + "]";
+                                }
+                                else
+                                {
+                                    tmp_txt += !String.IsNullOrEmpty(tmp_txt) ? "," : "" + "[" + (place.area1 + " " + place.area2) + "]";
+                                }
+                            }
+                        }
+
+                    }
+                    <input type="text" value="@tmp_txt" class="form-control form-control-sm" readonly />
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-2">
+                    <label class="form-control-label" for="is_posting">Web posting</label>
+                    <div>
+                        <div class="radio-custom radio-default radio-inline">
+                            <input type="radio" id="hire" name="is_posting" value="1" @(Model.is_posting == 1 ? "checked" : "") disabled>
+                            <label for="hire">Yes</label>
+                        </div>
+                        <div class="radio-custom radio-default radio-inline">
+                            <input type="radio" id="reputation" name="is_posting" value="0" @(Model.is_posting == 0 ? "checked" : "") disabled>
+                            <label for="radio">No</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-md-10">
+                    <label class="form-control-label">
+                        Documents
+                        <span class="label-reqired">*</span>
+                    </label>
+                    <div id="paperDiv" name="paperDiv" class="form-inline">
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" id="is_kor_resume" value="1" @(Model.is_kor_resume == 1 ? "checked" : "") disabled>
+                            <label for="is_kor_resume">국문이력서</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" id="is_eng_resume" value="1" @(Model.is_eng_resume == 1 ? "checked" : "") disabled>
+                            <label for="is_eng_resume">영문이력서</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" id="is_portfolio" value="1" @(Model.is_portfolio == 1 ? "checked" : "") disabled>
+                            <label for="is_portfolio">포트폴리오</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" id="is_self_introduction" value="1" @(Model.is_self_introduction == 1 ? "checked" : "") disabled>
+                            <label for="is_self_introduction">자기소개서</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" id="is_etc" value="1" @(Model.is_etc == 1 ? "checked" : "") disabled>
+                            <label for="is_etc">기타</label>&nbsp;&nbsp;
+                        </div>
+                        @Html.TextBoxFor(x => x.etc_comment, new { @class = "form-control form-control-sm", @autocomplete = "off", @readonly = "readonly" })
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+            {
+                if (Model.pjt_status == 1 || Model.pjt_status == 4)
+                {
+                    <div class="row">
+                        <div class="col-md-12 vertical-align text-right pt-10">
+                            <div class="vertical-align-bottom">
+                                <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq })" id="btnModify" class="btn btn-success" title="프로젝트 정보 수정">Modify Project</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- 프로젝트 부가정보 시작 -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fas fa-project-diagram"></i>
+                Additional Information
+            </h3>
+            <div class="panel-actions">
+                <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+            </div>
+        </div>
+        <div id="projectAdd" class="panel-body">
+            <div class="row">
+
+                <div class="form-group col-md-12">
+                    <label class="form-control-label">구인절차</label>
+                    <div class="form-inline">
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" id="is_pre_interview" value="1" @(Model.is_pre_interview == 1 ? "checked" : "") disabled>
+                            <label for="is_pre_interview">사전면접</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" id="is_number" value="1" @(Model.is_number == 1 ? "checked" : "") disabled>
+                            <label></label>
+                        </div>
+                        <select class="form-control form-control-sm" id="interview_number" name="interview_number" disabled>
+                            <option value="1" @(Model.interview_number == 1 ? "selected" : "")>1</option>
+                            <option value="2" @(Model.interview_number == 2 ? "selected" : "")>2</option>
+                            <option value="3" @(Model.interview_number == 3 ? "selected" : "")>3</option>
+                            <option value="4" @(Model.interview_number == 4 ? "selected" : "")>4</option>
+                            <option value="5" @(Model.interview_number == 5 ? "selected" : "")>5</option>
+                        </select>
+                        <label for="interview_number">차 면접</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" id="is_personality_test" value="1" @(Model.is_personality_test == 1 ? "checked" : "") disabled>
+                            <label for="is_personality_test">인적성검사</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="form-control-label" for="confidentiallity">Confidentiallity</label>
+                    <div class="checkbox-custom checkbox-primary">
+                        <input type="checkbox" id="confidentiallity" name="confidentiallity" value="1" @(Model.confidentiallity == 1 ? "checked" : "") disabled>
+                        <label for="inputUnchecked"></label>
+                    </div>
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="form-control-label" for="genderMan">성별 <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i></label>
+                    <div>
+                        <div class="radio-custom radio-default radio-inline">
+                            <input type="radio" id="genderMan" name="gender_type" value="1" @(Model.gender_type == 1 ? "checked" : "") disabled>
+                            <label for="hire">남</label>
+                        </div>
+                        <div class="radio-custom radio-default radio-inline">
+                            <input type="radio" id="genderWoman" name="gender_type" value="2" @(Model.gender_type == 2 ? "checked" : "") disabled>
+                            <label for="genderWoman">여</label>
+                        </div>
+                        <div class="radio-custom radio-default radio-inline">
+                            <input type="radio" id="genderNone" name="gender_type" value="3" checked @(Model.gender_type == 3 ? "checked" : "") disabled>
+                            <label for="genderNone">무관</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="form-control-label" for="start_age">연령대(생년) <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i></label>
+                    <div class="input-group input-group-sm">
+                        @Html.TextBoxFor(x => x.start_age, new { @class = "form-control", @type = "number", @autocomplete = "off", @placeholder = "시작연령", @readonly = "true" })
+                        <span class="input-group-addon"> ~ </span>
+                        @Html.TextBoxFor(x => x.end_age, new { @class = "form-control", @type = "number", @autocomplete = "off", @placeholder = "종료연령", @readonly = "true" })
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-4">
+                    <label class="form-control-label" for="target_school">타겟학교 <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i></label>
+                    @Html.HiddenFor(x => x.target_school)
+                    @{
+                        var school_name = string.IsNullOrWhiteSpace(Model.target_school_campus) ? Model.target_school_name : Model.target_school_name + "(" + Model.target_school_campus + ")";
+                    }
+                    @Html.TextBox("school_name", school_name, new { @class = "form-control form-control-sm", @placeholder = "학교명", @onkeydown = "FindSchool(this)", @readonly = "true" })
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="form-control-label" for="target_major">타겟전공 <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i></label>
+                    @Html.HiddenFor(x => x.target_major)
+                    @Html.TextBox("major_name", Model.target_major_name, new { @class = "form-control form-control-sm", @placeholder = "전공명", @onkeydown = "FindMajor(this)", @readonly = "true" })
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="form-control-label" for="target_company">타겟회사</label>
+                    @Html.HiddenFor(x => x.target_company)
+                    @Html.TextBox("target_company_name", Model.target_company_name, new { @class = "form-control form-control-sm", @placeholder = "회사명", @onkeydown = "FindCompany(this)", @readonly = "true" })
+                </div>
+                <div class="form-group col-md-12">
+                    <label class="form-control-label" for="keywordField">키워드 <i class="fas fa-info-circle text-info" title="후보자 자동제안 참조 항목"></i></label>
+                    @{
+                        var keywordVal = "";
+                        if (Model.keywordList.Count > 0)
+                        {
+                            keywordVal = String.Join(",", Model.keywordList.Select(x => x.pk_name).ToArray());
+                        }
+                    }
+                    <input type="text" id="keywordField" name="keywordField" class="form-control form-control-sm" data-plugin="tokenfield" value="@keywordVal" readonly />
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+    <!-- 프로젝트 부가정보 끝-->
+    <!-- 프로젝트 진행사항 시작 -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fas fa-tasks"></i>
+                Project 진행사항
+            </h3>
+            <div class="panel-actions">
+                <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+            </div>
+        </div>
+        <div id="projectProgress" class="panel-body">
+            <!-- ajax 로 바인딩 -->
+        </div>
+    </div>
+    <!-- 프로젝트 진행사항 끝 -->
+    <!-- 간편 후보자 리스트 시작 -->
+    @*<div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fas fa-id-card"></i>
+                    간편 후보자 현황
+                </h3>
+                <div class="panel-actions">
+                    <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+                </div>
+            </div>
+            <div id="projectSimpleCandidate" class="panel-body">
+
+            </div>
+        </div>*@
+    <!-- 간편 후보자 리스트 끝-->
+    <!-- 프로젝트 후보자 제안 시작 -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fas fa-user-plus"></i>
+                후보자 제안
+            </h3>
+            <div class="panel-actions">
+                <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+            </div>
+        </div>
+        <div id="projectCandiSuggetion" class="panel-body">
+
+        </div>
+    </div>
+    <!-- 프로젝트 후보자 제안 끝 -->
+    
+    <!-- 프로젝트 담당자 시작 -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fas fa-user-tie"></i>
+                Contact
+            </h3>
+            <div class="panel-actions">
+                <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+            </div>
+        </div>
+        <div id="projectContact" class="panel-body">
+            <div class="row">
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="contact_name">이름</label>
+                    <div class="form-inline">
+                        <div class="form-group">
+                            @Html.HiddenFor(x => x.cc_seq)
+                            @Html.TextBoxFor(x => x.contact_name, new { @class = "form-control", @readonly = "readonly" })
+                        </div>
+                        <div class="form-group">
+                            <div class="radio-custom radio-default radio-inline">
+                                <input type="radio" id="male" name="contact_gender" value="1" disabled @(Model.contact_gender == 1 ? "checked" : "")>
+                                <label for="hire">남</label>
+                            </div>
+                            <div class="radio-custom radio-default radio-inline">
+                                <input type="radio" id="female" name="contact_gender" value="2" disabled @(Model.contact_gender == 2 ? "checked" : "")>
+                                <label for="genderWoman">여</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="contact_email">이메일</label>
+                    @Html.TextBoxFor(x => x.contact_email, new { @class = "form-control col-md-8", @readonly = "readonly" })
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="contact_phone">전화번호</label>
+                    @Html.TextBoxFor(x => x.contact_phone, new { @class = "form-control col-md-8", @readonly = "readonly" })
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="contact_cell_phone">휴대폰</label>
+                    @Html.TextBoxFor(x => x.contact_cell_phone, new { @class = "form-control col-md-8", @readonly = "readonly" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="contact_division">부서명</label>
+                    @Html.TextBoxFor(x => x.contact_division, new { @class = "form-control col-md-8", @readonly = "readonly" })
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="contact_position">직함</label>
+                    @Html.TextBoxFor(x => x.contact_position, new { @class = "form-control col-md-8", @readonly = "readonly" })
+                </div>
+                <div class="form-group col-md-3">
+
+                </div>
+                <div class="form-group col-md-3 vertical-align ">
+                    <div class="vertical-align-bottom">
+                        <button type="button" id="btnContactSave" class="btn btn-sm btn-primary">저장</button>
+                        <button type="button" id="btnContact" class="btn btn-sm btn-success">담당자 불러오기</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 프로젝트 담당자 끝-->
+    <!-- 세금계산서 담당자 시작 -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fas fa-wallet"></i>
+                전자세금계산서 담당자
+            </h3>
+            <div class="panel-actions">
+                <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+            </div>
+        </div>
+        <div id="projectTax" class="panel-body">
+            <div class="row">
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="tax_division">담당팀/ 담당자</label>
+                    <div class="form-inline">
+                        <div class="form-group">
+                            @Html.HiddenFor(x => x.ctc_seq)
+                            @Html.TextBoxFor(x => x.tax_division, new { @class = "form-control col-md-5", @readonly = "readonly" })&nbsp;&nbsp;/&nbsp;&nbsp;
+                            @Html.TextBoxFor(x => x.tax_name, new { @class = "form-control col-md-5", @readonly = "readonly" })
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="tax_email">이메일</label>
+                    @Html.TextBoxFor(x => x.tax_email, new { @class = "form-control col-md-8", @readonly = "readonly" })
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="tax_phone">전화번호</label>
+                    @Html.TextBoxFor(x => x.tax_phone, new { @class = "form-control col-md-8", @readonly = "readonly" })
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="tax_cell_phone">휴대폰</label>
+                    @Html.TextBoxFor(x => x.tax_cell_phone, new { @class = "form-control col-md-8", @readonly = "readonly" })
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="tax_deposit_manager">입금메일 담당자명</label>
+                    @Html.TextBoxFor(x => x.tax_deposit_manager, new { @class = "form-control col-md-8", @readonly = "readonly" })
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="form-control-label" for="tax_deposit_email">전화번호</label>
+                    @Html.TextBoxFor(x => x.tax_deposit_email, new { @class = "form-control col-md-8", @readonly = "readonly" })
+                </div>
+                <div class="form-group col-md-3">
+
+                </div>
+                <div class="form-group col-md-3 vertical-align">
+                    <div class="vertical-align-bottom">
+                        <button type="button" id="btnTaxSave" class="btn btn-sm btn-primary">저장</button>
+                        <button type="button" id="btnTax" class="btn btn-sm btn-success">세금계산서 담당자 불러오기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 세금계산서 담당자 끝 -->
+    <!-- 프로젝트 인보이스 시작 -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fas fa-file-invoice-dollar"></i>
+                Invoice
+            </h3>
+            <div class="panel-actions">
+                <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+            </div>
+        </div>
+        <div id="projectInvoice" class="panel-body">
+
+        </div>
+    </div>
+    <!-- 프로젝트 인보이스 끝 -->
+    <!-- 프로젝트 메모 시작 -->
+    <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fas fa-sticky-note"></i>
+                Memo
+            </h3>
+            <div class="panel-actions">
+                <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
+            </div>
+        </div>
+        <div id="projectMemo" class="panel-body">
+
+        </div>
+    </div>
+    <!-- 프로젝트 메모 끝 -->
+
+    <div class="modal fade" id="InvoiceCreateModal" aria-hidden="false" aria-labelledby="InvoiceCreateModalLabel" role="dialog" tabindex="-1">
+        <div class="modal-dialog modal-simple">
+            <div class="modal-content" style="width:750px;">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <h4 class="modal-title text-center" id="InvoiceCreateModalLabel">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        Invoice Information
+                    </h4>
+                </div>
+                <div class="modal-body" style="max-height:800px; overflow-y:auto">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/Libs/remark/global/vendor/bootstrap-tokenfield/bootstrap-tokenfield.min599c.js?v4.0.4"></script>
+    <script src="~/Libs/remark/global/js/Plugin/bootstrap-tokenfield.min599c.js?v4.0.4"></script>
+
+    <script type="text/javascript">
+        
+        //공유 프로젝트
+    function shareProject(obj, p_seq) {
+        callShareBtn = obj;
+        $.ajax({
+            url: '@Url.Action("ShareProjectCreate", "Project")',
+            data: {
+                p_seq: p_seq
+            },
+            dataType: 'html',
+            type: 'GET',
+            beforeSend: function ()
+            {
+                $(".page").isLoading({
+                    text: "Loading",
+                    position: "overlay"
+                });
+            }
+        })
+        .done(function (json) {
+            $(".page").isLoading("hide");
+
+            $.fancybox.open({
+                'content':json,
+                'width': '400',
+                'height': '385',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': '프로젝트 공유',
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            $(".page").isLoading( "hide" );
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+
+    //공유 프로젝트 취소
+    function cancelShareProject(obj, p_seq) {
+     alertify.confirm()
+        .set({
+            'labels': { ok: '확인', cancel: '취소' },
+            'onok': function () {
+
+                callShareBtn = obj;
+
+                $.ajax({
+                   url: '@Url.Action("ShareProjectCancel", "Project")',
+                   data: {
+                        p_seq: p_seq
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                   beforeSend: function ()
+                   {
+
+                   }
+                })
+                .done(function (json) {
+
+                    if (json.ok) {
+
+                        NormalAlert(json.message);
+                        $(callShareBtn).removeClass("btn-danger");
+                        $(callShareBtn).addClass("btn-primary");
+                        $(callShareBtn).text("공유");
+                        $(callShareBtn).attr("onclick", "shareProject(this, " + p_seq + ")");
+
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            },
+            'oncancel': function () {
+
+                return;
+            },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>프로젝트 공유 취소')
+        .setting({
+            message: "해당 프로젝트의 공유를 취소하시겠습니까?",
+        })
+        .show();
+        }
+
+    //전담코웍 알림
+    function CoWorkAlram(p_seq) {
+        alertify.confirm()
+        .set({
+            'labels': { ok: '확인', cancel: '취소' },
+            'onok': function () {
+
+                $.ajax({
+                   url: '@Url.Action("CreateCoWorkAlram", "Project")',
+                    data: {
+                        p_seq: p_seq
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                   beforeSend: function ()
+                   {
+
+                   }
+                })
+                .done(function (json) {
+
+                    if (json.ok) {
+
+                        NormalAlert(json.message);
+                        chkAlertBadge();
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            },
+            'oncancel': function () {
+
+                return;
+            },
+        })
+        .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>전담코웤 알림')
+        .setting({
+            message: "전담코웤 알림을 보내시겠습니까?",
+        })
+        .show();
+    }
+
+        $(document).ready(function () {
+
+            $(".token").find("a.close").remove();
+            $(".token").find(".token-label").css("padding-right", "5px");
+
+            callBoardList(@Model.p_seq, 1) 
+            callProjectProgress(@Model.p_seq, 0, 1)
+            callProjectCandiSuggetionList(@Model.p_seq)
+            callProjectSimpleCandidateList(@Model.p_seq, 1)
+            callProjectInvoiceList(@Model.p_seq, 1)
+            callMemoList(@Model.p_seq, 1)
+
+
+            //프로젝트 마감 버튼 클릭시
+            $("#btnPjtState").click(function () {
+                $.ajax({
+                    url: '@Url.Action("ProjectStateChange", "Project")',
+                    data: {
+                        p_seq: '@Model.p_seq'
+                    },
+                    dataType: 'html',
+                    type: 'GET',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':json,
+                        'width': '300',
+                        'height': '200',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': '프로젝트 마감사유',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        },
+                        afterClose: function () {
+                            // fancybox is closed, run myOtherFunct()
+                            window.setTimeout(function () { location.reload() }, 2000);
+                        }
+                    });
+
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+            //전자세금계산서 담당자
+            $("#btnTax").click(function () {
+
+                if ($("#company_name").val() == "" || $("#c_seq").val() == 0) {
+                    NormalAlert("고객사 명을 검색 하세요.")
+                    return false;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("SearchProjectTaxContact", "Project")',
+                    data: {
+                        c_seq: $("#c_seq").val()
+                    },
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                       showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':json,
+                        'width': '500',
+                        'height': '385',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': '전자세금계산서 담당자 목록',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+
+            });
+
+            //담당자 불러오기
+            $("#btnContact").click(function () {
+
+                if ($("#company_name").val() == "" || $("#c_seq").val() == 0) {
+                    NormalAlert("고객사 명을 검색 하세요.")
+                    return false;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("SearchProjectContact", "Project")',
+                    data: {
+                        c_seq: $("#c_seq").val()
+                    },
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':json,
+                        'width': '500',
+                        'height': '385',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': 'Contact 목록',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+
+            });
+
+            //세금계산서 담당자 저장.
+            $("#btnTaxSave").click(function () {
+
+                $.ajax({
+                   url: '@Url.Action("ProjectTaxContactSave", "Project")',
+                   data: {
+                       p_seq: $("#p_seq").val()
+                       ,
+                       ctc_seq : $("#ctc_seq").val()
+                   },
+                   dataType: 'json',
+                   type: 'POST',
+                   beforeSend: function ()
+                   {
+                       showLoading();
+                   }
+                })
+                .done(function (json) {
+                    hideLoading();
+                    if (json.ok) {
+                        NormalAlert(json.message);
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                    .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+
+            });
+
+            //프로젝트 담당자 저장
+            $("#btnContactSave").click(function () {
+
+                $.ajax({
+                   url: '@Url.Action("ProjectContactSave", "Project")',
+                   data: {
+                       p_seq: $("#p_seq").val()
+                       ,
+                       cc_seq : $("#cc_seq").val()
+                   },
+                   dataType: 'json',
+                   type: 'POST',
+                   beforeSend: function ()
+                   {
+                       showLoading();
+                   }
+                })
+                .done(function (json) {
+                    hideLoading();
+                    if (json.ok) {
+                        NormalAlert(json.message);
+                    } else {
+                        ErrorAlert(json.message);
+                    }
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+
+            });
+        });
+
+        //프로젝트 진행사항
+        function callProjectProgress(p_seq, state, page) {
+
+            if(page == null || page == undefined)
+                page = 1;
+
+            $.ajax({
+                url: '@Url.Action("ProjectProgressList", "Project")',
+                data: {
+                    p_seq: p_seq
+                    , state: state
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#projectProgress');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#projectProgress');
+                $('#projectProgress').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#projectProgress');
+            });
+        }
+
+        //후보자 제안 목록
+        function callProjectCandiSuggetionList(p_seq) {
+
+            $.ajax({
+                url: '@Url.Action("ProjectCandiSuggetionList", "Project")',
+                data: {
+                    p_seq: p_seq
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#projectCandiSuggetion');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#projectCandiSuggetion');
+                $('#projectCandiSuggetion').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#projectCandiSuggetion');
+            });
+        }
+
+        //간편 후보자 목록
+        function callProjectSimpleCandidateList(p_seq, page) {
+
+            $.ajax({
+                url: '@Url.Action("ProjectSimpleCandidateList", "Project")',
+                data: {
+                    p_seq: p_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#projectSimpleCandidate');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#projectSimpleCandidate');
+                $('#projectSimpleCandidate').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#projectSimpleCandidate');
+            });
+        }
+
+        //인보이스 리스트
+        function callProjectInvoiceList(p_seq, page) {
+            $.ajax({
+                url: '@Url.Action("ProjectInvoiceList", "Project")',
+                data: {
+                    p_seq: p_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#projectInvoice');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#projectInvoice');
+                $('#projectInvoice').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#projectInvoice');
+            });
+        }
+
+        //메모 리스트
+        function callMemoList(p_seq, page) {
+            $.ajax({
+                url: '@Url.Action("ProjectMemoList", "Project")',
+                data: {
+                    p_seq: p_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#projectMemo');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#projectMemo');
+                $('#projectMemo').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#projectMemo');
+            });
+        }
+
+        //공유 프로젝트 코멘트 
+        function callBoardList(p_seq, page) {
+            $.ajax({
+                url: '@Url.Action("ShareProjectBoardList", "Project")',
+                data: {
+                    p_seq: p_seq
+                    ,page : page
+                },
+                dataType: 'html',
+                type: 'POST',
+                beforeSend: function () {
+                    showLoading('#commentList');
+                }
+            })
+            .done(function (view) {
+                hideLoading('#commentList');
+                $('#commentList').html(view);
+
+            })
+            .always(function () {
+                hideLoading('#commentList');
+            });
+        }
+
+
+    </script>
+
+}

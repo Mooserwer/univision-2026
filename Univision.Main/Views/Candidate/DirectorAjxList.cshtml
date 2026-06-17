@@ -1,0 +1,330 @@
+﻿@model Univision.Core.Models.DTO.Response.Candidate.DirectorListViewModel
+@{
+  Layout = null;
+  int cookie_can_open_win = 0, cookie_can_view_list = 0;
+  if (HttpContext.Current.Request.Cookies.AllKeys.Contains("CAND_OPEN_WINDOW"))
+  {
+    cookie_can_open_win = Convert.ToInt32(Request.Cookies["CAND_OPEN_WINDOW"].Value);
+  }
+
+  if (HttpContext.Current.Request.Cookies.AllKeys.Contains("CAND_VIEW_LIST"))
+  {
+    cookie_can_view_list = Convert.ToInt32(Request.Cookies["CAND_VIEW_LIST"].Value);
+  }
+}
+<div class="nav-tabs-horizontal nav-tabs-animate">
+
+  <div class="dropdown page-user-sortlist">
+    <div class="checkbox-custom checkbox-primary mr-2 inline-block mt-0" title="항상 새창에서 열기">
+      <input type="checkbox" name="candidate_new_win" id="candidate_new_win" class="form-control-label" onclick="javascript:fSetCandCookie('CAND_OPEN_WINDOW', this);" @(cookie_can_open_win == 1 ? "checked" : "") />
+      <label for="candidate_new_win">항상 새창에서 열기</label>
+    </div>
+
+    정렬 : <a class="dropdown-toggle inline-block" data-toggle="dropdown" href="#" aria-expanded="false">
+  @if (Model.search.orderOption == "DESC")
+  {
+    <text>↓</text>
+  }
+  else
+  {
+    <text>↑</text>
+  }
+
+  @if (Model.search.orderTxt == "A.kor_name")
+  {
+    <text>이름</text>
+  }
+  else if (Model.search.orderTxt == "A.birth_date")
+  {
+    <text>생년</text>
+  }
+  else if (Model.search.orderTxt == "A.group_name")
+  {
+    <text>그룹명</text>
+  }
+  else if (Model.search.orderTxt == "A.comp_name")
+  {
+    <text>회사명</text>
+  }
+  else if (Model.search.orderTxt == "A.create_dt")
+  {
+    <text>최초 등록일</text>
+  }
+  else if (Model.search.orderTxt == "A.modify_dt")
+  {
+    <text>최종 수정일</text>
+  }
+
+</a>
+         <div class="dropdown-menu animation-scale-up animation-top-right animation-duration-250"
+              role="menu">
+           <a class="active dropdown-item" href="javascript:cd_order_set('A.kor_name')">이름</a>
+           <a class="dropdown-item" href="javascript:cd_order_set('A.birth_date')">생년</a>
+           <a class="dropdown-item" href="javascript:cd_order_set('A.group_name')">그룹명</a>
+           <a class="dropdown-item" href="javascript:cd_order_set('A.comp_name')">회사명</a>
+           <a class="dropdown-item" href="javascript:cd_order_set('A.create_dt')">최초 등록일</a>
+           <a class="dropdown-item" href="javascript:cd_order_set('A.modify_dt')">최종 수정일</a>
+         </div>
+
+
+
+  </div>
+  <ul class="nav nav-tabs nav-tabs-line">
+    <li class="nav-item" role="presentation">
+      <a class="active nav-link" data-toggle="tab" href="#all_contacts"
+         aria-controls="all_contacts" role="tab">조회 결과 (@Model.PagingInfo.TotalItems)</a>
+    </li>
+
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane animation-fade active" id="all_contacts" role="tabpanel">
+      <ul class="list-group">
+        @if (Model.list.Count > 0)
+        {
+          foreach (var data in Model.list)
+          {
+
+
+
+            <li class="list-group-item">
+              <div class="media">
+                <div class="pr-0 pr-sm-20 align-self-center">
+                  <div class="avatar">
+                    @if (!String.IsNullOrEmpty(data.picture_path))
+                    {
+                      <img src="@data.picture_path" alt="@data.kor_name">
+                    }
+                    else
+                    {
+                      <img src="/Content/images/user.png" alt="@data.kor_name">
+                    }
+
+                  </div>
+                </div>
+                <div class="media-body align-self-center cd-border-list">
+                  <h5 class="mt-0 mb-5">
+                    <a href="javascript:openCandidateDirector('@data.d_seq')" class="clearfix">
+                      @data.kor_name (@data.birth_year / @Utils.ReturnGenderTxt(data.gender))
+                    </a>
+                  </h5>
+                  <p>
+                    @data.comp_name <small>(@data.group_name)</small><br />
+                    @data.curr_pos                    
+                    @(!String.IsNullOrEmpty(data.curr_work) ? "/ " + data.curr_work : "")
+                    / @Utils.ReturnExecTypeTxt(data.exec_type)
+                  </p>
+                </div>
+                <div class="media-body align-self-center cd-border-list">
+                  @if (!string.IsNullOrWhiteSpace(data.exp_history))
+                  {
+                    string[] expList = data.exp_history.Split('\n');
+                    if (expList.Length > 0)
+                    {
+                      int exp_cnt = 0;
+                      foreach (var exp in expList)
+                      {                        
+                        <span class="clearfix">- @exp</span> 
+                      }
+
+                    }
+                  }                  
+                </div>
+                <div class="media-body align-self-center cd-border-list">
+                  @if (!string.IsNullOrWhiteSpace(data.edu_history))
+                  {
+                    string[] eduList = data.edu_history.Split('\n');
+                    if (eduList.Length > 0)
+                    {
+                      int edu_cnt = 0;
+                      foreach (var edu in eduList)
+                      {
+                        <span class="clearfix">- @edu</span>
+                      }
+
+                    }
+                  }
+                </div>
+                <div class="media-body align-self-center cd-border-list">
+                  @if (!string.IsNullOrWhiteSpace(data.busi_str))
+                  {
+                    string[] businessList = data.busi_str.Split('\n');
+                    if (businessList.Length > 0)
+                    {
+                      int busi_cnt = 0;
+                      foreach (var business in businessList)
+                      {
+                        busi_cnt++;
+                        <span class="clearfix">- [@business]</span>
+                        if (busi_cnt >= 2)
+                        {
+                          break;
+                        }
+                      }
+
+                    }
+                  }
+                </div>
+                <div class="media-body align-self-center cd-border-list">
+
+                  @if (!string.IsNullOrWhiteSpace(data.job_str))
+                  {
+                    string[] jobList = data.job_str.Split('\n');
+                    if (jobList.Length > 0)
+                    {
+                      int job_cnt = 0;
+                      foreach (var job in jobList)
+                      {
+                        job_cnt++;
+                        <span class="clearfix">- [@job]</span>
+                        if (job_cnt >= 2)
+                        {
+                          break;
+                        }
+                      }
+
+                    }
+                  }
+                </div>
+                <div class="media-body align-self-center cd-border-list">
+
+                  @{
+                    if (!string.IsNullOrWhiteSpace(data.keyword))
+                    {
+                      string[] keywordList = data.keyword.Split(',');
+                      if (keywordList.Length > 0)
+                      {
+                        int key_cnt = 0;
+                        <p class="">
+                          @foreach (var keyword in keywordList)
+                          {
+                            key_cnt++;
+                            if (!string.IsNullOrWhiteSpace(keyword))
+                            {
+
+                              <keywordbox style="word-break:keep-all;">@Html.Raw(keyword)</keywordbox>
+
+
+                              if (key_cnt >= 15) { break; }
+
+                            }
+
+                          }
+
+                        </p>
+                      }
+                    }
+                  }
+                </div>
+              </div>
+            </li>
+          }
+        }
+      </ul>
+    </div>
+  </div>
+</div>
+@*
+  <table class="table block_table table-bordered table-hover table-striped" style="table-layout:fixed;font-size:0.8em;">
+    <thead>
+      <tr>
+        <th class="text-center" style="width:100px">Company</th>
+        <th class="text-center" style="width:100px">Name</th>
+        <th class="text-center">Exp.</th>
+        <th class="text-center">Edu</th>
+        <th class="text-center" style="width:135px">Ind.</th>
+        <th class="text-center" style="width:135px">Job</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (Model.Items.Count > 0)
+      {
+        int num = 1;
+        foreach (var data in Model.Items)
+        {
+          <tr id="cd_list_@data.di_cd_seq">
+            <td class="text-center">
+              @data.dv_comp_group_name
+              <br />
+              [@data.dv_company_name]
+            </td>
+            <td class="text-center text-truncate">
+              <a href="javascript:openCandidateDirector('@data.di_cd_seq')" class="clearfix">
+                @data.dv_kor_name<br />
+                (@data.di_birth_year / @Utils.ReturnGenderTxt(data.di_gender))
+              </a>
+            </td>
+
+
+            <td class="text-truncate">
+              @data.dv_exp_history
+            </td>
+            <td class="text-truncate">
+              @data.dv_edu_history
+            </td>
+
+            <td class="text-truncate" title="@data.dv_ind_str">
+              @if (!string.IsNullOrWhiteSpace(data.dv_ind_str))
+              {
+                string[] businessList = data.dv_ind_str.Split('\n');
+                if (businessList.Length > 0)
+                {
+                  int busi_cnt = 0;
+                  foreach (var business in businessList)
+                  {
+                    busi_cnt++;
+                    <span class="clearfix">- [@business]</span>
+                    if (busi_cnt >= 2)
+                    {
+                      break;
+                    }
+                  }
+
+                }
+              }
+            </td>
+            <td class="col-12 text-truncate" title="@data.dv_job_str">
+
+              @if (!string.IsNullOrWhiteSpace(data.dv_job_str))
+              {
+                string[] jobList = data.dv_job_str.Split('\n');
+                if (jobList.Length > 0)
+                {
+                  int job_cnt = 0;
+                  foreach (var job in jobList)
+                  {
+                    job_cnt++;
+                    <span class="clearfix">- [@job]</span>
+                    if (job_cnt >= 2)
+                    {
+                      break;
+                    }
+                  }
+
+                }
+              }
+            </td>
+          </tr>
+
+
+
+
+        }
+      }
+      else
+      {
+        <li class="list-group-item text-center">
+          No Data Found.
+        </li>
+        <tr>
+          <td colspan="6" class="text-center">No Data Found.</td>
+        </tr>
+
+      }
+    </tbody>
+  </table>
+*@
+
+@Html.PageAjaxLinksWithFunction(Model.PagingInfo,
+                 ViewContext.HttpContext.Request.Url.AbsoluteUri,
+                 x => String.Format("javascript:SearchPaging({0})", x))

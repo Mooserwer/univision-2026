@@ -1,0 +1,497 @@
+﻿@model Univision.Core.Models.DTO.Response.Client.ActivityListViewModel
+@{
+    ViewBag.Title = "ContactLIst";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .extend-box {
+        position: absolute !important;
+        top: 1.9em;
+        right: 1em;
+    }
+
+    .panel-body .input-search .form-control {
+        border-radius: 2px;
+    }
+
+    .panel-body .form-control-label {
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+    }
+
+    .panel-body .form-group {
+        margin-bottom: 3px;
+    }
+
+    .panel {
+        margin-bottom: 1rem;
+    }
+
+    .table thead th {
+        font-weight: bold;
+    }
+
+    /*.innertable {
+        border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;
+    }*/
+
+    .innertable tr {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        /*border: 0px;
+        border-color: white;
+        background-color: white;
+        empty-cells: show;
+        border-collapse: inherit;
+        padding: initial;*/
+    }
+
+        .innertable tr td {
+            width: 100%;
+            border: 0px;
+            border-color: white;
+            background-color: white;
+            empty-cells: show;
+            border-collapse: inherit;
+            padding: initial;
+        }
+</style>
+
+<link href="~/Libs/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
+<link rel="stylesheet" href="~/Libs/remark/base/assets/examples/css/pages/user.min599c.css?v4.0.4">
+
+<div class="page-user">
+    <div class="page-content">
+        <!--검색 Form -->
+        @using (Html.BeginForm("ActivityList", "Client", FormMethod.Get, new { @id = "SearchForm" }))
+        {
+
+            @Html.HiddenFor(x => x.search.orderTxt)
+            @Html.HiddenFor(x => x.search.orderOption)
+            <!-- 검색 패널 시작 -->
+            <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
+                <div class="panel-heading">
+                    <div class="panel-title">
+                        <i class="fas fa-search"></i>
+                        업체 통합검색
+                    </div>
+                    <a class="panel-action icon wb-minus extend-box" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true">
+                    </a>
+                </div>
+
+                <div class="panel-body bg-blue-grey-200">
+                    <hr class="d-md-none d-block" />
+                    <!-- 검색조건 시작 -->
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.kor_name, "업체명(Client Name)", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.search.kor_name, new { @class = "form-control" })
+                        </div>
+                        <div class="w-100 d-none d-md-block d-lg-none"></div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.am_name, "AM명(AM Name)", new { @class = "form-control-label" })
+                            @Html.TextBoxFor(x => x.search.am_name, new { @class = "form-control" })
+                        </div>
+                        <div class="w-100 d-none d-md-block d-lg-none"></div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.createStart, "일자", new { @class = "form-control-label" })
+                            <div class="form-group">
+                                <div class="input-group">
+                                    @Html.TextBoxFor(x => x.search.dateStart, new { @class = "form-control", @placeholder = "YYYY-MM-DD" })
+                                    <div class="input-group-text pl-5 pr-5">
+                                        ~
+                                    </div>
+                                    @Html.TextBoxFor(x => x.search.dateEnd, new { @class = "form-control", @placeholder = "YYYY-MM-DD" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-100 d-none d-md-block d-lg-none"></div>
+                        <div class="col-md-6 col-lg-4 col-xxl-3 pt-2">
+                            @Html.LabelFor(x => x.search.createStart, "등록일", new { @class = "form-control-label" })
+                            <div class="form-group">
+                                <div class="input-group">
+                                    @Html.TextBoxFor(x => x.search.createStart, new { @class = "form-control", @placeholder = "YYYY-MM-DD" })
+                                    <div class="input-group-text pl-5 pr-5">
+                                        ~
+                                    </div>
+                                    @Html.TextBoxFor(x => x.search.createEnd, new { @class = "form-control", @placeholder = "YYYY-MM-DD" })
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 검색조건 끝 -->
+                    <!-- 검색조건 네째줄 시작 -->
+                    <div class="row pt-2">
+                        <div class="col">
+                            <div class="form-group text-right">
+                                <button type="submit" id="btnSearch" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-search"></i>
+                                    검색
+                                </button>
+                                <button type="button" id="btnReset" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-redo"></i>
+                                    초기화
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 검색조건 네째줄 끝 -->
+                </div>
+            </div>
+            <!-- 검색 패널 끝 -->
+        }
+
+        <div class="panel">
+
+            <div class="panel-body">
+
+                <div class="dataTables_length" id="DataTables_Table_0_length" style="text-align:right;padding-bottom:20px;">
+                    <label>
+                        <button type="button" id="btnClientSearch" class="btn btn-outline btn-primary">활동내역 추가</button>
+                    </label>
+                </div>
+
+                <ul class="timeline timeline-single" style="text-align:center;">
+                    @*<li class="timeline-period">MAY 2017</li>*@
+                    @if (Model.list.Count > 0)
+                    {
+                        int num = 1;
+                        foreach (var data in Model.list)
+                        {
+                            
+
+                                
+                                    <li class="timeline-item">
+                                        <div class="timeline-dot"></div>
+                                        <div class="timeline-content">
+                                            <span class="block mb-5 font-weight-900">
+                                                @(data.title)
+                                            </span>
+                                                <br />
+                                                @*<small>
+                                                    [
+                                                    @if (!string.IsNullOrWhiteSpace(career.join_dt))
+                                                    {
+                                                        @(career.join_dt)
+                                                    }
+                                                    ~
+                                                    @if (!string.IsNullOrWhiteSpace(career.leave_dt))
+                                                    {
+                                                        @(career.leave_dt)
+                                                    }
+                                                    ]
+                                                </small>
+                                            </span>
+                                            <span class="block mb-5">@career.division_name</span>
+                                            <span class="block mb-5">@career.r_name</span>*@
+                                        </div>
+                                    </li>
+                                }
+                                @*<li class="py-0 btn-li-more text-center"> <i class="fas fa-chevron-down" area-hidden="true"></i> More (@(Model.careerList.Count - 2))</li>
+                                <li class="py-0 btn-li-collapse text-center"> <i class="fas fa-chevron-up" area-hidden="true"></i> Collapse </li>*@
+                            
+                            @*if ((num % 2) == 0)
+                            {
+                                <li class="timeline-item">
+                                    <div class="timeline-dot">
+                                        <i class="icon wb-image" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="timeline-info bg-blue-500" style="color:white;">
+                                        <time datetime="@data.log_date"><b>@data.title</b></time>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="card card-article card-shadow">
+                                            <div class="card-block">
+                                                <h3 class="card-title">@data.kor_name</h3>
+                                                <p class="card-text">
+                                                    <text>@Utils.ConvertDateTimeToString(data.log_date) @data.log_hour:@data.log_min</text>
+                                                </p>
+                                                <h4>@data.log_comment</h4>
+                                            </div>
+                                            <div class="card-block">
+                                                <button type="button" id="btnClientSearch" class="btn btn-primary btn-outline card-link">수정</button>
+                                                <button type="button" id="btnClientSearch" class="btn btn-danger btn-outline card-link" onclick="DeleteContactConfirm(this, '@data.cal_seq')">삭제</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="timeline-item timeline-reverse">
+                                    <div class="timeline-dot bg-green-500">
+                                        <i class="icon wb-file" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="timeline-info bg-green-500" style="color:white;">
+                                        <time datetime="@data.log_date"><b>@data.title</b></time>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="card card-article card-shadow">
+                                            <div class="card-block">
+                                                <h3 class="card-title">@data.kor_name</h3>
+                                                <p class="card-text">
+                                                    <text>@Utils.ConvertDateTimeToString(data.log_date) @data.log_hour:@data.log_min</text>
+                                                </p>
+                                                <h4>@data.log_comment</h4>
+                                            </div>
+                                            <div class="card-block">
+                                                <div class="card-actions float-right">
+                                                    <a href="javascript:void(0)">
+                                                        <i class="icon wb-chat-working" aria-hidden="true"></i>
+                                                        <span>2500</span>
+                                                    </a>
+                                                    <a href="javascript:void(0)">
+                                                        <i class="icon wb-heart" aria-hidden="true"></i>
+                                                        <span>20</span>
+                                                    </a>
+                                                </div>
+                                                <button type="button" id="btnClientSearch" class="btn btn-primary btn-outline card-link">수정</button>
+                                                <button type="button" id="btnClientSearch" class="btn btn-danger btn-outline card-link" onclick="DeleteContactConfirm(this, '@data.cal_seq')">삭제</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            }*@
+                            num = num + 1;
+                        }
+                        
+                    }
+
+
+                    
+
+
+
+                </ul>
+
+            </div>
+
+        </div>
+
+        
+    </div>
+</div>
+
+
+@section scripts{
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#btnReset").click(function () {
+                $("#search_searchNum").val("10");
+                $("#search_SelectOption").val("");
+                $("#search_SearchString").val("");
+                $("#search_phone").val("");
+                $("#search_email").val("");
+                $("#search_createStart").val("");
+                $("#search_createEnd").val("");
+
+                $("#SearchForm").submit();
+            });
+
+
+            $("#btnClientSearch").click(function () {
+                //debugger;
+                $.ajax({
+                    url: '@Url.Action("SearchClient", "Client")',
+                    data: {
+
+                    },
+                    dataType: 'html',
+                    type: 'POST',
+                    beforeSend: function ()
+                    {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+
+                    $.fancybox.open({
+                        'content':json,
+                        'width': '800',
+                        'height': '385',
+                        'autoDimensions':false,
+                        'type':'iframe',
+                        'autoSize': false,
+                        'title': '고객사 목록',
+                        helpers: {
+                            title : {
+                                type: 'inside',
+                                position : 'top'
+                            },
+                            overlay: {
+                                closeClick: false
+                            }
+                        }
+                    });
+                })
+                .fail(function (e) {
+                    hideLoading();
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+            });
+
+
+        $('.deleteActivityBtn').click(function (e) {
+            var cal_seq = e.target.value;
+            var c_seq = $("#c_seq").val();
+
+            alertify.confirm()
+                    .set({
+                        'labels': { ok: '확인', cancel: '취소' },
+                        'onok': function () {
+                            $.ajax({
+                                url: '@Url.Action("ClientTaxDelete", "Client")',
+                                data: { ctc_seq: ctc_seq },
+                                dataType: 'json',
+                                type: 'POST',
+                                beforeSend: function () {
+                                    showLoading();
+                                }
+                            })
+                            .done(function (json) {
+                                hideLoading();
+                                if (json.ok) {
+                                    location.href = "/Client/ClientDetail?c_seq=" + c_seq;
+                                }
+                                else {
+                                    ErrorAlert('오류입니다.');
+                                }
+                            });
+                        },
+                        'oncancel': function () {
+                            return;
+                        },
+                    })
+                    .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>담당자 삭제')
+                    .setting({
+                        message: "담당자를 삭제 하시겠습니까?",
+                    })
+                .show();
+
+            var result = confirm("정말 삭제 하시겠습니까?");
+
+            if (result) {
+
+                $.ajax({
+                    url: '@Url.Action("ClientActivityDelete", "Client")',
+                    data: { cal_seq: cal_seq },
+                    dataType: 'json',
+                    type: 'POST',
+                    beforeSend: function () {
+                        showLoading();
+                    }
+                })
+                .done(function (json) {
+                    hideLoading();
+                    if (json.ok) {
+                        location.href = "/Client/ClientDetail?c_seq=" + c_seq;
+                    }
+                    else {
+                        ErrorAlert('오류입니다.');
+                    }
+                })
+            }
+            else
+            {
+
+            }
+        });
+    });
+
+
+    function ActivityDetail(cal_seq, c_seq) {
+        $.ajax({
+            url: '@Url.Action("PopActivity", "Client")',
+            data: { cal_seq: cal_seq, c_seq: c_seq },
+            dataType: 'html',
+            type: 'POST',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+            $.fancybox.open({
+                'content':json,
+                'width': '620',
+                'height': '320',
+                'autoDimensions':false,
+                'type':'iframe',
+                'autoSize': false,
+                'title': '활동내역',
+                helpers: {
+                    title : {
+                        type: 'inside',
+                        position : 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.0');
+            });
+    }
+
+
+    function DeleteContactConfirm(obj, cal_seq) {
+                alertify.confirm()
+                .set({
+                    'labels': { ok: '확인', cancel: '취소' },
+                    'onok': function () {
+                        ClientActivityDelete(obj, cal_seq)
+                    },
+                    'oncancel': function () {
+                        return;
+                    },
+                })
+                .setHeader('<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>활동내역 삭제')
+                .setting({
+                    message: "활동내역을 삭제 하시겠습니까?",
+                })
+                .show();
+            }
+
+
+    function ClientActivityDelete(obj, cal_seq) {
+        $.ajax({
+            url: '@Url.Action("ClientActivityDelete", "Client")',
+            data: {
+                cal_seq: cal_seq
+            },
+            dataType: 'json',
+            type: 'POST',
+            beforeSend: function ()
+            {
+                showLoading();
+            }
+        })
+        .done(function (json) {
+            hideLoading();
+            if (json.ok) {
+
+                location.reload();
+
+            } else {
+                ErrorAlert(json.message);
+            }
+        })
+        .fail(function (e) {
+            hideLoading();
+            ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+        });
+    }
+</script>
+}

@@ -1,0 +1,192 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<a href="@Url.Action("companyApi","Home")" class="btn btn-warning">법인 사업장 api 이동</a>
+<a href="@Url.Action("Index","Remark")" class="btn btn-primary">Remark 템플릿 보기</a>
+<br />
+<br />
+
+<div class="col-md-12">
+    <h3>학교 조회</h3>
+    <table class="table table-bordered">
+        <tr>
+            <td>
+                학교분류
+            </td>
+            <td>
+                <select id="gubun">
+                    <option value="high_list">고등학교</option>
+                    <option value="seet_list">특수/기타 학교</option>
+                    <option value="alte_list">대안학교</option>
+                    <option value="univ_list" selected>대학교</option>
+                </select>
+            </td>
+            <td>
+                지역
+            </td>
+            <td>
+                <select id="region">
+                    <option value="">전체</option>
+                    <option value="100260">서울특별시</option>
+                    <option value="100267">부산광역시</option>
+                    <option value="100269">인천광역시</option>
+                    <option value="100271">대전광역시</option>
+                    <option value="100272">대구광역시</option>
+                    <option value="100273">울산광역시</option>
+                    <option value="100275">광주광역시</option>
+                    <option value="100276">경기도</option>
+                    <option value="100278">강원도</option>
+                    <option value="100280">충청북도</option>
+                    <option value="100281">충청남도</option>
+                    <option value="100282">전라북도</option>
+                    <option value="100283">전라남도</option>
+                    <option value="100285">경상북도</option>
+                    <option value="100291">경상남도</option>
+                    <option value="100292">제주도</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                학교명
+            </td>
+            <td>
+                @Html.TextBox("searchSchulNm", "서울")
+            </td>
+        </tr>
+        <tr>
+            <td>
+                페이지번호
+            </td>
+            <td>
+                @Html.TextBox("thisPage", "1", new { @type = "number" })
+            </td>
+            <td>페이지당 건수</td>
+            <td>
+                @Html.TextBox("perPage", "5", new { @type = "number" })
+            </td>
+        </tr>
+    </table>
+    <button id="btnSearch" class="btn btn-primary">조회</button>
+    <br />
+    <br />
+    <h5>결과</h5>
+    <table id="response" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>전체 검색 결과수</th>
+                <th>학교명</th>
+                <th>학교종류</th>
+                <th>학교유형</th>
+                <th>설립유형</th>
+                <th>지역</th>
+                <th>주소</th>
+                <th>mycollege 접속 정보(대학교)</th>
+                <th>링크 link : 상세페이지 링크, open: 새창으로 띄움</th>
+            </tr>
+        </thead>
+        <tbody id="responseBody"></tbody>
+    </table>
+
+</div>
+
+@section scripts {
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            $("#btnSearch").click(function () {
+
+                $.ajax({
+                   url: '@Url.Action("SearchScoolList", "Home")',
+                   data: {
+                       gubun: $("#gubun").val()
+                       ,
+                       region :$("#region").val()
+                       ,
+                       searchSchulNm :$("#searchSchulNm").val()
+                       ,
+                       thisPage : $("#thisPage").val()
+                       ,
+                       perPage :$("#perPage").val()
+                    },
+                    dataType: 'json',
+                    type: 'POST',
+                   beforeSend: function ()
+                   {
+
+                   }
+                })
+                .done(function (json) {
+
+
+                    if (json.ok) {
+
+                        if (json.list.length > 0) {
+
+                            var sb = new StringBuilder();
+
+                            for (var i = 0; i < json.list.length; i++) {
+
+                                sb.append("<tr>");
+                                sb.append("<td>");
+                                sb.append(json.list[i].totalCount)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].schoolName)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].schoolGubun)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].schoolType)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].estType)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].region)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].adres)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].collegeinfourl)
+                                sb.append("</td>");
+
+                                sb.append("<td>");
+                                sb.append(json.list[i].link)
+                                sb.append("</td>");
+
+                                sb.append("</tr>");
+                            }
+
+                            $("#responseBody").empty();
+                            $("#responseBody").append(sb.toString());
+                        }
+
+                    } else {
+                        alert(json.message);
+
+                    }
+                })
+                .fail(function (e) {
+                    ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
+                });
+
+            });
+
+        });
+
+    </script>
+
+}

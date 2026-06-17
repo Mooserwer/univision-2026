@@ -1,0 +1,515 @@
+﻿@model Univision.Core.Models.DTO.Response.Statistics.UnivisionActivityListModel
+@using Univision.Security
+
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-content container-fluid">
+
+  <!-- row -->
+  @using (Html.BeginForm("UnivisionActivity", "Statistics", FormMethod.Get, new { @id = "SearchForm" }))
+  {
+    <div class="row">
+      <!-- block -->
+      <div class="col-md-3 form-group ">
+        <div class="input-group input-group-sm">
+          @{
+            var userList = new SelectList(Model.userList, "uv_seq", "name").ToList();
+            
+            userList.Insert(0, new SelectListItem { Value = "-1", Text = "전체" });
+            
+
+
+          }
+          @Html.DropDownListFor(x => x.search.uv_seq, userList, new { @class = "form-control" })
+        </div>
+      </div>
+      <!-- // block -->
+      <div class="col-md-5 form-group">
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">
+            <h5>기간 :</h5>
+          </span>
+          @Html.TextBoxFor(x => x.search.startDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+          <span class="input-group-addon">
+            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+          </span>
+          <sapn class="input-group-addon bg-transparent border-0"> ~ </sapn>
+          @Html.TextBoxFor(x => x.search.endDt, new { @class = "form-control jDatePicker", @placeholder = "YYYY-MM-DD", @autocomplete = "off" })
+          <span class="input-group-addon">
+            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+          </span>
+        </div>
+      </div>
+      <div class="col-md-1 offset-3">
+        <button type="submit" class="btn btn-sm btn-raised btn-primary btn-block">검색</button>
+      </div>
+      <!-- block -->
+    </div>
+  }
+
+  <!-- //row -->
+  <!-- row -->
+  <div class="row" id="univision_activity_body">
+    <div class="col-xl-12">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title py-10">
+            유니비전 GPI (후보자 등록/수정, 메모장 등록, 후보자 추천/면접)
+          </h3>
+        </header>
+        <div class="panel-body">
+          <div data-role="container" style="padding:0 !important; margin:0 !important;">
+            <div data-role="content" style="padding:0 !important; margin:0 !important;">
+              <div class="table-responsive">
+                <table id="default-table" class="table table-hover table-bordered" style="table-layout:fixed;font-size:0.85em;">
+                  <colgroup>
+                    <col style="">
+                    <col style="">
+                    <col style="">
+                    <col style="">
+
+                    <col style="">
+                    <col style="">
+                    <col style="">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <td rowspan="2">
+                        Month
+                      </td>
+                      <td colspan="3">
+                        후보자 등록
+                      </td>
+                      <td colspan="1">
+                        후보자 메모
+                      </td>
+                      <td colspan="2">
+                        프로젝트
+                      </td>
+                      <td colspan="4">
+                        프로젝트 진행
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        등록(대행)
+                      </td>
+                      <td>
+                        업데이트
+                      </td>
+                      <td>
+                        합계<br />(20건)
+                      </td>
+                      <td>
+                        후보자<br />(20건)
+                      </td>
+                      <!--
+  <td title="">
+    프로젝트
+  </td>
+  <td>
+    합계<br />(20건)
+  </td>
+    -->
+                      <td>
+                        전체
+                      </td>
+                      <td>
+                        신규등록<br />(8건)
+                      </td>
+                      <td>
+                        추천<br />(20명)
+                      </td>
+                      <td>
+                        면접이상<br />(10명)
+                      </td>
+                      <td>
+                        협상
+                      </td>
+                      <td>
+                        성공 <!--<i class="fa fa-info-circle text-info" title="인보이스 발행 한 후보자"></i>-->
+                      </td>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                    @if (Model.list.Count > 0)
+                    {
+                      foreach (var data in Model.list)
+                      {
+                    <tr>
+                      <th class="text-center">
+                        @data.mon
+                      </th>
+                      <td class="text-right">
+                        <a href="javascript:PopCandidateList(1, '@data.mon', '@data.mon');" title="직접등록 상세내역( @data.mon)">
+                          @Utils.ConvertMoneyToString(data.can_create_cnt)
+                        </a>
+                        (
+                        <a href="javascript:PopCandidateList(0, '@data.mon', '@data.mon');" title="대행등록 상세내역( @data.mon )">
+                          @Utils.ConvertMoneyToString(data.can_create_cnt_agt)
+                        </a>
+                        )
+                      </td>
+                      <td class="text-right">
+                        <a href="javascript:PopCandidateUpdateList('@data.mon', '@data.mon');" title="이력서 업데이트 상세내역( @data.mon )">
+                          @Utils.ConvertMoneyToString(data.can_update_cnt)
+                        </a>
+                      </td>
+                      <td class="text-right">
+                        @Utils.ConvertMoneyToString(data.can_create_update_cnt)
+                      </td>
+                      <td class="text-right">
+                        <a href="javascript:PopMemoList('@data.mon', '@data.mon');" title="메모장 상세내역( @data.mon )">
+                          @Utils.ConvertMoneyToString(data.can_memo_cnt)
+                        </a>
+                      </td>
+                      <!--
+  <td class="text-right">
+    @Utils.ConvertMoneyToString(data.pjt_memo_cnt)
+  </td>
+  <td class="text-right">
+    @Utils.ConvertMoneyToString(data.can_pjt_memo_cnt)
+  </td>
+  -->
+                      <td class="text-right">
+                        @Utils.ConvertMoneyToString(data.pjt_total_cnt)
+                      </td>
+                      <td class="text-right">
+                        @Utils.ConvertMoneyToString(data.pjt_cnt)
+                      </td>
+                      <td class="text-right">
+                        <a href="javascript:PopRecommList(30, '@data.mon', '@data.mon');" title="추천 후보자 내역( @data.mon )">
+                          @Utils.ConvertMoneyToString(data.pjt_rec_cnt)
+                        </a>
+                      </td>
+                      <td class="text-right">
+                        <a href="javascript:PopRecommList(50, '@data.mon', '@data.mon');" title="면접 후보자 내역( @data.mon )">
+                          @Utils.ConvertMoneyToString(data.pjt_interview_cnt)
+                        </a>
+                      </td>
+                      <td class="text-right">
+                        <a href="javascript:PopRecommList(70, '@data.mon', '@data.mon');" title="협상 후보자 내역( @data.mon )">
+                          @Utils.ConvertMoneyToString(data.pjt_nego_cnt)
+                        </a>
+                      </td>
+                      <td class="text-right">
+                        <a href="javascript:PopHireList(80, '@data.mon', '@data.mon');" title="채용 후보자 내역( @data.mon )">
+                          @Utils.ConvertMoneyToString(data.pjt_invoice_cnt)
+                        </a>
+                      </td>
+                    </tr>
+                      }
+
+                  <tr class="bg-blue-100">
+                    <th class="text-center">
+                      합계
+                    </th>
+                    <td class="text-right">
+                      <a href="javascript:PopCandidateList(1, '@Model.list.LastOrDefault().mon', '@Model.list.FirstOrDefault().mon');" title="직접등록 상세내역 (@Model.list.LastOrDefault().mon ~ @Model.list.FirstOrDefault().mon)">
+                        @Utils.ConvertMoneyToString(Model.list.Sum(x => x.can_create_cnt))
+                      </a>
+                      (
+                      <a href="javascript:PopCandidateList(0, '@Model.list.LastOrDefault().mon', '@Model.list.FirstOrDefault().mon');" title="대행등록 상세내역 (@Model.list.LastOrDefault().mon ~ @Model.list.FirstOrDefault().mon)">
+                        @Utils.ConvertMoneyToString(Model.list.Sum(x => x.can_create_cnt_agt))
+                      </a>
+                      )
+
+                    </td>
+                    <td class="text-right">
+                      <a href="javascript:PopCandidateUpdateList('@Model.list.LastOrDefault().mon', '@Model.list.FirstOrDefault().mon');" title="이력서 업데이트 상세내역 (@Model.list.LastOrDefault().mon ~ @Model.list.FirstOrDefault().mon)">
+                        @Utils.ConvertMoneyToString(Model.list.Sum(x => x.can_update_cnt))
+                      </a>
+                    </td>
+                    <td class="text-right">
+                      @Utils.ConvertMoneyToString(Model.list.Sum(x => x.can_create_update_cnt))
+                    </td>
+                    <td class="text-right">
+                      <a href="javascript:PopMemoList('@Model.list.LastOrDefault().mon', '@Model.list.FirstOrDefault().mon');" title="메모장 상세내역 ( @Model.list.LastOrDefault().mon ~ @Model.list.FirstOrDefault().mon )">
+                        @Utils.ConvertMoneyToString(Model.list.Sum(x => x.can_memo_cnt))
+                      </a>
+
+                    </td>
+                    <!--
+  <td class="text-right">
+    @Utils.ConvertMoneyToString(Model.list.Sum(x => x.pjt_memo_cnt))
+  </td>
+  <td class="text-right">
+    @Utils.ConvertMoneyToString(Model.list.Sum(x => x.can_pjt_memo_cnt))
+  </td>
+    -->
+                    <td class="text-right" colspan="2">
+                      @Utils.ConvertMoneyToString(Model.list.Sum(x => x.pjt_cnt))
+                    </td>
+                    <td class="text-right">
+                      <a href="javascript:PopRecommList(30, '@Model.list.LastOrDefault().mon', '@Model.list.FirstOrDefault().mon');" title="추천 후보자 내역( @Model.list.LastOrDefault().mon ~ @Model.list.FirstOrDefault().mon )">
+                        @Utils.ConvertMoneyToString(Model.list.Sum(x => x.pjt_rec_cnt))
+                      </a>
+
+                    </td>
+                    <td class="text-right">
+                      <a href="javascript:PopRecommList(50, '@Model.list.LastOrDefault().mon', '@Model.list.FirstOrDefault().mon');" title="면접 후보자 내역( @Model.list.LastOrDefault().mon ~ @Model.list.FirstOrDefault().mon )">
+                        @Utils.ConvertMoneyToString(Model.list.Sum(x => x.pjt_interview_cnt))
+                      </a>
+                    </td>
+                    <td class="text-right">
+                      <a href="javascript:PopRecommList(70, '@Model.list.LastOrDefault().mon', '@Model.list.FirstOrDefault().mon');" title="협상 후보자 내역( @Model.list.LastOrDefault().mon ~ @Model.list.FirstOrDefault().mon )">
+                        @Utils.ConvertMoneyToString(Model.list.Sum(x => x.pjt_nego_cnt))
+                      </a>
+                    </td>
+                    <td class="text-right">
+                      <a href="javascript:PopHireList(80, '@Model.list.LastOrDefault().mon', '@Model.list.FirstOrDefault().mon');" title="채용확정 후보자 내역( @Model.list.LastOrDefault().mon ~ @Model.list.FirstOrDefault().mon )">
+                        @Utils.ConvertMoneyToString(Model.list.Sum(x => x.pjt_invoice_cnt))
+                      </a>
+                    </td>
+                  </tr>
+                  <tr class="bg-blue-200">
+                    <th class="text-center">
+                      월평균<br />(@Model.list.Count 개월 / 반올림)
+
+                    </th>
+                    <td class="text-right">
+                      @Utils.ConvertMoneyToString(Model.list.Average(x => x.can_create_cnt))
+                      (@Utils.ConvertMoneyToString(Model.list.Average(x => x.can_create_cnt_agt)))
+                    </td>
+                    <td class="text-right">
+                      @Utils.ConvertMoneyToString(Model.list.Average(x => x.can_update_cnt))
+                    </td>
+                    <td class="text-right">
+                      @Utils.ConvertMoneyToString(Model.list.Average(x => x.can_create_update_cnt))
+                    </td>
+                    <td class="text-right">
+                      @Utils.ConvertMoneyToString(Model.list.Average(x => x.can_memo_cnt))
+                    </td>
+                    <!--
+  <td class="text-right">
+    @Utils.ConvertMoneyToString(Model.list.Average(x => x.pjt_memo_cnt))
+  </td>
+  <td class="text-right">
+    @Utils.ConvertMoneyToString(Model.list.Average(x => x.can_pjt_memo_cnt))
+  </td>
+    -->
+                    <td class="text-right" colspan="2">
+                      @Utils.ConvertMoneyToString(Model.list.Average(x => x.pjt_cnt))
+                    </td>
+                    <td class="text-right">
+                      @Utils.ConvertMoneyToString(Model.list.Average(x => x.pjt_rec_cnt))
+                    </td>
+                    <td class="text-right">
+                      @Utils.ConvertMoneyToString(Model.list.Average(x => x.pjt_interview_cnt))
+                    </td>
+                    <td class="text-right">
+                      @Utils.ConvertMoneyToString(Model.list.Average(x => x.pjt_nego_cnt))
+                    </td>
+                    <td class="text-right">
+                      @Utils.ConvertMoneyToString(Model.list.Average(x => x.pjt_invoice_cnt))
+                    </td>
+                  </tr>
+                    }
+                    else
+                    {
+                      <tr>
+                        <td colspan="9">KPI정보가 없습니다.</td>
+                      </tr>
+                    }
+
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- // row -->
+
+
+</div>
+
+@section scripts {
+
+  <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            BindDatePicker($(".jDatePicker"));
+            AuthControll(1);
+
+
+            $("#btnSearch").click(function () {
+
+
+            });
+
+            $('#search_uv_seq').change(function () {
+                $('#SearchForm').submit()
+            })
+
+
+        });
+
+        function PopMemoList(from, to) {
+            $.fancybox.open({
+                href : "@Url.Action("UnivisionMemoList", "Statistics")",
+                ajax : {
+                    type: "post",
+                    data: {
+                        uv_seq: $('#search_uv_seq').val(),
+                        from_month_str: from,
+                        to_month_str : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: true,
+                'title': '메모장 내역 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+
+        function PopCandidateList(direct, from, to) {
+            $.fancybox.open({
+                href : "@Url.Action("UnivisionCandidateList", "Statistics")",
+                ajax : {
+                    type: "post",
+                    data: {
+                        is_direct : direct,
+                        uv_seq: $('#search_uv_seq').val(),
+                        from_month_str: from,
+                        to_month_str : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: false,
+                'title': '후보자 등록현황 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+
+    function PopRecommList(status, from, to) {
+      var pop_title = "추천";
+      if (status == 50) {
+        pop_title = "면접";
+      }
+            $.fancybox.open({
+                href : "@Url.Action("UnivisionPjtCandidateList", "Statistics")",
+                ajax : {
+                    type: "post",
+                    data: {
+                      status: status,
+                      uv_seq: $('#search_uv_seq').val(),
+                      from_month_str: from,
+                      to_month_str : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: false,
+              'title': pop_title  + ' 후보자 현황 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+    function PopHireList(status, from, to) {
+      var pop_title = "채용";
+      
+            $.fancybox.open({
+                href : "@Url.Action("UnivisionPjtHireCandidateList", "Statistics")",
+                ajax : {
+                    type: "post",
+                    data: {
+                      status: status,
+                      uv_seq: $('#search_uv_seq').val(),
+                      from_month_str: from,
+                      to_month_str : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: false,
+              'title': pop_title  + ' 후보자 현황 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+
+        function PopCandidateUpdateList(from, to) {
+            $.fancybox.open({
+                href : "@Url.Action("UnivisionCandidateUpdateList", "Statistics")",
+                ajax : {
+                    type: "post",
+                    data: {
+                        uv_seq: $('#search_uv_seq').val(),
+                        from_month_str: from,
+                        to_month_str : to
+                    }
+                },
+                autoDimensions:false,
+                type: 'ajax',
+                padding: 5,
+                scrolling : 'auto',
+                autoSize: false,
+                'title': '후보자 업데이트현황 (' + from + '~' + to+')',
+                helpers: {
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        }
+
+        //권한별 부서, User select 제어
+        function AuthControll(ua_seq) {
+            var userDisabled = "";
+
+            switch (ua_seq)
+            {
+                case 1:
+                case 2:
+                case 3:
+                    userDisabled = "";
+                    break;
+                case 4:
+                    userDisabled = "";
+                    break;
+                default:
+                    userDisabled = "disabled";
+                    break;
+
+            }
+
+            if (userDisabled != "")
+                $("#search_uv_seq").attr("disabled", userDisabled);
+        };
+
+
+  </script>
+
+}

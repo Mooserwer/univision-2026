@@ -1,0 +1,223 @@
+﻿@model Univision.Main.Models.Project.SearchProjectSearcherModel
+<style>
+    h3 {
+        margin-top: 0px !important;
+    }
+
+    .fancybox-title {
+        text-align: left !important;
+    }
+</style>
+
+<div class="form-inline mb-10">
+    @{
+
+        var deptList = new SelectList(Model.deptList, "ud_seq", "ud_name").ToList();
+        deptList.Insert(0, new SelectListItem { Value = "0", Text = "팀 선택" });
+    }
+    @Html.DropDownListFor(x => x.ud_seq, deptList, new { @class = "form-control col-md-3" })
+    <div class="input-group col-md-9 no-side-space">
+        @Html.TextBoxFor(x => x.searchTxt, new { @class = "form-control", @placeholder = "Searhcer 이름" })
+        <button type="button" class="btn btn-primary" onclick="FancyBoxSearch();"><i class="fas fa-search" aria-hidden="true"></i></button>
+    </div>
+</div>
+<div class="panel" style="margin-bottom:0px !important;">
+    <div class="panel-body" style="padding: 5px 10px 5px 10px; max-height:287px; overflow-y:auto">
+        <table class="table table-borderless table-hover">
+            <thead class="text-center">
+                <tr>
+                    <th class="tbw10">
+                        <div class="checkbox-custom checkbox-primary">
+                            <input type="checkbox" id="checkAll" name="checkAll">
+                            <label for="checkAll"></label>
+                        </div>
+                    </th>
+                    <th class="tbw30">이름</th>
+                    <th class="tbw20">직급</th>
+                    <th class="tbw40">팀명</th>
+                    <th class="hidden-sm-down">연락처</th>
+                </tr>
+            </thead>
+            <tbody class="text-center" style="vertical-align:middle;">
+                @if (Model.list.Count > 0)
+                {
+                    foreach (var data in Model.list)
+                    {
+                        <tr>
+                            <td>
+                                <div class="checkbox-custom checkbox-primary">
+                                    <input type="checkbox" id="@data.uv_seq" name="charge_uv_seq" value="@data.uv_seq" dept-cd="@data.ud_seq" rank=" @data.rank_name" dept="@data.ud_name" uv_name="@data.name" gubun="@data.gubun">
+                                    <label for="@data.uv_seq"></label>
+                                </div>
+                            </td>
+                            <td>
+                                @data.name
+                            </td>
+                            <td>
+                                @data.rank_name
+                            </td>
+                            <td>
+                                @data.ud_name
+                            </td>
+                            <td class="hidden-sm-down">
+                                @data.hp
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4">데이터가 없습니다.</td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="text-right mt-10">
+    <button type="button" id="btnPopConfirm" class="btn btn-primary">등록</button>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("input:checkbox[name='charge_uv_seq']").each(function () {
+
+            if (chargeArr.indexOf($(this).val()) > -1) {
+                $(this).prop("checked", true);
+            }
+        })
+
+        $("#checkAll").click(function () {
+
+            if ($(this).is(":checked")) {
+                $("input:checkbox[name='charge_uv_seq']").prop("checked", true);
+            }
+            else {
+                $("input:checkbox[name='charge_uv_seq']").prop("checked", false);
+            }
+
+        });
+
+
+        $("#btnPopConfirm").click(function () {
+
+            var sb = new StringBuilder();
+
+            $("input:checkbox[name='charge_uv_seq']").each(function () {
+
+                //이미 추가된 항목이면 패스
+                if (chargeArr.indexOf($(this).val()) > -1) {
+
+                    //만일 체크 해제된 항목이라면 본문에서도 지워줌.
+                    if (!$(this).is(":checked")) {
+
+                        var unChkVal = $(this).val();
+
+                        $("#salesList").find("input[name='data.uv_seq']").each(function () {
+
+                            if ($(this).val() == unChkVal) {
+                                $(this).closest(".chargeRow").remove();
+                            }
+                        });
+                    }
+                    return;
+                }
+
+                if ($(this).is(":checked")) {
+                    sb.append("<div class='chargeRow pb-5'> ");
+                    sb.append("    <div class='row form-inline no-side-space col-md-12 sts20'>");
+                    sb.append("        <div class='col-md-2 tbw20 text-center'>");
+                    sb.append("            <input type='hidden' id='data_uv_seq' name='data.uv_seq' value='" + $(this).val() + "' />");
+                    sb.append("            <input type='hidden' id='data_ud_seq' name='data.ud_seq' value='" +  $(this).attr("dept-cd") + "' />");
+                    sb.append("            <input type='hidden' id='data_uv_seq' name='data.name' value='" + $(this).attr("uv_name") + "' />");
+                    sb.append($(this).attr("uv_name"));
+                    sb.append("       </div>");
+                    sb.append("        <div class='col-md-2 tbw40'>");
+                    sb.append("            <div class='input-group input-group-sm'>");
+                    sb.append("                <input type='number' id='charge_fee_rate' name='charge_fee_rate' value='0' class='form-control text-right fee_change' autocomplete='off' max=100 min=0 step='0.01' >");
+                    sb.append("                <span class='input-group-addon'>");
+                    sb.append("                    %");
+                    sb.append("                </span>");
+                    sb.append("            </div>");
+                    sb.append("        </div>");
+                    sb.append("        <div class='col-md-3 tbw40'>");
+                    sb.append("            <div class='input-group input-group-sm'>");
+                  sb.append("                <input type='text' id='charge_amt' name='charge_amt' value='0' class='form-control text-right fee_change' readonly='readonly' autocomplete='off'>");
+                    sb.append("            </div>");
+                    sb.append("        </div>");
+                    sb.append("        <div class='col-md-4  tbw90 sts20'>");
+                    sb.append("            <input type='text' id='charge_comments' name='charge_comments' class='form-control form-control-sm tbw100' placeholder='Comment'/>")
+                    sb.append("        </div>");
+                    sb.append("        <div class='col-md-1 tbw10 sts20 text-right'>");
+                    sb.append("            <button type='button' class='btn btn-xs btn-danger share_remove' title='Remove'><i class='fas fa-times'></i></button>");
+                    sb.append("        </div>");
+                    sb.append("    </div>");
+                    sb.append("</div>");
+
+                }
+            });
+
+            var $chargeRow = $(sb.toString())
+            $chargeRow.find('.share_remove').click(function () {
+                $(this).closest('.chargeRow').remove();
+                changeTotalFee();
+            });
+            $chargeRow.find('.fee_change').change(changeTotalFee);
+
+            $("#salesList").append($chargeRow);
+            //$('#CreateForm').formValidation('revalidateField', 'Searcher');
+          if (typeof SetShareMoneyType !== 'undefined') {
+              SetShareMoneyType();
+            }
+            $.fancybox.close();
+        });
+    });
+
+    //FancyBox 팝업 내의 페이지 이동.
+    function FancyBoxSearch() {
+
+        $.ajax({
+            url: '@Url.Action("AddProjectInvoiceCharge", "Project")',
+            data: {
+                ud_seq: $("#ud_seq").val()
+                ,searchTxt: $("#searchTxt").val()
+            },
+            dataType: 'html',
+            type: 'GET',
+            beforeSend: function () {
+
+            }
+        })
+        .done(function (view) {
+
+            $.fancybox({
+                'content': view,
+                'width': $(".fancybox-outer").width(),
+                'height': $(".fancybox-outer").height(),
+                'autoDimensions': false,
+                'type': 'iframe',
+                'autoSize': false,
+                'title': $(".fancybox-title").text(),
+                helpers: {
+                    title: {
+                        type: 'inside',
+                        position: 'top'
+                    },
+                    overlay: {
+                        closeClick: false
+                    }
+                }
+            });
+        })
+        .always(function () {
+
+        });
+    }
+
+</script>

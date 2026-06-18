@@ -96,6 +96,23 @@
 
   <script type="text/javascript" src="~/Libs/remark/global/vendor/babel-external-helpers/babel-external-helpers599c.js?v4.1.0"></script>
   <script type="text/javascript" src="~/Libs/remark/global/vendor/jquery/jquery.min599c.js?v4.1.0"></script>
+  <script type="text/javascript">
+    /* Chrome가 deprecated 처리한 'unload' 이벤트 바인딩을 무시한다.
+       animsition이 등록하는 빈(no-op) unload 핸들러 때문에 발생하는
+       "Permissions policy violation: unload is not allowed" 콘솔 경고를 제거한다.
+       ('beforeunload'는 차단하지 않으며, 애니메이션 동작에는 영향이 없다.) */
+    (function () {
+      if (!window.jQuery) return;
+      var _on = jQuery.fn.on;
+      jQuery.fn.on = function (types) {
+        if (typeof types === 'string' &&
+            types.split(' ').every(function (t) { return /^unload(\.|$)/.test(t); })) {
+          return this; // 'unload' / 'unload.namespace' 만 건너뜀
+        }
+        return _on.apply(this, arguments);
+      };
+    })();
+  </script>
   <script type="text/javascript" src="~/Libs/remark/global/vendor/popper-js/umd/popper.min599c.js?v4.1.0"></script>
   <script type="text/javascript" src="~/Libs/remark/global/vendor/bootstrap/bootstrap.min599c.js?v4.1.0"></script>
   <script type="text/javascript" src="~/Libs/remark/global/vendor/animsition/animsition.min599c.js?v4.1.0"></script>

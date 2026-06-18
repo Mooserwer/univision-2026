@@ -5,84 +5,184 @@
 <script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
 <link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_ai.css?v=1533562669">
 <style>
-  .loader {
-    width: 32px;
-    height: 32px;
-    border: 5px solid #FFF;
-    border-bottom-color: #FF3D00;
-    border-radius: 50%;
-    display: inline-block;
-    box-sizing: border-box;
-    animation: rotation 1s linear infinite;
+  /* ═══ 이력서 AI 등록 — Makeup AI teal 디자인 ═══ */
+  .cai-wrap {
+    --mu-primary:#0d7377; --mu-primary-dark:#0b5e62; --mu-secondary:#0e9090;
+    --mu-success:#10b981; --mu-danger:#ef4444; --mu-warning:#f59e0b;
+    --mu-bg:#f0f9f9; --mu-card:#fff; --mu-border:#b2d8d8;
+    --mu-text:#1e3a5f; --mu-muted:#374151;
+    --mu-radius:14px; --mu-shadow:0 4px 24px rgba(13,115,119,0.08);
+    --mu-shadow-hover:0 8px 32px rgba(13,115,119,0.16);
+    background:var(--mu-bg); border-radius:18px; padding:0 0 22px;
+    box-shadow:var(--mu-shadow); overflow:hidden; margin-bottom:20px;
   }
+  .cai-body { padding:0 22px; max-width:760px; margin:0 auto; }
 
-  @@keyframes rotation {
-    0% {
-      transform: rotate(0deg);
-    }
-
-    100% {
-      transform: rotate(360deg);
-    }
+  /* 헤더 */
+  .cai-wrap .mu-header {
+    background:linear-gradient(135deg,#0d7377 0%,#0e9090 60%,#14b8a6 100%);
+    padding:18px 24px; display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:12px; position:relative; overflow:hidden;
+    margin-bottom:22px; box-shadow:0 8px 32px rgba(13,115,119,0.25);
   }
+  .cai-wrap .mu-header::before { content:''; position:absolute; top:-60px; right:-60px;
+    width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,0.06); pointer-events:none; }
+  .cai-wrap .mu-header-left { display:flex; align-items:center; gap:12px; }
+  .cai-wrap .mu-header-icon { width:42px; height:42px; background:rgba(255,255,255,0.18);
+    border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .cai-wrap .mu-header-title { color:#fff; font-size:1.2rem; font-weight:700; margin:0; letter-spacing:-0.3px; }
+  .cai-wrap .mu-header-sub { color:rgba(255,255,255,0.85); font-size:0.86rem; margin:2px 0 0; }
+  .cai-wrap .mu-v2-badge { display:inline-flex; align-items:center; gap:4px;
+    background:rgba(255,255,255,0.22); border:1px solid rgba(255,255,255,0.35); color:#fff;
+    border-radius:20px; padding:2px 10px; font-size:0.72rem; font-weight:700; margin-left:8px; vertical-align:middle; }
+  .cai-wrap .mu-header-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .cai-wrap .mu-model-tag { display:inline-flex; align-items:center; gap:7px;
+    background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.28); color:rgba(255,255,255,0.95);
+    border-radius:8px; padding:0 14px; font-size:0.84rem; font-weight:600; height:34px; white-space:nowrap; }
+  .cai-wrap .mu-btn-reset { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25);
+    color:rgba(255,255,255,0.9); border-radius:8px; padding:0 14px; font-size:0.86rem; cursor:pointer;
+    transition:background 0.2s; text-decoration:none; display:inline-flex; align-items:center; gap:7px; height:34px; }
+  .cai-wrap .mu-btn-reset:hover { background:rgba(255,255,255,0.28); color:#fff; text-decoration:none; }
+
+  /* 업로드 카드 */
+  .cai-wrap .mu-upload-card { background:var(--mu-card); border-radius:var(--mu-radius);
+    box-shadow:var(--mu-shadow); overflow:hidden; transition:box-shadow 0.25s; }
+  .cai-wrap .mu-upload-card:hover { box-shadow:var(--mu-shadow-hover); }
+  .cai-wrap .mu-upload-card-header { padding:12px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--mu-border); }
+  .cai-wrap .mu-lang-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px;
+    font-size:0.86rem; font-weight:700; background:linear-gradient(135deg,#ccf2f4,#b2e0e0); color:#0d7377; }
+  .cai-wrap .mu-upload-card-title { font-size:0.97rem; font-weight:600; color:var(--mu-text); }
+  .cai-wrap .mu-dropzone { border:2px dashed var(--mu-border) !important; background:#f7fefe !important;
+    border-radius:0 !important; min-height:150px !important; transition:border-color 0.25s, background 0.25s !important;
+    margin:0 !important; padding:26px 16px !important; cursor:pointer !important; }
+  .cai-wrap .mu-dropzone:hover, .cai-wrap .mu-dropzone.dz-drag-hover { border-color:var(--mu-primary) !important; background:#f0f9f9 !important; }
+  .cai-wrap .mu-dropzone .dz-message { text-align:center; margin:0; }
+  .cai-wrap .mu-dz-icon { font-size:2rem; margin-bottom:8px; display:block; opacity:0.45; }
+  .cai-wrap .mu-dz-text { font-size:0.96rem; color:var(--mu-muted); line-height:1.6; }
+  .cai-wrap .mu-dz-hint { font-size:0.82rem; color:#4b5563; margin-top:6px; display:block; }
+
+  /* 안내 카드 */
+  .cai-wrap .mu-notice-card { background:var(--mu-card); border-radius:var(--mu-radius); box-shadow:var(--mu-shadow);
+    padding:16px 18px; border-left:4px solid var(--mu-primary); margin-top:16px; }
+  .cai-wrap .mu-notice-title { font-size:0.93rem; font-weight:700; color:var(--mu-primary-dark); margin-bottom:8px;
+    display:flex; align-items:center; gap:7px; }
+  .cai-wrap .mu-notice-list { list-style:none; margin:0; padding:0; }
+  .cai-wrap .mu-notice-list li { font-size:0.87rem; color:var(--mu-muted); padding:3px 0 3px 16px; position:relative; line-height:1.6; }
+  .cai-wrap .mu-notice-list li::before { content:'–'; position:absolute; left:0; color:#6b7280; }
+  .cai-wrap .mu-notice-list li.warn { color:#b45309; font-weight:600; }
+  .cai-wrap .mu-notice-list li.warn::before { color:#f59e0b; }
+
+  /* 로그 패널 */
+  #log_panel .mu-panel { background:#fff; border-radius:14px; box-shadow:0 4px 24px rgba(13,115,119,0.08); overflow:hidden; }
+  #log_panel .mu-panel-header { background:linear-gradient(135deg,#0d7377,#0e9090); padding:13px 18px;
+    display:flex; align-items:center; justify-content:space-between; }
+  #log_panel .mu-panel-title { color:#fff; font-size:1rem; font-weight:700; display:flex; align-items:center; gap:8px; }
+  #log_panel .cai-log-body { padding:14px; max-height:60vh; overflow-y:auto; }
+  #ai_upload_log { display:flex; flex-direction:column; gap:10px; }
+
+  .cai-log-item { display:flex; gap:10px; background:#f8fafc; border:1px solid #e2e8f0; border-left:3px solid #cbd5e1;
+    border-radius:10px; padding:10px 12px; animation:cai-slide-in 0.3s ease-out; }
+  .cai-log-item.is-info    { border-left-color:#0e9090; }
+  .cai-log-item.is-success { border-left-color:#10b981; background:linear-gradient(135deg,#f0fdf4,#f8fafc); }
+  .cai-log-item.is-warning { border-left-color:#f59e0b; background:#fffbeb; }
+  .cai-log-item.is-danger  { border-left-color:#ef4444; background:#fff5f5; }
+  .cai-log-icon { flex-shrink:0; font-size:1rem; line-height:1.4; }
+  .cai-log-body-text { flex:1; min-width:0; }
+  .cai-log-time { font-size:0.74rem; color:#94a3b8; display:block; margin-bottom:3px; }
+  .cai-log-text { font-size:0.9rem; color:#1f2937; word-break:break-word; line-height:1.55; }
+  .cai-log-text textarea { margin-top:8px; border-radius:8px; border:1px solid var(--mu-border); width:100%; }
+  .cai-log-actions { margin-top:10px; }
+
+  /* 모달 (teal) */
+  .cai-modal { border:none !important; border-radius:16px !important; overflow:hidden; box-shadow:0 20px 60px rgba(13,115,119,0.3) !important; }
+  .cai-modal-title { background:linear-gradient(135deg,#0d7377,#0e9090); color:#fff; padding:16px 20px;
+    font-size:1.05rem; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .cai-modal-title #ai_modal_title { color:#fff; }
+  .cai-modal .modal-body { padding:26px 20px; }
+  .cai-modal .modal-footer { border-top:1px solid #eef2f2; justify-content:center; }
+
+  /* 로더 (teal) */
+  .loader { width:34px; height:34px; border:5px solid #cdeaea; border-bottom-color:#0d7377;
+    border-radius:50%; display:inline-block; box-sizing:border-box; animation:rotation 1s linear infinite; }
+
+  @@keyframes rotation { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+  @@keyframes cai-slide-in { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
 </style>
 <div class="page-content" style="position:relative;">
 
-  <div class="panel panel-success panel-line shadow">
-    <div class="panel-heading">
-      <h3 class="panel-title">
-        <i class="fas fa-upload"></i>
-        이력서 신규등록 (AI) <span class="badge badge-success">Beta</span>
-      </h3>
-      <div class="panel-actions">
-        <a class="panel-action" aria-hidden="true" title="업로드 초기화" href="javascript:ResetUploadPage();"><i class="fa fa-redo"></i></a>
+  <div class="cai-wrap">
+
+    @* ▶ 헤더 *@
+    <div class="mu-header">
+      <div class="mu-header-left">
+        <div class="mu-header-icon">✨</div>
+        <div>
+          <div class="mu-header-title">
+            이력서 신규등록 (AI)
+            <span class="mu-v2-badge"><i class="fas fa-bolt" style="font-size:0.7rem;"></i> Beta</span>
+          </div>
+          <div class="mu-header-sub">이력서 파일을 업로드하면 GPT가 분석하여 후보자 정보를 자동 추출합니다.</div>
+        </div>
+      </div>
+      <div class="mu-header-right">
+        <span class="mu-model-tag"><i class="fas fa-robot"></i> GPT-5 Mini</span>
+        <a href="javascript:ResetUploadPage();" class="mu-btn-reset" title="업로드 초기화">
+          <i class="fa fa-redo" style="font-size:0.72rem;"></i> 초기화
+        </a>
       </div>
     </div>
 
-    <div id="resume_upload_panel" class="panel-body pt-20">
+    <div id="resume_upload_panel" class="cai-body">
+
+      @* 진행상태 모달 (기존 동작 유지 · teal 테마) *@
       <div class="modal fade" id="modal_upload_progress" tabindex="-1" role="dialog" aria-labelledby="modal_upload_progress_label" aria-hidden="true">
         <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-title">
-              <h3 class="pl-20"><span id="ai_modal_title">ChatGPT가 파일을 분석 중 입니다..</span></h3>
+          <div class="modal-content cai-modal">
+            <div class="modal-title cai-modal-title">
+              <span>✨</span>
+              <span id="ai_modal_title">ChatGPT가 파일을 분석 중 입니다..</span>
             </div>
             <div class="modal-body text-center" id="ai_modal_contents">
               <span id="summary_loader" class="loader"></span>
             </div>
             <div class="modal-footer">
-              <span style="" class="text-center">
-                <button type="button" class="btn btn-danger" style="min-width:200px;" id="btn_cancel_result" disabled="true">요청취소</button>
-              </span>
+              <button type="button" class="btn btn-danger" style="min-width:200px;" id="btn_cancel_result" disabled="true">요청취소</button>
             </div>
           </div>
-
-        </div>
-
-      </div>
-      <div class="row">
-        <div class="col-8 offset-2">
-          <form id="create-ai-resume" class="dropzone h-full text-left">
-            <div class="row py-2">
-              <div class="col">
-                <div class="dz-message" id="upload_message">
-                  <h4>AI 이력서 등록 <span class="badge badge-success">Beta</span></h4>
-
-                  <small>[이력서 파일을 여기에 끌어놓거나 클릭하여 파일을 선택해주세요.]</small><br />
-                  <p>
-                    - 글자 인식이 가능한 이력서만 등록이 가능합니다.(이미지 형식은 인식 불가)<br />
-                    - 내용이 너무 길거나 용량이 큰 파일은 인식이 어려울 수 있습니다.<br />
-                    <span class="text-danger">- GPT가 분석한 내용은 정확하지 않을 수 있습니다.<br /> <span class="font-weight-800">꼭 저장하시기전 틀린내용이 없는지 검수가 필요합니다.</span></span>
-                    <br /><br />
-                    <span>* 대표적으로 <span class="text-danger font-weight-800 font-size-14">[잡코리아] PDF 이력서</span>는<br />회사,학교,연락처 글자 인식이 되지 않습니다 ㅠㅠ</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </form>
         </div>
       </div>
-    </div>
-  </div>
+
+      @* 업로드 카드 *@
+      <div class="mu-upload-card">
+        <div class="mu-upload-card-header">
+          <span class="mu-lang-badge">📄 이력서</span>
+          <span class="mu-upload-card-title">이력서 파일 업로드</span>
+        </div>
+        <form id="create-ai-resume" class="dropzone mu-dropzone">
+          <div class="dz-message" id="upload_message">
+            <span class="mu-dz-icon">📄</span>
+            <div class="mu-dz-text">이력서 파일을 드래그하거나<br />클릭하여 업로드</div>
+            <span class="mu-dz-hint">PDF, DOCX, HWP 등 텍스트 인식 가능한 파일</span>
+          </div>
+        </form>
+      </div>
+
+      @* 안내사항 *@
+      <div class="mu-notice-card">
+        <div class="mu-notice-title">
+          <i class="fas fa-exclamation-triangle" style="color:#f59e0b;"></i>
+          AI 분석 시 주의사항
+        </div>
+        <ul class="mu-notice-list">
+          <li class="warn">GPT가 분석한 내용은 정확하지 않을 수 있습니다. 저장 전 반드시 내용을 검수하세요.</li>
+          <li>글자 인식이 가능한 이력서만 등록할 수 있습니다. (이미지 형식은 인식 불가)</li>
+          <li>내용이 너무 길거나 용량이 큰 파일은 인식이 어려울 수 있습니다.</li>
+          <li class="warn">[잡코리아] PDF 이력서는 회사·학교·연락처 글자 인식이 되지 않습니다.</li>
+        </ul>
+      </div>
+
+    </div><!-- /resume_upload_panel -->
+  </div><!-- /cai-wrap -->
   <div id="debug_area" class="row d-none">
     <div class="col">
       <form id="ai_resume_form" method="post" action="@Url.Action("CandidateAiCreate", "Candidate")" target="_blank">
@@ -461,22 +561,17 @@
       <textarea class="form-control" rows="5" name="ai_summary_job_stream" id="ai_summary_job_stream" readonly="true"></textarea>
     </div>
   </div>
-  <div class="row d-none" id="log_panel">
-    <div class="col-12">
-      <div class="panel shadow">
-        <div class="panel-heading">
-          <h5 class="panel-title">
-            분석 내용
-          </h5>
+  <div class="d-none" id="log_panel">
+    <div class="cai-wrap">
+      <div class="mu-panel">
+        <div class="mu-panel-header">
+          <div class="mu-panel-title"><i class="fas fa-tasks"></i> 분석 진행 현황</div>
         </div>
-        <div class="panel-body bg-light py-5">
-          <p id="ai_upload_log">
-
-          </p>
+        <div class="cai-log-body">
+          <div id="ai_upload_log"></div>
         </div>
       </div>
     </div>
-
   </div>
 
 
@@ -1531,25 +1626,28 @@
       if (!type) {
         type = "info";
       }
-      var event_time = "[" + new Date().toISOString() + "]";
+      var icons = { info: "🔹", success: "✅", warning: "⚠️", danger: "⛔" };
+      var icon = icons[type] || "🔹";
+      var event_time = new Date().toLocaleTimeString('ko-KR', { hour12: false });
       var reset_btn = '';
       if (type == "danger") {
-        reset_btn = '<button class="btn btn-primary" onclick="ResetUploadPage();">다시 업로드 하기</button> ';
+        reset_btn = '<div class="cai-log-actions"><button class="btn btn-primary" onclick="ResetUploadPage();">다시 업로드 하기</button></div>';
       }
-      var card = `<div class='card border border-${type} shadow'>
-                                <div class="card-block text-${type} py-2 ">
-                                  <span class='text-dark'>${event_time}</span><br/>
-                                  ${contents}
-                                </div>
-                                ${reset_btn}
-                              </div>`;
+      var card = `<div class="cai-log-item is-${type}">
+                    <span class="cai-log-icon">${icon}</span>
+                    <div class="cai-log-body-text">
+                      <span class="cai-log-time">${event_time}</span>
+                      <div class="cai-log-text">${contents}</div>
+                      ${reset_btn}
+                    </div>
+                  </div>`;
       let temp = document.createElement("div");
       temp.innerHTML = card;
       temp.style.opacity = '0';
       temp.style.transition = 'opacity 500ms';
       document.getElementById('ai_upload_log').prepend(temp);
 
-      setInterval(() => temp.style.opacity = '1', 100);
+      setTimeout(() => { temp.style.opacity = '1'; }, 50);
 
       if (type == "danger") {
         ai_modal_title.innerText = "오류발생 / 중지";

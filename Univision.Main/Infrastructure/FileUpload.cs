@@ -703,7 +703,7 @@ namespace Univision.Main.Infrastructure
                 while (File.Exists(newFullPath))
                 {
                     newFileName = string.Format("{0}({1})", fileNameOnly, count++) + Path.GetExtension(originPath);
-                    newFullPath = Path.Combine(newFullPath, newFileName);
+                    newFullPath = Path.Combine(newPath, newFileName);
                 }
 
                 File.Move(originPath, newFullPath);
@@ -748,7 +748,7 @@ namespace Univision.Main.Infrastructure
                 while (File.Exists(newFullPath))
                 {
                     newFileName = string.Format("{0}({1})", fileNameOnly, count++) + Path.GetExtension(originPath);
-                    newFullPath = Path.Combine(newFullPath, newFileName);
+                    newFullPath = Path.Combine(newPath, newFileName);
                 }
 
                 File.Copy(originPath.Normalize(), newFullPath);

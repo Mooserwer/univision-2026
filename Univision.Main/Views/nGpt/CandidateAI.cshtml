@@ -1,441 +1,407 @@
 ﻿@{
-  Layout = null;
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.Title = "이력서 신규등록 (AI)";
   string api_key = System.Configuration.ConfigurationManager.AppSettings["OpenAIApiResumeKey"];
 }
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>이력서 신규등록 AI</title>
-  <link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_ai.css?v=1533562669" />
-  <link rel="stylesheet" href="~/Libs/fontawesome/css/all.min.css?v4.1.0" />
-  <script src="~/Scripts/jquery-3.3.1.min.js"></script>
+
+<link rel="stylesheet" href="~/Libs/dropzone/css/dropzone_ai.css?v=1533562669" />
+<style>
+  /* ═══ 이력서 신규등록 AI — teal 디자인 (레이아웃 내장형) ═══ */
+  .mu-page {
+    --mu-primary:      #0d7377;
+    --mu-primary-dark: #0b5e62;
+    --mu-secondary:    #0e9090;
+    --mu-success:      #10b981;
+    --mu-danger:       #ef4444;
+    --mu-warning:      #f59e0b;
+    --mu-bg:           #f0f9f9;
+    --mu-card:         #ffffff;
+    --mu-border:       #b2d8d8;
+    --mu-text:         #1e3a5f;
+    --mu-muted:        #374151;
+    --mu-radius:       14px;
+    --mu-shadow:       0 4px 24px rgba(13,115,119,0.08);
+    --mu-shadow-hover: 0 8px 32px rgba(13,115,119,0.16);
+    background: var(--mu-bg);
+    border-radius: 16px;
+    padding: 0 0 28px;
+    overflow: hidden;
+    box-shadow: var(--mu-shadow);
+  }
+
+  /* ═══ 헤더 ══════════════════════════════════ */
+  .mu-page .mu-header {
+    background: linear-gradient(135deg, #0d7377 0%, #0e9090 60%, #14b8a6 100%);
+    padding: 20px 24px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    position: relative; overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(13,115,119,0.22);
+  }
+  .mu-page .mu-header::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 220px; height: 220px; border-radius: 50%;
+    background: rgba(255,255,255,0.06); pointer-events: none;
+  }
+  .mu-page .mu-header-left  { display: flex; align-items: center; gap: 12px; }
+  .mu-page .mu-header-icon  {
+    width: 42px; height: 42px; background: rgba(255,255,255,0.18);
+    border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 20px; flex-shrink: 0;
+  }
+  .mu-page .mu-header-title { color: #fff; font-size: 1.2rem; font-weight: 700; margin: 0; letter-spacing: -0.3px; text-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+  .mu-page .mu-header-sub   { color: rgba(255,255,255,0.85); font-size: 0.88rem; margin: 2px 0 0; }
+  .mu-page .mu-v2-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.35);
+    color: #fff; border-radius: 20px; padding: 2px 10px;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;
+    margin-left: 8px; vertical-align: middle;
+  }
+  .mu-page .mu-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .mu-page .mu-model-tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.28);
+    color: rgba(255,255,255,0.95); border-radius: 8px;
+    padding: 0 14px; font-size: 0.86rem; font-weight: 600; height: 34px; white-space: nowrap;
+  }
+  .mu-page .mu-btn-reset {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.9); border-radius: 8px; padding: 0 14px;
+    font-size: 0.88rem; cursor: pointer; transition: background 0.2s, color 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+    white-space: nowrap; height: 34px;
+  }
+  .mu-page .mu-btn-reset:hover { background: rgba(255,255,255,0.25); color: #fff; text-decoration: none; }
+
+  /* ═══ 2컬럼 ════════════════════════════════ */
+  .mu-page .mu-body { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 22px; align-items: start; }
+  @@media (max-width: 1100px) { .mu-page .mu-body { grid-template-columns: 1fr; } }
+
+  /* ═══ 업로드 카드 ═══════════════════════════ */
+  .mu-page .mu-upload-card {
+    background: var(--mu-card); border-radius: var(--mu-radius);
+    box-shadow: var(--mu-shadow); overflow: hidden; transition: box-shadow 0.25s;
+  }
+  .mu-page .mu-upload-card:hover { box-shadow: var(--mu-shadow-hover); }
+  .mu-page .mu-upload-card-header {
+    padding: 12px 16px 10px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--mu-border);
+  }
+  .mu-page .mu-lang-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 11px; border-radius: 20px; font-size: 0.88rem; font-weight: 700;
+    background: linear-gradient(135deg, #ccf2f4, #b2e0e0); color: #0d7377;
+  }
+  .mu-page .mu-upload-card-title { font-size: 0.97rem; font-weight: 600; color: var(--mu-text); }
+  .mu-page .mu-dropzone {
+    border: 2px dashed var(--mu-border) !important; background: #f7fefe !important;
+    border-radius: 0 !important; min-height: 170px !important;
+    transition: border-color 0.25s, background 0.25s !important;
+    margin: 0 !important; padding: 28px 14px !important; cursor: pointer !important;
+  }
+  .mu-page .mu-dropzone:hover, .mu-page .mu-dropzone.dz-drag-hover { border-color: var(--mu-primary) !important; background: #f0f9f9 !important; }
+  .mu-page .mu-dropzone .dz-message { text-align: center; margin: 0; }
+  .mu-page .mu-dz-icon { font-size: 2rem; margin-bottom: 8px; display: block; opacity: 0.4; }
+  .mu-page .mu-dz-text { font-size: 0.96rem; color: var(--mu-muted); line-height: 1.6; }
+  .mu-page .mu-dz-hint { font-size: 0.84rem; color: #4b5563; margin-top: 6px; display: block; }
+
+  /* ═══ 안내 카드 ════════════════════════════ */
+  .mu-page .mu-notice-card {
+    background: var(--mu-card); border-radius: var(--mu-radius);
+    box-shadow: var(--mu-shadow); padding: 16px 18px; border-left: 4px solid var(--mu-primary);
+    margin-top: 14px;
+  }
+  .mu-page .mu-notice-title { font-size: 0.93rem; font-weight: 700; color: var(--mu-primary-dark); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+  .mu-page .mu-notice-list { list-style: none; margin: 0; padding: 0; }
+  .mu-page .mu-notice-list li { font-size: 0.88rem; color: var(--mu-muted); padding: 3px 0 3px 16px; position: relative; line-height: 1.6; }
+  .mu-page .mu-notice-list li::before { content: '–'; position: absolute; left: 0; color: #6b7280; }
+  .mu-page .mu-notice-list li.warn { color: #b45309; font-weight: 600; }
+  .mu-page .mu-notice-list li.warn::before { color: #f59e0b; }
+
+  /* ═══ 사이드패널 ════════════════════════════ */
+  .mu-page .mu-sidebar { position: sticky; top: 16px; max-height: calc(100vh - 120px); display: flex; flex-direction: column; }
+  .mu-page .mu-panel { background: var(--mu-card); border-radius: var(--mu-radius); box-shadow: var(--mu-shadow); overflow: hidden; display: flex; flex-direction: column; min-height: 320px; max-height: calc(100vh - 120px); }
+  .mu-page .mu-panel-header {
+    background: linear-gradient(135deg, #0d7377, #0e9090);
+    padding: 13px 16px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .mu-page .mu-panel-title { color: #fff; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .mu-page .mu-panel-counts { display: flex; gap: 6px; }
+  .mu-page .mu-count-chip {
+    padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
+    background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.2);
+  }
+  .mu-page .mu-count-chip.done { background: rgba(16,185,129,0.3); color: #6ee7b7; border-color: rgba(16,185,129,0.4); }
+  .mu-page .mu-panel-empty { padding: 42px 18px; text-align: center; color: #4b5563; }
+  .mu-page .mu-panel-empty-icon { font-size: 2.5rem; opacity: 0.35; margin-bottom: 10px; display: block; }
+  .mu-page .mu-panel-empty-text { font-size: 0.92rem; line-height: 1.7; }
+  .mu-page .mu-jobs-list {
+    flex: 1; overflow-y: auto; min-height: 0;
+    padding: 10px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .mu-page .mu-jobs-list::-webkit-scrollbar       { width: 4px; }
+  .mu-page .mu-jobs-list::-webkit-scrollbar-track { background: #f1f5f9; }
+  .mu-page .mu-jobs-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+  /* ═══ Job 카드 ══════════════════════════════ */
+  .mu-page .mu-job-card {
+    background: #f8fafc; border: 1px solid var(--mu-border);
+    border-radius: 10px; overflow: hidden;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    animation: card-slide-in 0.3s ease-out; flex-shrink: 0;
+  }
+  .mu-page .mu-job-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+  .mu-page .mu-job-card.is-complete { border-color: #10b981; background: linear-gradient(135deg, #f0fdf4, #f8fafc); box-shadow: 0 0 0 2px rgba(16,185,129,0.12); animation: job-complete-pop 0.5s ease-out; }
+  .mu-page .mu-job-card.is-error    { border-color: #ef4444; background: #fff5f5; }
+
+  .mu-page .mu-job-head { padding: 10px 12px 8px; display: flex; align-items: flex-start; gap: 8px; }
+  .mu-page .mu-job-lang { flex-shrink: 0; width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; background: #ccf2f4; }
+  .mu-page .mu-job-info { flex: 1; min-width: 0; }
+  .mu-page .mu-job-name { font-size: 0.93rem; font-weight: 600; color: var(--mu-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mu-page .mu-job-status-text { font-size: 0.82rem; color: var(--mu-muted); margin-top: 2px; }
+  .mu-page .mu-job-badge { flex-shrink: 0; padding: 2px 8px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; background: #e2e8f0; color: #1f2937; }
+  .mu-page .mu-job-badge.processing { background: #ccf2f4; color: #0d7377; animation: badge-pulse 2s ease-in-out infinite; }
+  .mu-page .mu-job-badge.done  { background: #d1fae5; color: #065f46; }
+  .mu-page .mu-job-badge.error { background: #fee2e2; color: #991b1b; }
+
+  .mu-page .mu-job-pbar-wrap  { padding: 0 12px 10px; }
+  .mu-page .mu-job-pbar-track { height: 5px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+  .mu-page .mu-job-pbar-fill  {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, #0d7377, #14b8a6);
+    transition: width 0.5s ease; position: relative;
+  }
+  .mu-page .mu-job-pbar-fill::after { content: ''; position: absolute; top: 0; right: 0; width: 30px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5)); animation: pbar-shine 1.5s linear infinite; }
+  .mu-page .mu-job-pbar-fill.is-done  { background: linear-gradient(90deg, #10b981, #34d399); }
+  .mu-page .mu-job-pbar-fill.is-done::after  { display: none; }
+  .mu-page .mu-job-pbar-fill.is-error { background: #ef4444; }
+  .mu-page .mu-job-pbar-fill.is-error::after { display: none; }
+  .mu-page .mu-job-pct { font-size: 0.8rem; color: var(--mu-muted); margin-top: 4px; }
+
+  .mu-page .mu-job-log-toggle { width: 100%; background: none; border: none; border-top: 1px dashed #e2e8f0; padding: 6px 12px; font-size: 0.82rem; color: #4b5563; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px; transition: background 0.15s; }
+  .mu-page .mu-job-log-toggle:hover { background: #f1f5f9; }
+  .mu-page .mu-job-logs { display: none; padding: 8px 12px; background: #f8fafc; border-top: 1px solid #f1f5f9; max-height: 240px; overflow-y: auto; }
+  .mu-page .mu-job-logs.is-open { display: block; }
+
+  .mu-page .mu-download-area { padding: 12px; text-align: center; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border-top: 1px solid #a7f3d0; }
+  .mu-page .mu-download-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none;
+    border-radius: 10px; padding: 10px 22px; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; text-decoration: none; box-shadow: 0 4px 14px rgba(16,185,129,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .mu-page .mu-download-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,0.55); color: #fff; text-decoration: none; }
+
+  .mu-page .mu-log-item { display: flex; gap: 7px; padding: 5px 0; border-bottom: 1px solid #e9ecef; font-size: 0.86rem; }
+  .mu-page .mu-log-item:last-child { border-bottom: none; }
+  .mu-page .mu-log-icon { flex-shrink: 0; font-size: 0.8rem; margin-top: 1px; }
+  .mu-page .mu-log-body { flex: 1; min-width: 0; }
+  .mu-page .mu-log-time { color: #4b5563; font-size: 0.78rem; }
+  .mu-page .mu-log-text { flex: 1; min-width: 0; color: #1f2937; margin-top: 2px; word-break: break-word; }
+
+  /* ═══ 애니메이션 ════════════════════════════ */
+  @@keyframes pbar-shine { 0% { opacity: 0; transform: translateX(-20px); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateX(20px); } }
+  @@keyframes badge-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+  @@keyframes job-complete-pop { 0% { transform: scale(0.98); } 50% { transform: scale(1.015); } 100% { transform: scale(1); } }
+  @@keyframes card-slide-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<div class="page-content">
+  <div class="mu-page">
+
+    @* ▶ 헤더 *@
+    <div class="mu-header">
+      <div class="mu-header-left">
+        <div class="mu-header-icon">📄</div>
+        <div>
+          <div class="mu-header-title">
+            이력서 신규등록 (AI)
+            <span class="mu-v2-badge"><i class="fas fa-bolt" style="font-size:0.7rem;"></i> New</span>
+          </div>
+          <div class="mu-header-sub">이력서를 업로드하면 GPT가 분석하여 후보자 정보를 추출합니다.</div>
+        </div>
+      </div>
+      <div class="mu-header-right">
+        <input type="hidden" id="gpt_model" value="gpt-5.4-mini" />
+        <span class="mu-model-tag"><i class="fas fa-robot"></i> GPT-5.4 Mini</span>
+        <a href="javascript:ResetUploadPage();" class="mu-btn-reset">
+          <i class="fa fa-redo" style="font-size:0.72rem;"></i> 초기화
+        </a>
+      </div>
+    </div>
+
+    <!-- ▶ 메인 2컬럼 -->
+    <div class="mu-body">
+
+      <!-- 좌측: 업로드 영역 -->
+      <div class="mu-upload-section">
+        <div class="mu-upload-card">
+          <div class="mu-upload-card-header">
+            <span class="mu-lang-badge">📄 이력서</span>
+            <span class="mu-upload-card-title">이력서 파일 업로드 (여러 개 동시 가능)</span>
+          </div>
+          <form id="form_candidate" class="dropzone mu-dropzone">
+            <div class="dz-message">
+              <span class="mu-dz-icon">📄</span>
+              <div class="mu-dz-text">이력서 파일을 드래그하거나<br />클릭하여 업로드</div>
+              <span class="mu-dz-hint">PDF · DOCX · HWP 지원 · 여러 파일은 순차 처리됩니다</span>
+            </div>
+          </form>
+        </div>
+
+        <!-- 안내사항 -->
+        <div class="mu-notice-card">
+          <div class="mu-notice-title">
+            <i class="fas fa-exclamation-triangle" style="color:#f59e0b;"></i>
+            AI 분석 시 주의사항
+          </div>
+          <ul class="mu-notice-list">
+            <li class="warn">GPT가 분석한 내용은 정확하지 않을 수 있습니다. 저장 전 반드시 내용을 검수하세요.</li>
+            <li>글자 인식이 가능한 이력서만 등록할 수 있습니다. (이미지 형식은 인식 불가)</li>
+            <li>PDF·DOCX·HWP 파일을 GPT에 직접 업로드하여 분석합니다.</li>
+            <li>여러 파일을 한 번에 올리면 대기열에 쌓여 한 건씩 순차로 처리됩니다.</li>
+            <li class="warn">[잡코리아] PDF 이력서는 회사·학교·연락처 글자 인식이 되지 않습니다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 우측: 사이드패널 -->
+      <div class="mu-sidebar">
+        <div class="mu-panel">
+          <div class="mu-panel-header">
+            <div class="mu-panel-title"><i class="fas fa-tasks"></i> 처리 현황 및 결과</div>
+            <div class="mu-panel-counts">
+              <span class="mu-count-chip"      id="chip_total" style="display:none;"></span>
+              <span class="mu-count-chip done" id="chip_done"  style="display:none;"></span>
+            </div>
+          </div>
+          <div id="mu_empty_state" class="mu-panel-empty">
+            <span class="mu-panel-empty-icon">📭</span>
+            <div class="mu-panel-empty-text">
+              아직 업로드된 파일이 없습니다.<br>
+              좌측에서 이력서를 업로드해주세요.
+            </div>
+          </div>
+          <div class="mu-jobs-list" id="mu_jobs_list" style="display:none;"></div>
+        </div>
+      </div>
+
+    </div><!-- /mu-body -->
+  </div><!-- /mu-page -->
+</div><!-- /page-content -->
+
+@section scripts {
   <script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; height: 100%; }
+  <script src="~/Scripts/gpt/candidate_prompt.js?a1"></script>
+  <script src="~/Scripts/gpt/candidate_schema.js?a1"></script>
+  <script src="~/Scripts/gpt/makeup_manager.js?a1"></script>
+  <script src="~/Scripts/gpt/candidate_manager.js?a1"></script>
 
-    :root {
-      --mu-primary:      #0d7377;
-      --mu-primary-dark: #0b5e62;
-      --mu-secondary:    #0e9090;
-      --mu-success:      #10b981;
-      --mu-danger:       #ef4444;
-      --mu-warning:      #f59e0b;
-      --mu-bg:           #f0f9f9;
-      --mu-card:         #ffffff;
-      --mu-border:       #b2d8d8;
-      --mu-text:         #1e3a5f;
-      --mu-muted:        #374151;
-      --mu-radius:       14px;
-      --mu-shadow:       0 4px 24px rgba(13,115,119,0.08);
-      --mu-shadow-hover: 0 8px 32px rgba(13,115,119,0.16);
+  <script type="text/javascript">
+    const API_KEY                       = "@api_key";
+    window.url_candidate_resume_upload  = "@Url.Action("CandidateResumeUpload", "nGpt")";
+    window.url_candidate_ai_create      = "@Url.Action("CandidateAiCreate",       "Candidate")";
+    window.url_candidate_ai_update      = "@Url.Action("CandidateCreateAiUpdate", "Candidate")";
+    window.url_find_duplicate_candidate = "@Url.Action("FindDuplicateCandidate",  "Candidate")";
+  </script>
+
+  <script type="text/javascript">
+    Dropzone.autoDiscover = false;
+
+    let working_cnt = 0;
+    let total_cnt   = 0;
+    let done_cnt    = 0;
+
+    const queue = [];
+    let processing = false;
+
+    function updateSidebarCounts() {
+      var ct = document.getElementById('chip_total');
+      var cd = document.getElementById('chip_done');
+      if (total_cnt > 0) { ct.style.display = ''; ct.textContent = '전체 ' + total_cnt + '건'; }
+      if (done_cnt  > 0) { cd.style.display = ''; cd.textContent = '✅ ' + done_cnt + '건 완료'; }
     }
 
-    .mu-page {
-      background: var(--mu-bg);
-      min-height: 100vh;
-      min-width: 780px;
-      padding: 0 0 40px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    function showJobsList() {
+      document.getElementById('mu_empty_state').style.display = 'none';
+      document.getElementById('mu_jobs_list').style.display   = '';
     }
 
-    /* ═══ 헤더 ══════════════════════════════════ */
-    .mu-header {
-      background: linear-gradient(135deg, #0d7377 0%, #0e9090 60%, #14b8a6 100%);
-      padding: 20px 24px 16px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 12px;
-      position: relative; overflow: hidden;
-      border-radius: 0 0 20px 20px; margin-bottom: 24px;
-      box-shadow: 0 8px 32px rgba(13,115,119,0.3);
-    }
-    .mu-header::before {
-      content: ''; position: absolute; top: -60px; right: -60px;
-      width: 220px; height: 220px; border-radius: 50%;
-      background: rgba(255,255,255,0.06); pointer-events: none;
-    }
-    .mu-header-left  { display: flex; align-items: center; gap: 12px; }
-    .mu-header-icon  {
-      width: 42px; height: 42px; background: rgba(255,255,255,0.18);
-      border-radius: 10px; display: flex; align-items: center;
-      justify-content: center; font-size: 20px; backdrop-filter: blur(4px); flex-shrink: 0;
-    }
-    .mu-header-title { color: #fff; font-size: 1.2rem; font-weight: 700; margin: 0; letter-spacing: -0.3px; text-shadow: 0 1px 4px rgba(0,0,0,0.15); }
-    .mu-header-sub   { color: rgba(255,255,255,0.85); font-size: 0.88rem; margin: 2px 0 0; }
-    .mu-v2-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.35);
-      color: #fff; border-radius: 20px; padding: 2px 10px;
-      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;
-      margin-left: 8px; vertical-align: middle;
-    }
-    .mu-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .mu-model-tag {
-      display: inline-flex; align-items: center; gap: 7px;
-      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.28);
-      color: rgba(255,255,255,0.95); border-radius: 8px;
-      padding: 0 14px; font-size: 0.86rem; font-weight: 600;
-      height: 34px; white-space: nowrap;
-    }
-    .mu-btn-reset {
-      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
-      color: rgba(255,255,255,0.9); border-radius: 8px; padding: 0 14px;
-      font-size: 0.88rem; cursor: pointer; transition: background 0.2s, color 0.2s;
-      text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
-      white-space: nowrap; height: 34px;
-    }
-    .mu-btn-reset:hover { background: rgba(255,255,255,0.25); color: #fff; text-decoration: none; }
+    // 파일 추가 → 대기열 등록 (카드는 즉시 '대기' 상태로 생성)
+    function enqueue(file) {
+      total_cnt++;
+      showJobsList(); updateSidebarCounts();
 
-    /* ═══ 2컬럼 ════════════════════════════════ */
-    .mu-body { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px; align-items: start; }
-
-    /* ═══ 업로드 카드 ═══════════════════════════ */
-    .mu-upload-card {
-      background: var(--mu-card); border-radius: var(--mu-radius);
-      box-shadow: var(--mu-shadow); overflow: hidden; transition: box-shadow 0.25s;
-    }
-    .mu-upload-card:hover { box-shadow: var(--mu-shadow-hover); }
-    .mu-upload-card-header {
-      padding: 12px 16px 10px; display: flex; align-items: center; gap: 10px;
-      border-bottom: 1px solid var(--mu-border);
-    }
-    .mu-lang-badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 4px 11px; border-radius: 20px; font-size: 0.88rem; font-weight: 700;
-      background: linear-gradient(135deg, #ccf2f4, #b2e0e0); color: #0d7377;
-    }
-    .mu-upload-card-title { font-size: 0.97rem; font-weight: 600; color: var(--mu-text); }
-
-    .mu-dropzone {
-      border: 2px dashed var(--mu-border) !important; background: #f7fefe !important;
-      border-radius: 0 !important; min-height: 170px !important;
-      transition: border-color 0.25s, background 0.25s !important;
-      margin: 0 !important; padding: 28px 14px !important;
-      cursor: pointer !important;
-    }
-    .mu-dropzone:hover, .mu-dropzone.dz-drag-hover { border-color: var(--mu-primary) !important; background: #f0f9f9 !important; }
-    .mu-dropzone .dz-message { text-align: center; margin: 0; }
-    .mu-dz-icon { font-size: 2rem; margin-bottom: 8px; display: block; opacity: 0.4; }
-    .mu-dz-text { font-size: 0.96rem; color: var(--mu-muted); line-height: 1.6; }
-    .mu-dz-hint { font-size: 0.84rem; color: #4b5563; margin-top: 6px; display: block; }
-
-    /* ═══ 안내 카드 ════════════════════════════ */
-    .mu-notice-card {
-      background: var(--mu-card); border-radius: var(--mu-radius);
-      box-shadow: var(--mu-shadow); padding: 16px 18px; border-left: 4px solid var(--mu-primary);
-      margin-top: 14px;
-    }
-    .mu-notice-title { font-size: 0.93rem; font-weight: 700; color: var(--mu-primary-dark); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
-    .mu-notice-list { list-style: none; margin: 0; padding: 0; }
-    .mu-notice-list li { font-size: 0.88rem; color: var(--mu-muted); padding: 3px 0 3px 16px; position: relative; line-height: 1.6; }
-    .mu-notice-list li::before { content: '–'; position: absolute; left: 0; color: #6b7280; }
-    .mu-notice-list li.warn { color: #b45309; font-weight: 600; }
-    .mu-notice-list li.warn::before { color: #f59e0b; }
-
-    /* ═══ 사이드패널 ════════════════════════════ */
-    .mu-sidebar { position: sticky; top: 20px; height: calc(100vh - 80px); display: flex; flex-direction: column; }
-    .mu-panel { background: var(--mu-card); border-radius: var(--mu-radius); box-shadow: var(--mu-shadow); overflow: hidden; display: flex; flex-direction: column; flex: 1; min-height: 0; }
-    .mu-panel-header {
-      background: linear-gradient(135deg, #0d7377, #0e9090);
-      padding: 13px 16px; display: flex; align-items: center; justify-content: space-between;
-    }
-    .mu-panel-title { color: #fff; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .mu-panel-counts { display: flex; gap: 6px; }
-    .mu-count-chip {
-      padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
-      background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.2);
-    }
-    .mu-count-chip.done { background: rgba(16,185,129,0.3); color: #6ee7b7; border-color: rgba(16,185,129,0.4); }
-    .mu-panel-empty { padding: 42px 18px; text-align: center; color: #4b5563; }
-    .mu-panel-empty-icon { font-size: 2.5rem; opacity: 0.35; margin-bottom: 10px; display: block; }
-    .mu-panel-empty-text { font-size: 0.92rem; line-height: 1.7; }
-    .mu-jobs-list {
-      flex: 1; overflow-y: auto; min-height: 0;
-      padding: 10px; display: flex; flex-direction: column; gap: 10px;
-    }
-    .mu-jobs-list::-webkit-scrollbar       { width: 4px; }
-    .mu-jobs-list::-webkit-scrollbar-track { background: #f1f5f9; }
-    .mu-jobs-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
-    /* ═══ Job 카드 ══════════════════════════════ */
-    .mu-job-card {
-      background: #f8fafc; border: 1px solid var(--mu-border);
-      border-radius: 10px; overflow: hidden;
-      transition: box-shadow 0.2s, border-color 0.2s;
-      animation: card-slide-in 0.3s ease-out;
-      flex-shrink: 0;
-    }
-    .mu-job-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
-    .mu-job-card.is-complete { border-color: #10b981; background: linear-gradient(135deg, #f0fdf4, #f8fafc); box-shadow: 0 0 0 2px rgba(16,185,129,0.12); animation: job-complete-pop 0.5s ease-out; }
-    .mu-job-card.is-error    { border-color: #ef4444; background: #fff5f5; }
-
-    .mu-job-head { padding: 10px 12px 8px; display: flex; align-items: flex-start; gap: 8px; }
-    .mu-job-lang { flex-shrink: 0; width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; background: #ccf2f4; }
-    .mu-job-info { flex: 1; min-width: 0; }
-    .mu-job-name { font-size: 0.93rem; font-weight: 600; color: var(--mu-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .mu-job-status-text { font-size: 0.82rem; color: var(--mu-muted); margin-top: 2px; }
-    .mu-job-badge { flex-shrink: 0; padding: 2px 8px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; background: #e2e8f0; color: #1f2937; }
-    .mu-job-badge.processing { background: #ccf2f4; color: #0d7377; animation: badge-pulse 2s ease-in-out infinite; }
-    .mu-job-badge.done  { background: #d1fae5; color: #065f46; }
-    .mu-job-badge.error { background: #fee2e2; color: #991b1b; }
-
-    .mu-job-pbar-wrap  { padding: 0 12px 10px; }
-    .mu-job-pbar-track { height: 5px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
-    .mu-job-pbar-fill  {
-      height: 100%; border-radius: 99px;
-      background: linear-gradient(90deg, #0d7377, #14b8a6);
-      transition: width 0.5s ease; position: relative;
-    }
-    .mu-job-pbar-fill::after { content: ''; position: absolute; top: 0; right: 0; width: 30px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5)); animation: pbar-shine 1.5s linear infinite; }
-    .mu-job-pbar-fill.is-done  { background: linear-gradient(90deg, #10b981, #34d399); }
-    .mu-job-pbar-fill.is-done::after  { display: none; }
-    .mu-job-pbar-fill.is-error { background: #ef4444; }
-    .mu-job-pbar-fill.is-error::after { display: none; }
-    .mu-job-pct { font-size: 0.8rem; color: var(--mu-muted); margin-top: 4px; }
-
-    .mu-job-log-toggle { width: 100%; background: none; border: none; border-top: 1px dashed #e2e8f0; padding: 6px 12px; font-size: 0.82rem; color: #4b5563; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 5px; transition: background 0.15s; }
-    .mu-job-log-toggle:hover { background: #f1f5f9; }
-    .mu-job-logs { display: none; padding: 8px 12px; background: #f8fafc; border-top: 1px solid #f1f5f9; max-height: 240px; overflow-y: auto; }
-    .mu-job-logs.is-open { display: block; }
-
-    .mu-download-area { padding: 12px; text-align: center; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border-top: 1px solid #a7f3d0; }
-    .mu-download-btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
-      background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none;
-      border-radius: 10px; padding: 10px 22px; font-size: 0.95rem; font-weight: 700;
-      cursor: pointer; text-decoration: none; box-shadow: 0 4px 14px rgba(16,185,129,0.4);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .mu-download-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,0.55); color: #fff; text-decoration: none; }
-
-    .mu-log-item { display: flex; gap: 7px; padding: 5px 0; border-bottom: 1px solid #e9ecef; font-size: 0.86rem; }
-    .mu-log-item:last-child { border-bottom: none; }
-    .mu-log-icon { flex-shrink: 0; font-size: 0.8rem; margin-top: 1px; }
-    .mu-log-body { flex: 1; min-width: 0; }
-    .mu-log-time { color: #4b5563; font-size: 0.78rem; }
-    .mu-log-text { flex: 1; min-width: 0; color: #1f2937; margin-top: 2px; word-break: break-word; }
-
-    /* ═══ 애니메이션 ════════════════════════════ */
-    @@keyframes pbar-shine {
-      0%   { opacity: 0; transform: translateX(-20px); }
-      50%  { opacity: 1; }
-      100% { opacity: 0; transform: translateX(20px); }
-    }
-    @@keyframes badge-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-    @@keyframes job-complete-pop { 0% { transform: scale(0.98); } 50% { transform: scale(1.015); } 100% { transform: scale(1); } }
-    @@keyframes card-slide-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* 800px 팝업 최적화 */
-    .mu-header { padding: 12px 14px 10px; margin-bottom: 14px; border-radius: 0 0 14px 14px; gap: 8px; }
-    .mu-header-icon  { width: 34px; height: 34px; font-size: 16px; }
-    .mu-header-title { font-size: 1.02rem; }
-    .mu-header-sub   { font-size: 0.78rem; }
-    .mu-v2-badge     { font-size: 0.68rem; padding: 2px 8px; margin-left: 6px; }
-    .mu-model-tag    { font-size: 0.78rem; padding: 0 10px; height: 30px; }
-    .mu-btn-reset    { font-size: 0.8rem;  padding: 0 10px; height: 30px; }
-    .mu-body { gap: 12px; padding: 0 12px; }
-    .mu-sidebar { top: 10px; height: calc(100vh - 60px); }
-    .mu-panel-header { padding: 10px 12px; }
-    .mu-panel-title  { font-size: 0.9rem; }
-    .mu-jobs-list { padding: 8px; gap: 8px; }
-    .mu-download-btn { padding: 9px 16px; font-size: 0.9rem; }
-  </style>
-</head>
-<body>
-
-<div class="mu-page">
-
-  @* ▶ 헤더 *@
-  <div class="mu-header">
-    <div class="mu-header-left">
-      <div class="mu-header-icon">📄</div>
-      <div>
-        <div class="mu-header-title">
-          이력서 신규등록 AI
-          <span class="mu-v2-badge"><i class="fas fa-bolt" style="font-size:0.7rem;"></i> New</span>
-        </div>
-        <div class="mu-header-sub">이력서를 업로드하면 GPT가 분석하여 후보자 정보를 추출합니다.</div>
-      </div>
-    </div>
-    <div class="mu-header-right">
-      <input type="hidden" id="gpt_model" value="gpt-5.4-mini" />
-      <span class="mu-model-tag"><i class="fas fa-robot"></i> GPT-5.4 Mini</span>
-      <a href="javascript:ResetUploadPage();" class="mu-btn-reset">
-        <i class="fa fa-redo" style="font-size:0.72rem;"></i> 초기화
-      </a>
-    </div>
-  </div>
-
-  <!-- ▶ 메인 2컬럼 -->
-  <div class="mu-body">
-
-    <!-- 좌측: 업로드 영역 -->
-    <div class="mu-upload-section">
-      <div class="mu-upload-card">
-        <div class="mu-upload-card-header">
-          <span class="mu-lang-badge">📄 이력서</span>
-          <span class="mu-upload-card-title">이력서 파일 업로드 (여러 개 동시 가능)</span>
-        </div>
-        <form id="form_candidate" class="dropzone mu-dropzone">
-          <div class="dz-message">
-            <span class="mu-dz-icon">📄</span>
-            <div class="mu-dz-text">이력서 파일을 드래그하거나<br>클릭하여 업로드</div>
-            <span class="mu-dz-hint">PDF · DOCX · HWP 지원 · 여러 파일은 순차 처리됩니다</span>
-          </div>
-        </form>
-      </div>
-
-      <!-- 안내사항 -->
-      <div class="mu-notice-card">
-        <div class="mu-notice-title">
-          <i class="fas fa-exclamation-triangle" style="color:#f59e0b;"></i>
-          AI 분석 시 주의사항
-        </div>
-        <ul class="mu-notice-list">
-          <li class="warn">GPT가 분석한 내용은 정확하지 않을 수 있습니다. 저장 전 반드시 내용을 검수하세요.</li>
-          <li>글자 인식이 가능한 이력서만 등록할 수 있습니다. (이미지 형식은 인식 불가)</li>
-          <li>PDF·DOCX·HWP 파일을 GPT에 직접 업로드하여 분석합니다.</li>
-          <li>여러 파일을 한 번에 올리면 대기열에 쌓여 한 건씩 순차로 처리됩니다.</li>
-          <li class="warn">[잡코리아] PDF 이력서는 회사·학교·연락처 글자 인식이 되지 않습니다.</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 우측: 사이드패널 -->
-    <div class="mu-sidebar">
-      <div class="mu-panel">
-        <div class="mu-panel-header">
-          <div class="mu-panel-title"><i class="fas fa-tasks"></i> 처리 현황 및 결과</div>
-          <div class="mu-panel-counts">
-            <span class="mu-count-chip"      id="chip_total" style="display:none;"></span>
-            <span class="mu-count-chip done" id="chip_done"  style="display:none;"></span>
-          </div>
-        </div>
-        <div id="mu_empty_state" class="mu-panel-empty">
-          <span class="mu-panel-empty-icon">📭</span>
-          <div class="mu-panel-empty-text">
-            아직 업로드된 파일이 없습니다.<br>
-            좌측에서 이력서를 업로드해주세요.
-          </div>
-        </div>
-        <div class="mu-jobs-list" id="mu_jobs_list" style="display:none;"></div>
-      </div>
-    </div>
-
-  </div><!-- /mu-body -->
-</div><!-- /mu-page -->
-
-<script src="~/Scripts/gpt/candidate_prompt.js?a1"></script>
-<script src="~/Scripts/gpt/candidate_schema.js?a1"></script>
-<script src="~/Scripts/gpt/makeup_manager.js?a1"></script>
-<script src="~/Scripts/gpt/candidate_manager.js?a1"></script>
-
-<script type="text/javascript">
-  const API_KEY                       = "@api_key";
-  window.url_candidate_resume_upload  = "@Url.Action("CandidateResumeUpload", "nGpt")";
-  window.url_candidate_ai_create      = "@Url.Action("CandidateAiCreate",       "Candidate")";
-  window.url_candidate_ai_update      = "@Url.Action("CandidateCreateAiUpdate", "Candidate")";
-  window.url_find_duplicate_candidate = "@Url.Action("FindDuplicateCandidate",  "Candidate")";
-</script>
-
-<script type="text/javascript">
-  Dropzone.autoDiscover = false;
-
-  let working_cnt = 0;
-  let total_cnt   = 0;
-  let done_cnt    = 0;
-
-  const queue = [];
-  let processing = false;
-
-  function updateSidebarCounts() {
-    var ct = document.getElementById('chip_total');
-    var cd = document.getElementById('chip_done');
-    if (total_cnt > 0) { ct.style.display = ''; ct.textContent = '전체 ' + total_cnt + '건'; }
-    if (done_cnt  > 0) { cd.style.display = ''; cd.textContent = '✅ ' + done_cnt + '건 완료'; }
-  }
-
-  function showJobsList() {
-    document.getElementById('mu_empty_state').style.display = 'none';
-    document.getElementById('mu_jobs_list').style.display   = '';
-  }
-
-  // 파일 추가 → 대기열 등록 (카드는 즉시 '대기' 상태로 생성)
-  function enqueue(file) {
-    total_cnt++;
-    showJobsList(); updateSidebarCounts();
-
-    var model = document.getElementById('gpt_model').value;
-    var worker = new ResumeCandidateManager(++working_cnt, model, function () {
-      done_cnt++; updateSidebarCounts();
-    });
-    worker.initDirect(file);
-
-    queue.push({ worker: worker, file: file });
-    pump();
-  }
-
-  // 대기열 순차 처리 (동시 1건)
-  async function pump() {
-    if (processing) return;
-    var job = queue.shift();
-    if (!job) return;
-    processing = true;
-    try { await runOne(job.worker, job.file); }
-    catch (e) { console.error("[CandidateAI] runOne error:", e); }
-    processing = false;
-    pump();
-  }
-
-  async function runOne(worker, file) {
-    try {
-      await worker._saveToServer();           // ① 서버에 파일 저장
-      await worker._uploadToOpenAI();         // ② OpenAI 업로드
-      var json = await worker.analyze();      // ③ 구조화 분석
-      await worker._deleteFromOpenAI();       // ④ OpenAI 파일 정리
-      if (!json) { worker._handleError(); return; }
-
-      var built = worker.buildCandidateModel(json);  // ⑤ 모델 변환
-      if (!built) { worker._handleError(); return; }
-
-      var dup = await worker.checkDuplicate(built.phone, built.email); // ⑥ 중복확인
-      if (dup < 0) { worker.addLog("danger", "중복확인 실패로 중단합니다."); worker._handleError(); return; }
-
-      worker.showRegister(built.model, dup);  // ⑦ 등록 버튼 노출
-    } catch (e) {
-      worker.addLog("danger", "처리 중 오류: " + e.message);
-      worker._handleError();
-      await worker._deleteFromOpenAI();
-    }
-  }
-
-  function makeDz(formId) {
-    try {
-      var el = document.getElementById(formId);
-      if (el && el.dropzone) el.dropzone.destroy();
-      var dz = new Dropzone("#" + formId, {
-        url:              "/dummy",
-        autoProcessQueue: false,
-        previewTemplate:  '<div style="display:none;"></div>'
+      var model = document.getElementById('gpt_model').value;
+      var worker = new ResumeCandidateManager(++working_cnt, model, function () {
+        done_cnt++; updateSidebarCounts();
       });
-      dz.on("addedfile", function (file) { enqueue(file); });
-      return dz;
-    } catch (e) {
-      console.error("[CandidateAI] Dropzone init error:", e);
-      return null;
+      worker.initDirect(file);
+
+      queue.push({ worker: worker, file: file });
+      pump();
     }
-  }
 
-  var dzCandidate = makeDz("form_candidate");
-
-  function ResetUploadPage() {
-    if (confirm("업로드 화면을 초기화 하시겠습니까?")) {
-      location.reload();
+    // 대기열 순차 처리 (동시 1건)
+    async function pump() {
+      if (processing) return;
+      var job = queue.shift();
+      if (!job) return;
+      processing = true;
+      try { await runOne(job.worker, job.file); }
+      catch (e) { console.error("[CandidateAI] runOne error:", e); }
+      processing = false;
+      pump();
     }
-  }
-</script>
 
-</body>
-</html>
+    async function runOne(worker, file) {
+      try {
+        await worker._saveToServer();           // ① 서버에 파일 저장
+        await worker._uploadToOpenAI();         // ② OpenAI 업로드
+        var json = await worker.analyze();      // ③ 구조화 분석
+        await worker._deleteFromOpenAI();       // ④ OpenAI 파일 정리
+        if (!json) { worker._handleError(); return; }
+
+        var built = worker.buildCandidateModel(json);  // ⑤ 모델 변환
+        if (!built) { worker._handleError(); return; }
+
+        var dup = await worker.checkDuplicate(built.phone, built.email); // ⑥ 중복확인
+        if (dup < 0) { worker.addLog("danger", "중복확인 실패로 중단합니다."); worker._handleError(); return; }
+
+        worker.showRegister(built.model, dup);  // ⑦ 등록 버튼 노출
+      } catch (e) {
+        worker.addLog("danger", "처리 중 오류: " + e.message);
+        worker._handleError();
+        await worker._deleteFromOpenAI();
+      }
+    }
+
+    function makeDz(formId) {
+      try {
+        var el = document.getElementById(formId);
+        if (el && el.dropzone) el.dropzone.destroy();
+        var dz = new Dropzone("#" + formId, {
+          url:              "/dummy",
+          autoProcessQueue: false,
+          previewTemplate:  '<div style="display:none;"></div>'
+        });
+        dz.on("addedfile", function (file) { enqueue(file); });
+        return dz;
+      } catch (e) {
+        console.error("[CandidateAI] Dropzone init error:", e);
+        return null;
+      }
+    }
+
+    var dzCandidate = makeDz("form_candidate");
+
+    function ResetUploadPage() {
+      if (confirm("업로드 화면을 초기화 하시겠습니까?")) {
+        location.reload();
+      }
+    }
+  </script>
+}

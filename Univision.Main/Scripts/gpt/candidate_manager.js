@@ -144,6 +144,32 @@ class ResumeCandidateManager extends ResumeMakeupManager {
   }
 
   // ─────────────────────────────────────────────────────────
+  //  Responses API 구조화 출력 호출 (텍스트 입력 — 산업/직무 제안용)
+  //  파일 없이 instructions(분류표) + input(회사명/직급·부서)만 전달
+  // ─────────────────────────────────────────────────────────
+  async _callGPTText(schema, schemaName, systemPrompt, userText) {
+    const res = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` },
+      body: JSON.stringify({
+        model: this.gptModel,
+        instructions: systemPrompt,
+        input: userText,
+        text: { format: { type: "json_schema", name: schemaName, schema, strict: true } }
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(`Responses API ${res.status}: ${err.error?.message ?? res.statusText}`);
+    }
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const content = data.output?.[0]?.content?.[0]?.text;
+    if (!content) throw new Error("GPT 빈 응답 (Responses API)");
+    return JSON.parse(content);
+  }
+
+  // ─────────────────────────────────────────────────────────
   //  이력서 분석 (구조화 JSON)
   // ─────────────────────────────────────────────────────────
   async analyze() {
@@ -180,10 +206,43 @@ class ResumeCandidateManager extends ResumeMakeupManager {
   }
 
   // ─────────────────────────────────────────────────────────
+  //  산업(business) 제안 — 회사명 입력 (실패 시 null, 진행 계속)
+  // ─────────────────────────────────────────────────────────
+  async analyzeBusi(companyName) {
+    this.updateProgress(60, "산업 분석 중");
+    this.addLog("info", `[${companyName}] 산업 분석 중...`);
+    try {
+      const r = await this._callGPTText(candidate_busi_schema, "industry", candidate_prompt_busi, companyName);
+      this.addLog("success", `산업 분석 완료 ✔ (${r.business?.length || 0}건)`);
+      return r;
+    } catch (e) {
+      this.addLog("warning", "산업 분석 실패 — 산업 제안 없이 진행합니다. " + e.message);
+      return null;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  //  직무(job) 제안 — "회사명 / 직급·부서" 입력 (실패 시 null, 진행 계속)
+  // ─────────────────────────────────────────────────────────
+  async analyzeJob(companyDivText) {
+    this.updateProgress(72, "직무 분석 중");
+    this.addLog("info", `[${companyDivText}] 직무 분석 중...`);
+    try {
+      const r = await this._callGPTText(candidate_job_schema, "job", candidate_prompt_job, companyDivText);
+      this.addLog("success", `직무 분석 완료 ✔ (${r.job?.length || 0}건)`);
+      return r;
+    } catch (e) {
+      this.addLog("warning", "직무 분석 실패 — 직무 제안 없이 진행합니다. " + e.message);
+      return null;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
   //  GPT JSON → 유니비전 후보자 모델로 변환
   //  (Candidate/CandidateAi 의 ConvertCandidateCreateModel 이식)
+  //  busi/job 은 산업/직무 제안 결과 (없으면 null)
   // ─────────────────────────────────────────────────────────
-  buildCandidateModel(data) {
+  buildCandidateModel(data, busi, job) {
     const normMonth = (v) => {
       if (!v) return v;
       if (v.length === 4) return v + "-01";
@@ -247,6 +306,30 @@ class ResumeCandidateManager extends ResumeMakeupManager {
       }
     }
 
+    if (busi?.business?.length >= 1) {
+      for (let i = 0; i < busi.business.length; i++) {
+        const b = busi.business[i];
+        if (b?.code1) {
+          model.gpt_busiList.push({
+            code1: parseInt(b.code1), code2: parseInt(b.code2),
+            code_name1: b.code_name1, code_name2: b.code_name2, reason: b.reason
+          });
+        }
+      }
+    }
+
+    if (job?.job?.length >= 1) {
+      for (let i = 0; i < job.job.length; i++) {
+        const j = job.job[i];
+        if (j?.code1) {
+          model.gpt_jobList.push({
+            code1: parseInt(j.code1), code2: parseInt(j.code2),
+            code_name1: j.code_name1, code_name2: j.code_name2, reason: j.reason
+          });
+        }
+      }
+    }
+
     if (this.resumeInfo) {
       if (!this.resumeInfo.file_type) this.resumeInfo.file_type = data?.resume_type || 'K';
       model.resumeList.push(this.resumeInfo);
@@ -260,7 +343,7 @@ class ResumeCandidateManager extends ResumeMakeupManager {
   // ─────────────────────────────────────────────────────────
   async checkDuplicate(phone, email) {
     if (!phone && !email) return 0;
-    this.updateProgress(85, "중복 후보자 확인 중");
+    this.updateProgress(50, "중복 후보자 확인 중");
     this.addLog("info", `중복 데이터 확인 중...<br>[${phone}, ${email}]`);
     try {
       const res = await fetch(window.url_find_duplicate_candidate, {

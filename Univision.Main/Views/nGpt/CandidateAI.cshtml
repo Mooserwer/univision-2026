@@ -365,13 +365,29 @@
         await worker._deleteFromOpenAI();       // ④ OpenAI 파일 정리
         if (!json) { worker._handleError(); return; }
 
-        var built = worker.buildCandidateModel(json);  // ⑤ 모델 변환
-        if (!built) { worker._handleError(); return; }
-
-        var dup = await worker.checkDuplicate(built.phone, built.email); // ⑥ 중복확인
+        var phone = json.cell_phone || '';
+        var email = json.email1 || '';
+        var dup = await worker.checkDuplicate(phone, email);  // ⑤ 중복확인
         if (dup < 0) { worker.addLog("danger", "중복확인 실패로 중단합니다."); worker._handleError(); return; }
 
-        worker.showRegister(built.model, dup);  // ⑦ 등록 버튼 노출
+        // ⑥ 산업/직무 제안 (신규 후보자에 한해)
+        var busi = null, job = null;
+        if (dup === 0) {
+          var firstCo = (json.companyList && json.companyList[0]) ? json.companyList[0] : null;
+          var companyName  = firstCo && firstCo.company_name  ? firstCo.company_name  : '';
+          var divisionName = firstCo && firstCo.division_name ? firstCo.division_name : '';
+          if (companyName) busi = await worker.analyzeBusi(companyName);
+          else worker.addLog("warning", "산업을 제안하기 위한 경력정보가 부족합니다.");
+          if (companyName && divisionName) job = await worker.analyzeJob(companyName + " / " + divisionName);
+          else worker.addLog("warning", "직무를 제안하기 위한 경력정보가 부족합니다.");
+        } else {
+          worker.addLog("info", "중복(업데이트) 건은 산업/직무 제안을 생략합니다.");
+        }
+
+        var built = worker.buildCandidateModel(json, busi, job);  // ⑦ 모델 변환
+        if (!built) { worker._handleError(); return; }
+
+        worker.showRegister(built.model, dup);  // ⑧ 등록 버튼 노출
       } catch (e) {
         worker.addLog("danger", "처리 중 오류: " + e.message);
         worker._handleError();

@@ -67,3 +67,55 @@ const candidate_schema = {
     "addr1", "ex_addr", "schoolList", "companyList"
   ]
 };
+
+// ─────────────────────────────────────────────────────────
+//  산업(business) 제안 스키마 — 회사명 → 산업분류 2~5건
+// ─────────────────────────────────────────────────────────
+const candidate_busi_schema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    business: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          code1:      { type: "string", description: "산업 대분류 코드" },
+          code_name1: { type: "string", description: "산업 대분류명" },
+          code2:      { type: "string", description: "산업 소분류 코드" },
+          code_name2: { type: "string", description: "산업 소분류명" },
+          reason:     { type: "string", description: "산업 지정 사유" }
+        },
+        required: ["code1", "code_name1", "code2", "code_name2", "reason"]
+      }
+    }
+  },
+  required: ["business"]
+};
+
+// ─────────────────────────────────────────────────────────
+//  직무(job) 제안 스키마 — 회사명+직급/부서 → 직무분류 2~5건
+// ─────────────────────────────────────────────────────────
+const candidate_job_schema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    job: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          code1:      { type: "string", description: "직무 대분류 코드" },
+          code_name1: { type: "string", description: "직무 대분류명" },
+          code2:      { type: "string", description: "직무 소분류 코드" },
+          code_name2: { type: "string", description: "직무 소분류명" },
+          reason:     { type: "string", description: "직무 지정 사유" }
+        },
+        required: ["code1", "code_name1", "code2", "code_name2", "reason"]
+      }
+    }
+  },
+  required: ["job"]
+};

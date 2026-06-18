@@ -33,6 +33,58 @@ namespace Univision.Main.Controllers
     }
 
     // ─────────────────────────────────────────────────────────
+    //  이력서 AI 신규등록 — 후보자 추출 페이지 (레이아웃 없음)
+    // ─────────────────────────────────────────────────────────
+    public ActionResult CandidateAI()
+    {
+      return View();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  이력서 파일 저장 (서버 텍스트추출 없이 임시 폴더에만 저장)
+    //  내용 분석은 클라이언트에서 OpenAI 직접 업로드로 처리한다.
+    //  반환: { ok, result: can_resume(file_type=""), temp_folder }
+    // ─────────────────────────────────────────────────────────
+    [HttpPost]
+    public ActionResult CandidateResumeUpload(HttpPostedFileBase file)
+    {
+      try
+      {
+        if (file == null || file.ContentLength == 0)
+          return Json(new { ok = false, message = "파일이 없습니다." });
+
+        FileUpload fiUpload = new FileUpload();
+        string path = Server.MapPath("~/UploadedFiles");
+        string uploadTmpFolder = Utils.ReturnUniqueValue(AppIdentity.user_seq);
+        var rst = fiUpload.UploadTemp(path, "Temp", uploadTmpFolder, file);
+
+        if (!rst.status)
+          throw new Exception(rst.statusMessage);
+
+        var cr = new can_resume()
+        {
+          file_dir         = rst.dbPath,
+          file_origin_path = rst.filePath,
+          file_path        = rst.name,
+          file_extension   = rst.extension,
+          file_type        = ""
+        };
+
+        return Json(new
+        {
+          ok = true,
+          message = "Upload Complete.",
+          result = cr,
+          temp_folder = uploadTmpFolder
+        });
+      }
+      catch (Exception e)
+      {
+        return Json(new { ok = false, message = "[Error] " + e.Message });
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────
     //  PDF → Word 변환 페이지
     // ─────────────────────────────────────────────────────────
     public ActionResult PdfToWord()

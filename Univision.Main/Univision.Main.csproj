@@ -5348,6 +5348,9 @@
     <Content Include="Scripts\gpt\makeup_manager5.js" />
     <Content Include="Scripts\gpt\makeup_prompts.js" />
     <Content Include="Scripts\gpt\makeup_schema.js" />
+    <Content Include="Scripts\gpt\candidate_manager.js" />
+    <Content Include="Scripts\gpt\candidate_prompt.js" />
+    <Content Include="Scripts\gpt\candidate_schema.js" />
     <Content Include="Scripts\Invoice\invoice-common.js" />
     <Content Include="Scripts\Invoice\invoice-cancel-create.js" />
     <Content Include="Scripts\Invoice\invoice-refund-create.js" />
@@ -5824,6 +5827,7 @@
     <Content Include="Views\nGpt\MakeupGPT.cshtml" />
     <Content Include="Views\nGpt\PdfToWord.cshtml" />
     <Content Include="Views\nGpt\MakeupAI.cshtml" />
+    <Content Include="Views\nGpt\CandidateAI.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

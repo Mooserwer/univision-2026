@@ -2838,10 +2838,18 @@
             //console.log($ele)
             return $ele.length > 0 && $ele.val() != "";
             //return $("#select1 option:selected").text() == "Other";
-          }
+          },
+          maxByte: 150
+        },
+        major_name: {
+          maxByte: 100
         },
         company_name: {
-          required: true
+          required: true,
+          maxByte: 100
+        },
+        division_name: {
+          maxByte: 100
         },
         admission_year: {
           regex: /^(19[5-9][0-9]|20\d{2})-(0[0-9]|1[0-2])$/
@@ -2989,6 +2997,21 @@
       candidate_validate_opt.messages.phone.remote = "[이미 등록된 전화번호 입니다.(Phone2)]";
       candidate_validate_opt.messages.email1.remote = "[이미 등록된 메일주소 입니다.(Email1)]"
       candidate_validate_opt.messages.email2.remote = "[이미 등록된 메일주소 입니다.(Email2)]"
+    }
+
+    // varchar 바이트 길이 검증 (SQL Server varchar = 바이트 기준 · 한글 2바이트, 영문/숫자 1바이트)
+    // 학교명 varchar(150) / 전공 varchar(100) / 회사명 varchar(100) / 부서·직급명 varchar(100)
+    if ($.validator && !$.validator.methods.maxByte) {
+      $.validator.addMethod("maxByte", function (value, element, param) {
+        if (this.optional(element)) return true;
+        var bytes = 0;
+        for (var i = 0; i < value.length; i++) {
+          bytes += (value.charCodeAt(i) > 127) ? 2 : 1;
+        }
+        return bytes <= param;
+      }, function (param) {
+        return "입력 길이가 초과되었습니다. (최대 " + param + "바이트 · 한글 2바이트, 영문/숫자 1바이트)";
+      });
     }
 
     var valid_option_cand = $.extend({}, valid_option, candidate_validate_opt);

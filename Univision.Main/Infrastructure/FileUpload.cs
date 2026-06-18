@@ -693,6 +693,11 @@ namespace Univision.Main.Infrastructure
         {
             try
             {
+                if (string.IsNullOrEmpty(originPath))
+                    return new UploadFileResult() { status = false, statusMessage = "원본 파일 경로가 비어 있습니다." };
+                if (!File.Exists(originPath))
+                    return new UploadFileResult() { status = false, statusMessage = "원본 파일을 찾을 수 없습니다. (" + originPath + ")" };
+
                 string newFullPath = Path.Combine(newPath, Path.GetFileName(originPath).Normalize());
                 string fileNameOnly = Path.GetFileNameWithoutExtension(originPath).Normalize();
                 string newFileName =  Path.GetFileName(originPath).Normalize();
@@ -706,9 +711,9 @@ namespace Univision.Main.Infrastructure
                     newFullPath = Path.Combine(newPath, newFileName);
                 }
 
-                File.Move(originPath, newFullPath);
-
-                File.Delete(originPath);
+                // 임시파일이 일시적으로 잠겨 있을 수 있어(바이러스 검사/인덱서 등) 전송 오류는 재시도
+                // File.Move 는 성공 시 원본을 제거하므로 별도 File.Delete 불필요
+                RetryIo(() => File.Move(originPath, newFullPath));
 
                 UploadFileResult result = new UploadFileResult()
                 {
@@ -732,6 +737,16 @@ namespace Univision.Main.Infrastructure
             }
         }
 
+        // 일시적 IO 오류(파일 잠금 등) 발생 시 잠깐 대기 후 재시도
+        private static void RetryIo(Action op, int maxAttempts = 3)
+        {
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                try { op(); return; }
+                catch (IOException) { if (attempt >= maxAttempts) throw; System.Threading.Thread.Sleep(200 * attempt); }
+            }
+        }
+
         public UploadFileResult CopyFile(string originPath, string newPath)
         {
             try
@@ -751,7 +766,7 @@ namespace Univision.Main.Infrastructure
                     newFullPath = Path.Combine(newPath, newFileName);
                 }
 
-                File.Copy(originPath.Normalize(), newFullPath);
+                RetryIo(() => File.Copy(originPath.Normalize(), newFullPath));
 
                 //File.Delete(originPath);
                 if (File.Exists(newFullPath))

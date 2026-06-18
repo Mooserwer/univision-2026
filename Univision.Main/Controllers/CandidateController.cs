@@ -4167,20 +4167,22 @@ namespace Univision.Main.Controllers
 
         await cer.CreateOrUpdateCandidate(model, state, activity_list, CommonCodes.Create, AppIdentity.user_seq, 1);
 
+        string resumeWarning = null;
         if (data.resumeList != null && data.resumeList.Count > 0)
         {
           FileUpload fi = new FileUpload();
+          var failedResumes = new List<string>();
           //이력서 임시파일 정식으로 이동
           foreach (var resume in data.resumeList)
           {
             var result = fi.MoveFile(resume.file_origin_path, Path.Combine(Server.MapPath("~/UploadedFiles"), "candidate/" + model.data.c_seq));
             if (!result.status)
-              return Json(new
-              {
-                ok = false
-                  ,
-                message = result.statusMessage
-              });
+            {
+              // 후보자/활동내역은 이미 저장됨 → 중단하면 재시도 시 중복 생성되므로,
+              // 실패한 파일만 기록하고 계속 진행 (can_resume 레코드는 만들지 않아 DB 정합성 유지)
+              failedResumes.Add(!string.IsNullOrEmpty(resume.file_path) ? resume.file_path : System.IO.Path.GetFileName(resume.file_origin_path ?? ""));
+              continue;
+            }
 
             can_resume cr = new can_resume()
             {
@@ -4202,6 +4204,12 @@ namespace Univision.Main.Controllers
             };
 
             await cer.CreateOrDeleteCanResume(cr, CommonCodes.Create);
+          }
+
+          if (failedResumes.Count > 0)
+          {
+            resumeWarning = "후보자는 정상 저장되었으나 이력서 파일 " + failedResumes.Count + "건 첨부에 실패했습니다.<br/>["
+              + string.Join(", ", failedResumes) + "]<br/>후보자 상세 화면에서 해당 이력서를 다시 업로드해주세요.";
           }
         }
 
@@ -4231,7 +4239,8 @@ namespace Univision.Main.Controllers
         return Json(new
         {
           ok = true,
-          c_seq = model.data.c_seq
+          c_seq = model.data.c_seq,
+          message = resumeWarning
         });
       }
       catch (Exception e)

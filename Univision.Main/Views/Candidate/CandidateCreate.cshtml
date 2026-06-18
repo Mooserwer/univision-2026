@@ -2966,8 +2966,15 @@
           success: function (json) {
             //
             if (json.ok) {
-              NormalAlert("후보자를 등록 했습니다.", LocationHrefCustom("/Candidate/CandidateDetail?c_seq=" + json.c_seq + "&is_pop=" + window.viewbag_is_pop));
               hideLoading();
+              if (json.message) {
+                // 후보자는 저장됐으나 이력서 파일 첨부 실패 등 경고가 있는 경우 — 안내 후 상세로 이동
+                NormalAlert(json.message, function () {
+                  location.href = "/Candidate/CandidateDetail?c_seq=" + json.c_seq + "&is_pop=" + window.viewbag_is_pop;
+                });
+              } else {
+                NormalAlert("후보자를 등록 했습니다.", LocationHrefCustom("/Candidate/CandidateDetail?c_seq=" + json.c_seq + "&is_pop=" + window.viewbag_is_pop));
+              }
             } else {
               ErrorAlert(json.message);
               hideLoading();

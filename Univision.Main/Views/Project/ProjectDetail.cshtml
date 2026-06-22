@@ -955,6 +955,10 @@
                   <input type="radio" id="female" name="contact_gender" value="2" disabled @(Model.contact_gender == 2 ? "checked" : "")>
                   <label for="genderWoman">여</label>
                 </div>
+                <div class="radio-custom radio-default radio-inline">
+                  <input type="radio" id="contact_gender_unknown" name="contact_gender" value="3" disabled @(Model.contact_gender == 3 ? "checked" : "")>
+                  <label for="contact_gender_unknown">모름</label>
+                </div>
               </div>
             </div>
           </div>

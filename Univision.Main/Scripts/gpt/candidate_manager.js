@@ -185,7 +185,10 @@ class ResumeCandidateManager extends ResumeMakeupManager {
     }, 1000);
 
     try {
-      const parsed = await this._callGPT(candidate_schema, "resume_candidate", candidate_prompt);
+      // 본문에서 이름 추출 실패 시 파일명을 힌트로 쓰도록 파일명을 함께 전달
+      const fileName = this.originalFile?.name || this.resumeInfo?.file_path || "";
+      const promptWithFile = candidate_prompt + "\n\n[업로드 파일명] " + fileName;
+      const parsed = await this._callGPT(candidate_schema, "resume_candidate", promptWithFile);
       clearInterval(timer);
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       this.addLog("success", `이력서 분석 완료 ✔ (${elapsed}s)`);

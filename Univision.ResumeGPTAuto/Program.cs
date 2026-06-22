@@ -159,223 +159,208 @@ namespace Univision.ResumeGPTAuto
                   await Logger.WriteLineAsync("\t\t엑셀파일은 읽지 않습니다.");
                   continue;
                 }
-                // 파일 내용을 읽음
-                string fileContents = await ResumeGetContents(resume.file_path2);
-
-                if (!string.IsNullOrEmpty(fileContents))
+                // 원본 파일 경로 (DEBUG 환경은 네트워크 경로로 치환)
+                string localPath = resume.file_path2;
+#if DEBUG
+                localPath = localPath.Replace(@"D:\", @"\\10.1.2.150\");
+#endif
+                if (!File.Exists(localPath))
                 {
-                  fileContents = @"메일주소 : " + mail.dv_snd_addr + "\n" + fileContents;
-                  var messages = new List<Message>
-                                    {
-                                        new Message
-                                        {
-                                            Role = "system",
-                                            Content = isResumeSysPrompt
-                                        },
-                                        new Message
-                                        {
-                                            Role = "user",
-                                            Content = fileContents
-                                        }
-                                    };
-                  try
+                  Logger.WriteLine("\t\t파일을 찾을 수 없습니다: " + localPath, LogLevel.Warning);
+                  continue;
+                }
+
+                // 텍스트 추출 대신 OpenAI Files API 에 파일을 직접 업로드하여 분석 (gpt-5.4-mini)
+                string openaiFileId = null;
+                try
+                {
+                  openaiFileId = await gpt.UploadFileAsync(localPath);
+                }
+                catch (Exception e)
+                {
+                  Logger.WriteLine("\t\tOpenAI 파일 업로드 실패: " + e.Message, LogLevel.Warning);
+                  continue;
+                }
+
+                try
+                {
+                  // 이력서 여부 + 언어 판단 (파일 직접 분석): 'K'(한글) / 'E'(영문) / 'N'(이력서 아님)
+                  string isResumeResult = (await gpt.GetResponseFromFileAsync(openaiFileId, isResumeSysPrompt)).Trim().ToUpper();
+                  await Logger.WriteLineAsync("\t\t이력서 판단: " + isResumeResult);
+                  bool isResume = isResumeResult.StartsWith("K") || isResumeResult.StartsWith("E");
+                  string resumeLang = isResumeResult.StartsWith("E") ? "E" : "K";
+
+                  if (isResume)
                   {
-                    // GPT를 사용하여 파일이 이력서인지 판단
-                    string isResumeResult = await gpt.GetCompletionAsync(messages);
-                    await Logger.WriteLineAsync("\t\t이력서 여부: " + isResumeResult);
-
-                    if (isResumeResult.Trim().Equals("Y", StringComparison.OrdinalIgnoreCase))
+                    //국영문 여부 저장하기
+                    try
                     {
-                      //국영문 여부 저장하기
-                      try
+                      var res = await mailResumeEnRepo.SelectMailResumeFileOneAsync(resume.dv_timestamp, (int)resume.dn_seq);
+                      if (res != null)
                       {
-                        var res = await mailResumeEnRepo.SelectMailResumeFileOneAsync(resume.dv_timestamp, (int)resume.dn_seq);
-                        if (res != null)
-                        {
-                          if (IsMostlyHangul(fileContents))
-                          {
-                            res.resume_type = "K";
-                          }
-                          else
-                          {
-                            res.resume_type = "E";
-                          }
-                          await mailResumeEnRepo.CreateOrUpdateMailResumeFileOneAsync(res, "U");
-                          await Logger.WriteLineAsync("\t\t이력서 언어 : " + res.resume_type + " 저장 완료");
-                        }
-                      }
-                      catch (Exception e)
-                      {
-                        Logger.WriteLine("\t\t이력서 언어 저장 실패" + e.Message, LogLevel.Error);
-                      }
-
-                      if (is_organize)
-                      {
-                        //이미 내용분석 작업이 끝났으면 다음 파일로 이동
-                        continue;
-                      }
-
-                      var messages2 = new List<Message>
-                                    {
-                                        new Message
-                                        {
-                                            Role = "system",
-                                            Content = resumeToJsonPrompt
-                                        },
-                                        new Message
-                                        {
-                                            Role = "user",
-                                            Content = fileContents
-                                        }
-                                    };
-                      Logger.WriteLine("\t\t내용분석중..");
-                      //GPT를 사용하여 이력서 데이터 분류 작업 시작
-                      string resumeJsonResult = await gpt.GetCompletionAsync(messages2);
-                      Logger.WriteLine(resumeJsonResult);
-                      //분류된 이력서 데이터 검증
-                      try
-                      {
-                        mail_resume_gpt gpt_result = new mail_resume_gpt();
-                        gpt_result.gpt_result = resumeJsonResult.Replace("`json", "").Replace("`", "");
-
-                        var model = JsonConvert.DeserializeObject<CandidateCreateModel>(gpt_result.gpt_result, new JsonSerializerSettings
-                        {
-                          Error = HandleDeserializationError
-                        });
-
-                        gpt_result.gpt_result = JsonConvert.SerializeObject(model);
-
-                        //추출된 메일 주소가 없으면 수신메일로 지정
-                        if (String.IsNullOrEmpty(model.email1))
-                        {
-                          model.email1 = mail.dv_snd_addr;
-                        }
-                        if (!String.IsNullOrEmpty(model.cell_phone) || !String.IsNullOrEmpty(model.email1))
-                        {
-                          var dup_c_seq = await FindDuplicateCandidate(model.cell_phone, model.email1);
-                          if (dup_c_seq > 0)
-                          {
-                            Logger.WriteLine("\t\t\t중복 후보자 있음 : " + dup_c_seq.ToString());
-                          }
-                          else
-                          {
-                            if (mail.dv_cd_no.HasValue)
-                            {
-                              dup_c_seq = mail.dv_cd_no.Value;
-                              //Logger.WriteLine("\t\t\t중복 후보자 있음 : " + dup_c_seq.ToString());
-                            }
-                          }
-                          gpt_result.c_seq = dup_c_seq;
-                        }
-                        if ((!gpt_result.c_seq.HasValue || gpt_result.c_seq.Value == 0) && model.companyList.Count > 0)
-                        {
-                          try
-                          {
-                            string company_name = model.companyList[0].company_name;
-                            string dept_pos = model.companyList[0].division_name;
-                            var messages3 = new List<Message>
-                                    {
-                                        new Message
-                                        {
-                                            Role = "system",
-                                            Content = BusiToJsonPrompt
-                                        },
-                                        new Message
-                                        {
-                                            Role = "user",
-                                            Content = company_name
-                                        }
-                                    };
-
-                            Logger.WriteLine("\t\t" + company_name + "회사를 기준으로 산업제안 추출..");
-                            string BusiJsonResult = await gpt.GetCompletionAsync(messages3);
-                            Logger.WriteLine(BusiJsonResult);
-                            gpt_result.gpt_result_busi = BusiJsonResult.Replace("`json", "").Replace("`", "");
-                            var busi_model = JsonConvert.DeserializeObject<can_business>(gpt_result.gpt_result_busi);
-
-                            var messages4 = new List<Message>
-                                    {
-                                        new Message
-                                        {
-                                            Role = "system",
-                                            Content = JobToJsonPrompt
-                                        },
-                                        new Message
-                                        {
-                                            Role = "user",
-                                            Content = company_name + "/" +dept_pos
-                                        }
-                                    };
-
-                            Logger.WriteLine("\t\t" + company_name + "/" + dept_pos + "회사와 직무 기준으로 직무제안 추출..");
-                            string JobJsonResult = await gpt.GetCompletionAsync(messages4);
-                            Logger.WriteLine(JobJsonResult);
-                            gpt_result.gpt_result_job = JobJsonResult.Replace("`json", "").Replace("`", "");
-                            var job_model = JsonConvert.DeserializeObject<can_job>(gpt_result.gpt_result_busi);
-
-
-                          }
-                          catch (Exception e)
-                          {
-                            Logger.WriteLine("산업 / 직무 분석 중 오류 : " + e.Message, LogLevel.Warning);
-                          }
-                        }
-
-                        gpt_result.dv_timestamp = mail.dv_timestamp;
-                        gpt_result.reg_date = DateTime.UtcNow.AddHours(9);
-
-                        var exist_gpt = await mailResumeEnRepo.SelectMailResumeGptOneAsync(mail.dv_timestamp);
-                        if (exist_gpt != null)
-                        {
-                          await mailResumeEnRepo.DeleteGptResult(exist_gpt);
-                        }
-
-                        await mailResumeEnRepo.CreateOrUpdateMailResumeGPTOneAsync(gpt_result, "C");
-
-                        is_organize = true;
-                        // TODO: 데이터가 정상이면 임시로 후보자 테이블에 저장
-
-                        continue;
-                      }
-                      catch (Exception e)
-                      {
-                        // TODO: 오류 처리 및 필요한 경우 다음 메일로 진행
-                        Logger.WriteLine("내용분석 데이터 오류 : " + e.Message, LogLevel.Error);
-                        continue;
+                        res.resume_type = resumeLang;
+                        await mailResumeEnRepo.CreateOrUpdateMailResumeFileOneAsync(res, "U");
+                        await Logger.WriteLineAsync("\t\t이력서 언어 : " + res.resume_type + " 저장 완료");
                       }
                     }
-                    else
+                    catch (Exception e)
                     {
-                      // 이력서가 아니면 다음 파일로 이동
-                      Logger.WriteLine("\t\t이력서 아님");
+                      Logger.WriteLine("\t\t이력서 언어 저장 실패" + e.Message, LogLevel.Error);
+                    }
 
-                      try
+                    if (is_organize)
+                    {
+                      //이미 내용분석 작업이 끝났으면 다음 파일로 이동
+                      continue;
+                    }
+
+                    Logger.WriteLine("\t\t내용분석중..");
+                    //GPT(파일)로 이력서 데이터 분류 — 발신 메일주소를 힌트로 함께 전달
+                    string organizeInstr = resumeToJsonPrompt + "\n\n[참고] 발신 메일주소: " + mail.dv_snd_addr;
+                    string resumeJsonResult = await gpt.GetResponseFromFileAsync(openaiFileId, organizeInstr);
+                    Logger.WriteLine(resumeJsonResult);
+                    //분류된 이력서 데이터 검증
+                    try
+                    {
+                      mail_resume_gpt gpt_result = new mail_resume_gpt();
+                      gpt_result.gpt_result = resumeJsonResult.Replace("`json", "").Replace("`", "");
+
+                      var model = JsonConvert.DeserializeObject<CandidateCreateModel>(gpt_result.gpt_result, new JsonSerializerSettings
                       {
-                        var res = await mailResumeEnRepo.SelectMailResumeFileOneAsync(resume.dv_timestamp, (int)resume.dn_seq);
-                        if (res != null)
+                        Error = HandleDeserializationError
+                      });
+
+                      gpt_result.gpt_result = JsonConvert.SerializeObject(model);
+
+                      //추출된 메일 주소가 없으면 수신메일로 지정
+                      if (String.IsNullOrEmpty(model.email1))
+                      {
+                        model.email1 = mail.dv_snd_addr;
+                      }
+                      if (!String.IsNullOrEmpty(model.cell_phone) || !String.IsNullOrEmpty(model.email1))
+                      {
+                        var dup_c_seq = await FindDuplicateCandidate(model.cell_phone, model.email1);
+                        if (dup_c_seq > 0)
                         {
-                          res.resume_type = "O";
-                          await mailResumeEnRepo.CreateOrUpdateMailResumeFileOneAsync(res, "U");
-                          Logger.WriteLine("\t\t이력서 언어 : " + res.resume_type + " 저장 완료");
+                          Logger.WriteLine("\t\t\t중복 후보자 있음 : " + dup_c_seq.ToString());
+                        }
+                        else
+                        {
+                          if (mail.dv_cd_no.HasValue)
+                          {
+                            dup_c_seq = mail.dv_cd_no.Value;
+                            //Logger.WriteLine("\t\t\t중복 후보자 있음 : " + dup_c_seq.ToString());
+                          }
+                        }
+                        gpt_result.c_seq = dup_c_seq;
+                      }
+                      if ((!gpt_result.c_seq.HasValue || gpt_result.c_seq.Value == 0) && model.companyList.Count > 0)
+                      {
+                        try
+                        {
+                          string company_name = model.companyList[0].company_name;
+                          string dept_pos = model.companyList[0].division_name;
+                          var messages3 = new List<Message>
+                                  {
+                                      new Message
+                                      {
+                                          Role = "system",
+                                          Content = BusiToJsonPrompt
+                                      },
+                                      new Message
+                                      {
+                                          Role = "user",
+                                          Content = company_name
+                                      }
+                                  };
+
+                          Logger.WriteLine("\t\t" + company_name + "회사를 기준으로 산업제안 추출..");
+                          string BusiJsonResult = await gpt.GetCompletionAsync(messages3, "gpt-5.4-mini");
+                          Logger.WriteLine(BusiJsonResult);
+                          gpt_result.gpt_result_busi = BusiJsonResult.Replace("`json", "").Replace("`", "");
+                          var busi_model = JsonConvert.DeserializeObject<can_business>(gpt_result.gpt_result_busi);
+
+                          var messages4 = new List<Message>
+                                  {
+                                      new Message
+                                      {
+                                          Role = "system",
+                                          Content = JobToJsonPrompt
+                                      },
+                                      new Message
+                                      {
+                                          Role = "user",
+                                          Content = company_name + "/" +dept_pos
+                                      }
+                                  };
+
+                          Logger.WriteLine("\t\t" + company_name + "/" + dept_pos + "회사와 직무 기준으로 직무제안 추출..");
+                          string JobJsonResult = await gpt.GetCompletionAsync(messages4, "gpt-5.4-mini");
+                          Logger.WriteLine(JobJsonResult);
+                          gpt_result.gpt_result_job = JobJsonResult.Replace("`json", "").Replace("`", "");
+                          var job_model = JsonConvert.DeserializeObject<can_job>(gpt_result.gpt_result_busi);
+
+
+                        }
+                        catch (Exception e)
+                        {
+                          Logger.WriteLine("산업 / 직무 분석 중 오류 : " + e.Message, LogLevel.Warning);
                         }
                       }
-                      catch (Exception e)
+
+                      gpt_result.dv_timestamp = mail.dv_timestamp;
+                      gpt_result.reg_date = DateTime.UtcNow.AddHours(9);
+
+                      var exist_gpt = await mailResumeEnRepo.SelectMailResumeGptOneAsync(mail.dv_timestamp);
+                      if (exist_gpt != null)
                       {
-                        Logger.WriteLine("\t\t이력서 언어 저장 실패" + e.Message, LogLevel.Error);
+                        await mailResumeEnRepo.DeleteGptResult(exist_gpt);
                       }
+
+                      await mailResumeEnRepo.CreateOrUpdateMailResumeGPTOneAsync(gpt_result, "C");
+
+                      is_organize = true;
+                      // TODO: 데이터가 정상이면 임시로 후보자 테이블에 저장
 
                       continue;
                     }
+                    catch (Exception e)
+                    {
+                      // TODO: 오류 처리 및 필요한 경우 다음 메일로 진행
+                      Logger.WriteLine("내용분석 데이터 오류 : " + e.Message, LogLevel.Error);
+                      continue;
+                    }
                   }
-                  catch
+                  else
                   {
-                    Logger.WriteLine("\t\t파일 내용을 읽을 수 없습니다.", LogLevel.Warning);
-                  }
+                    // 이력서가 아니면 다음 파일로 이동
+                    Logger.WriteLine("\t\t이력서 아님");
 
+                    try
+                    {
+                      var res = await mailResumeEnRepo.SelectMailResumeFileOneAsync(resume.dv_timestamp, (int)resume.dn_seq);
+                      if (res != null)
+                      {
+                        res.resume_type = "O";
+                        await mailResumeEnRepo.CreateOrUpdateMailResumeFileOneAsync(res, "U");
+                        Logger.WriteLine("\t\t이력서 언어 : " + res.resume_type + " 저장 완료");
+                      }
+                    }
+                    catch (Exception e)
+                    {
+                      Logger.WriteLine("\t\t이력서 언어 저장 실패" + e.Message, LogLevel.Error);
+                    }
+
+                    continue;
+                  }
                 }
-                else
+                catch (Exception e)
                 {
-                  Logger.WriteLine("\t\t파일 내용을 읽을 수 없습니다.", LogLevel.Warning);
+                  Logger.WriteLine("\t\t파일 분석 중 오류: " + e.Message, LogLevel.Warning);
+                }
+                finally
+                {
+                  await gpt.DeleteFileAsync(openaiFileId);
                 }
               }
             }

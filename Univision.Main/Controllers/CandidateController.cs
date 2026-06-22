@@ -4797,20 +4797,21 @@ namespace Univision.Main.Controllers
 
         await cer.TempCreateOrUpdateCandidate(model, state);
 
+        string resumeWarning = null;
         if (data.resumeList != null && data.resumeList.Count > 0)
         {
           FileUpload fi = new FileUpload();
+          var failedResumes = new List<string>();
           //이력서 임시파일 정식으로 이동
           foreach (var resume in data.resumeList)
           {
             var result = fi.MoveFile(resume.file_origin_path, Path.Combine(Server.MapPath("~/UploadedFiles"), "t_candidate/" + model.data.c_seq));
             if (!result.status)
-              return Json(new
-              {
-                ok = false
-                  ,
-                message = result.statusMessage
-              });
+            {
+              // 임시저장 후보자는 이미 저장됨 → 중단하지 않고(중복 방지) 실패 파일만 기록 후 계속
+              failedResumes.Add(!string.IsNullOrEmpty(resume.file_path) ? resume.file_path : System.IO.Path.GetFileName(resume.file_origin_path ?? ""));
+              continue;
+            }
 
             tempsaved_can_resume cr = new tempsaved_can_resume()
             {
@@ -4829,11 +4830,18 @@ namespace Univision.Main.Controllers
 
             await cer.CreateOrDeleteTempCanResume(cr, CommonCodes.Create);
           }
+
+          if (failedResumes.Count > 0)
+          {
+            resumeWarning = "임시저장은 완료되었으나 이력서 파일 " + failedResumes.Count + "건 첨부에 실패했습니다.<br/>["
+              + string.Join(", ", failedResumes) + "]<br/>다시 시도해주세요.";
+          }
         }
 
         return Json(new
         {
-          ok = true
+          ok = true,
+          message = resumeWarning
         });
       }
       catch (Exception e)

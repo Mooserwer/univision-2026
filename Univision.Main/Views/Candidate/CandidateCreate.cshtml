@@ -1621,7 +1621,7 @@
         success: function (json) {
           hideLoading();
           if (json.ok) {
-            NormalAlert("임시저장 완료", function () {
+            NormalAlert(json.message ? json.message : "임시저장 완료", function () {
               location.href = "/Candidate/TemporaryCandidateList";
             });
           } else {

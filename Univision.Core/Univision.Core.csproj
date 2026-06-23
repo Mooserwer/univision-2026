@@ -278,6 +278,11 @@
     <Compile Include="Models\DTO\board_read_history.cs" />
     <Compile Include="Models\DTO\board_file.cs" />
     <Compile Include="Models\DTO\board.cs" />
+    <Compile Include="Models\DTO\Appr\appr_doc.cs" />
+    <Compile Include="Models\DTO\Appr\appr_line.cs" />
+    <Compile Include="Models\DTO\Appr\appr_file.cs" />
+    <Compile Include="Models\DTO\Appr\appr_comment.cs" />
+    <Compile Include="Models\DTO\Appr\ApprDocViewModel.cs" />
     <Compile Include="Models\DTO\code_graduate_status.cs" />
     <Compile Include="Models\DTO\code_can_education.cs" />
     <Compile Include="Models\DTO\CSV_MODEL.cs" />
@@ -380,6 +385,7 @@
     <Compile Include="Repositories\AdminEntityRepository.cs" />
     <Compile Include="Repositories\BoardEntityRepository.cs" />
     <Compile Include="Repositories\BoardRepository.cs" />
+    <Compile Include="Repositories\ApprovalRepository.cs" />
     <Compile Include="Repositories\MyListEntityRepository.cs" />
     <Compile Include="Repositories\MeetingRoomEntityRepository.cs" />
     <Compile Include="Repositories\ProjectEntityRepository.cs" />

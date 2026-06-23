@@ -1,0 +1,197 @@
+﻿@model Univision.Core.Models.DTO.ApprDocViewModel
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.Title = "전자결재 - 문서";
+  var doc = Model.doc;
+  bool isDrafter = (bool)ViewBag.isDrafter;
+  bool isMyTurn = (bool)ViewBag.isMyTurn;
+  bool canRecall = (bool)ViewBag.canRecall;
+  bool canEdit = (bool)ViewBag.canEdit;
+  int me = Univision.Security.AppIdentity.user_seq;
+}
+
+<div class="page-content">
+  <div class="panel panel-default panel-line shadow">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        @if (doc.doc_status == 0) { <span class="badge badge-secondary">임시저장</span> }
+        else if (doc.doc_status == 1) { <span class="badge badge-info">진행중</span> }
+        else if (doc.doc_status == 2) { <span class="badge badge-success">승인완료</span> }
+        else if (doc.doc_status == 3) { <span class="badge badge-danger">반려</span> }
+        else if (doc.doc_status == 4) { <span class="badge badge-warning">회수</span> }
+        &nbsp;@doc.title
+      </h3>
+      <div class="panel-actions">
+        <a href="@Url.Action("WorkList", "Appr")" class="btn btn-xs btn-secondary">목록</a>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <!-- 문서 정보 -->
+      <table class="table table-bordered mb-15" style="font-size:0.92rem;">
+        <tr>
+          <th style="width:110px; background:#f7f7f7;">기안자</th>
+          <td>@doc.drafter_name @(string.IsNullOrEmpty(doc.drafter_ud_name) ? "" : "(" + doc.drafter_ud_name + ")")</td>
+          <th style="width:110px; background:#f7f7f7;">기안일</th>
+          <td>@doc.reg_date.ToString("yyyy-MM-dd HH:mm")</td>
+        </tr>
+        <tr>
+          <th style="background:#f7f7f7;">상신일</th>
+          <td>@(doc.submit_date.HasValue ? doc.submit_date.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
+          <th style="background:#f7f7f7;">완료일</th>
+          <td>@(doc.complete_date.HasValue ? doc.complete_date.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
+        </tr>
+      </table>
+
+      <!-- 결재선 현황 -->
+      <h5 class="mb-1">결재선</h5>
+      <table class="table table-bordered mb-15" style="font-size:0.9rem;">
+        <thead>
+          <tr style="background:#f7f7f7;">
+            <th style="width:60px;">순서</th><th style="width:140px;">결재자</th>
+            <th style="width:100px;">상태</th><th style="width:150px;">처리일시</th><th>의견</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var l in Model.lines)
+          {
+            bool isCur = doc.doc_status == 1 && l.order_no == doc.cur_order;
+            <tr class="@(isCur ? "table-warning" : "")">
+              <td>@l.order_no</td>
+              <td>@l.approver_name @(string.IsNullOrEmpty(l.approver_position) ? "" : "(" + l.approver_position + ")")</td>
+              <td>
+                @if (l.line_status == 1) { <span class="badge badge-success">승인</span> }
+                else if (l.line_status == 2) { <span class="badge badge-danger">반려</span> }
+                else if (isCur) { <span class="badge badge-info">결재중</span> }
+                else { <span class="badge badge-secondary">대기</span> }
+              </td>
+              <td>@(l.process_date.HasValue ? l.process_date.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
+              <td>@l.opinion</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- 본문 -->
+      <h5 class="mb-1">본문</h5>
+      <div class="border rounded p-15 mb-15" style="white-space:pre-wrap; min-height:120px;">@doc.content</div>
+
+      <!-- 첨부 -->
+      @if (Model.files != null && Model.files.Count > 0)
+      {
+        <h5 class="mb-1">첨부파일</h5>
+        <ul class="list-unstyled mb-15">
+          @foreach (var f in Model.files)
+          {
+            <li><i class="fa fa-paperclip"></i> <a href="@Url.Action("DownloadFile", "Appr", new { af_seq = f.af_seq })">@f.file_path</a></li>
+          }
+        </ul>
+      }
+
+      <!-- 액션 버튼 -->
+      <div class="text-center my-15">
+        @if (isMyTurn)
+        {
+          <div class="form-group" style="max-width:600px; margin:0 auto 10px;">
+            <textarea id="opinion" class="form-control" rows="2" placeholder="결재 의견 (반려 시 필수)"></textarea>
+          </div>
+          <button type="button" class="btn btn-success" id="btn_approve"><i class="fa fa-check"></i> 승인</button>
+          <button type="button" class="btn btn-danger" id="btn_reject"><i class="fa fa-times"></i> 반려</button>
+        }
+        @if (canRecall)
+        {
+          <button type="button" class="btn btn-warning" id="btn_recall"><i class="fa fa-undo"></i> 결재회수</button>
+        }
+        @if (canEdit)
+        {
+          <a href="@Url.Action("Write", "Appr", new { ad_seq = doc.ad_seq })" class="btn btn-primary"><i class="fa fa-pen"></i> 수정</a>
+          <button type="button" class="btn btn-outline-danger" id="btn_delete"><i class="fa fa-trash"></i> 삭제</button>
+        }
+        @if (isDrafter)
+        {
+          <a href="@Url.Action("Write", "Appr", new { copy = doc.ad_seq })" class="btn btn-info"><i class="fa fa-copy"></i> 재기안</a>
+        }
+      </div>
+
+      <!-- 댓글 -->
+      <h5 class="mb-1">댓글</h5>
+      <div id="comment_list" class="mb-2">
+        @foreach (var c in Model.comments)
+        {
+          <div class="border-bottom py-2" data-ac="@c.ac_seq">
+            <b>@c.writer_name</b>
+            <small class="text-muted">@c.reg_date.ToString("yyyy-MM-dd HH:mm")</small>
+            @if (c.writer_seq == me)
+            {
+              <a href="javascript:;" class="text-danger del-comment float-right" data-ac="@c.ac_seq">삭제</a>
+            }
+            <div style="white-space:pre-wrap;">@c.content</div>
+          </div>
+        }
+      </div>
+      <div class="input-group">
+        <textarea id="comment_input" class="form-control" rows="2" placeholder="댓글을 입력하세요"></textarea>
+        <span class="input-group-btn">
+          <button type="button" class="btn btn-primary" id="btn_comment">등록</button>
+        </span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+@section scripts {
+  <script type="text/javascript">
+    var AD_SEQ = @doc.ad_seq;
+
+    function postAction(url, data, okMsg, reload) {
+      $.post(url, data, function (json) {
+        if (json.ok) {
+          NormalAlert(json.message || okMsg, function () { if (reload) location.reload(); });
+        } else { ErrorAlert(json.message || '처리 중 오류가 발생했습니다.'); }
+      }).fail(function () { ErrorAlert('처리 중 오류가 발생했습니다.'); });
+    }
+
+    $(function () {
+      $('#btn_approve').click(function () {
+        ConfirmAlert('승인', '승인 하시겠습니까?', function () {
+          postAction('@Url.Action("Approve", "Appr")', { ad_seq: AD_SEQ, opinion: $('#opinion').val() }, '승인되었습니다.', true);
+        });
+      });
+      $('#btn_reject').click(function () {
+        if (!$('#opinion').val().trim()) { ErrorAlert('반려 사유를 입력해주세요.'); return; }
+        ConfirmAlert('반려', '반려 하시겠습니까?', function () {
+          postAction('@Url.Action("Reject", "Appr")', { ad_seq: AD_SEQ, opinion: $('#opinion').val() }, '반려되었습니다.', true);
+        });
+      });
+      $('#btn_recall').click(function () {
+        ConfirmAlert('결재회수', '이 문서를 회수하시겠습니까? 회수 후 수정하여 다시 상신할 수 있습니다.', function () {
+          postAction('@Url.Action("Recall", "Appr")', { ad_seq: AD_SEQ }, '회수되었습니다.', true);
+        });
+      });
+      $('#btn_delete').click(function () {
+        ConfirmAlert('삭제', '삭제 하시겠습니까?', function () {
+          $.post('@Url.Action("DeleteDoc", "Appr")', { ad_seq: AD_SEQ }, function (json) {
+            if (json.ok) { NormalAlert('삭제되었습니다.', function () { location.href = '@Url.Action("WorkList", "Appr")'; }); }
+            else { ErrorAlert(json.message); }
+          });
+        });
+      });
+      $('#btn_comment').click(function () {
+        var v = $('#comment_input').val().trim();
+        if (!v) return;
+        $.post('@Url.Action("AddComment", "Appr")', { ad_seq: AD_SEQ, content: v }, function (json) {
+          if (json.ok) { location.reload(); } else { ErrorAlert(json.message); }
+        });
+      });
+      $('#comment_list').on('click', '.del-comment', function () {
+        var ac = $(this).data('ac');
+        ConfirmAlert('삭제', '댓글을 삭제하시겠습니까?', function () {
+          $.post('@Url.Action("DeleteComment", "Appr")', { ac_seq: ac }, function (json) {
+            if (json.ok) { location.reload(); }
+          });
+        });
+      });
+    });
+  </script>
+}

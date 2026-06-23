@@ -1,0 +1,65 @@
+﻿@model List<Univision.Core.Models.DTO.appr_doc>
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.Title = "전자결재 - 기안함";
+  int status = (int)ViewBag.status;
+  var tabs = new[] {
+    new { v = -1, n = "전체" }, new { v = 0, n = "임시저장" }, new { v = 1, n = "진행중" },
+    new { v = 2, n = "승인완료" }, new { v = 3, n = "반려" }, new { v = 4, n = "회수" }
+  };
+}
+
+<div class="page-content">
+  <div class="panel panel-primary panel-line shadow">
+    <div class="panel-heading">
+      <h3 class="panel-title"><i class="fas fa-file-signature"></i> 전자결재 - 기안함</h3>
+      <div class="panel-actions">
+        <a href="@Url.Action("Write", "Appr")" class="btn btn-sm btn-primary"><i class="fa fa-pen"></i> 기안 작성</a>
+      </div>
+    </div>
+    <div class="panel-body">
+      <ul class="nav nav-tabs mb-15">
+        @foreach (var t in tabs)
+        {
+          <li class="nav-item">
+            <a class="nav-link @(status == t.v ? "active" : "")" href="@Url.Action("WorkList", "Appr", new { status = t.v })">@t.n</a>
+          </li>
+        }
+      </ul>
+
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th style="width:100px;">상태</th>
+            <th>제목</th>
+            <th style="width:140px;">현재 결재</th>
+            <th style="width:160px;">기안일</th>
+            <th style="width:70px;">첨부</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (Model.Count == 0)
+          {
+            <tr><td colspan="5" class="text-center text-muted py-20">문서가 없습니다.</td></tr>
+          }
+          @foreach (var d in Model)
+          {
+            <tr style="cursor:pointer;" onclick="location.href='@Url.Action("Detail", "Appr", new { ad_seq = d.ad_seq })'">
+              <td>
+                @if (d.doc_status == 0) { <span class="badge badge-secondary">임시저장</span> }
+                else if (d.doc_status == 1) { <span class="badge badge-info">진행중</span> }
+                else if (d.doc_status == 2) { <span class="badge badge-success">승인완료</span> }
+                else if (d.doc_status == 3) { <span class="badge badge-danger">반려</span> }
+                else if (d.doc_status == 4) { <span class="badge badge-warning">회수</span> }
+              </td>
+              <td>@d.title</td>
+              <td>@(d.doc_status == 1 ? (d.cur_approver_name ?? "-") : "-")</td>
+              <td>@d.reg_date.ToString("yyyy-MM-dd HH:mm")</td>
+              <td>@(d.file_count > 0 ? "📎 " + d.file_count : "")</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

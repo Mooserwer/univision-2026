@@ -403,6 +403,7 @@
     <Compile Include="Models\Vacation\MyVacationModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controllers\nGptController.cs" />
+    <Compile Include="Controllers\ApprController.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Controllers\MyListController.cs" />
@@ -5827,6 +5828,10 @@
     <Content Include="Views\nGpt\MakeupGPT.cshtml" />
     <Content Include="Views\nGpt\PdfToWord.cshtml" />
     <Content Include="Views\nGpt\MakeupAI.cshtml" />
+    <Content Include="Views\Appr\WorkList.cshtml" />
+    <Content Include="Views\Appr\ApprovalList.cshtml" />
+    <Content Include="Views\Appr\Write.cshtml" />
+    <Content Include="Views\Appr\Detail.cshtml" />
     <Content Include="Views\nGpt\CandidateAI.cshtml" />
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,171 @@
+﻿@model Univision.Core.Models.DTO.ApprDocViewModel
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.Title = "전자결재 - 기안 작성";
+  var usersJson = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.users ?? new System.Collections.Generic.List<object>());
+  var linesJson = Newtonsoft.Json.JsonConvert.SerializeObject(
+    Model.lines.Select(l => new { l.approver_seq, l.approver_name }));
+}
+
+<div class="page-content">
+  <div class="panel panel-primary panel-line shadow">
+    <div class="panel-heading">
+      <h3 class="panel-title"><i class="fas fa-pen"></i> 기안 작성</h3>
+    </div>
+    <div class="panel-body">
+      <form id="apprForm" onsubmit="return false;">
+        <input type="hidden" id="ad_seq" value="@Model.doc.ad_seq" />
+        <input type="hidden" id="line_json" name="line_json" />
+        <input type="hidden" id="del_files" name="del_files" />
+
+        <div class="form-group">
+          <label class="form-control-label">제목 <span class="text-danger">*</span></label>
+          <input type="text" id="title" name="title" class="form-control" maxlength="300" value="@Model.doc.title" placeholder="제목을 입력하세요" autocomplete="off" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-control-label">결재선 <span class="text-danger">*</span> <small class="text-muted">(상신 순서대로 결재됩니다)</small></label>
+          <div class="row">
+            <div class="col-12 col-md-5 mb-2">
+              <div class="input-group">
+                <select id="user_select" class="form-control"></select>
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-outline-primary" id="btn_add_line">추가</button>
+                </span>
+              </div>
+            </div>
+          </div>
+          <table class="table table-sm" id="line_table" style="max-width:560px;">
+            <thead><tr><th style="width:50px;">순서</th><th>결재자</th><th style="width:120px;">정렬/삭제</th></tr></thead>
+            <tbody id="line_body"></tbody>
+          </table>
+        </div>
+
+        <div class="form-group">
+          <label class="form-control-label">본문</label>
+          <textarea id="content" name="content" class="form-control" rows="12" placeholder="본문을 입력하세요">@Model.doc.content</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-control-label">첨부파일</label>
+          <input type="file" id="files" name="files" class="form-control" multiple />
+          @if (Model.files != null && Model.files.Count > 0)
+          {
+            <div class="mt-2" id="exist_files">
+              <small class="text-muted">기존 첨부:</small>
+              @foreach (var f in Model.files)
+              {
+                <div class="exist-file" data-af="@f.af_seq" style="font-size:0.9rem;">
+                  <i class="fa fa-paperclip"></i> @f.file_path
+                  <a href="javascript:;" class="text-danger del-exist" data-af="@f.af_seq">[삭제]</a>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="text-right mt-3">
+          <a href="@Url.Action("WorkList", "Appr")" class="btn btn-secondary">취소</a>
+          <button type="button" class="btn btn-default" id="btn_temp">임시저장</button>
+          <button type="button" class="btn btn-primary" id="btn_submit">상신</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+@section scripts {
+  <script type="text/javascript">
+    var USERS = @Html.Raw(usersJson);
+    var LINES = @Html.Raw(linesJson);
+    var DEL_FILES = [];
+
+    function renderUserSelect() {
+      var $s = $('#user_select').empty();
+      $s.append('<option value="">결재자 선택...</option>');
+      USERS.forEach(function (u) {
+        $s.append('<option value="' + u.uv_seq + '">' + u.name + '</option>');
+      });
+    }
+
+    function renderLines() {
+      var $b = $('#line_body').empty();
+      LINES.forEach(function (l, i) {
+        $b.append(
+          '<tr data-seq="' + l.approver_seq + '">' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td>' + l.approver_name + '</td>' +
+          '<td>' +
+          '<a href="javascript:;" class="ln-up">▲</a> ' +
+          '<a href="javascript:;" class="ln-down">▼</a> ' +
+          '<a href="javascript:;" class="text-danger ln-del">✕</a>' +
+          '</td></tr>');
+      });
+      $('#line_json').val(JSON.stringify(LINES));
+    }
+
+    $(function () {
+      renderUserSelect();
+      renderLines();
+
+      $('#btn_add_line').click(function () {
+        var seq = parseInt($('#user_select').val() || '0');
+        if (!seq) return;
+        if (LINES.some(function (l) { return l.approver_seq === seq; })) { ErrorAlert('이미 추가된 결재자입니다.'); return; }
+        var u = USERS.find(function (x) { return x.uv_seq === seq; });
+        LINES.push({ approver_seq: seq, approver_name: u ? u.name : '' });
+        renderLines();
+      });
+
+      $('#line_body').on('click', '.ln-del', function () {
+        var i = $(this).closest('tr').index();
+        LINES.splice(i, 1); renderLines();
+      }).on('click', '.ln-up', function () {
+        var i = $(this).closest('tr').index();
+        if (i > 0) { var t = LINES[i - 1]; LINES[i - 1] = LINES[i]; LINES[i] = t; renderLines(); }
+      }).on('click', '.ln-down', function () {
+        var i = $(this).closest('tr').index();
+        if (i < LINES.length - 1) { var t = LINES[i + 1]; LINES[i + 1] = LINES[i]; LINES[i] = t; renderLines(); }
+      });
+
+      $('#exist_files').on('click', '.del-exist', function () {
+        var af = $(this).data('af');
+        DEL_FILES.push(af);
+        $('#del_files').val(DEL_FILES.join(','));
+        $(this).closest('.exist-file').css('text-decoration', 'line-through').find('.del-exist').remove();
+      });
+
+      $('#btn_temp').click(function () { save(0); });
+      $('#btn_submit').click(function () { save(1); });
+    });
+
+    function save(submit) {
+      var title = $('#title').val().trim();
+      if (!title) { ErrorAlert('제목을 입력해주세요.'); return; }
+      if (submit === 1 && LINES.length === 0) { ErrorAlert('상신하려면 결재선을 1명 이상 지정해야 합니다.'); return; }
+
+      var fd = new FormData();
+      fd.append('ad_seq', $('#ad_seq').val());
+      fd.append('title', title);
+      fd.append('content', $('#content').val());
+      fd.append('line_json', JSON.stringify(LINES));
+      fd.append('del_files', $('#del_files').val() || '');
+      fd.append('submit', submit);
+      var files = document.getElementById('files').files;
+      for (var i = 0; i < files.length; i++) fd.append('files', files[i]);
+
+      if (typeof showLoading === 'function') showLoading();
+      $.ajax({
+        url: '@Url.Action("SaveDoc", "Appr")',
+        type: 'POST', data: fd, processData: false, contentType: false,
+        success: function (json) {
+          if (typeof hideLoading === 'function') hideLoading();
+          if (json.ok) {
+            NormalAlert(json.message, function () { location.href = '@Url.Action("Detail", "Appr")' + '?ad_seq=' + json.ad_seq; });
+          } else { ErrorAlert(json.message); }
+        },
+        error: function () { if (typeof hideLoading === 'function') hideLoading(); ErrorAlert('저장 중 오류가 발생했습니다.'); }
+      });
+    }
+  </script>
+}

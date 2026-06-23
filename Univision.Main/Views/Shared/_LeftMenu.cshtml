@@ -530,6 +530,25 @@
       </li>
     }
           *@
+
+          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(controllerName, "appr")">
+            <a href="javascript:void(0)">
+              <i class="site-menu-icon wb-check" aria-hidden="true"></i>
+              <span class="site-menu-title">전자결재</span>
+              <span class="site-menu-arrow" title="하위 메뉴를 확장/축소합니다."></span>
+            </a>
+            <ul class="site-menu-sub">
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "worklist,write,detail")">
+                <a href="@Url.Action("WorkList", "Appr")"><span class="site-menu-title">기안함</span></a>
+              </li>
+              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "approvallist")">
+                <a href="@Url.Action("ApprovalList", "Appr")"><span class="site-menu-title">결재함</span></a>
+              </li>
+              <li class="site-menu-item">
+                <a href="@Url.Action("Write", "Appr")"><span class="site-menu-title">기안 작성</span></a>
+              </li>
+            </ul>
+          </li>
         </ul>
 
 

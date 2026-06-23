@@ -42,15 +42,19 @@ namespace GPT.Core
       {
         model_name = "gpt-4o-mini";
       }
-
-      var requestBody = new
+      
+      var requestBody = new Dictionary<string, object>
       {
-        model = model_name, // 사용하고자 하는 모델 이름
-        messages = messages,
-        //max_tokens = 100, // 생성할 텍스트의 최대 토큰 수
-        temperature = 0, // 생성 텍스트의 창의성 수준 
-        top_p = 0,
+        { "model", model_name },
+        { "messages", messages }
       };
+
+      // 2. model_name 조건에 따라 프로퍼티 동적 추가
+      if (model_name.StartsWith("gpt-4"))
+      {
+        requestBody["temperature"] = 0; // 원하는 값으로 설정
+        requestBody["top_p"] = 0;
+      }
 
       var jsonRequestBody = JsonConvert.SerializeObject(requestBody);
 

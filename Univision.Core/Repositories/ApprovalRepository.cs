@@ -15,7 +15,7 @@ namespace Univision.Core.Repositories
     private const string DOC_COLS_LIST = @"
 SELECT d.*,
        (SELECT COUNT(*) FROM APPR_FILE f WHERE f.ad_seq = d.ad_seq) AS file_count,
-       (SELECT TOP 1 l.approver_name FROM APPR_LINE l WHERE l.ad_seq = d.ad_seq AND l.order_no = d.cur_order) AS cur_approver_name
+       (SELECT TOP 1 l.approver_name FROM APPR_LINE l WHERE l.ad_seq = d.ad_seq AND l.order_no = d.cur_order AND l.line_type = 0) AS cur_approver_name
 FROM APPR_DOC d ";
 
     // ── 기안함: 내가 기안한 문서 (status<0 이면 전체) ──────────────
@@ -31,24 +31,31 @@ FROM APPR_DOC d ";
       }
     }
 
-    // ── 결재함: tab 0 결재대기(내 차례), tab 1 결재완료(내가 처리함) ──
+    // ── 결재함: tab 0 결재대기(내 차례), 1 결재완료(내가 처리함), 2 참조 ──
     public async Task<List<appr_doc>> SelectApprovalListAsync(int approverSeq, int tab)
     {
       using (IDbConnection con = new SqlConnection(base.BaseConnectionString))
       {
         string q;
-        if (tab == 1)
+        if (tab == 2)
+        {
+          q = DOC_COLS_LIST + @"
+WHERE d.is_deleted = 0 AND d.doc_status >= 1
+  AND EXISTS (SELECT 1 FROM APPR_LINE l WHERE l.ad_seq = d.ad_seq AND l.approver_seq = @approverSeq AND l.line_type = 1)
+ORDER BY d.submit_date DESC ";
+        }
+        else if (tab == 1)
         {
           q = DOC_COLS_LIST + @"
 WHERE d.is_deleted = 0
-  AND EXISTS (SELECT 1 FROM APPR_LINE l WHERE l.ad_seq = d.ad_seq AND l.approver_seq = @approverSeq AND l.line_status <> 0)
+  AND EXISTS (SELECT 1 FROM APPR_LINE l WHERE l.ad_seq = d.ad_seq AND l.approver_seq = @approverSeq AND l.line_type = 0 AND l.line_status <> 0)
 ORDER BY d.reg_date DESC ";
         }
         else
         {
           q = DOC_COLS_LIST + @"
 WHERE d.is_deleted = 0 AND d.doc_status = 1
-  AND EXISTS (SELECT 1 FROM APPR_LINE l WHERE l.ad_seq = d.ad_seq AND l.approver_seq = @approverSeq AND l.order_no = d.cur_order AND l.line_status = 0)
+  AND EXISTS (SELECT 1 FROM APPR_LINE l WHERE l.ad_seq = d.ad_seq AND l.approver_seq = @approverSeq AND l.line_type = 0 AND l.order_no = d.cur_order AND l.line_status = 0)
 ORDER BY d.submit_date DESC ";
         }
         var ret = await con.QueryAsync<appr_doc>(q, new { approverSeq });
@@ -64,7 +71,7 @@ ORDER BY d.submit_date DESC ";
         string q = @"
 SELECT COUNT(*) FROM APPR_DOC d
 WHERE d.is_deleted = 0 AND d.doc_status = 1
-  AND EXISTS (SELECT 1 FROM APPR_LINE l WHERE l.ad_seq = d.ad_seq AND l.approver_seq = @approverSeq AND l.order_no = d.cur_order AND l.line_status = 0)";
+  AND EXISTS (SELECT 1 FROM APPR_LINE l WHERE l.ad_seq = d.ad_seq AND l.approver_seq = @approverSeq AND l.line_type = 0 AND l.order_no = d.cur_order AND l.line_status = 0)";
         return await con.ExecuteScalarAsync<int>(q, new { approverSeq });
       }
     }
@@ -130,13 +137,12 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
         using (var tx = con.BeginTransaction())
         {
           await con.ExecuteAsync("DELETE FROM APPR_LINE WHERE ad_seq=@ad_seq", new { ad_seq }, tx);
-          int order = 1;
           foreach (var l in lines)
           {
             await con.ExecuteAsync(@"
-INSERT INTO APPR_LINE (ad_seq, order_no, approver_seq, approver_name, approver_position, line_status)
-VALUES (@ad_seq, @order_no, @approver_seq, @approver_name, @approver_position, 0)",
-              new { ad_seq, order_no = order++, l.approver_seq, l.approver_name, l.approver_position }, tx);
+INSERT INTO APPR_LINE (ad_seq, order_no, approver_seq, approver_name, approver_position, line_type, line_status)
+VALUES (@ad_seq, @order_no, @approver_seq, @approver_name, @approver_position, @line_type, 0)",
+              new { ad_seq, l.order_no, l.approver_seq, l.approver_name, l.approver_position, l.line_type }, tx);
           }
           tx.Commit();
         }
@@ -190,12 +196,12 @@ VALUES (@ad_seq, @order_no, @approver_seq, @approver_name, @approver_position, 0
           "SELECT * FROM APPR_DOC WHERE ad_seq=@ad_seq AND is_deleted=0", new { ad_seq });
         if (doc == null || doc.doc_status != 1) return -1;
 
-        var lines = (await con.QueryAsync<appr_line>(
-          "SELECT * FROM APPR_LINE WHERE ad_seq=@ad_seq ORDER BY order_no", new { ad_seq })).ToList();
-        var cur = lines.FirstOrDefault(x => x.order_no == doc.cur_order);
+        var apprLines = (await con.QueryAsync<appr_line>(
+          "SELECT * FROM APPR_LINE WHERE ad_seq=@ad_seq AND line_type=0 ORDER BY order_no", new { ad_seq })).ToList();
+        var cur = apprLines.FirstOrDefault(x => x.order_no == doc.cur_order);
         if (cur == null || cur.approver_seq != approverSeq || cur.line_status != 0) return -1;
 
-        int maxOrder = lines.Count == 0 ? 0 : lines.Max(x => x.order_no);
+        int maxOrder = apprLines.Count == 0 ? 0 : apprLines.Max(x => x.order_no);
 
         using (var tx = con.BeginTransaction())
         {

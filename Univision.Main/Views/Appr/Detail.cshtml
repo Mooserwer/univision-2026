@@ -10,6 +10,20 @@
   int me = Univision.Security.AppIdentity.user_seq;
 }
 
+<style>
+  .appr-line-h { display: flex; flex-wrap: wrap; gap: 10px; }
+  .appr-card { width: 130px; border: 1px solid #d5dde5; border-radius: 8px; overflow: hidden; text-align: center; background: #fff; }
+  .appr-card .ac-ord { font-size: 0.72rem; color: #fff; padding: 2px; background: #9aa7b3; }
+  .appr-card .ac-stat { font-weight: 700; font-size: 0.85rem; padding: 4px 2px; }
+  .appr-card .ac-name { font-size: 0.95rem; font-weight: 600; padding: 2px; }
+  .appr-card .ac-date { font-size: 0.72rem; color: #8a98a8; padding-bottom: 4px; }
+  .appr-card .ac-opinion { font-size: 0.72rem; color: #666; padding: 0 4px 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .appr-card.is-approve { border-color: #36b37e; } .appr-card.is-approve .ac-ord { background: #36b37e; } .appr-card.is-approve .ac-stat { color: #1e8e5a; }
+  .appr-card.is-reject { border-color: #e0564b; } .appr-card.is-reject .ac-ord { background: #e0564b; } .appr-card.is-reject .ac-stat { color: #c0392b; }
+  .appr-card.is-cur { border-color: #4b89dc; box-shadow: 0 0 0 2px rgba(75,137,220,.2); } .appr-card.is-cur .ac-ord { background: #4b89dc; } .appr-card.is-cur .ac-stat { color: #3a6fb0; }
+  .appr-card.is-wait .ac-stat { color: #9aa7b3; }
+</style>
+
 <div class="page-content">
   <div class="panel panel-default panel-line shadow">
     <div class="panel-heading">
@@ -43,34 +57,38 @@
         </tr>
       </table>
 
-      <!-- 결재선 현황 -->
+      <!-- 결재선 현황 (가로) -->
+      @{
+        var apprLines = Model.lines.Where(l => l.line_type == 0).OrderBy(l => l.order_no).ToList();
+        var refLines = Model.lines.Where(l => l.line_type == 1).OrderBy(l => l.order_no).ToList();
+      }
       <h5 class="mb-1">결재선</h5>
-      <table class="table table-bordered mb-15" style="font-size:0.9rem;">
-        <thead>
-          <tr style="background:#f7f7f7;">
-            <th style="width:60px;">순서</th><th style="width:140px;">결재자</th>
-            <th style="width:100px;">상태</th><th style="width:150px;">처리일시</th><th>의견</th>
-          </tr>
-        </thead>
-        <tbody>
-          @foreach (var l in Model.lines)
-          {
-            bool isCur = doc.doc_status == 1 && l.order_no == doc.cur_order;
-            <tr class="@(isCur ? "table-warning" : "")">
-              <td>@l.order_no</td>
-              <td>@l.approver_name @(string.IsNullOrEmpty(l.approver_position) ? "" : "(" + l.approver_position + ")")</td>
-              <td>
-                @if (l.line_status == 1) { <span class="badge badge-success">승인</span> }
-                else if (l.line_status == 2) { <span class="badge badge-danger">반려</span> }
-                else if (isCur) { <span class="badge badge-info">결재중</span> }
-                else { <span class="badge badge-secondary">대기</span> }
-              </td>
-              <td>@(l.process_date.HasValue ? l.process_date.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
-              <td>@l.opinion</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+      <div class="appr-line-h mb-15">
+        @foreach (var l in apprLines)
+        {
+          bool isCur = doc.doc_status == 1 && l.order_no == doc.cur_order;
+          string cls = l.line_status == 1 ? "is-approve" : l.line_status == 2 ? "is-reject" : (isCur ? "is-cur" : "is-wait");
+          <div class="appr-card @cls">
+            <div class="ac-ord">@(l.order_no)차</div>
+            <div class="ac-stat">
+              @if (l.line_status == 1) { <text>승인</text> }
+              else if (l.line_status == 2) { <text>반려</text> }
+              else if (isCur) { <text>결재중</text> }
+              else { <text>대기</text> }
+            </div>
+            <div class="ac-name">@l.approver_name</div>
+            <div class="ac-date">@(l.process_date.HasValue ? l.process_date.Value.ToString("MM-dd HH:mm") : "")</div>
+            @if (!string.IsNullOrEmpty(l.opinion))
+            {
+              <div class="ac-opinion" title="@l.opinion">@l.opinion</div>
+            }
+          </div>
+        }
+      </div>
+      @if (refLines.Count > 0)
+      {
+        <div class="mb-15"><b>참조</b> : @string.Join(", ", refLines.Select(r => r.approver_name))</div>
+      }
 
       <!-- 본문 -->
       <h5 class="mb-1">본문</h5>

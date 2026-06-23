@@ -32,6 +32,7 @@ CREATE TABLE dbo.APPR_LINE
     approver_seq      INT               NOT NULL,        -- 결재자 uv_seq
     approver_name     NVARCHAR(50)      NULL,
     approver_position NVARCHAR(50)      NULL,            -- 직급(표시용)
+    line_type         INT               NOT NULL DEFAULT 0, -- 0 결재 / 1 참조(열람만)
     line_status       INT               NOT NULL DEFAULT 0, -- 0 대기 / 1 승인 / 2 반려
     process_date      DATETIME          NULL,
     opinion           NVARCHAR(1000)    NULL             -- 결재 의견/반려 사유

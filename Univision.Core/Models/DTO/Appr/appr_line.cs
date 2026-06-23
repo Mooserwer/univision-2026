@@ -11,6 +11,8 @@ namespace Univision.Core.Models.DTO
     public int approver_seq { get; set; }
     public string approver_name { get; set; }
     public string approver_position { get; set; }
+    // 0 결재 / 1 참조(열람만)
+    public int line_type { get; set; }
     // 0 대기 / 1 승인 / 2 반려
     public int line_status { get; set; }
     public DateTime? process_date { get; set; }

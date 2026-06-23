@@ -3,61 +3,79 @@
   Layout = "~/Views/Shared/_Layout.cshtml";
   ViewBag.Title = "전자결재 - 기안 작성";
   var usersJson = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.users ?? new System.Collections.Generic.List<object>());
-  var linesJson = Newtonsoft.Json.JsonConvert.SerializeObject(
-    Model.lines.Select(l => new { l.approver_seq, l.approver_name }));
+  var lineJson = Newtonsoft.Json.JsonConvert.SerializeObject(
+    Model.lines.Where(l => l.line_type == 0).Select(l => new { l.approver_seq, l.approver_name }));
+  var refJson = Newtonsoft.Json.JsonConvert.SerializeObject(
+    Model.lines.Where(l => l.line_type == 1).Select(l => new { l.approver_seq, l.approver_name }));
 }
+
+<style>
+  .appr-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+  .appr-chip { border: 1px solid #cdd6e0; border-radius: 8px; background: #f7f9fc; padding: 6px 10px; min-width: 96px; text-align: center; position: relative; }
+  .appr-chip .ord { font-size: 0.72rem; color: #8a98a8; }
+  .appr-chip .nm { font-weight: 600; font-size: 0.92rem; }
+  .appr-chip .ctl { margin-top: 2px; font-size: 0.8rem; }
+  .appr-chip .ctl a { cursor: pointer; color: #6b7c8f; text-decoration: none; padding: 0 2px; }
+  .appr-chip .ctl a.rm { color: #e0564b; }
+  .appr-arrow { align-self: center; color: #b0bcc8; }
+  .appr-empty { color: #9aa7b3; font-size: 0.88rem; padding: 6px 0; }
+  #drop_area { border: 2px dashed #b9c4d0; border-radius: 10px; background: #fafbfd; padding: 22px; text-align: center; color: #7d8b99; cursor: pointer; transition: .15s; }
+  #drop_area.drag { border-color: #4b89dc; background: #eef5ff; color: #4b89dc; }
+  .file-row { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 2px; font-size: 0.9rem; }
+  .file-row .rm { color: #e0564b; cursor: pointer; }
+  .userpick-item { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+  .userpick-item:hover { background: #f5f8ff; }
+</style>
 
 <div class="page-content">
   <div class="panel panel-primary panel-line shadow">
-    <div class="panel-heading">
-      <h3 class="panel-title"><i class="fas fa-pen"></i> 기안 작성</h3>
-    </div>
+    <div class="panel-heading"><h3 class="panel-title"><i class="fas fa-pen"></i> 기안 작성</h3></div>
     <div class="panel-body">
       <form id="apprForm" onsubmit="return false;">
         <input type="hidden" id="ad_seq" value="@Model.doc.ad_seq" />
-        <input type="hidden" id="line_json" name="line_json" />
-        <input type="hidden" id="del_files" name="del_files" />
+        <input type="hidden" id="del_files" />
 
         <div class="form-group">
           <label class="form-control-label">제목 <span class="text-danger">*</span></label>
-          <input type="text" id="title" name="title" class="form-control" maxlength="300" value="@Model.doc.title" placeholder="제목을 입력하세요" autocomplete="off" />
+          <input type="text" id="title" class="form-control" maxlength="300" value="@Model.doc.title" placeholder="제목을 입력하세요" autocomplete="off" />
         </div>
 
         <div class="form-group">
-          <label class="form-control-label">결재선 <span class="text-danger">*</span> <small class="text-muted">(상신 순서대로 결재됩니다)</small></label>
-          <div class="row">
-            <div class="col-12 col-md-5 mb-2">
-              <div class="input-group">
-                <select id="user_select" class="form-control"></select>
-                <span class="input-group-btn">
-                  <button type="button" class="btn btn-outline-primary" id="btn_add_line">추가</button>
-                </span>
-              </div>
-            </div>
-          </div>
-          <table class="table table-sm" id="line_table" style="max-width:560px;">
-            <thead><tr><th style="width:50px;">순서</th><th>결재자</th><th style="width:120px;">정렬/삭제</th></tr></thead>
-            <tbody id="line_body"></tbody>
-          </table>
+          <label class="form-control-label">결재선 <span class="text-danger">*</span> <small class="text-muted">(왼쪽 → 오른쪽 순서로 결재)</small>
+            <button type="button" class="btn btn-xs btn-outline-primary ml-2" onclick="openUserModal('line')">+ 결재자 추가</button>
+          </label>
+          <div id="line_box" class="appr-chips border rounded p-2" style="min-height:54px;"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-control-label">참조자 <small class="text-muted">(열람만 가능)</small>
+            <button type="button" class="btn btn-xs btn-outline-info ml-2" onclick="openUserModal('ref')">+ 참조자 추가</button>
+          </label>
+          <div id="ref_box" class="appr-chips border rounded p-2" style="min-height:46px;"></div>
         </div>
 
         <div class="form-group">
           <label class="form-control-label">본문</label>
-          <textarea id="content" name="content" class="form-control" rows="12" placeholder="본문을 입력하세요">@Model.doc.content</textarea>
+          <textarea id="content" class="form-control" rows="12" placeholder="본문을 입력하세요">@Model.doc.content</textarea>
         </div>
 
         <div class="form-group">
-          <label class="form-control-label">첨부파일</label>
-          <input type="file" id="files" name="files" class="form-control" multiple />
+          <label class="form-control-label">첨부파일 <small class="text-muted">(드래그&드롭 또는 클릭하여 여러 개 선택)</small></label>
+          <div id="drop_area">
+            <i class="fa fa-cloud-upload-alt" style="font-size:1.6rem;"></i>
+            <div>여기로 파일을 끌어다 놓거나 클릭하여 선택하세요</div>
+          </div>
+          <input type="file" id="file_input" multiple style="display:none;" />
+          <div id="file_list" class="mt-2"></div>
           @if (Model.files != null && Model.files.Count > 0)
           {
             <div class="mt-2" id="exist_files">
               <small class="text-muted">기존 첨부:</small>
               @foreach (var f in Model.files)
               {
-                <div class="exist-file" data-af="@f.af_seq" style="font-size:0.9rem;">
-                  <i class="fa fa-paperclip"></i> @f.file_path
-                  <a href="javascript:;" class="text-danger del-exist" data-af="@f.af_seq">[삭제]</a>
+                <div class="file-row exist-file" data-af="@f.af_seq">
+                  <span><i class="fa fa-paperclip"></i> @f.file_path</span>
+                  <span class="rm del-exist" data-af="@f.af_seq">삭제</span>
                 </div>
               }
             </div>
@@ -74,64 +92,136 @@
   </div>
 </div>
 
+<!-- 사용자 검색 팝업 -->
+<div class="modal fade" id="userModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userModalTitle">결재자 검색</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="userSearch" class="form-control mb-2" placeholder="이름으로 검색" autocomplete="off" />
+        <div id="userListBox" style="max-height:340px; overflow-y:auto;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary" id="userModalOk">추가</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 @section scripts {
   <script type="text/javascript">
     var USERS = @Html.Raw(usersJson);
-    var LINES = @Html.Raw(linesJson);
+    var LINES = @Html.Raw(lineJson);   // 결재자
+    var REFS  = @Html.Raw(refJson);    // 참조자
+    var DROPFILES = [];
     var DEL_FILES = [];
+    var pickTarget = 'line';
 
-    function renderUserSelect() {
-      var $s = $('#user_select').empty();
-      $s.append('<option value="">결재자 선택...</option>');
-      USERS.forEach(function (u) {
-        $s.append('<option value="' + u.uv_seq + '">' + u.name + '</option>');
+    // ── 결재선/참조 칩 렌더 ───────────────────────────────────────
+    function renderChips() {
+      var $l = $('#line_box').empty();
+      if (LINES.length === 0) { $l.append('<span class="appr-empty">결재자를 추가하세요.</span>'); }
+      LINES.forEach(function (u, i) {
+        if (i > 0) $l.append('<span class="appr-arrow">▶</span>');
+        $l.append(
+          '<div class="appr-chip" data-seq="' + u.approver_seq + '">' +
+          '<div class="ord">' + (i + 1) + '차</div><div class="nm">' + u.approver_name + '</div>' +
+          '<div class="ctl"><a class="mv-l" data-t="line" data-i="' + i + '">◀</a>' +
+          '<a class="mv-r" data-t="line" data-i="' + i + '">▶</a>' +
+          '<a class="rm" data-t="line" data-i="' + i + '">✕</a></div></div>');
+      });
+
+      var $r = $('#ref_box').empty();
+      if (REFS.length === 0) { $r.append('<span class="appr-empty">참조자 없음</span>'); }
+      REFS.forEach(function (u, i) {
+        $r.append(
+          '<div class="appr-chip" data-seq="' + u.approver_seq + '">' +
+          '<div class="nm">' + u.approver_name + '</div>' +
+          '<div class="ctl"><a class="rm" data-t="ref" data-i="' + i + '">✕</a></div></div>');
       });
     }
 
-    function renderLines() {
-      var $b = $('#line_body').empty();
-      LINES.forEach(function (l, i) {
-        $b.append(
-          '<tr data-seq="' + l.approver_seq + '">' +
-          '<td>' + (i + 1) + '</td>' +
-          '<td>' + l.approver_name + '</td>' +
-          '<td>' +
-          '<a href="javascript:;" class="ln-up">▲</a> ' +
-          '<a href="javascript:;" class="ln-down">▼</a> ' +
-          '<a href="javascript:;" class="text-danger ln-del">✕</a>' +
-          '</td></tr>');
+    // ── 사용자 검색 팝업 ──────────────────────────────────────────
+    function openUserModal(target) {
+      pickTarget = target;
+      $('#userModalTitle').text(target === 'line' ? '결재자 검색' : '참조자 검색');
+      $('#userSearch').val('');
+      renderUserList('');
+      $('#userModal').modal('show');
+    }
+
+    function renderUserList(kw) {
+      var arr = (pickTarget === 'line') ? LINES : REFS;
+      var added = arr.map(function (x) { return x.approver_seq; });
+      kw = (kw || '').toLowerCase();
+      var $box = $('#userListBox').empty();
+      var shown = 0;
+      USERS.forEach(function (u) {
+        if (added.indexOf(u.uv_seq) >= 0) return;
+        if (kw && u.name.toLowerCase().indexOf(kw) < 0) return;
+        shown++;
+        $box.append(
+          '<label class="userpick-item"><input type="checkbox" class="upick" value="' + u.uv_seq + '" data-name="' + u.name + '"> ' +
+          '<span>' + u.name + '</span></label>');
       });
-      $('#line_json').val(JSON.stringify(LINES));
+      if (shown === 0) $box.append('<div class="text-muted p-2">검색 결과가 없습니다.</div>');
+    }
+
+    // ── 첨부 (drag & drop + 다중) ─────────────────────────────────
+    function addFiles(fileList) {
+      for (var i = 0; i < fileList.length; i++) DROPFILES.push(fileList[i]);
+      renderFiles();
+    }
+    function renderFiles() {
+      var $l = $('#file_list').empty();
+      DROPFILES.forEach(function (f, i) {
+        $l.append('<div class="file-row"><span><i class="fa fa-paperclip"></i> ' + f.name +
+          ' <small class="text-muted">(' + Math.round(f.size / 1024) + ' KB)</small></span>' +
+          '<span class="rm" data-i="' + i + '">삭제</span></div>');
+      });
     }
 
     $(function () {
-      renderUserSelect();
-      renderLines();
+      renderChips();
 
-      $('#btn_add_line').click(function () {
-        var seq = parseInt($('#user_select').val() || '0');
-        if (!seq) return;
-        if (LINES.some(function (l) { return l.approver_seq === seq; })) { ErrorAlert('이미 추가된 결재자입니다.'); return; }
-        var u = USERS.find(function (x) { return x.uv_seq === seq; });
-        LINES.push({ approver_seq: seq, approver_name: u ? u.name : '' });
-        renderLines();
+      // 칩 컨트롤
+      $('#line_box, #ref_box').on('click', '.rm', function () {
+        var t = $(this).data('t'), i = $(this).data('i');
+        (t === 'line' ? LINES : REFS).splice(i, 1); renderChips();
+      }).on('click', '.mv-l', function () {
+        var i = $(this).data('i'); if (i > 0) { var t = LINES[i - 1]; LINES[i - 1] = LINES[i]; LINES[i] = t; renderChips(); }
+      }).on('click', '.mv-r', function () {
+        var i = $(this).data('i'); if (i < LINES.length - 1) { var t = LINES[i + 1]; LINES[i + 1] = LINES[i]; LINES[i] = t; renderChips(); }
       });
 
-      $('#line_body').on('click', '.ln-del', function () {
-        var i = $(this).closest('tr').index();
-        LINES.splice(i, 1); renderLines();
-      }).on('click', '.ln-up', function () {
-        var i = $(this).closest('tr').index();
-        if (i > 0) { var t = LINES[i - 1]; LINES[i - 1] = LINES[i]; LINES[i] = t; renderLines(); }
-      }).on('click', '.ln-down', function () {
-        var i = $(this).closest('tr').index();
-        if (i < LINES.length - 1) { var t = LINES[i + 1]; LINES[i + 1] = LINES[i]; LINES[i] = t; renderLines(); }
+      // 팝업 검색/추가
+      $('#userSearch').on('input', function () { renderUserList($(this).val()); });
+      $('#userModalOk').click(function () {
+        var arr = (pickTarget === 'line') ? LINES : REFS;
+        $('#userListBox .upick:checked').each(function () {
+          var seq = parseInt($(this).val());
+          if (!arr.some(function (x) { return x.approver_seq === seq; }))
+            arr.push({ approver_seq: seq, approver_name: $(this).data('name') });
+        });
+        $('#userModal').modal('hide');
+        renderChips();
       });
+
+      // 첨부 drag & drop
+      var dropArea = document.getElementById('drop_area');
+      dropArea.addEventListener('click', function () { document.getElementById('file_input').click(); });
+      dropArea.addEventListener('dragover', function (e) { e.preventDefault(); dropArea.classList.add('drag'); });
+      dropArea.addEventListener('dragleave', function () { dropArea.classList.remove('drag'); });
+      dropArea.addEventListener('drop', function (e) { e.preventDefault(); dropArea.classList.remove('drag'); addFiles(e.dataTransfer.files); });
+      document.getElementById('file_input').addEventListener('change', function (e) { addFiles(e.target.files); e.target.value = ''; });
+      $('#file_list').on('click', '.rm', function () { DROPFILES.splice($(this).data('i'), 1); renderFiles(); });
 
       $('#exist_files').on('click', '.del-exist', function () {
-        var af = $(this).data('af');
-        DEL_FILES.push(af);
-        $('#del_files').val(DEL_FILES.join(','));
+        DEL_FILES.push($(this).data('af')); $('#del_files').val(DEL_FILES.join(','));
         $(this).closest('.exist-file').css('text-decoration', 'line-through').find('.del-exist').remove();
       });
 
@@ -149,10 +239,10 @@
       fd.append('title', title);
       fd.append('content', $('#content').val());
       fd.append('line_json', JSON.stringify(LINES));
+      fd.append('ref_json', JSON.stringify(REFS));
       fd.append('del_files', $('#del_files').val() || '');
       fd.append('submit', submit);
-      var files = document.getElementById('files').files;
-      for (var i = 0; i < files.length; i++) fd.append('files', files[i]);
+      DROPFILES.forEach(function (f) { fd.append('files', f); });
 
       if (typeof showLoading === 'function') showLoading();
       $.ajax({
@@ -160,9 +250,8 @@
         type: 'POST', data: fd, processData: false, contentType: false,
         success: function (json) {
           if (typeof hideLoading === 'function') hideLoading();
-          if (json.ok) {
-            NormalAlert(json.message, function () { location.href = '@Url.Action("Detail", "Appr")' + '?ad_seq=' + json.ad_seq; });
-          } else { ErrorAlert(json.message); }
+          if (json.ok) { NormalAlert(json.message, function () { location.href = '@Url.Action("Detail", "Appr")' + '?ad_seq=' + json.ad_seq; }); }
+          else { ErrorAlert(json.message); }
         },
         error: function () { if (typeof hideLoading === 'function') hideLoading(); ErrorAlert('저장 중 오류가 발생했습니다.'); }
       });

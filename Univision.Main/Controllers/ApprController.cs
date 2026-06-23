@@ -52,7 +52,8 @@ namespace Univision.Main.Controllers
           {
             approver_seq = l.approver_seq,
             approver_name = l.approver_name,
-            approver_position = l.approver_position
+            approver_position = l.approver_position,
+            line_type = l.line_type
           }).ToList();
         }
       }
@@ -71,18 +72,19 @@ namespace Univision.Main.Controllers
 
     // ── 저장 (submit=0 임시저장 / 1 상신) ─────────────────────────
     [HttpPost]
-    public async Task<JsonResult> SaveDoc(int ad_seq, string title, string content, string line_json, int submit, string del_files)
+    public async Task<JsonResult> SaveDoc(int ad_seq, string title, string content, string line_json, string ref_json, int submit, string del_files)
     {
       try
       {
         if (string.IsNullOrWhiteSpace(title))
           return Json(new { ok = false, message = "제목을 입력해주세요." });
 
-        var lines = new List<appr_line>();
-        if (!string.IsNullOrWhiteSpace(line_json))
-          lines = JsonConvert.DeserializeObject<List<appr_line>>(line_json) ?? new List<appr_line>();
+        var approvers = string.IsNullOrWhiteSpace(line_json)
+          ? new List<appr_line>() : (JsonConvert.DeserializeObject<List<appr_line>>(line_json) ?? new List<appr_line>());
+        var refs = string.IsNullOrWhiteSpace(ref_json)
+          ? new List<appr_line>() : (JsonConvert.DeserializeObject<List<appr_line>>(ref_json) ?? new List<appr_line>());
 
-        if (submit == 1 && lines.Count == 0)
+        if (submit == 1 && approvers.Count == 0)
           return Json(new { ok = false, message = "상신하려면 결재선을 1명 이상 지정해야 합니다." });
 
         // 신규 / 수정 분기
@@ -107,7 +109,10 @@ namespace Univision.Main.Controllers
           await _repo.UpdateDocContentAsync(new appr_doc { ad_seq = ad_seq, title = title, content = content });
         }
 
-        await _repo.ReplaceLinesAsync(ad_seq, lines);
+        var allLines = new List<appr_line>();
+        int on = 1; foreach (var a in approvers) { a.line_type = 0; a.order_no = on++; allLines.Add(a); }
+        int rn = 1; foreach (var rf in refs) { rf.line_type = 1; rf.order_no = rn++; allLines.Add(rf); }
+        await _repo.ReplaceLinesAsync(ad_seq, allLines);
 
         // 첨부 삭제
         if (!string.IsNullOrWhiteSpace(del_files))
@@ -165,7 +170,7 @@ namespace Univision.Main.Controllers
       if (vm == null) return RedirectToAction("WorkList");
 
       int me = AppIdentity.user_seq;
-      var curLine = vm.lines.FirstOrDefault(x => x.order_no == vm.doc.cur_order);
+      var curLine = vm.lines.FirstOrDefault(x => x.line_type == 0 && x.order_no == vm.doc.cur_order);
       ViewBag.isDrafter = vm.doc.drafter_seq == me;
       ViewBag.isMyTurn = vm.doc.doc_status == 1 && curLine != null && curLine.approver_seq == me && curLine.line_status == 0;
       ViewBag.canRecall = vm.doc.drafter_seq == me && vm.doc.doc_status == 1;

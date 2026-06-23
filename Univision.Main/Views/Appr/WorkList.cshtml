@@ -31,6 +31,7 @@
         <thead>
           <tr>
             <th style="width:100px;">상태</th>
+            <th style="width:135px;">문서번호</th>
             <th>제목</th>
             <th style="width:140px;">현재 결재</th>
             <th style="width:160px;">기안일</th>
@@ -40,7 +41,7 @@
         <tbody>
           @if (Model.Count == 0)
           {
-            <tr><td colspan="5" class="text-center text-muted py-20">문서가 없습니다.</td></tr>
+            <tr><td colspan="6" class="text-center text-muted py-20">문서가 없습니다.</td></tr>
           }
           @foreach (var d in Model)
           {
@@ -52,6 +53,7 @@
                 else if (d.doc_status == 3) { <span class="badge badge-danger">반려</span> }
                 else if (d.doc_status == 4) { <span class="badge badge-warning">회수</span> }
               </td>
+              <td><small class="text-muted">@d.doc_no</small></td>
               <td>@d.title</td>
               <td>@(d.doc_status == 1 ? (d.cur_approver_name ?? "-") : "-")</td>
               <td>@d.reg_date.ToString("yyyy-MM-dd HH:mm")</td>

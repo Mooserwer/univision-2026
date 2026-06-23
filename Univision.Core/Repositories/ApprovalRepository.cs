@@ -85,7 +85,7 @@ WHERE d.is_deleted = 0 AND d.doc_status = 1
         var vm = new ApprDocViewModel();
         vm.doc = await con.QueryFirstOrDefaultAsync<appr_doc>(
           @"SELECT d.*,
-                   (SELECT ud_name FROM UV_USER u WHERE u.uv_seq = d.drafter_seq) AS drafter_ud_name
+                   (SELECT ud_name FROM UV_DIVISION WHERE ud_seq = d.drafter_ud_seq) AS drafter_ud_name
             FROM APPR_DOC d WHERE d.ad_seq = @ad_seq AND d.is_deleted = 0", new { ad_seq });
         if (vm.doc == null) return null;
 
@@ -159,8 +159,17 @@ VALUES (@ad_seq, @order_no, @approver_seq, @approver_name, @approver_position, @
         {
           await con.ExecuteAsync(
             "UPDATE APPR_LINE SET line_status=0, process_date=NULL, opinion=NULL WHERE ad_seq=@ad_seq", new { ad_seq }, tx);
-          await con.ExecuteAsync(
-            "UPDATE APPR_DOC SET doc_status=1, cur_order=1, submit_date=GETDATE(), complete_date=NULL, mod_date=GETDATE() WHERE ad_seq=@ad_seq", new { ad_seq }, tx);
+
+          // 자동 채번: doc_no 가 없을 때만 '기안-yyMM-0001' 형식으로 부여 (월별 순번)
+          await con.ExecuteAsync(@"
+DECLARE @prefix NVARCHAR(20) = N'기안-' + FORMAT(GETDATE(), 'yyMM') + N'-';
+DECLARE @next INT = (SELECT ISNULL(MAX(CAST(RIGHT(doc_no, 4) AS INT)), 0) + 1
+                     FROM APPR_DOC WHERE doc_no LIKE @prefix + N'%');
+UPDATE APPR_DOC
+   SET doc_status = 1, cur_order = 1, submit_date = GETDATE(), complete_date = NULL, mod_date = GETDATE(),
+       doc_no = CASE WHEN doc_no IS NULL OR doc_no = '' THEN @prefix + RIGHT('000' + CAST(@next AS VARCHAR(4)), 4) ELSE doc_no END
+ WHERE ad_seq = @ad_seq;", new { ad_seq }, tx);
+
           tx.Commit();
         }
       }

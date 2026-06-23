@@ -9,3 +9,10 @@ BEGIN
     ALTER TABLE dbo.APPR_LINE ADD line_type INT NOT NULL DEFAULT 0;  -- 0 결재 / 1 참조(열람만)
 END
 GO
+
+-- 문서 자동 채번 (예: 기안-2606-0001), 상신 시 부여
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.APPR_DOC') AND name = 'doc_no')
+BEGIN
+    ALTER TABLE dbo.APPR_DOC ADD doc_no NVARCHAR(30) NULL;
+END
+GO

@@ -33,7 +33,7 @@
         else if (doc.doc_status == 2) { <span class="badge badge-success">승인완료</span> }
         else if (doc.doc_status == 3) { <span class="badge badge-danger">반려</span> }
         else if (doc.doc_status == 4) { <span class="badge badge-warning">회수</span> }
-        &nbsp;@doc.title
+        @(string.IsNullOrEmpty(doc.doc_no) ? "" : " [" + doc.doc_no + "]")&nbsp;@doc.title
       </h3>
       <div class="panel-actions">
         <a href="@Url.Action("WorkList", "Appr")" class="btn btn-xs btn-secondary">목록</a>
@@ -43,6 +43,10 @@
 
       <!-- 문서 정보 -->
       <table class="table table-bordered mb-15" style="font-size:0.92rem;">
+        <tr>
+          <th style="width:110px; background:#f7f7f7;">문서번호</th>
+          <td colspan="3">@(string.IsNullOrEmpty(doc.doc_no) ? "(상신 시 부여)" : doc.doc_no)</td>
+        </tr>
         <tr>
           <th style="width:110px; background:#f7f7f7;">기안자</th>
           <td>@doc.drafter_name @(string.IsNullOrEmpty(doc.drafter_ud_name) ? "" : "(" + doc.drafter_ud_name + ")")</td>

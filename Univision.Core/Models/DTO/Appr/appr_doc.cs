@@ -6,6 +6,7 @@ namespace Univision.Core.Models.DTO
   public class appr_doc
   {
     public int ad_seq { get; set; }
+    public string doc_no { get; set; }   // 자동 채번 (기안-yyMM-0001), 상신 시 부여
     public string title { get; set; }
     public string content { get; set; }
     public int drafter_seq { get; set; }

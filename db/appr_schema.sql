@@ -7,6 +7,7 @@
 CREATE TABLE dbo.APPR_DOC
 (
     ad_seq          INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    doc_no          NVARCHAR(30)      NULL,              -- 자동 채번 (예: 기안-2606-0001), 상신 시 부여
     title           NVARCHAR(300)     NOT NULL,
     content         NVARCHAR(MAX)     NULL,
     drafter_seq     INT               NOT NULL,          -- 기안자 uv_seq

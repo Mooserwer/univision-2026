@@ -9,6 +9,7 @@ using System.Web.Mvc;
 using Univision.Core.Models.DTO;
 using Univision.Core.Repositories;
 using Univision.Main.Infrastructure;
+using Univision.Main.Infrastructure.Mailing;
 using Univision.Security;
 
 namespace Univision.Main.Controllers
@@ -153,7 +154,10 @@ namespace Univision.Main.Controllers
         }
 
         if (submit == 1)
+        {
           await _repo.SubmitAsync(ad_seq);
+          await NotifyAsync(ad_seq, null);   // 첫 결재자에게 알림
+        }
 
         return Json(new { ok = true, ad_seq, message = submit == 1 ? "상신되었습니다." : "임시저장 되었습니다." });
       }
@@ -182,6 +186,7 @@ namespace Univision.Main.Controllers
     public async Task<JsonResult> Approve(int ad_seq, string opinion)
     {
       int r = await _repo.ProcessApprovalAsync(ad_seq, AppIdentity.user_seq, true, opinion);
+      if (r == 1) await NotifyAsync(ad_seq, opinion);   // 다음 결재자 또는 (최종 승인 시) 기안자에게 알림
       return Json(r == 1 ? new { ok = true, message = "승인 처리되었습니다." }
                          : new { ok = false, message = "결재 권한이 없거나 처리할 수 없는 상태입니다." });
     }
@@ -192,6 +197,7 @@ namespace Univision.Main.Controllers
       if (string.IsNullOrWhiteSpace(opinion))
         return Json(new { ok = false, message = "반려 사유를 입력해주세요." });
       int r = await _repo.ProcessApprovalAsync(ad_seq, AppIdentity.user_seq, false, opinion);
+      if (r == 1) await NotifyAsync(ad_seq, opinion);   // 기안자에게 반려 알림
       return Json(r == 1 ? new { ok = true, message = "반려 처리되었습니다." }
                          : new { ok = false, message = "결재 권한이 없거나 처리할 수 없는 상태입니다." });
     }
@@ -259,6 +265,70 @@ namespace Univision.Main.Controllers
         .OrderBy(u => u.name)
         .Select(u => (object)new { uv_seq = u.uv_seq, name = u.name })
         .ToList();
+    }
+
+    // ── 알림 메일: 진행중이면 현재 결재자, 완료/반려면 기안자에게 (실패는 무시) ──
+    private async Task NotifyAsync(int ad_seq, string opinion)
+    {
+      try
+      {
+        var vm = await _repo.SelectDocAsync(ad_seq);
+        if (vm == null) return;
+        var doc = vm.doc;
+
+        int recipientSeq;
+        string action;
+        if (doc.doc_status == 3) { recipientSeq = doc.drafter_seq; action = "반려"; }
+        else if (doc.doc_status == 2) { recipientSeq = doc.drafter_seq; action = "최종 승인 완료"; }
+        else if (doc.doc_status == 1)
+        {
+          var cur = vm.lines.FirstOrDefault(l => l.line_type == 0 && l.order_no == doc.cur_order);
+          if (cur == null) return;
+          recipientSeq = cur.approver_seq;
+          action = "결재 요청";
+        }
+        else return;
+
+        var user = await _repo.SelectUserContactAsync(recipientSeq);
+        if (user == null || string.IsNullOrWhiteSpace(user.email)) return;
+
+        string url = Request.Url.GetLeftPart(UriPartial.Authority) + Url.Action("Detail", "Appr", new { ad_seq });
+
+        var dto = new ApprNotifyDto
+        {
+          ToArr = new[] { user.email },
+          recipient = user.name ?? "",
+          actionkor = action,
+          docno = doc.doc_no ?? "",
+          title = doc.title ?? "",
+          drafter = doc.drafter_name ?? "",
+          opinion = string.IsNullOrWhiteSpace(opinion) ? "-" : opinion,
+          detailurl = url
+        };
+        var tmpl = new TempleteDto
+        {
+          MailSubject = "[전자결재] {{actionkor}} - {{title}}",
+          MailBody = ApprMailBody()
+        };
+        new MailService().SendApprNotifyMail(dto, tmpl);
+      }
+      catch { /* 알림 메일 실패는 무시 */ }
+    }
+
+    private static string ApprMailBody()
+    {
+      return @"
+<div style='font-family:맑은 고딕,sans-serif;font-size:14px;color:#333;line-height:1.6;'>
+  <p>{{recipient}}님,</p>
+  <p><b>[{{actionkor}}]</b> 전자결재 알림입니다.</p>
+  <table style='border-collapse:collapse;border:1px solid #e3e8ee;'>
+    <tr><td style='padding:6px 12px;color:#888;background:#f7f9fc;'>문서번호</td><td style='padding:6px 12px;'>{{docno}}</td></tr>
+    <tr><td style='padding:6px 12px;color:#888;background:#f7f9fc;'>제목</td><td style='padding:6px 12px;'>{{title}}</td></tr>
+    <tr><td style='padding:6px 12px;color:#888;background:#f7f9fc;'>기안자</td><td style='padding:6px 12px;'>{{drafter}}</td></tr>
+    <tr><td style='padding:6px 12px;color:#888;background:#f7f9fc;'>의견</td><td style='padding:6px 12px;'>{{opinion}}</td></tr>
+  </table>
+  <p style='margin-top:16px;'><a href='{{detailurl}}' style='background:#4b89dc;color:#fff;padding:9px 18px;border-radius:6px;text-decoration:none;'>문서 보기</a></p>
+</div>";
     }
   }
 }

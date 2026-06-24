@@ -65,6 +65,44 @@ namespace Univision.Main.Infrastructure.Mailing
     }
 
     /// <summary>
+    /// 전자결재 알림 메일 발송 (다음 결재자 / 기안자).
+    /// </summary>
+    public MailResult SendApprNotifyMail(ApprNotifyDto data, TempleteDto template)
+    {
+      try
+      {
+        string mailSubject = _mapMail(data, template.MailSubject);
+        string mailContentHtml = _mapMail(data, template.MailBody);
+
+        CDO.Message message = new CDO.Message();
+        CDO.IConfiguration configuration = message.Configuration;
+        ADODB.Fields fields = configuration.Fields;
+
+        ADODB.Field field = fields["http://schemas.microsoft.com/cdo/configuration/smtpserver"];
+        field.Value = "localhost";
+        field = fields["http://schemas.microsoft.com/cdo/configuration/smtpserverport"];
+        field.Value = 25;
+        field = fields["http://schemas.microsoft.com/cdo/configuration/sendusing"];
+        field.Value = CDO.CdoSendUsing.cdoSendUsingPickup;
+        field = fields["http://schemas.microsoft.com/cdo/configuration/smtpserverpickupdirectory"];
+        field.Value = @"C:\Inetpub\mailroot\Pickup";
+        fields.Update();
+
+        message.To = String.Join(";", data.ToArr);
+        message.From = mId;
+        message.Subject = mailSubject;
+        message.HTMLBody = mailContentHtml;
+        message.Send();
+
+        return new MailResult() { isSend = true, message = "메일 발송 했습니다." };
+      }
+      catch (Exception e)
+      {
+        return new MailResult() { isSend = false, message = e.Message };
+      }
+    }
+
+    /// <summary>
     /// 회의실 예약 알림 메일 발송.
     /// </summary>
     /// <param name="data"></param>

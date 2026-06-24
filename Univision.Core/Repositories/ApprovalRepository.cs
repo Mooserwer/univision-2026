@@ -76,6 +76,27 @@ WHERE d.is_deleted = 0 AND d.doc_status = 1
       }
     }
 
+    // ── 사용자 연락처(이메일) 조회 ─────────────────────────────────
+    public async Task<uv_user> SelectUserContactAsync(int uv_seq)
+    {
+      using (IDbConnection con = new SqlConnection(base.BaseConnectionString))
+        return await con.QueryFirstOrDefaultAsync<uv_user>(
+          "SELECT uv_seq, name, email FROM uv_user WHERE uv_seq = @uv_seq", new { uv_seq });
+    }
+
+    // ── 결재대기 건수 (동기 — 메뉴 뱃지용) ─────────────────────────
+    public int CountPendingApproval(int approverSeq)
+    {
+      using (IDbConnection con = new SqlConnection(base.BaseConnectionString))
+      {
+        string q = @"
+SELECT COUNT(*) FROM APPR_DOC d
+WHERE d.is_deleted = 0 AND d.doc_status = 1
+  AND EXISTS (SELECT 1 FROM APPR_LINE l WHERE l.ad_seq = d.ad_seq AND l.approver_seq = @approverSeq AND l.line_type = 0 AND l.order_no = d.cur_order AND l.line_status = 0)";
+        return con.ExecuteScalar<int>(q, new { approverSeq });
+      }
+    }
+
     // ── 문서 단건 + 결재선 + 첨부 + 댓글 ───────────────────────────
     public async Task<ApprDocViewModel> SelectDocAsync(int ad_seq)
     {

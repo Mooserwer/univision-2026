@@ -5340,6 +5340,7 @@
     <Content Include="Libs\easy_ns\README.md" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
     <Content Include="Scripts\FileSaver\FileSaver.min.js.map" />
+    <None Include="Properties\PublishProfiles\TestSvProfile.pubxml" />
     <None Include="Properties\PublishProfiles\TEST_SERVER.pubxml" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\FileDownload.js" />

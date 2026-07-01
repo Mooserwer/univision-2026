@@ -4495,6 +4495,7 @@ FROM pjt_recandidate A INNER JOIN(select ROW_NUMBER() OVER(partition by pic_seq 
                        ON B.p_seq = INV.p_seq
                        AND B.prc_seq = INV.prc_seq
                        AND INV.is_deleted = 0
+                       AND INV.invoice_type NOT IN(4, 5)
                        AND NOT EXISTS(select 1
                                        FROM pjt_invoice_info CAN_INV
                                        WHERE CAN_INV.p_seq = INV.p_seq

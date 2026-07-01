@@ -594,5 +594,32 @@ AND ((A.v_type = 5 AND @uv_seq = 215 AND A.end_date < GETDATE())
         throw e;
       }
     }
+
+    // ── Shift 자택근무(v_type=11) 주간 한도 ─────────────────────────
+    // uv_user.weekly_shift_limit (NULL 이면 기본 1일)
+    public int SelectWeeklyShiftLimit(int uv_seq)
+    {
+      using (IDbConnection con = new SqlConnection(base.BaseConnectionString))
+      {
+        return con.ExecuteScalar<int>(
+          "SELECT ISNULL(weekly_shift_limit, 1) FROM uv_user WHERE uv_seq = @uv_seq", new { uv_seq });
+      }
+    }
+
+    // 해당 주(weekStart 이상 ~ weekEndNext 미만)에 신청된 Shift 자택근무 일수 합계 (반려 제외)
+    public decimal CountShiftHomeDaysInWeek(int uv_seq, string weekStart, string weekEndNext)
+    {
+      using (IDbConnection con = new SqlConnection(base.BaseConnectionString))
+      {
+        return con.ExecuteScalar<decimal?>(@"
+SELECT ISNULL(SUM(CAST(vacation_number AS decimal(9,2))), 0)
+FROM uv_vacation_history
+WHERE request_user = @uv_seq
+  AND v_type = 11
+  AND ISNULL(leader_confirm, 0) <> -1
+  AND start_date >= @weekStart
+  AND start_date <  @weekEndNext", new { uv_seq, weekStart, weekEndNext }) ?? 0;
+      }
+    }
   }
 }

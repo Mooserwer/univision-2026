@@ -377,6 +377,41 @@ namespace Univision.Main.Controllers
       }
     }
 
+    // Shift 자택근무(v_type=11) 주간 한도 초과 여부 사전 체크 (경고용)
+    [HttpGet]
+    public JsonResult CheckShiftHomeWeekly(string date, decimal days = 1)
+    {
+      try
+      {
+        DateTime d = DateTime.Parse(date);
+        int diff = ((int)d.DayOfWeek + 6) % 7;          // 월요일 기준(월=0)
+        DateTime weekStart = d.Date.AddDays(-diff);
+        DateTime weekEndNext = weekStart.AddDays(7);     // 다음 주 월요일(미포함 상한)
+
+        MyListRepository mr = new MyListRepository();
+        int limit = mr.SelectWeeklyShiftLimit(AppIdentity.user_seq);
+        decimal used = mr.CountShiftHomeDaysInWeek(AppIdentity.user_seq,
+                          weekStart.ToString("yyyy-MM-dd"), weekEndNext.ToString("yyyy-MM-dd"));
+
+        string weekStr = weekStart.ToString("MM/dd") + "~" + weekStart.AddDays(6).ToString("MM/dd");
+        bool over = (used + days) > limit;
+
+        return Json(new
+        {
+          ok = true,
+          over,
+          used,
+          limit,
+          week = weekStr,
+          message = string.Format("이번 주({0}) Shift 자택근무가 이미 {1}일 신청되어 주간 한도({2}일)를 초과합니다.<br/>그래도 계속 신청하시겠습니까?", weekStr, used, limit)
+        }, JsonRequestBehavior.AllowGet);
+      }
+      catch (Exception e)
+      {
+        return Json(new { ok = false, message = e.Message }, JsonRequestBehavior.AllowGet);
+      }
+    }
+
     [HttpPost]
     public async Task<JsonResult> MyVacationCreate(VacationCreateModel model)
     {

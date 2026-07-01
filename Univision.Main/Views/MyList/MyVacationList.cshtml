@@ -513,31 +513,51 @@
                 }
                 vacation_data.detail_list.push(vacation_detail);
             });
-            ConfirmAlert('Confirm!', '신청하시겠습니까?', function () {
-                $.ajax({
-                    type: 'POST',
-                    url: '@Url.Action("MyVacationCreate", "MyList")',
-                    data: vacation_data,
-                    dataType: 'json',
-                    beforeSend: function () {
-                        showLoading();
-                    },
-                    success: function (data) {
-                        hideLoading();
-                        if (!data.ok) {
-                            //fget_alert();
-                            ErrorAlert(data.rtn_msg);
-                            return;
+            var vtype = parseInt(myForm.find('#vd_dv_gubun').val());
+            var totalDays = parseFloat(myForm.find('#vd_dn_total_period').val()) || 1;
+
+            function doSubmit() {
+                ConfirmAlert('Confirm!', '신청하시겠습니까?', function () {
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("MyVacationCreate", "MyList")',
+                        data: vacation_data,
+                        dataType: 'json',
+                        beforeSend: function () {
+                            showLoading();
+                        },
+                        success: function (data) {
+                            hideLoading();
+                            if (!data.ok) {
+                                //fget_alert();
+                                ErrorAlert(data.rtn_msg);
+                                return;
+                            }
+                            NormalAlert("신청완료", function () {
+                                location.href = "@Url.Action("MyVacationList", "MyList")";
+                            });
+                        },
+                        error: function () {
+                            hideLoading();
                         }
-                        NormalAlert("신청완료", function () {
-                            location.href = "@Url.Action("MyVacationList", "MyList")";
-                        });
-                    },
-                    error: function () {
-                        hideLoading();
-                    }
+                    });
                 });
-            });
+            }
+
+            // Shift 자택근무(11) : 이번 주 신청분이 주간 한도 초과 시 경고 후 진행 (추후 완전 차단 예정)
+            if (vtype === 11) {
+                $.get('@Url.Action("CheckShiftHomeWeekly", "MyList")',
+                    { date: vacation_data.data.start_date, days: totalDays },
+                    function (res) {
+                        if (res && res.ok && res.over) {
+                            ConfirmAlert('주간 한도 초과 경고', res.message, function () { doSubmit(); });
+                        } else {
+                            doSubmit();
+                        }
+                    }).fail(function () { doSubmit(); });
+            } else {
+                doSubmit();
+            }
         }
 
 

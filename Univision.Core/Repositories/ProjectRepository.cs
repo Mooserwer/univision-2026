@@ -4495,12 +4495,12 @@ FROM pjt_recandidate A INNER JOIN(select ROW_NUMBER() OVER(partition by pic_seq 
                        ON B.p_seq = INV.p_seq
                        AND B.prc_seq = INV.prc_seq
                        AND INV.is_deleted = 0
-                       AND INV.pii_seq NOT IN(select pii_seq
-                                               FROM pjt_invoice_info CAN_INV
-                                               WHERE CAN_INV.p_seq = INV.p_seq
-                                               AND   CAN_INV.pre_pii = INV.pii_seq
-                                               AND   CAN_INV.is_deleted = 0
-                                               AND   CAN_INV.invoice_type IN(4, 5))
+                       AND NOT EXISTS(select 1
+                                       FROM pjt_invoice_info CAN_INV
+                                       WHERE CAN_INV.p_seq = INV.p_seq
+                                       AND   CAN_INV.pre_pii = INV.pii_seq
+                                       AND   CAN_INV.is_deleted = 0
+                                       AND   CAN_INV.invoice_type IN(4, 5))
 
 
 

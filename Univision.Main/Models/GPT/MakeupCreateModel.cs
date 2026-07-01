@@ -10,6 +10,9 @@ namespace Univision.Main.Models.GPT
 {
   public class MakeupCreateModel
   {
+    /*
+     * 이름
+     */
     public string candidate { get; set; }
     public string yob { get; set; }
     public string gender { get; set; }

@@ -118,11 +118,78 @@ namespace Univision.Main.Controllers
     }
 
     /// <summary>
-    /// 휴가승인 전용 목록 페이지. (목록/승인 처리는 Dashboard/VacationApprList 파셜을 AJAX 재사용)
+    /// 휴가승인 전용 목록 페이지. (Tabulator)
     /// </summary>
     public ActionResult VacationApprovalList()
     {
       return View();
+    }
+
+    /// <summary>
+    /// 휴가승인 목록 데이터 (Tabulator ajax). SHIFT(집, v_type=11)이 해당 주 주간한도를 초과하면 shift_over=true.
+    /// </summary>
+    [HttpPost]
+    public JsonResult VacationApprovalListAjx()
+    {
+      MyListRepository mlr = new MyListRepository();
+      var list = mlr.SelectMyVacationApprovalList(AppIdentity.user_seq);
+
+      // 신청자별 주간한도 / (신청자,주)별 사용합계 캐시 (N+1 방지)
+      var limitCache = new Dictionary<int, int>();
+      var usedCache = new Dictionary<string, decimal>();
+
+      var result = new List<object>();
+      foreach (var v in list)
+      {
+        bool shiftOver = false;
+        if (v.v_type == 11 && v.start_date.HasValue && v.request_user.HasValue)
+        {
+          int reqUser = v.request_user.Value;
+          DateTime sd = v.start_date.Value.Date;
+          int diff = ((int)sd.DayOfWeek + 6) % 7; // 월요일=0
+          DateTime weekStart = sd.AddDays(-diff);
+          string ws = weekStart.ToString("yyyy-MM-dd");
+          string we = weekStart.AddDays(7).ToString("yyyy-MM-dd");
+
+          int limit;
+          if (!limitCache.TryGetValue(reqUser, out limit))
+          {
+            limit = mlr.SelectWeeklyShiftLimit(reqUser);
+            limitCache[reqUser] = limit;
+          }
+          string key = reqUser + "|" + ws;
+          decimal used;
+          if (!usedCache.TryGetValue(key, out used))
+          {
+            used = mlr.CountShiftHomeDaysInWeek(reqUser, ws, we);
+            usedCache[key] = used;
+          }
+          shiftOver = used > limit;
+        }
+
+        string dateStr = Utils.ConvertDateTimeToString(v.start_date);
+        if (v.start_date != v.end_date)
+        {
+          dateStr += " ~ " + Utils.ConvertDateTimeToString(v.end_date);
+        }
+
+        result.Add(new
+        {
+          v_seq = v.v_seq,
+          request_name = v.request_name,
+          request_date = Utils.ConvertDateTimeToString(v.request_date),
+          type_name = v.type_name,
+          date_str = dateStr,
+          vacation_number = v.vacation_number,
+          cur_remain = v.cur_remain,
+          v_type = v.v_type,
+          comment = v.comment,
+          vacation_detail = v.vacation_detail,
+          shift_over = shiftOver
+        });
+      }
+
+      return Json(new { list = result });
     }
 
 

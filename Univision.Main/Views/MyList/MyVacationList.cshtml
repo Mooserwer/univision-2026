@@ -516,32 +516,35 @@
             var vtype = parseInt(myForm.find('#vd_dv_gubun').val());
             var totalDays = parseFloat(myForm.find('#vd_dn_total_period').val()) || 1;
 
-            function doSubmit() {
-                ConfirmAlert('Confirm!', '신청하시겠습니까?', function () {
-                    $.ajax({
-                        type: 'POST',
-                        url: '@Url.Action("MyVacationCreate", "MyList")',
-                        data: vacation_data,
-                        dataType: 'json',
-                        beforeSend: function () {
-                            showLoading();
-                        },
-                        success: function (data) {
-                            hideLoading();
-                            if (!data.ok) {
-                                //fget_alert();
-                                ErrorAlert(data.rtn_msg);
-                                return;
-                            }
-                            NormalAlert("신청완료", function () {
-                                location.href = "@Url.Action("MyVacationList", "MyList")";
-                            });
-                        },
-                        error: function () {
-                            hideLoading();
+            // 실제 신청 요청 (확인창 없이 바로 전송)
+            function postVacation() {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("MyVacationCreate", "MyList")',
+                    data: vacation_data,
+                    dataType: 'json',
+                    beforeSend: function () {
+                        showLoading();
+                    },
+                    success: function (data) {
+                        hideLoading();
+                        if (!data.ok) {
+                            //fget_alert();
+                            ErrorAlert(data.rtn_msg);
+                            return;
                         }
-                    });
+                        NormalAlert("신청완료", function () {
+                            location.href = "@Url.Action("MyVacationList", "MyList")";
+                        });
+                    },
+                    error: function () {
+                        hideLoading();
+                    }
                 });
+            }
+
+            function doSubmit() {
+                ConfirmAlert('Confirm!', '신청하시겠습니까?', postVacation);
             }
 
             // Shift 자택근무(11) : 반차 신청 불가
@@ -565,7 +568,8 @@
                     { date: vacation_data.data.start_date, days: totalDays },
                     function (res) {
                         if (res && res.ok && res.over) {
-                            ConfirmAlert('주간 한도 초과 경고', res.message, function () { doSubmit(); });
+                            // 한도 초과 경고 확인창 하나만 사용 (OK 시 바로 신청). 확인창 중첩 방지.
+                            ConfirmAlert('주간 한도 초과 경고', res.message, postVacation);
                         } else {
                             doSubmit();
                         }

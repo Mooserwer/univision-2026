@@ -38,23 +38,31 @@
 
               @if (data.table_type == "CA" && (data.create_seq == AppIdentity.user_seq || AppIdentity.ua_seq <= 2))
               {
-                <span class="float-right can_memo_btn">
-                  <a class="mr-5" href="javascript:void(0);" id="btn_memo_modi_@data.seq" onclick="memoModify('@data.seq', this)" title="메모 수정">
-                    <i class="fas fa-pen"></i>
-                  </a>
-                  <a class="mr-5" href="javascript:void(0);" onclick="memoDeleteConfirm('@data.c_seq', '@data.seq')" title="메모 삭제">
-                    <i class="fas fa-trash red-600"></i>
-                  </a>
-                </span>
+                @*PMS 오픈 관련 등록기능 제한*@
+                if (Univision.Security.AppIdentity.CanPmsEdit)
+                {
+                  <span class="float-right can_memo_btn">
+                    <a class="mr-5" href="javascript:void(0);" id="btn_memo_modi_@data.seq" onclick="memoModify('@data.seq', this)" title="메모 수정">
+                      <i class="fas fa-pen"></i>
+                    </a>
+                    <a class="mr-5" href="javascript:void(0);" onclick="memoDeleteConfirm('@data.c_seq', '@data.seq')" title="메모 삭제">
+                      <i class="fas fa-trash red-600"></i>
+                    </a>
+                  </span>
+                }
               }
               else if (data.table_type == "PH")
               {
                 <span class="float-right">
                   @if (data.create_seq == AppIdentity.user_seq || AppIdentity.ua_seq < 3)
                   {
-                    <a class="mr-5" href="javascript:void(0);" onclick="ProjectProgressCreate(@data.p_seq, @data.c_seq)" title="진행사항 추가">
-                      <i class="fas fa-plus green-500"></i>
-                    </a>
+                    @*PMS 오픈 관련 등록기능 제한*@
+                    if (Univision.Security.AppIdentity.CanPmsEdit)
+                    {
+                      <a class="mr-5" href="javascript:void(0);" onclick="ProjectProgressCreate(@data.p_seq, @data.c_seq)" title="진행사항 추가">
+                        <i class="fas fa-plus green-500"></i>
+                      </a>
+                    }
                   }
                   <a class="mr-5" href="javascript:void(0);" onclick="PopOtherCandidate('@data.p_seq', '@data.c_seq')" title="해당 프로젝트의 다른 후보자">
                     <i class="fas fa-users"></i>

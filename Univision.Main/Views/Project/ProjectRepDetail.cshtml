@@ -49,22 +49,26 @@
 
       </h3>
       <div class="panel-actions">
-        @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+        @*PMS 오픈 관련 등록기능 제한*@
+        @if (Univision.Security.AppIdentity.CanPmsEdit)
         {
-          if (Model.pjt_status == 1)
+          if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
           {
-            <button type="button" class="btn btn-sm btn-primary" id="btnPjtState">프로젝트 마감</button>
+            if (Model.pjt_status == 1)
+            {
+              <button type="button" class="btn btn-sm btn-primary" id="btnPjtState">프로젝트 마감</button>
 
+            }
+            else
+            {
+              <button type="button" class="btn btn-xs btn-warning" id="btnPjtState">프로젝트 상태변경</button>
+            }
           }
-          else
-          {
-            <button type="button" class="btn btn-xs btn-warning" id="btnPjtState">프로젝트 상태변경</button>
-          }
+          <button type="button" class="btn btn-sm btn-success border-primary" onclick="CreateInvoice(@Model.p_seq)" title="인보이스 발행(채용, 선수금, 취소 등)">
+            <i class="fa fa-file-invoice"></i>
+            인보이스 발행 (Invoice)
+          </button>
         }
-        <button type="button" class="btn btn-sm btn-success border-primary" onclick="CreateInvoice(@Model.p_seq)" title="인보이스 발행(채용, 선수금, 취소 등)">
-          <i class="fa fa-file-invoice"></i>
-          인보이스 발행 (Invoice)
-        </button>
         <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
       </div>
       <div class="panel-actions">
@@ -339,14 +343,18 @@
             <label class="form-control-label" for="contact_cell_phone">휴대폰</label>
             @Html.TextBoxFor(x => x.contact_cell_phone, new { @class = "form-control form-control-sm", @readonly = "readonly" })
           </div>
-          <div class="form-group col-md-3 vertical-align ">
-            <div class="vertical-align-bottom">
-              <button type="submit" id="btnNewContactSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
-              <button type="button" id="btnNewContactReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
-              <button type="button" id="btnContactSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
-              <button type="button" id="btnContact" class="btn btn-sm btn-success">담당자 불러오기</button>
+          @*PMS 오픈 관련 등록기능 제한*@
+          @if (Univision.Security.AppIdentity.CanPmsEdit)
+          {
+            <div class="form-group col-md-3 vertical-align ">
+              <div class="vertical-align-bottom">
+                <button type="submit" id="btnNewContactSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
+                <button type="button" id="btnNewContactReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
+                <button type="button" id="btnContactSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
+                <button type="button" id="btnContact" class="btn btn-sm btn-success">담당자 불러오기</button>
+              </div>
             </div>
-          </div>
+          }
         </div>
       }
     </div>
@@ -398,14 +406,18 @@
             <label class="form-control-label" for="tax_deposit_email">발행용 이메일</label>
             @Html.TextBoxFor(x => x.tax_deposit_email, new { @class = "form-control form-control-sm", @readonly = "readonly" })
           </div>
-          <div class="form-group col-md-3 vertical-align">
-            <div class="vertical-align-bottom">
-              <button type="submit" id="btnNewTaxSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
-              <button type="button" id="btnNewTaxReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
-              <button type="button" id="btnTaxSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
-              <button type="button" id="btnTax" class="btn btn-sm btn-success">계산서 담당 불러오기</button>
+          @*PMS 오픈 관련 등록기능 제한*@
+          @if (Univision.Security.AppIdentity.CanPmsEdit)
+          {
+            <div class="form-group col-md-3 vertical-align">
+              <div class="vertical-align-bottom">
+                <button type="submit" id="btnNewTaxSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
+                <button type="button" id="btnNewTaxReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
+                <button type="button" id="btnTaxSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
+                <button type="button" id="btnTax" class="btn btn-sm btn-success">계산서 담당 불러오기</button>
+              </div>
             </div>
-          </div>
+          }
         </div>
       }
 
@@ -418,9 +430,13 @@
       <h3 class="panel-title">
         <i class="fas fa-file-invoice-dollar"></i>
         Invoice
-        <button type="button" class="btn btn-sm btn-primary" id="btnCreateInvoice">
-          인보이스 생성
-        </button>
+        @*PMS 오픈 관련 등록기능 제한*@
+        @if (Univision.Security.AppIdentity.CanPmsEdit)
+        {
+          <button type="button" class="btn btn-sm btn-primary" id="btnCreateInvoice">
+            인보이스 생성
+          </button>
+        }
       </h3>
       <div class="panel-actions">
         <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>
@@ -733,7 +749,7 @@
             //인보이스 생성
             $("#btnCreateInvoice").click(function () {
               alert("화면 상단의 [인보이스 발행] 버튼을 통해 발행 부탁드립니다.");
-              
+
               return;
 
                 var valid_msg = ""

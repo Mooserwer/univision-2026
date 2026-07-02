@@ -183,10 +183,14 @@ else
   <div class="card">
     <div class="card-block text-center">
       <h4 class="card-title">계약 정보가 등록되지 않았습니다.</h4>
-      <p class="card-text">
-        "계약 정보 생성" 버튼을 눌러 계약정보를 입력하여 주십시오.
-      </p>
-      <a href="#" id="btn_create_contract" class="btn btn-sm btn-primary"><i class="fas fa-handshake"></i> 계약 정보 생성 <small>[New Contract]</small></a>
+      @*PMS 오픈 관련 등록기능 제한*@
+      @if (Univision.Security.AppIdentity.CanPmsEdit)
+      {
+        <p class="card-text">
+          "계약 정보 생성" 버튼을 눌러 계약정보를 입력하여 주십시오.
+        </p>
+        <a href="#" id="btn_create_contract" class="btn btn-sm btn-primary"><i class="fas fa-handshake"></i> 계약 정보 생성 <small>[New Contract]</small></a>
+      }
     </div>
   </div>
 }

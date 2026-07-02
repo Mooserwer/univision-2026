@@ -4,77 +4,81 @@
 
 @using (Html.BeginForm("CreateProjectFile", "Project", FormMethod.Post, new { @id = "FileCreateForm", @enctype = "multipart/form-data" }))
 {
+  @*PMS 오픈 관련 등록기능 제한*@
+  if (Univision.Security.AppIdentity.CanPmsEdit)
+  {
     @Html.HiddenFor(x => x.p_seq)
     <div class="col-md-12 row">
-        <div class="form-group col-md-2">
-            @Html.TextBox("file_type_name", "", new { @class = "form-control", @placeholder = "파일구분(Ex. 보고서, 참고자료)" })
-        </div>
-        <div class="col-md-10">
-            <button type="button" id="btnCreateFile" class="btn btn-sm btn-primary">등록</button>
-        </div>
+      <div class="form-group col-md-2">
+        @Html.TextBox("file_type_name", "", new { @class = "form-control", @placeholder = "파일구분(Ex. 보고서, 참고자료)" })
+      </div>
+      <div class="col-md-10">
+        <button type="button" id="btnCreateFile" class="btn btn-sm btn-primary">등록</button>
+      </div>
     </div>
     <div class="col-md-12 mb-30">
-        <input type="file" id="files" name="files" class="dropify" data-plugin="dropify" data-default-file="" data-height="100" data-errors-position="outside" />
+      <input type="file" id="files" name="files" class="dropify" data-plugin="dropify" data-default-file="" data-height="100" data-errors-position="outside" />
     </div>
+  }
 }
 
 <table class="table table-borderless">
-    <thead class="text-center">
+  <thead class="text-center">
+    <tr>
+      <th>No.</th>
+      <th>구분</th>
+      <th>파일명</th>
+      <th>파일</th>
+      <th>등록자</th>
+      <th>등록일</th>
+      <th>비고</th>
+    </tr>
+  </thead>
+  <tbody class="text-center">
+    @if (Model.list.Count > 0)
+    {
+      int num = (Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage + 1;
+      foreach (var data in Model.list)
+      {
         <tr>
-            <th>No.</th>
-            <th>구분</th>
-            <th>파일명</th>
-            <th>파일</th>
-            <th>등록자</th>
-            <th>등록일</th>
-            <th>비고</th>
-        </tr>
-    </thead>
-    <tbody class="text-center">
-        @if (Model.list.Count > 0)
-        {
-            int num = (Model.PagingInfo.CurrentPage - 1) * Model.PagingInfo.ItemsPerPage + 1;
-            foreach (var data in Model.list)
+          <td>
+            @(num++)
+          </td>
+          <td>
+            @data.file_type_name
+          </td>
+          <td>
+            @data.file_path
+          </td>
+          <td>
+            @if (!string.IsNullOrWhiteSpace(data.file_dir))
             {
-                <tr>
-                    <td>
-                        @(num++)
-                    </td>
-                    <td>
-                        @data.file_type_name
-                    </td>
-                    <td>
-                        @data.file_path
-                    </td>
-                    <td>
-                        @if (!string.IsNullOrWhiteSpace(data.file_dir))
-                        {
-                            <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.pf_seq, @type = "project" })">
-                                <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
-                            </a>
-                        }
-                    </td>
-                    <td>
-                        @data.create_user_name
-                    </td>
-                    <td>
-                        @Utils.ConvertDateTimeToString(data.create_dt)
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-warning" onclick="DeleteProjectFile('관련파일 삭제', '관련파일을 삭제 하시겠습니까?', '@data.pf_seq')">삭제</button>
-                    </td>
-                </tr>
+              <a href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.pf_seq, @type = "project" })">
+                <i class="far fa-fw @Utils.ReturnFileExtensionClass(data.file_extension)"></i>
+              </a>
             }
-        }
-        else
-        {
-            <tr>
-                <td colspan="7">
-                    등록된 관련파일이 없습니다.
-                </td>
-            </tr>
-        }
-    </tbody>
+          </td>
+          <td>
+            @data.create_user_name
+          </td>
+          <td>
+            @Utils.ConvertDateTimeToString(data.create_dt)
+          </td>
+          <td>
+            <button type="button" class="btn btn-sm btn-warning" onclick="DeleteProjectFile('관련파일 삭제', '관련파일을 삭제 하시겠습니까?', '@data.pf_seq')">삭제</button>
+          </td>
+        </tr>
+      }
+    }
+    else
+    {
+      <tr>
+        <td colspan="7">
+          등록된 관련파일이 없습니다.
+        </td>
+      </tr>
+    }
+  </tbody>
 </table>
 
 @Html.PageAjaxLinksWithFunction(Model.PagingInfo,

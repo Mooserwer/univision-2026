@@ -135,103 +135,110 @@
     <input autocomplete="off" class="form-control form-control-sm" id="progress_search_filter_txt" name="progress_search_filter_txt" placeholder="후보자 검색" type="text" value="">
   </div>
 </div>
-  <div class="row">
-    @if (Model.list.Count > 0)
+<div class="row">
+  @if (Model.list.Count > 0)
+  {
+    foreach (var data in Model.list)
     {
-      foreach (var data in Model.list)
+      int progress = 0;
+      string progressClass = "";
+      string borderClass = "border-secondary";
+
+      switch (data.state)
       {
-        int progress = 0;
-        string progressClass = "";
-        string borderClass = "border-secondary";
+        case ProjectHistoryStateCode.interest:
+        case ProjectHistoryStateCode.fail:
+          progress = 0;
+          progressClass = "";
+          break;
 
-        switch (data.state)
-        {
-          case ProjectHistoryStateCode.interest:
-          case ProjectHistoryStateCode.fail:
-            progress = 0;
-            progressClass = "";
-            break;
+        case ProjectHistoryStateCode.recommand:
+        case ProjectHistoryStateCode.paper:
+          progress = 25;
+          progressClass = "progress-bar-warning";
+          borderClass = "border-warning";
+          break;
 
-          case ProjectHistoryStateCode.recommand:
-          case ProjectHistoryStateCode.paper:
-            progress = 25;
-            progressClass = "progress-bar-warning";
-            borderClass = "border-warning";
-            break;
+        case ProjectHistoryStateCode.interview:
+        case ProjectHistoryStateCode.interviewOk:
+          progress = 50;
+          progressClass = "progress-bar-info";
+          borderClass = "border-info";
+          break;
 
-          case ProjectHistoryStateCode.interview:
-          case ProjectHistoryStateCode.interviewOk:
-            progress = 50;
-            progressClass = "progress-bar-info";
-            borderClass = "border-info";
-            break;
+        case ProjectHistoryStateCode.hireReady:
+          progress = 75;
+          progressClass = "progress-bar-primary";
+          borderClass = "border-primary";
+          break;
 
-          case ProjectHistoryStateCode.hireReady:
-            progress = 75;
-            progressClass = "progress-bar-primary";
-            borderClass = "border-primary";
-            break;
+        case ProjectHistoryStateCode.hireOk:
+          progress = 100;
+          progressClass = "progress-bar-success";
+          borderClass = "border-success";
+          break;
+      }
 
-          case ProjectHistoryStateCode.hireOk:
-            progress = 100;
-            progressClass = "progress-bar-success";
-            borderClass = "border-success";
-            break;
-        }
-
-        <div class="col-xxl-4 col-xl-6 col-md-12 pb-5 recans">
-          <div class="shadow p-3 mb-5 bg-white rounded border @borderClass p-3" style="border-radius : 3px;">
-            <div class="">
-              <span>
-                <span class="pr-5 d-inline-block">
-                  <div class="checkbox-custom checkbox-primary mt-0" title="Check for Request Makeup(메이크업 요청을 위해 체크)">
-                    <input type="checkbox" class="chk_request_makeup" id="request_makeup_@data.pic_seq" value="@data.pic_seq" data-c_seq="@data.c_seq">
-                    <label for="request_makeup_@data.c_seq"></label>
-                  </div>
-                </span>
-                @{
-                  string hover_title = String.Empty;
-                  hover_title = "후보자 상세정보(클릭 시 상세화면으로 이동)<br />";
-                  if (Univision.Security.AppIdentity.isExternal != 1)
-                  {
-                    hover_title += "<br/>-" + data.phone + " <br /> - " + data.email;
-                  }
-
-
-                  hover_title += "<br /> - " + data.final_school + " / " + data.final_major + " <br /> - " + data.company_name;
-                }
-                <a href="javascript:openCandidatePop('@data.c_seq')" data-html="true" data-toggle="popover" data-trigger="hover" data-content="@Html.Raw(hover_title)">
-                  @data.kor_name
-                  @if (data.birth_date.HasValue)
-                  {
-                    @("(" + Utils.ConvertDateTimeToString(data.birth_date).Substring(2, 2) + "년생")
-                  }
-
-                  @(" / " + Utils.ReturnGenderTxt(data.gender) + ")")
-                </a>
-                @if (data.pin_to_top == 1)
+      <div class="col-xxl-4 col-xl-6 col-md-12 pb-5 recans">
+        <div class="shadow p-3 mb-5 bg-white rounded border @borderClass p-3" style="border-radius : 3px;">
+          <div class="">
+            <span>
+              <span class="pr-5 d-inline-block">
+                <div class="checkbox-custom checkbox-primary mt-0" title="Check for Request Makeup(메이크업 요청을 위해 체크)">
+                  <input type="checkbox" class="chk_request_makeup" id="request_makeup_@data.pic_seq" value="@data.pic_seq" data-c_seq="@data.c_seq">
+                  <label for="request_makeup_@data.c_seq"></label>
+                </div>
+              </span>
+              @{
+                string hover_title = String.Empty;
+                hover_title = "후보자 상세정보(클릭 시 상세화면으로 이동)<br />";
+                if (Univision.Security.AppIdentity.isExternal != 1)
                 {
-                  <a href="javascript:ProjectSetPin('@data.prc_seq', 0)" title="고정 해제" class="text-warning"><i class="fa fa-fw fa-star"></i></a>
+                  hover_title += "<br/>-" + data.phone + " <br /> - " + data.email;
                 }
-                else
+
+
+                hover_title += "<br /> - " + data.final_school + " / " + data.final_major + " <br /> - " + data.company_name;
+              }
+              <a href="javascript:openCandidatePop('@data.c_seq')" data-html="true" data-toggle="popover" data-trigger="hover" data-content="@Html.Raw(hover_title)">
+                @data.kor_name
+                @if (data.birth_date.HasValue)
                 {
-                  <a href="javascript:ProjectSetPin('@data.prc_seq', 1)" title="상단에 고정" class="text-secondary"><i class="fa fa-fw fa-star"></i></a>
+                  @("(" + Utils.ConvertDateTimeToString(data.birth_date).Substring(2, 2) + "년생")
                 }
-                <span style="color:#1962bf">[@(Utils.ReturnProjectHistoryStateTxt(data.state))]</span>
-                &nbsp;
+
+                @(" / " + Utils.ReturnGenderTxt(data.gender) + ")")
+              </a>
+              @if (data.pin_to_top == 1)
+              {
+                <a href="javascript:ProjectSetPin('@data.prc_seq', 0)" title="고정 해제" class="text-warning"><i class="fa fa-fw fa-star"></i></a>
+              }
+              else
+              {
+                <a href="javascript:ProjectSetPin('@data.prc_seq', 1)" title="상단에 고정" class="text-secondary"><i class="fa fa-fw fa-star"></i></a>
+              }
+              <span style="color:#1962bf">[@(Utils.ReturnProjectHistoryStateTxt(data.state))]</span>
+              &nbsp;
+              @*PMS 오픈 관련 등록기능 제한*@
+              @if (Univision.Security.AppIdentity.CanPmsEdit)
+              {
                 <span style="cursor:pointer" onclick="ProjectProgressCreate(@data.pic_seq, @data.p_seq, @data.c_seq, '@data.kor_name')" title="진행사항 생성">
                   [<i class="fas fa-pen"></i> <small>Add</small>]
                 </span>
+              }
 
-                @*
-    @if (data.state == ProjectHistoryStateCode.interest)
-    {
-      <i class="fas fa-trash" style="cursor:pointer" onclick="DeleteProgress('@data.prc_seq')" title="잠재후보 제외"></i>
-    }
-                *@
+              @*
+                @if (data.state == ProjectHistoryStateCode.interest)
+                {
+                  <i class="fas fa-trash" style="cursor:pointer" onclick="DeleteProgress('@data.prc_seq')" title="잠재후보 제외"></i>
+                }
+              *@
 
 
-                @if (data.state == ProjectHistoryStateCode.hireOk && data.invoice_cnt == 0 && data.is_no_invoice == 0)
+              @if (data.state == ProjectHistoryStateCode.hireOk && data.invoice_cnt == 0 && data.is_no_invoice == 0)
+              {
+                @*PMS 오픈 관련 등록기능 제한*@
+                if (Univision.Security.AppIdentity.CanPmsEdit)
                 {
                   <span class="image blinking">
                     <span style="cursor:pointer;" onclick="ProjectInvoiceCreate(@data.p_seq, @data.c_seq, '0')" title="인보이스 발행">
@@ -240,115 +247,116 @@
                     </span>
                   </span>
                 }
-
-
-
-                <span class="float-right">
-                  추천자 - @data.create_name
-                  <i class="fas fa-list-alt" style="cursor:pointer" onclick="ProjectProgressHistoryList(@data.pic_seq, '@data.kor_name')" title="진행사항 리스트"></i>
-                </span>
-
-              </span>
-            </div>
-            <h5 class="small">
-              [@Utils.ConvertDateTimeToString(data.schedule_date)] @data.contents 
-              
-              @if (data.pa_seq > 0)
-              {
-                if (data.agree_dt != null)
-                {
-                  <span class="badge badge-primary" title="개인정보 수집 및 제공 동의 완료 (@Utils.ConvertDateTimeToString(data.agree_dt))">동의완료 됨</span>
-                }
-                else
-                {
-                  <span class="badge badge-info" title="개인정보 수집 및 제공 동의 요청 발송 (@Utils.ConvertDateTimeToString(data.send_dt))">동의요청 중</span>
-                }
               }
-              @if (!string.IsNullOrWhiteSpace(data.file_directory))
+
+
+
+              <span class="float-right">
+                추천자 - @data.create_name
+                <i class="fas fa-list-alt" style="cursor:pointer" onclick="ProjectProgressHistoryList(@data.pic_seq, '@data.kor_name')" title="진행사항 리스트"></i>
+              </span>
+
+            </span>
+          </div>
+          <h5 class="small">
+            [@Utils.ConvertDateTimeToString(data.schedule_date)] @data.contents
+
+            @if (data.pa_seq > 0)
+            {
+              if (data.agree_dt != null)
               {
-                <a href="@data.file_directory" title="첨부파일 다운로드" download>
-                  <i class="fas fa-file"></i>
+                <span class="badge badge-primary" title="개인정보 수집 및 제공 동의 완료 (@Utils.ConvertDateTimeToString(data.agree_dt))">동의완료 됨</span>
+              }
+              else
+              {
+                <span class="badge badge-info" title="개인정보 수집 및 제공 동의 요청 발송 (@Utils.ConvertDateTimeToString(data.send_dt))">동의요청 중</span>
+              }
+            }
+            @if (!string.IsNullOrWhiteSpace(data.file_directory))
+            {
+              <a href="@data.file_directory" title="첨부파일 다운로드" download>
+                <i class="fas fa-file"></i>
+              </a>
+            }
+          </h5>
+          <div class="progress mb-5" data-labeltype="percentage" data-goal="-40" data-plugin="progress">
+            <div class="progress-bar @progressClass" aria-valuemin="-100" aria-valuemax="0" aria-valuenow="-80" role="progressbar" style="width:@(progress)%;">
+              <span class="progress-label">@(progress)% - @(Utils.ReturnProjectHistoryStateTxt(data.state))</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 col-6 text-center">
+              @if (!string.IsNullOrWhiteSpace(data.final_kor_resume_dir))
+              {
+                <a class="badge badge-outline badge-primary" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_kor_cr_seq, @type = "canResume" })" title="국문원본이력서 : @data.final_kor_resume_name">
+                  <i class="fas fa-file"></i> Resume(Kor)
+                  <br />(@Utils.ConvertDateTimeToString(data.final_kor_resume_date))
                 </a>
               }
-            </h5>
-            <div class="progress mb-5" data-labeltype="percentage" data-goal="-40" data-plugin="progress">
-              <div class="progress-bar @progressClass" aria-valuemin="-100" aria-valuemax="0" aria-valuenow="-80" role="progressbar" style="width:@(progress)%;">
-                <span class="progress-label">@(progress)% - @(Utils.ReturnProjectHistoryStateTxt(data.state))</span>
-              </div>
+              else
+              {
+                <span class="badge badge-outline badge-secondary" title="No Kor Resume File">
+                  <i class="fas fa-file"></i> Resume(Kor)
+                  <br /> &nbsp;
+                </span>
+              }
             </div>
+            <div class="col-md-3 col-6 text-center">
+              @if (!string.IsNullOrWhiteSpace(data.final_mkor_resume_dir))
+              {
+                <a class="badge badge-primary" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_mkor_cr_seq, @type = "canResume" })" title="국문Makeup : @data.final_mkor_resume_name">
+                  <i class="fas fa-file"></i> Makeup(Kor)
+                  <br />(@Utils.ConvertDateTimeToString(data.final_mkor_resume_date))
+                </a>
+              }
+              else
+              {
+                <span class="badge badge-secondary" title="No Kor Makeup File">
+                  <i class="fas fa-file"></i> Makeup(Kor)
+                  <br />&nbsp;
+                </span>
+              }
+            </div>
+            <div class="col-md-3 col-6 text-center">
+              @if (!string.IsNullOrWhiteSpace(data.final_eng_resume_dir))
+              {
+                <a class="badge badge-outline badge-info" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_eng_cr_seq, @type = "canResume" })" title="영문원본이력서 : @data.final_eng_resume_name" download>
+                  <i class="fas fa-file"></i> Resume(Eng)
+                  <br />(@Utils.ConvertDateTimeToString(data.final_eng_resume_date))
+                </a>
+              }
+              else
+              {
+                <span class="badge badge-outline badge-secondary" title="No Eng Resume File">
+                  <i class="fas fa-file"></i> Resume(Eng)
+                  <br />&nbsp;
+                </span>
+              }
 
-            <div class="row">
-              <div class="col-md-3 col-6 text-center">
-                @if (!string.IsNullOrWhiteSpace(data.final_kor_resume_dir))
-                {
-                  <a class="badge badge-outline badge-primary" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_kor_cr_seq, @type = "canResume" })" title="국문원본이력서 : @data.final_kor_resume_name">
-                    <i class="fas fa-file"></i> Resume(Kor)
-                    <br />(@Utils.ConvertDateTimeToString(data.final_kor_resume_date))
-                  </a>
-                }
-                else
-                {
-                  <span class="badge badge-outline badge-secondary" title="No Kor Resume File">
-                    <i class="fas fa-file"></i> Resume(Kor)
-                    <br /> &nbsp;
-                  </span>
-                }
-              </div>
-              <div class="col-md-3 col-6 text-center">
-                @if (!string.IsNullOrWhiteSpace(data.final_mkor_resume_dir))
-                {
-                  <a class="badge badge-primary" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_mkor_cr_seq, @type = "canResume" })" title="국문Makeup : @data.final_mkor_resume_name">
-                    <i class="fas fa-file"></i> Makeup(Kor)
-                    <br />(@Utils.ConvertDateTimeToString(data.final_mkor_resume_date))
-                  </a>
-                }
-                else
-                {
-                  <span class="badge badge-secondary" title="No Kor Makeup File">
-                    <i class="fas fa-file"></i> Makeup(Kor)
-                    <br />&nbsp;
-                  </span>
-                }
-              </div>
-              <div class="col-md-3 col-6 text-center">
-                @if (!string.IsNullOrWhiteSpace(data.final_eng_resume_dir))
-                {
-                  <a class="badge badge-outline badge-info" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_eng_cr_seq, @type = "canResume" })" title="영문원본이력서 : @data.final_eng_resume_name" download>
-                    <i class="fas fa-file"></i> Resume(Eng)
-                    <br />(@Utils.ConvertDateTimeToString(data.final_eng_resume_date))
-                  </a>
-                }
-                else
-                {
-                  <span class="badge badge-outline badge-secondary" title="No Eng Resume File">
-                    <i class="fas fa-file"></i> Resume(Eng)
-                    <br />&nbsp;
-                  </span>
-                }
-
-              </div>
-              <div class="col-md-3 col-6 text-center">
-                @if (!string.IsNullOrWhiteSpace(data.final_meng_resume_dir))
-                {
-                  <a class="badge badge-info" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_meng_cr_seq, @type = "canResume" })" title="영문Makeup : @data.final_meng_resume_name" download>
-                    <i class="fas fa-file"></i> Makeup(Eng)
-                    <br />(@Utils.ConvertDateTimeToString(data.final_meng_resume_date))
-                  </a>
-                }
-                else
-                {
-                  <span class="badge badge-secondary" title="No Eng Makeup File">
-                    <i class="fas fa-file"></i> Makeup(Eng)
-                    <br />&nbsp;
-                  </span>
-                }
-              </div>
+            </div>
+            <div class="col-md-3 col-6 text-center">
+              @if (!string.IsNullOrWhiteSpace(data.final_meng_resume_dir))
+              {
+                <a class="badge badge-info" href="@Url.Action("Download", "DownloadFile", new { @element_seq = data.final_meng_cr_seq, @type = "canResume" })" title="영문Makeup : @data.final_meng_resume_name" download>
+                  <i class="fas fa-file"></i> Makeup(Eng)
+                  <br />(@Utils.ConvertDateTimeToString(data.final_meng_resume_date))
+                </a>
+              }
+              else
+              {
+                <span class="badge badge-secondary" title="No Eng Makeup File">
+                  <i class="fas fa-file"></i> Makeup(Eng)
+                  <br />&nbsp;
+                </span>
+              }
             </div>
           </div>
         </div>
-      }
+      </div>
     }
-  </div>
+  }
+</div>
 
 @Html.PageAjaxLinksWithFunction(Model.PagingInfo,
                          ViewContext.HttpContext.Request.Url.AbsoluteUri,

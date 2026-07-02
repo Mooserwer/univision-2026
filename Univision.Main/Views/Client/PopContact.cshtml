@@ -1,206 +1,209 @@
 ﻿@model Univision.Main.Models.Client.ClientPopupModel
 @{
-    Layout = null;
+  Layout = null;
 }
-    <div class="container">
-        @using (Html.BeginForm("ClientContactCreate", "Client", FormMethod.Post, new { @id = "ContactCreateForm" }))
-        {
-            <div class="row">
-                <input type="hidden" id="ccSeq" name="ccSeq" value="@Model.data.cc_seq" />
-                <input type="hidden" id="cSeq" name="cSeq" value="@Model.data.c_seq" />
-                <div class="col-md-6 form-group">
-                    <label class="form-control-label small" for="name" title="담당자명">Contact Name</label><span class="label-reqired">*</span>
-                    @Html.TextBox("name", Model.data.name, new { @class = "form-control form-control-sm" })
-                </div>
-                <div class="col-md-6 form-group">
-                    <label class="form-control-label small" for="gender1" title="성별">Gender</label><span class="label-reqired">*</span>
-                    <div class="form-inline">
-                        <div class="radio-custom radio-custom-sm radio-primary">
-                            <input type="radio" id="gender1" name="gender" value="1" @(Model.data.gender == 1 ? "checked" : "") />
-                            <label for="gender1">Male</label>
-                        </div>
-                        <div class="radio-custom radio-custom-sm radio-primary ml-10">
-                            <input type="radio" id="gender2" name="gender" value="2" @(Model.data.gender == 2 ? "checked" : "") />
-                            <label for="gender2">Female</label>
-                        </div>
-                        <div class="radio-custom radio-custom-sm radio-primary ml-10">
-                            <input type="radio" id="gender3" name="gender" value="3" @(Model.data.gender == 3 ? "checked" : "") />
-                            <label for="gender3">모름</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 form-group">
-                    <label class="form-control-label small" for="position" title="직급">Position</label><span class="label-reqired">*</span>
-                    @Html.TextBox("position", Model.data.position, new { @class = "form-control form-control-sm" })
-                </div>
-                <div class="col-md-6 form-group">
-                    <label class="form-control-label small" for="division" title="부서">Department</label><span class="label-reqired">*</span>
-                    @Html.TextBox("division", Model.data.division, new { @class = "form-control form-control-sm" })
-                </div>
-
-
-
-                <div class="col-md-6 form-group">
-                    <label class="form-control-label small" for="email" title="이메일">E-mail</label><span class="label-reqired">*</span>
-                    @Html.TextBox("email", Model.data.email, new { @class = "form-control form-control-sm" })
-                </div>
-                <div class="w-md-100"></div>
-                <div class="col-md-6 form-group">
-                    <label class="form-control-label small" for="cell_phone" title="휴대전화">Mobile</label><span class="label-reqired">*</span>
-                    @Html.TextBox("cell_phone", Model.data.cell_phone, new { @class = "form-control form-control-sm" })
-                </div>
-                <div class="col-md-6 form-group">
-                    <label class="form-control-label small" for="phone" title="전화번호">Phone</label>
-                    @Html.TextBox("phone", Model.data.phone, new { @class = "form-control form-control-sm" })
-                </div>
-                <div class="col-md-12 form-group">
-                    <label class="form-control-label small" for="memo" title="담당자 메모">Memo</label>
-                    @Html.TextBox("memo", Model.data.memo, new { @class = "form-control form-control-sm" })
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 text-right pt-5">
-                    <button type="submit" id="ContactSaveBtn" class="btn btn-sm btn-primary w-100" title="저장하기">
-                        <i class="icon wb-check"></i>
-                        Submit
-                    </button>
-                </div>
-
-            </div>
-
-        }
+<div class="container">
+  @using (Html.BeginForm("ClientContactCreate", "Client", FormMethod.Post, new { @id = "ContactCreateForm" }))
+  {
+    <div class="row">
+      <input type="hidden" id="ccSeq" name="ccSeq" value="@Model.data.cc_seq" />
+      <input type="hidden" id="cSeq" name="cSeq" value="@Model.data.c_seq" />
+      <div class="col-md-6 form-group">
+        <label class="form-control-label small" for="name" title="담당자명">Contact Name</label><span class="label-reqired">*</span>
+        @Html.TextBox("name", Model.data.name, new { @class = "form-control form-control-sm" })
+      </div>
+      <div class="col-md-6 form-group">
+        <label class="form-control-label small" for="gender1" title="성별">Gender</label><span class="label-reqired">*</span>
+        <div class="form-inline">
+          <div class="radio-custom radio-custom-sm radio-primary">
+            <input type="radio" id="gender1" name="gender" value="1" @(Model.data.gender == 1 ? "checked" : "") />
+            <label for="gender1">Male</label>
+          </div>
+          <div class="radio-custom radio-custom-sm radio-primary ml-10">
+            <input type="radio" id="gender2" name="gender" value="2" @(Model.data.gender == 2 ? "checked" : "") />
+            <label for="gender2">Female</label>
+          </div>
+          <div class="radio-custom radio-custom-sm radio-primary ml-10">
+            <input type="radio" id="gender3" name="gender" value="3" @(Model.data.gender == 3 ? "checked" : "") />
+            <label for="gender3">모름</label>
+          </div>
         </div>
-        <script type="text/javascript">
-
-
-            var phoneValidator = {
-                validators: {
-                    selector: "phone",
-                    callback: {
-                        message: "전화번호 혹은 휴대폰 번호 중 한 개의 번호는 입력 하셔야 합니다.",
-                        callback: function (input) {
-                            var fv = $("#ContactCreateForm").data("formValidation");
-
-                            let isEmpty = true;
-
-                            if ($("#phone").val() != "" || $("#cell_phone").val() != "") {
-                                isEmpty = false;
-                            }
-
-                            if (!isEmpty) {
-                                // Update the status of callback validator for all fields
-                                fv.updateStatus('phone', 'Valid', 'callback');
-                                fv.updateStatus('cell_phone', 'Valid', 'callback');
-                                return true;
-                            }
-
-                            return false;
-                        }
-                    }
-                }
-            };
-
-            $(document).ready(function () {
-
-                //$("#cell_phone").change(function () {
-                //    $('#ContactCreateForm').formValidation('revalidateField', 'cell_phone');
-                //});
-
-                StopEnterSubmit();
-
-                $("#ContactCreateForm").formValidation({
-                    framework: "bootstrap4",
-                    button: {
-                        selector: "#ContactSaveBtn",
-                        disabled: "disabled"
-                    },
-                    submitHandler: function () {
-                    },
-                    icon: null,
-                    fields: {
-                        name: {
-                            validators: {
-                                notEmpty: true
-                            }
-                        },
-                        gender: {
-                            validators: {
-                                notEmpty: true
-                            }
-                        },
-                        division: {
-                            validators: {
-                                notEmpty: true
-
-                            }
-                        },
-                        position: {
-                            validators: {
-                                notEmpty: true
-                            }
-                        },
-                        email: {
-                            validators: {
-                                notEmpty: true
-                            }
-                        },
-                        phone: phoneValidator,
-                        cell_phone: phoneValidator,
-                    },
-                    err: {
-                        clazz: "invalid-feedback"
-                    },
-                    control: {
-                        valid: "is-valid",
-                        invalid: "is-invalid"
-                    },
-                    row: {
-                        invalid: "has-danger"
-                    }
-                })
-                    .on('success.form.fv', function (e) {
-                        e.preventDefault();
-                        //debugger;
-                        var formURL = $("#ContactCreateForm").attr("action");
-
-                        $.ajax({
-                            url: formURL,
-                            type: "POST",
-                            dataType: 'json',
-                            data: {
-                                name: $("#name").val(),
-                                gender: $('input[name="gender"]:checked').val(),
-                                division: $("#division").val(),
-                                position: $("#position").val(),
-                                email: $("#email").val(),
-                                phone: $("#phone").val(),
-                                cell_phone: $("#cell_phone").val(),
-                                memo: $("#memo").val(),
-                                ccSeq: $("#ccSeq").val(),
-                                cSeq: $("#cSeq").val(),
-                                c_seq: $("#c_seq").val()
-                            },
-                            beforeSend: function () {
-                                showLoading("#ContactCreateForm");
-                            },
-                            success: function (json) {
-                                hideLoading("#ContactCreateForm");
-                                if (json.ok) {
-                                    location.reload();
-                                }
-                                else {
-                                    ErrorAlert(json.message);
-                                }
-                            },
-                            error: function (jqXHR, textStatus, errorThrown) {
-                                hideLoading("#ContactCreateForm");
-                                ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요1.");
-                            }
-                        });
-                    });
-            });
+      </div>
+      <div class="col-md-6 form-group">
+        <label class="form-control-label small" for="position" title="직급">Position</label><span class="label-reqired">*</span>
+        @Html.TextBox("position", Model.data.position, new { @class = "form-control form-control-sm" })
+      </div>
+      <div class="col-md-6 form-group">
+        <label class="form-control-label small" for="division" title="부서">Department</label><span class="label-reqired">*</span>
+        @Html.TextBox("division", Model.data.division, new { @class = "form-control form-control-sm" })
+      </div>
 
 
 
+      <div class="col-md-6 form-group">
+        <label class="form-control-label small" for="email" title="이메일">E-mail</label><span class="label-reqired">*</span>
+        @Html.TextBox("email", Model.data.email, new { @class = "form-control form-control-sm" })
+      </div>
+      <div class="w-md-100"></div>
+      <div class="col-md-6 form-group">
+        <label class="form-control-label small" for="cell_phone" title="휴대전화">Mobile</label><span class="label-reqired">*</span>
+        @Html.TextBox("cell_phone", Model.data.cell_phone, new { @class = "form-control form-control-sm" })
+      </div>
+      <div class="col-md-6 form-group">
+        <label class="form-control-label small" for="phone" title="전화번호">Phone</label>
+        @Html.TextBox("phone", Model.data.phone, new { @class = "form-control form-control-sm" })
+      </div>
+      <div class="col-md-12 form-group">
+        <label class="form-control-label small" for="memo" title="담당자 메모">Memo</label>
+        @Html.TextBox("memo", Model.data.memo, new { @class = "form-control form-control-sm" })
+      </div>
+    </div>
+    @*PMS 오픈 관련 등록기능 제한*@
+    if (Univision.Security.AppIdentity.CanPmsEdit)
+    {
+      <div class="row">
+        <div class="col-12 text-right pt-5">
+          <button type="submit" id="ContactSaveBtn" class="btn btn-sm btn-primary w-100" title="저장하기">
+            <i class="icon wb-check"></i>
+            Submit
+          </button>
+        </div>
 
-        </script>
+      </div>
+    }
+  }
+</div>
+<script type="text/javascript">
+
+
+  var phoneValidator = {
+    validators: {
+      selector: "phone",
+      callback: {
+        message: "전화번호 혹은 휴대폰 번호 중 한 개의 번호는 입력 하셔야 합니다.",
+        callback: function (input) {
+          var fv = $("#ContactCreateForm").data("formValidation");
+
+          let isEmpty = true;
+
+          if ($("#phone").val() != "" || $("#cell_phone").val() != "") {
+            isEmpty = false;
+          }
+
+          if (!isEmpty) {
+            // Update the status of callback validator for all fields
+            fv.updateStatus('phone', 'Valid', 'callback');
+            fv.updateStatus('cell_phone', 'Valid', 'callback');
+            return true;
+          }
+
+          return false;
+        }
+      }
+    }
+  };
+
+  $(document).ready(function () {
+
+    //$("#cell_phone").change(function () {
+    //    $('#ContactCreateForm').formValidation('revalidateField', 'cell_phone');
+    //});
+
+    StopEnterSubmit();
+
+    $("#ContactCreateForm").formValidation({
+      framework: "bootstrap4",
+      button: {
+        selector: "#ContactSaveBtn",
+        disabled: "disabled"
+      },
+      submitHandler: function () {
+      },
+      icon: null,
+      fields: {
+        name: {
+          validators: {
+            notEmpty: true
+          }
+        },
+        gender: {
+          validators: {
+            notEmpty: true
+          }
+        },
+        division: {
+          validators: {
+            notEmpty: true
+
+          }
+        },
+        position: {
+          validators: {
+            notEmpty: true
+          }
+        },
+        email: {
+          validators: {
+            notEmpty: true
+          }
+        },
+        phone: phoneValidator,
+        cell_phone: phoneValidator,
+      },
+      err: {
+        clazz: "invalid-feedback"
+      },
+      control: {
+        valid: "is-valid",
+        invalid: "is-invalid"
+      },
+      row: {
+        invalid: "has-danger"
+      }
+    })
+      .on('success.form.fv', function (e) {
+        e.preventDefault();
+        //debugger;
+        var formURL = $("#ContactCreateForm").attr("action");
+
+        $.ajax({
+          url: formURL,
+          type: "POST",
+          dataType: 'json',
+          data: {
+            name: $("#name").val(),
+            gender: $('input[name="gender"]:checked').val(),
+            division: $("#division").val(),
+            position: $("#position").val(),
+            email: $("#email").val(),
+            phone: $("#phone").val(),
+            cell_phone: $("#cell_phone").val(),
+            memo: $("#memo").val(),
+            ccSeq: $("#ccSeq").val(),
+            cSeq: $("#cSeq").val(),
+            c_seq: $("#c_seq").val()
+          },
+          beforeSend: function () {
+            showLoading("#ContactCreateForm");
+          },
+          success: function (json) {
+            hideLoading("#ContactCreateForm");
+            if (json.ok) {
+              location.reload();
+            }
+            else {
+              ErrorAlert(json.message);
+            }
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            hideLoading("#ContactCreateForm");
+            ErrorAlert("알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요1.");
+          }
+        });
+      });
+  });
+
+
+
+
+</script>

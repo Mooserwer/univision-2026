@@ -154,14 +154,16 @@
       frozenRows: 0,
       columns: [
         { formatter: "rownum", hozAlign: "center", width: 40 },
-
-
+        @*PMS 오픈 관련 등록기능 제한*@
+          @if (Univision.Security.AppIdentity.CanPmsEdit)
+          {
+        <text>
         {
           title: "", field: "", frozen: true, width: 150, hozAlign: "center", formatter: function (cell, formatterParams) {
             var invoice_status = cell.getData().invoice_status;
             var p_seq = cell.getData().p_seq;
             var pii_seq = cell.getData().pii_seq;
-            
+
             if (invoice_status == "발행 전") {
               var pic_seq = cell.getData().pic_seq;
               return "<button type='button' class='btn btn-sm btn-primary p-1 font-size-12' onclick='goContengencyInvoice(\"" + p_seq + "\", \"" + pic_seq + "\")'>성공 발행</button>";
@@ -181,70 +183,72 @@
               }
             }
           }},
-        //{ title: "월", field: "mon", sorter: "string", hozAlign: "center", width:100},
-        //{ title: "종료/재진행사유", field: "status_comment", sorter: "string", width: 100 },
+        </text>
+              }
+              //{ title: "월", field: "mon", sorter: "string", hozAlign: "center", width:100},
+              //{ title: "종료/재진행사유", field: "status_comment", sorter: "string", width: 100 },
 
-        //{ title: "프로젝트코드", field: "p_seq", sorter: "number", hozAlign: "right", editor: false, frozen: true },
+              //{ title: "프로젝트코드", field: "p_seq", sorter: "number", hozAlign: "right", editor: false, frozen: true },
 
-        //{ title: "종료/재진행사유", field: "status_comment", sorter: "string", width: 100 },
+              //{ title: "종료/재진행사유", field: "status_comment", sorter: "string", width: 100 },
+              {
+              title: "종류", field: "invoice_type_name", sorter: "string", hozAlign: "center", width: 100
+              },
         {
-          title: "종류", field: "invoice_type_name", sorter: "string", hozAlign: "center", width: 100
-        },
-        {
-          title: "상태", field: "invoice_status", sorter: "string", hozAlign: "center", width: 100,
+              title: "상태", field: "invoice_status", sorter: "string", hozAlign: "center", width: 100,
           formatter: function (cell, formatterParams) {
-            var value = cell.getValue();
+                  var value = cell.getValue();
 
-            if (value == "승인대기") {
-              return "<span class='text-warning text-bold'>발행요청<br/>(승인대기)</span>";
-            } else if (value == "승인") {
-              return "<span class='text-success text-bold'>승인완료</span>";
-            }else if (value == "발송완료") {
-                return "<span class='text-success text-bold'>" + value + "</span>";
-            } else {
-              return value;
-            }
-          }
-        },
+                  if (value == "승인대기") {
+                    return "<span class='text-warning text-bold'>발행요청<br/>(승인대기)</span>";
+                  } else if (value == "승인") {
+                    return "<span class='text-success text-bold'>승인완료</span>";
+                  }else if (value == "발송완료") {
+                    return "<span class='text-success text-bold'>" + value + "</span>";
+                  } else {
+                    return value;
+                  }
+                }
+              },
         { title: "신청자", field: "request_user_name", sorter: "string", width: 100, headerFilter: "input" },
         { title: "발행요청일", field: "billing_dt_str", sorter: "string", hozAlign: "center", width: 100 },
         { title: "보증일", field: "expire_guarantee_str", sorter: "string", hozAlign: "center", width: 100 },
         { title: "고객사명", field: "client_name", sorter: "string", width: 100, headerFilter: "input", formatter: function (cell, formatterParams) {
-          var client_name = cell.getValue();
-          var client_seq = cell.getData().client_seq;
-          return '<a href="@Url.Action("ClientDetail", "Client")?c_seq=' + client_seq + '" target="_blank">' + client_name+'</a>'
+                  var client_name = cell.getValue();
+                  var client_seq = cell.getData().client_seq;
+                  return '<a href="@Url.Action("ClientDetail", "Client")?c_seq=' + client_seq + '" target="_blank">' + client_name+'</a>'
          }},
         { title: "프로젝트종류", field: "pjt_type_str", sorter: "string", headerFilter: "input" },
         { title: "구인제목", field: "title", sorter: "string", headerFilter: "input", width: 150, formatter: function (cell, formatterParams) {
-            var title = cell.getValue();
-            var p_seq = cell.getData().p_seq;
-            var pjt_type = cell.getData().pjt_type;
+                  var title = cell.getValue();
+                  var p_seq = cell.getData().p_seq;
+                  var pjt_type = cell.getData().pjt_type;
 
-            if (pjt_type == 1) {
-              return '<a href="@Url.Action("ProjectDetail", "Project")?p_seq=' + p_seq + '" target="_blank">'+title+'</a>'
-            } else {
-              return '<a href="@Url.Action("ProjectRepDetail", "Project")?p_seq=' + p_seq + '" target="_blank">'+title+'</a>'
+                  if (pjt_type == 1) {
+                    return '<a href="@Url.Action("ProjectDetail", "Project")?p_seq=' + p_seq + '" target="_blank">'+title+'</a>'
+                  } else {
+                    return '<a href="@Url.Action("ProjectRepDetail", "Project")?p_seq=' + p_seq + '" target="_blank">'+title+'</a>'
             }
 
-          } },
+                } },
         { title: "AM", field: "director_name", sorter: "string", headerFilter: "input" },
         { title: "SM", field: "manager_name", sorter: "string", headerFilter: "input" },
         { title: "비고", field: "share_name", sorter: "string", hozAlign: "center", width: 250, headerFilter: "input" },
         {
-          title: "빌링금액", field: "billing_money", formatter: "money", sorter: "number", hozAlign: "right", width: 150,
+              title: "빌링금액", field: "billing_money", formatter: "money", sorter: "number", hozAlign: "right", width: 150,
           formatterParams: { decimal: ".", thousand: ",", negativeSign: true, precision: false, },
         },
         { title: "단위", field: "bill_currency_cd", sorter: "string", hozAlign: "center", width: 50 },
         { title: "VAT구분", field: "vat_type_str", sorter: "string", hozAlign: "center", width: 80 },
         { title: "수수료율", field: "fee_rate_str", sorter: "string", hozAlign: "center", width: 100},
         { title: "후보자", field: "candidate_name", sorter: "string", hozAlign: "center", width: 150, headerFilter: "input", formatter: function (cell, formatterParams) {
-          var candidate_name = cell.getValue();
-          var candidate_seq = cell.getData().candidate_seq;
-          return '<a href="@Url.Action("CandidateDetail", "Candidate")?c_seq=' + candidate_seq + '" target="_blank">' + candidate_name+'</a>'
+                  var candidate_name = cell.getValue();
+                  var candidate_seq = cell.getData().candidate_seq;
+                  return '<a href="@Url.Action("CandidateDetail", "Candidate")?c_seq=' + candidate_seq + '" target="_blank">' + candidate_name+'</a>'
          } },
         { title: "입사일", field: "join_dt_str", sorter: "string", hozAlign: "center", width: 100 },
         {
-          title: "연봉", field: "ann_income", formatter: "money", sorter: "number", hozAlign: "right", width: 150,
+              title: "연봉", field: "ann_income", formatter: "money", sorter: "number", hozAlign: "right", width: 150,
           formatterParams: { decimal: ".", thousand: ",", negativeSign: true, precision: false, },
           //accessorDownload: numberConvert
         },
@@ -272,12 +276,12 @@
       ajaxContentType: "json",
 
       ajaxResponse: function (url, params, response) {
-        //url - the URL of the request
-        //params - the parameters passed with the request
-        //response - the JSON object returned in the body of the response.
+              //url - the URL of the request
+              //params - the parameters passed with the request
+              //response - the JSON object returned in the body of the response.
 
-        return response.list; //return the tableData property of a response json object
-      },
+              return response.list; //return the tableData property of a response json object
+            },
       pagination: "local",
       paginationSize: 100,
       paginationSizeSelector: [10, 20, 30, 50, 100],

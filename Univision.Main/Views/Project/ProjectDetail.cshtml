@@ -132,96 +132,100 @@
     </div>
   </div>
   <!-- 공유 프로젝트 끝-->
-  <div class="panel">
-    <div class="panel-heading">
-      <h3 class="panel-title"></h3>
+  @*PMS 오픈 관련 등록기능 제한*@
+  @if (Univision.Security.AppIdentity.CanPmsEdit)
+  {
+    <div class="panel">
+      <div class="panel-heading">
+        <h3 class="panel-title"></h3>
 
 
-      <div class="panel-actions">
+        <div class="panel-actions">
 
-        <div class="panel-action">
-          @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
-          {
-            if (Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
+          <div class="panel-action">
+            @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
             {
-              if (Model.is_my_key == 1)
+              if (Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
               {
-                <button type="button" class="btn btn-sm btn-warning btn-outline" id="btnSetKeyPjt" onclick="cancelMyKeyProject(@Model.p_seq)" title="Remove from key project">
-                  <i class="fa fa-key"></i>
-                  Key 프로젝트 해제
-                </button>
+                if (Model.is_my_key == 1)
+                {
+                  <button type="button" class="btn btn-sm btn-warning btn-outline" id="btnSetKeyPjt" onclick="cancelMyKeyProject(@Model.p_seq)" title="Remove from key project">
+                    <i class="fa fa-key"></i>
+                    Key 프로젝트 해제
+                  </button>
+                }
+                else
+                {
+                  <button type="button" class="btn btn-sm btn-success btn-outline" id="btnSetKeyPjt" onclick="SetMyKeyProject(@Model.p_seq)" title="Set as key project">
+                    <i class="fa fa-key"></i>
+                    Key 프로젝트로 설정
+                  </button>
+
+                }
+              }
+              if (Model.pjt_status == 1)
+              {
+
+                <span class="pr-20">
+                  @if (Model.is_share_3m == 1)
+                  {
+                    <button type="button" class="btn btn-sm btn-danger" onclick="cancelShareProject(this, @Model.p_seq)" title="공유 취소/마감">Cancel Share</button>
+
+                  }
+                  else
+                  {
+                    <button type="button" class="btn btn-sm btn-primary" onclick="shareProject(this, @Model.p_seq)" title="프로젝트 공유하기">Share</button>
+                  }
+                  @if (Model.is_cowork == 1)
+                  {
+                    <button type="button" class="btn btn-sm btn-warning" onclick="cancelCoWorkProject(this, @Model.p_seq)" title="Co-work 취소/마감">Cancel Cowork</button>
+                  }
+                  else
+                  {
+                    <button type="button" class="btn btn-sm btn-info" onclick="CoWorkAlram(@Model.p_seq)" title="Co-work 요청">Cowork</button>
+
+                  }
+                </span>
+                <button type="button" class="btn btn-sm btn-primary" id="btnPjtState">프로젝트 상태변경</button>
+                <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq, @c_seq = Model.c_seq, @type = "pjtCopy" })" class="btn btn-sm btn-info" title="이 프로젝트 복사">
+                  Copy
+                </a>
+
               }
               else
               {
-                <button type="button" class="btn btn-sm btn-success btn-outline" id="btnSetKeyPjt" onclick="SetMyKeyProject(@Model.p_seq)" title="Set as key project">
-                  <i class="fa fa-key"></i>
-                  Key 프로젝트로 설정
-                </button>
-
+                @*PMS 오픈 관련 등록기능 제한*@
+                if (Univision.Security.AppIdentity.CanPmsEdit)
+                {
+                  <button type="button" class="btn btn-sm btn-warning" id="btnPjtState">프로젝트 상태변경</button>
+                  <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq, @c_seq = Model.c_seq, @type = "pjtCopy" })" class="btn btn-sm btn-info" title="이 프로젝트 복사">
+                    Copy
+                  </a>
+                }
               }
+              <button type="button" class="btn btn-sm btn-success border-primary" id="btnCreateInvoice" onclick="CreateInvoice(@Model.p_seq)" title="인보이스 발행(채용, 선수금, 취소 등)">
+                <i class="fa fa-file-invoice"></i>
+                인보이스 발행 (Invoice)
+              </button>
             }
-            if (Model.pjt_status == 1)
+            @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
             {
-
-              <span class="pr-20">
-                @if (Model.is_share_3m == 1)
-                {
-                  <button type="button" class="btn btn-sm btn-danger" onclick="cancelShareProject(this, @Model.p_seq)" title="공유 취소/마감">Cancel Share</button>
-
-                }
-                else
-                {
-                  <button type="button" class="btn btn-sm btn-primary" onclick="shareProject(this, @Model.p_seq)" title="프로젝트 공유하기">Share</button>
-                }
-                @if (Model.is_cowork == 1)
-                {
-                  <button type="button" class="btn btn-sm btn-warning" onclick="cancelCoWorkProject(this, @Model.p_seq)" title="Co-work 취소/마감">Cancel Cowork</button>
-                }
-                else
-                {
-                  <button type="button" class="btn btn-sm btn-info" onclick="CoWorkAlram(@Model.p_seq)" title="Co-work 요청">Cowork</button>
-
-                }
-              </span>
-              <button type="button" class="btn btn-sm btn-primary" id="btnPjtState">프로젝트 상태변경</button>
-              <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq, @c_seq = Model.c_seq, @type = "pjtCopy" })" class="btn btn-sm btn-info" title="이 프로젝트 복사">
-                Copy
-              </a>
-
-            }
-            else
-            {
-              @*PMS 오픈 관련 등록기능 제한*@
-              if (Univision.Security.AppIdentity.CanPmsEdit)
+              if (AppIdentity.ua_seq <= 3 || Model.pjt_status == 1 || Model.pjt_status == 4)
               {
-              <button type="button" class="btn btn-sm btn-warning" id="btnPjtState">프로젝트 상태변경</button>
-              <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq, @c_seq = Model.c_seq, @type = "pjtCopy" })" class="btn btn-sm btn-info" title="이 프로젝트 복사">
-                Copy
-              </a>
+
+                <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq })" id="btnModify" class="btn btn-sm btn-secondary" title="프로젝트 정보 수정">수정 (Modify)</a>
+
               }
             }
-            <button type="button" class="btn btn-sm btn-success border-primary" id="btnCreateInvoice" onclick="CreateInvoice(@Model.p_seq)" title="인보이스 발행(채용, 선수금, 취소 등)">
-              <i class="fa fa-file-invoice"></i>
-              인보이스 발행 (Invoice)
-            </button>
-          }
-          @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
-          {
-            if (AppIdentity.ua_seq <= 3 || Model.pjt_status == 1 || Model.pjt_status == 4)
+            @if (Model.log_cnt > 0)
             {
-
-              <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq })" id="btnModify" class="btn btn-sm btn-secondary" title="프로젝트 정보 수정">수정 (Modify)</a>
-
+              <a href="@Url.Action("ProjectLog", "Log", new { p_seq = Model.p_seq })" id="btnHisotry" class="btn btn-sm btn-default">Log</a>
             }
-          }
-          @if (Model.log_cnt > 0)
-          {
-            <a href="@Url.Action("ProjectLog", "Log", new { p_seq = Model.p_seq })" id="btnHisotry" class="btn btn-sm btn-default">Log</a>
-          }
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  }
   <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
     <div class="panel-heading">
       <h3 class="panel-title">
@@ -685,13 +689,17 @@
       {
         if (AppIdentity.ua_seq <= 3 || Model.pjt_status == 1 || Model.pjt_status == 4)
         {
-          <div class="row">
-            <div class="col-md-12 vertical-align text-right pt-10">
-              <div class="vertical-align-bottom">
-                <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq })" id="btnModify" class="btn btn-success" title="프로젝트 정보 수정">Modify Project</a>
+          @*PMS 오픈 관련 등록기능 제한*@
+          if (Univision.Security.AppIdentity.CanPmsEdit)
+          {
+            <div class="row">
+              <div class="col-md-12 vertical-align text-right pt-10">
+                <div class="vertical-align-bottom">
+                  <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq })" id="btnModify" class="btn btn-success" title="프로젝트 정보 수정">Modify Project</a>
+                </div>
               </div>
             </div>
-          </div>
+          }
         }
       }
     </div>
@@ -856,23 +864,28 @@
         <i class="fas fa-tasks"></i>
         Project Progress <small>(진행상황)</small>
       </h3>
+
       <div class="panel-actions sts11">
         <div class="sts10" style="display:inline-block">
           @if (AppIdentity.ua_seq <= 3 || Model.amList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null || Model.searcherList.Where(x => x.uv_seq == AppIdentity.user_seq).FirstOrDefault() != null)
           {
             <a href="#" class="btn btn-xs btn-success btn-outline" id="btn_progress_excel" title="Download candidates list to Excel ">EXCEL</a>
           }
-          <a href="#" class="btn btn-xs btn-info" id="btn_progress_create_checked" title="Changing the status of selected candidates">선택한 후보자 일괄 상태변경</a>
-          @if (Model.pjt_status == 1 || Model.pjt_status == 4)
+          <a href="#" class="btn btn-xs btn-success" id="btn_gpt_makeup2" title="GPT에게 메이크업 요청">Makeup(by GPT)</a>
+          @*PMS 오픈 관련 등록기능 제한*@
+          @if (Univision.Security.AppIdentity.CanPmsEdit)
           {
-            <a href="#" class="btn btn-xs btn-success" id="btn_gpt_makeup2" title="GPT에게 메이크업 요청">Makeup(by GPT)</a>
-            @*PMS 오픈 관련 등록기능 제한*@
-            if (Univision.Security.AppIdentity.CanPmsEdit)
+            <a href="#" class="btn btn-xs btn-info" id="btn_progress_create_checked" title="Changing the status of selected candidates">선택한 후보자 일괄 상태변경</a>
+            if (Model.pjt_status == 1 || Model.pjt_status == 4)
             {
-            <a href="#" class="btn btn-xs btn-dark" id="btn_send_privacy">개인정보 동의서 발송</a>
-            <a href="#" class="btn btn-xs btn-warning" id="btn_requestmakeup" title="메이크업 요청">Request Makeup</a>
-            <a href="@Url.Action("CandidateList", "Candidate")" class="btn btn-xs btn-primary">Add New candidate</a>
-            <a href="#" class="btn btn-xs btn-info btn-outline" id="btn_move_candidate" title="Move selected candidates">후보자 이관</a>
+
+
+
+              <a href="#" class="btn btn-xs btn-dark" id="btn_send_privacy">개인정보 동의서 발송</a>
+              <a href="#" class="btn btn-xs btn-warning" id="btn_requestmakeup" title="메이크업 요청">Request Makeup</a>
+              <a href="@Url.Action("CandidateList", "Candidate")" class="btn btn-xs btn-primary">Add New candidate</a>
+              <a href="#" class="btn btn-xs btn-info btn-outline" id="btn_move_candidate" title="Move selected candidates">후보자 이관</a>
+
             }
           }
         </div>
@@ -900,8 +913,9 @@
     </div>
   </div>
   <!-- 간편 후보자 리스트 끝-->
-  @if (Model.pjt_status == 1)
+  @if (Model.pjt_status == 1 && Univision.Security.AppIdentity.CanPmsEdit)
   {
+
     <!-- 프로젝트 후보자 제안 시작 -->
     <div class="panel panel-primary panel-line animation-scale-up" style="animation-fill-mode:backwards; animation-duration: 250ms; animation-delay: 0ms;">
       <div class="panel-heading">
@@ -980,14 +994,18 @@
             <label class="form-control-label" for="contact_cell_phone">휴대폰</label>
             @Html.TextBoxFor(x => x.contact_cell_phone, new { @class = "form-control form-control-sm", @readonly = "readonly" })
           </div>
-          <div class="form-group col-md-3 vertical-align ">
-            <div class="vertical-align-bottom">
-              <button type="submit" id="btnNewContactSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
-              <button type="button" id="btnNewContactReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
-              <button type="button" id="btnContactSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
-              <button type="button" id="btnContact" class="btn btn-sm btn-success">담당자 불러오기</button>
+          @*PMS 오픈 관련 등록기능 제한*@
+          @if (Univision.Security.AppIdentity.CanPmsEdit)
+          {
+            <div class="form-group col-md-3 vertical-align ">
+              <div class="vertical-align-bottom">
+                <button type="submit" id="btnNewContactSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
+                <button type="button" id="btnNewContactReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
+                <button type="button" id="btnContactSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
+                <button type="button" id="btnContact" class="btn btn-sm btn-success">담당자 불러오기</button>
+              </div>
             </div>
-          </div>
+          }
         </div>
       }
     </div>
@@ -1039,15 +1057,20 @@
             <label class="form-control-label" for="tax_deposit_email">발행용 이메일</label>
             @Html.TextBoxFor(x => x.tax_deposit_email, new { @class = "form-control form-control-sm", @readonly = "readonly" })
           </div>
-          <div class="form-group col-md-3 vertical-align">
-            <div class="vertical-align-bottom">
-              <button type="submit" id="btnNewTaxSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
-              <button type="button" id="btnNewTaxReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
-              <button type="button" id="btnTaxSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
-              <button type="button" id="btnTax" class="btn btn-sm btn-success">계산서 담당 불러오기</button>
+          @*PMS 오픈 관련 등록기능 제한*@
+          @if (Univision.Security.AppIdentity.CanPmsEdit)
+          {
+            <div class="form-group col-md-3 vertical-align">
+              <div class="vertical-align-bottom">
+                <button type="submit" id="btnNewTaxSave" class="btn btn-sm btn-primary" style="display:none">등록</button>
+                <button type="button" id="btnNewTaxReset" class="btn btn-sm btn-danger" style="display:none">취소</button>
+                <button type="button" id="btnTaxSave" class="btn btn-sm btn-primary" style="display:none">저장</button>
+                <button type="button" id="btnTax" class="btn btn-sm btn-success">계산서 담당 불러오기</button>
+              </div>
             </div>
-          </div>
+          }
         </div>
+
       }
 
     </div>
@@ -1059,14 +1082,17 @@
       <h3 class="panel-title">
         <i class="fas fa-file-invoice-dollar"></i>
         Invoice
-        <button type="button" class="btn btn-xs btn-success" id="btnCreateRetainerInvoice" title="선수금 인보이스 발행요청">
-          Retainer Invoice(선수금 인보이스)
-        </button>
+        @*PMS 오픈 관련 등록기능 제한*@
+        @if (Univision.Security.AppIdentity.CanPmsEdit)
+        {
+          <button type="button" class="btn btn-xs btn-success" id="btnCreateRetainerInvoice" title="선수금 인보이스 발행요청">
+            Retainer Invoice(선수금 인보이스)
+          </button>
 
-        <button type="button" class="btn btn-xs btn-secondary" id="btnCreateRefundInvoice" style="display:none;" title="환불 인보이스 발행요청">
-          Refund Invoice(환불 인보이스)
-        </button>
-
+          <button type="button" class="btn btn-xs btn-secondary" id="btnCreateRefundInvoice" style="display:none;" title="환불 인보이스 발행요청">
+            Refund Invoice(환불 인보이스)
+          </button>
+        }
         <span class="small"><small class="text-info">- Contigency 인보이스는 입사확정 후보자 정보에서 요청하십시오.</small></span>
       </h3>
       <div class="panel-actions">

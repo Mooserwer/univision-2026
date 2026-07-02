@@ -26,8 +26,8 @@
               </div>
             </div>
           }
-          </div>
-        
+        </div>
+
         <div class="panel-body p-10">
           <div id="key_project_table" data-role="container">
 
@@ -161,7 +161,13 @@
             target: "_blank",
           }
         },
-        { formatter: printIconRemove, field: "p_seq", width: 80, hozAlign: "center", cellClick: function (e, cell) { cancelMyKeyProject(cell.getRow().getData().p_seq)}},
+        @*PMS 오픈 관련 등록기능 제한*@
+        @if (Univision.Security.AppIdentity.CanPmsEdit)
+        {
+          <text>
+        { formatter: printIconRemove, field: "p_seq", width: 80, hozAlign: "center", cellClick: function (e, cell) { cancelMyKeyProject(cell.getRow().getData().p_seq) } },
+          </text>
+        }
         { title: "Key등록일자", field: "key_create_dt", sorter: "string", hozAlign: "center" },
 
         //{ title: "부서", field: "ud_name", sorter: "string", hozAlign: "left", headerFilter: "input", frozen: true, },
@@ -203,12 +209,12 @@
       ajaxContentType: "json",
 
       ajaxResponse: function (url, params, response) {
-        //url - the URL of the request
-        //params - the parameters passed with the request
-        //response - the JSON object returned in the body of the response.
+              //url - the URL of the request
+              //params - the parameters passed with the request
+              //response - the JSON object returned in the body of the response.
 
-        return response.list; //return the tableData property of a response json object
-      },
+              return response.list; //return the tableData property of a response json object
+            },
       pagination: "local",
       paginationSize: 100,
       paginationSizeSelector: [10, 20, 30, 50, 100],

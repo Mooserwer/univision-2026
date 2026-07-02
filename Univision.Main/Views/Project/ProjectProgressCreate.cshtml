@@ -55,13 +55,13 @@
       <label class="form-control-label">
         연봉<span class="label-reqired">*</span>
 
-          <span class="text-primary font-weight-900" id="recan_income_won_label">
-            @if (Model.currency_cd != "KRW" && Model.ann_income_won.HasValue)
-            {
-              <text>(원화 환산 예상액 : 약 </text> @Utils.ConvertMoneyToString(Model.ann_income_won) <text>원)</text>
-            }
+        <span class="text-primary font-weight-900" id="recan_income_won_label">
+          @if (Model.currency_cd != "KRW" && Model.ann_income_won.HasValue)
+          {
+            <text>(원화 환산 예상액 : 약 </text> @Utils.ConvertMoneyToString(Model.ann_income_won) <text>원)</text>
+          }
 
-          </span>
+        </span>
       </label>
 
       <div class="input-group input-group-sm">
@@ -69,12 +69,12 @@
         @Html.TextBoxFor(x => x.ann_income, new { @class = "form-control form-control-sm text-right" })
         @Html.HiddenFor(x => x.ann_income_won)
         <!--
-  <div class="btn-group">
-    <button class="btn btn-xs btn-default">+0</button>
-    <button class="btn btn-xs btn-default">+00</button>
-    <button class="btn btn-xs btn-default">+000</button>
-  </div>
-    -->
+        <div class="btn-group">
+          <button class="btn btn-xs btn-default">+0</button>
+          <button class="btn btn-xs btn-default">+00</button>
+          <button class="btn btn-xs btn-default">+000</button>
+        </div>
+          -->
         <select name="currency_cd" id="recan_currency_cd" class="form-control form-control-sm">
           <option value="">[금액단위 선택]</option>
           <option value="KRW" @(Model.currency_cd == "KRW" ? "selected" : "")>KRW(원)</option>
@@ -160,10 +160,13 @@
       </label>
     </div>
   </div>
-
-  <div class="text-right">
-    <button type="submit" class="btn btn-sm btn-primary" id="btnPopSave">등록</button>
-  </div>
+  @*PMS 오픈 관련 등록기능 제한*@
+  if (Univision.Security.AppIdentity.CanPmsEdit)
+  {
+    <div class="text-right">
+      <button type="submit" class="btn btn-sm btn-primary" id="btnPopSave">등록</button>
+    </div>
+  }
 }
 
 <script src="~/Libs/remark/global/vendor/dropify/dropify.min599c.js?v4.0.4"></script>
@@ -188,7 +191,7 @@
       $('#pjt_progress_file_label').removeClass('text-primary').text("관련 첨부파일");
     }
     $('#pjt_rec_date_info').text(text);
-    
+
   }
 
   $(document).ready(function () {

@@ -385,21 +385,21 @@
                 </a>
               }
 
-            <span class="text-secondary float-right small pr-10">
-              @if (data.create_name != data.modify_name)
-              {
-                <text>
-                  [Updated by @data.modify_name - @Utils.ConvertDateTimeToString(data.modify_dt) / Reg. by @data.create_name]
-                </text>
-              }
-              else
-              {
-                <text>
-                  [Reg/Updated by @data.modify_name - @Utils.ConvertDateTimeToString(data.modify_dt) ]
-                </text>
-              }
+              <span class="text-secondary float-right small pr-10">
+                @if (data.create_name != data.modify_name)
+                {
+                  <text>
+                    [Updated by @data.modify_name - @Utils.ConvertDateTimeToString(data.modify_dt) / Reg. by @data.create_name]
+                  </text>
+                }
+                else
+                {
+                  <text>
+                    [Reg/Updated by @data.modify_name - @Utils.ConvertDateTimeToString(data.modify_dt) ]
+                  </text>
+                }
 
-            </span>
+              </span>
             </td>
             <td class="text-left text-truncate">
               - <span title="Company : @data.company_name">@data.company_name</span>
@@ -435,11 +435,13 @@
               }
             </td>
             <td class="text-center">
-
-              <button class="btn btn-outline-primary btn-xs" onclick="ProjectProgressCreate(@data.pic_seq, @data.p_seq, @data.c_seq, '@data.kor_name')" title="진행사항 생성">
-                <i class="fas fa-pen"></i> Add
-              </button>
-
+              @*PMS 오픈 관련 등록기능 제한*@
+              @if (Univision.Security.AppIdentity.CanPmsEdit)
+              {
+                <button class="btn btn-outline-primary btn-xs" onclick="ProjectProgressCreate(@data.pic_seq, @data.p_seq, @data.c_seq, '@data.kor_name')" title="진행사항 생성">
+                  <i class="fas fa-pen"></i> Add
+                </button>
+              }
               @if (data.state == ProjectHistoryStateCode.interest && Univision.Security.AppIdentity.ua_seq == 1)
               {
                 <br />
@@ -450,13 +452,17 @@
 
               @if (data.state == ProjectHistoryStateCode.hireOk && data.invoice_cnt == 0 && data.is_no_invoice == 0)
               {
-                <br />
-                <span class="image blinking">
-                  <button class="btn btn-outline-success btn-xs" onclick="ProjectInvoiceCreate(@data.p_seq, @data.c_seq, '0')" title="인보이스 발행">
-                    <i class="fas fa-file-invoice-dollar red-600"></i>
-                    Invoice
-                  </button>
-                </span>
+                @*PMS 오픈 관련 등록기능 제한*@
+                if (Univision.Security.AppIdentity.CanPmsEdit)
+                {
+                  <br />
+                  <span class="image blinking">
+                    <button class="btn btn-outline-success btn-xs" onclick="ProjectInvoiceCreate(@data.p_seq, @data.c_seq, '0')" title="인보이스 발행">
+                      <i class="fas fa-file-invoice-dollar red-600"></i>
+                      Invoice
+                    </button>
+                  </span>
+                }
               }
               <br />
               <button class="btn btn-xs btn-outline-info" onclick="ProjectProgressHistoryList(@data.pic_seq, '@data.kor_name')" title="진행사항 리스트">

@@ -370,7 +370,11 @@
                 <a href="javascript:funcCopy('@(Model.data.email1)')" class="text-secondary">
                   <i class="fa fa-copy" aria-hidden="true" title="Copy"></i>
                 </a>
-                <button type="button" class="btn btn-xs btn-warning" onclick="openPrivacySmsSendModal('EMAIL', '@Model.data.c_seq')" title="개인정보 수집/제공 동의 발송">동의서 발송</button>
+                @*PMS 오픈 관련 등록기능 제한*@
+                if (Univision.Security.AppIdentity.CanPmsEdit)
+                {
+                  <button type="button" class="btn btn-xs btn-warning" onclick="openPrivacySmsSendModal('EMAIL', '@Model.data.c_seq')" title="개인정보 수집/제공 동의 발송">동의서 발송</button>
+                }
 
               }
               @if (!string.IsNullOrWhiteSpace(Model.data.email2))
@@ -381,7 +385,11 @@
                   <i class="fa fa-copy" aria-hidden="true" title="Copy"></i>
                 </a>
               }
-              <button type="button" class="btn btn-xs btn-primary" id="btn-edit-can-contact" onclick="CandidateContactModal('@Model.data.c_seq')" title="연락처(전화/이메일) 수정하기">연락처 수정</button>
+              @*PMS 오픈 관련 등록기능 제한*@
+              @if (Univision.Security.AppIdentity.CanPmsEdit)
+              {
+                <button type="button" class="btn btn-xs btn-primary" id="btn-edit-can-contact" onclick="CandidateContactModal('@Model.data.c_seq')" title="연락처(전화/이메일) 수정하기">연락처 수정</button>
+              }
             </div>
 
 
@@ -404,14 +412,22 @@
                 @if (Model.data.cell_phone.Length > 2 && Model.data.cell_phone.Substring(0, 2) == "01")
                 {
                   <button type="button" class="btn btn-xs btn-success" onclick="openSmsSendModal('@Model.data.cell_phone')" title="이 전화번호로 문자 발송">SMS</button>
-                  <button type="button" class="btn btn-xs btn-warning" onclick="openPrivacySmsSendModal('SMS2', '@Model.data.c_seq')" title="개인정보 수집/제공 동의 발송">동의서 발송</button>
+                  @*PMS 오픈 관련 등록기능 제한*@
+                  if (Univision.Security.AppIdentity.CanPmsEdit)
+                  {
+                    <button type="button" class="btn btn-xs btn-warning" onclick="openPrivacySmsSendModal('SMS2', '@Model.data.c_seq')" title="개인정보 수집/제공 동의 발송">동의서 발송</button>
+                  }
                 }
 
                 @if (Model.data.wrong_phone2 == 1)
                 {
                   <i class="fa fa-times-circle text-warning" aria-hidden="true" title="Wrong number"></i>
                 }
-                <button type="button" class="btn btn-xs btn-primary" id="btn-edit-can-contact" onclick="CandidateContactModal('@Model.data.c_seq')" title="연락처(전화/이메일) 수정하기">연락처 수정</button>
+                @*PMS 오픈 관련 등록기능 제한*@
+                @if (Univision.Security.AppIdentity.CanPmsEdit)
+                {
+                  <button type="button" class="btn btn-xs btn-primary" id="btn-edit-can-contact" onclick="CandidateContactModal('@Model.data.c_seq')" title="연락처(전화/이메일) 수정하기">연락처 수정</button>
+                }
               </div>
             }
             @if (!string.IsNullOrWhiteSpace(Model.data.phone))
@@ -433,7 +449,11 @@
                 @if (Model.data.phone.Length > 2 && Model.data.phone.Substring(0, 2) == "01")
                 {
                   <button type="button" class="btn btn-xs btn-success" onclick="openSmsSendModal('@Model.data.phone')" title="이 전화번호로 문자 발송">SMS</button>
-                  <button type="button" class="btn btn-xs btn-warning" onclick="openPrivacySmsSendModal('SMS1', '@Model.data.c_seq')" title="개인정보 수집/제공 동의 발송">동의서 발송</button>
+                  @*PMS 오픈 관련 등록기능 제한*@
+                  if (Univision.Security.AppIdentity.CanPmsEdit)
+                  {
+                    <button type="button" class="btn btn-xs btn-warning" onclick="openPrivacySmsSendModal('SMS1', '@Model.data.c_seq')" title="개인정보 수집/제공 동의 발송">동의서 발송</button>
+                  }
 
 
                 }
@@ -525,44 +545,48 @@
                 <text> ~ </text> @(Model.data.hope_salary2)
               }
             </div>
-            <div class="py-1 row">
-              <div class="col-4">
-                <button class="btn btn-info btn-sm btn-block" onclick="CreateAttentionModal('@Model.data.c_seq')" title="주의요망사항 설정">
-                  <i class="fa fa-user-check" aria-hidden="true"></i>
-                  Attention
-                </button>
-              </div>
-
-              <div class="col-4">
-                <button class="btn btn-warning btn-sm btn-block" onclick="CreateConfiModal('@Model.data.c_seq')" title="Confidential 설정">
-                  <i class="fa fa-eye-slash" aria-hidden="true"></i> Confidential
-                </button>
-              </div>
-
-              <div class="col-4">
-                <button class="btn btn-danger btn-sm btn-block" onclick="CreateInactiveModal('@Model.data.c_seq')" title="Inactive 설정">
-                  <i class="fa fa-user-lock" aria-hidden="true"></i> Inactive
-                </button>
-              </div>
-            </div>
-            <!--
-                <div class="py-1 form-inline">
-                  <div class="form-group">
-                    <label class="form-control-label" for="data_caution_type">
-                      주의요망사항
-                    </label>
-                    <div class="input-group input-group-sm">
-                      @Html.DropDownListFor(x => x.data.caution_type, new SelectList(CandidateCautionType.CandidateCautionTypes, "Key", "Value"), new { @class = "form-control form-control-sm " })
-                      <span class="input-group-btn">
-                        <button type="button" class="btn btn-sm btn-primary" onclick="saveCautionType()">
-                          <i class="fas fa-save"></i> 적용
-                        </button>
-                      </span>
-                    </div>
-
-                  </div>
+            @*PMS 오픈 관련 등록기능 제한*@
+            @if (Univision.Security.AppIdentity.CanPmsEdit)
+            {
+              <div class="py-1 row">
+                <div class="col-4">
+                  <button class="btn btn-info btn-sm btn-block" onclick="CreateAttentionModal('@Model.data.c_seq')" title="주의요망사항 설정">
+                    <i class="fa fa-user-check" aria-hidden="true"></i>
+                    Attention
+                  </button>
                 </div>
-              -->
+
+                <div class="col-4">
+                  <button class="btn btn-warning btn-sm btn-block" onclick="CreateConfiModal('@Model.data.c_seq')" title="Confidential 설정">
+                    <i class="fa fa-eye-slash" aria-hidden="true"></i> Confidential
+                  </button>
+                </div>
+
+                <div class="col-4">
+                  <button class="btn btn-danger btn-sm btn-block" onclick="CreateInactiveModal('@Model.data.c_seq')" title="Inactive 설정">
+                    <i class="fa fa-user-lock" aria-hidden="true"></i> Inactive
+                  </button>
+                </div>
+              </div>
+            }
+            <!--
+              <div class="py-1 form-inline">
+                <div class="form-group">
+                  <label class="form-control-label" for="data_caution_type">
+                    주의요망사항
+                  </label>
+                  <div class="input-group input-group-sm">
+                    @Html.DropDownListFor(x => x.data.caution_type, new SelectList(CandidateCautionType.CandidateCautionTypes, "Key", "Value"), new { @class = "form-control form-control-sm " })
+                    <span class="input-group-btn">
+                      <button type="button" class="btn btn-sm btn-primary" onclick="saveCautionType()">
+                        <i class="fas fa-save"></i> 적용
+                      </button>
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+            -->
           </p>
           <hr />
           <div class="row">
@@ -1015,19 +1039,23 @@
               <i class="fa fa-folder-open fa-fw" aria-hidden="true" title="Resume Files"></i> Upload Resume Files
               @if (Model.data.is_external_lock != 1)
               {
-                if (AppIdentity.user_seq != 386)
+                @*PMS 오픈 관련 등록기능 제한*@
+                if (Univision.Security.AppIdentity.CanPmsEdit)
                 {
-                  <label class="float-right ml-10 checkbox-inline" title="삭제 할 이력서가 있을 경우 잠금을 해제해 주세요">
-                    <input type="checkbox" id="switch-resume-remove" data-size="mini" data-toggle="toggle" data-off="<i class='fa fa-lock'></i> Remove Lock" data-on="<i class='fa fa-unlock'></i> Remove Unlock">
-                  </label>
-                }
-                if (AppIdentity.ua_seq <= 3)
-                {
+                  if (AppIdentity.user_seq != 386)
+                  {
+                    <label class="float-right ml-10 checkbox-inline" title="삭제 할 이력서가 있을 경우 잠금을 해제해 주세요">
+                      <input type="checkbox" id="switch-resume-remove" data-size="mini" data-toggle="toggle" data-off="<i class='fa fa-lock'></i> Remove Lock" data-on="<i class='fa fa-unlock'></i> Remove Unlock">
+                    </label>
+                  }
+                  if (AppIdentity.ua_seq <= 3)
+                  {
 
 
-                  <label class="float-right mr-10 checkbox-inline" title="삭제이력서 보기">
-                    <input type="checkbox" id="switch-remove-show" data-size="mini" data-toggle="toggle" data-off="<i class='fa fa-eye-slash'></i> Hide Deleted" data-on="<i class='fa fa-eye'></i> Show Deleted">
-                  </label>
+                    <label class="float-right mr-10 checkbox-inline" title="삭제이력서 보기">
+                      <input type="checkbox" id="switch-remove-show" data-size="mini" data-toggle="toggle" data-off="<i class='fa fa-eye-slash'></i> Hide Deleted" data-on="<i class='fa fa-eye'></i> Show Deleted">
+                    </label>
+                  }
                 }
 
               }
@@ -1056,25 +1084,28 @@
             </h5>
             @using (Html.BeginForm("CreateCandidateActivity", "Candidate", FormMethod.Get, new { @id = "CreateActivityForm" }))
             {
-              <div class="row my-1">
+              @*PMS 오픈 관련 등록기능 제한*@
+              if (Univision.Security.AppIdentity.CanPmsEdit)
+              {
+                <div class="row my-1">
 
-                <div class="col-12 text-center border border-info p-10 bd-gray-700">
-                  <b>&lt;작성 방법&gt;</b> ①이직사유 ②이직 시 고려사항 ③성향 ④연봉(현재/희망) ⑤근무가능지역
+                  <div class="col-12 text-center border border-info p-10 bd-gray-700">
+                    <b>&lt;작성 방법&gt;</b> ①이직사유 ②이직 시 고려사항 ③성향 ④연봉(현재/희망) ⑤근무가능지역
+                  </div>
+
+                </div>
+                <div class="row">
+                  <div class="col-12 form-group">
+                    <textarea class="form-control" id="memo" name="memo" rows="3" placeholder="후보자 관련정보 (이력,이직/지원사유,급여,성향,진행상황 및 기타 참고사항)"></textarea>
+                  </div>
                 </div>
 
-              </div>
-              <div class="row">
-                <div class="col-12 form-group">
-                  <textarea class="form-control" id="memo" name="memo" rows="3" placeholder="후보자 관련정보 (이력,이직/지원사유,급여,성향,진행상황 및 기타 참고사항)"></textarea>
+                <div class="row">
+                  <div class="col-12">
+                    <button type="submit" id="btnCreateActivity" class="btn btn-primary btn-sm w-full">Post</button>
+                  </div>
                 </div>
-              </div>
-
-              <div class="row">
-                <div class="col-12">
-                  <button type="submit" id="btnCreateActivity" class="btn btn-primary btn-sm w-full">Post</button>
-                </div>
-              </div>
-
+              }
             }
             <hr />
             <div id="activityBody">

@@ -362,17 +362,20 @@
     </div>
   </div>
 </div>
+@*PMS 오픈 관련 등록기능 제한*@
+@if (Univision.Security.AppIdentity.CanPmsEdit)
+{
+  <div class="row col-md-12 no-side-space">
+    <div class="col-md-6">
 
-<div class="row col-md-12 no-side-space">
-  <div class="col-md-6">
-
-  </div>
-  <div class="col-md-6 vertical-align text-right">
-    <div class="vertical-align-bottom">
-      <button type="button" class="btn btn-sm btn-warning" id="btnInvoiceDelete">삭제</button>
+    </div>
+    <div class="col-md-6 vertical-align text-right">
+      <div class="vertical-align-bottom">
+        <button type="button" class="btn btn-sm btn-warning" id="btnInvoiceDelete">삭제</button>
+      </div>
     </div>
   </div>
-</div>
+}
 
 
 <script type="text/javascript">

@@ -417,6 +417,12 @@ namespace Univision.Main.Controllers
     {
       try
       {
+        // Shift 자택근무(v_type=11) 는 반차 신청 불가
+        if (model.data.v_type == 11 && model.detail_list != null
+            && model.detail_list.Any(d => (d.v_type ?? 0) != 0 || (d.v_period ?? 1) != 1))
+        {
+          return Json(new { ok = false, rtn_msg = "Shift 자택근무는 반차로 신청할 수 없습니다." });
+        }
 
         MyListEntityRepository mler = new MyListEntityRepository();
         AccountRepository ar = new AccountRepository();

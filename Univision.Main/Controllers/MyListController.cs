@@ -403,7 +403,7 @@ namespace Univision.Main.Controllers
           used,
           limit,
           week = weekStr,
-          message = string.Format("이번 주({0}) Shift 자택근무가 이미 {1}일 신청되어 주간 한도({2}일)를 초과합니다.<br/>그래도 계속 신청하시겠습니까?", weekStr, used, limit)
+          message = string.Format("이번 주({0}) Shift 자택근무가 이미 {1}일 신청되어 주간 한도({2}일)를 초과합니다.<br/>그래도 계속 신청하시겠습니까?", weekStr, used.ToString("0.##"), limit)
         }, JsonRequestBehavior.AllowGet);
       }
       catch (Exception e)

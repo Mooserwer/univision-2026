@@ -532,6 +532,22 @@
           *@
 
           @{
+            int vacApprPending = 0;
+            try
+            {
+              var vacApprRepo = new Univision.Core.Repositories.MyListRepository();
+              vacApprPending = vacApprRepo.CountMyVacationApproval(Univision.Security.AppIdentity.user_seq);
+            }
+            catch { }
+          }
+          <li class="site-menu-item">
+            <a href="@Url.Action("Index", "Dashboard")#vcationAppr">
+              <i class="site-menu-icon wb-calendar" aria-hidden="true"></i>
+              <span class="site-menu-title">휴가승인 @if (vacApprPending > 0) { <span class="badge badge-danger">@vacApprPending</span> }</span>
+            </a>
+          </li>
+
+          @{
             int apprPending = 0;
             try
             {

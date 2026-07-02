@@ -527,6 +527,25 @@ AND ((A.v_type = 5 AND @uv_seq = 215 AND A.end_date < GETDATE())
     }
 
     /// <summary>
+    /// 내가 승인해야 할 휴가 건수 (좌측 메뉴 뱃지용). SelectMyVacationApprovalList 와 동일한 조건.
+    /// </summary>
+    public int CountMyVacationApproval(int uv_seq)
+    {
+      using (IDbConnection con = new SqlConnection(base.BaseConnectionString))
+      {
+        string query = @"
+SELECT COUNT(*)
+FROM uv_vacation_history AS A
+WHERE ((A.confirm_user = @uv_seq AND ISNULL(A.is_confirm,0) = 0 AND ISNULL(A.leader_confirm,0) = 1)
+        OR (A.leader_seq   = @uv_seq AND ISNULL(A.leader_confirm,0) = 0)
+        OR (A.s_leader_seq = @uv_seq AND ISNULL(A.s_leader_confirm,0) = 0 AND ISNULL(A.is_confirm,0) = 1 AND ISNULL(A.leader_confirm,0) = 1))
+AND ((A.v_type = 5 AND @uv_seq = 215 AND A.end_date < GETDATE())
+     OR (A.v_type <> 5 OR @uv_seq <> 215))";
+        return con.ExecuteScalar<int>(query, new { uv_seq });
+      }
+    }
+
+    /// <summary>
     /// 개인 알람목록 조회.
     /// </summary>
     /// <param name="search"></param>

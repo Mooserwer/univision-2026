@@ -4,7 +4,7 @@
 {
   <div style="text-align:right;">
     @*PMS 오픈 관련 등록기능 제한*@
-    @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+    @if (Univision.Security.AppIdentity.CanPmsEdit)
     {
 
 
@@ -105,7 +105,7 @@
               </td>
               <td class="hidden-sm-down">
                 @*PMS 오픈 관련 등록기능 제한*@
-                @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+                @if (Univision.Security.AppIdentity.CanPmsEdit)
                 {
                   if (Model.is_external_lock == 1)
                   {
@@ -141,7 +141,7 @@ else
     <div class="card-block text-center">
       <h4 class="card-title">세금계산서 담당자 정보가 없습니다.<small>[No E-Tax information]</small></h4>
       @*PMS 오픈 관련 등록기능 제한*@
-      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      @if (Univision.Security.AppIdentity.CanPmsEdit)
       {
         <p class="card-text">
           "Add E-Tax info" 버튼을 눌러 세금계산서 담당자를 추가 하실 수 있습니다.

@@ -3,7 +3,7 @@
 
 <div style="text-align:right;">
   @*PMS 오픈 관련 등록기능 제한*@
-  @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+  @if (Univision.Security.AppIdentity.CanPmsEdit)
   {
     <button type="button" id="contactBtn" value="0" class="btn btn-xs btn-primary  w-150" value="0" title="Contact 추가">
       <i class="icon wb-user-add"></i>
@@ -101,7 +101,7 @@
             </td>
             <td class="hidden-sm-down">
               @*PMS 오픈 관련 등록기능 제한*@
-              @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              @if (Univision.Security.AppIdentity.CanPmsEdit)
               {
                 if (Model.is_external_lock == 1)
                 {

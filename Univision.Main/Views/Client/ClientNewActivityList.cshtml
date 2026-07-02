@@ -14,7 +14,7 @@
     </div>
     <div class="col text-right">
       @*PMS 오픈 관련 등록기능 제한*@
-      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      @if (Univision.Security.AppIdentity.CanPmsEdit)
       {
         <button type="button" id="activityBtn" class="btn btn-primary w-150" title="메모(활동내역) 추가">
           <i class="icon wb-plus"></i>
@@ -167,7 +167,7 @@ else
     <div class="card-block text-center">
       <h4 class="card-title">메모가 없습니다.<small>[No Memo]</small></h4>
       @*PMS 오픈 관련 등록기능 제한*@
-      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      @if (Univision.Security.AppIdentity.CanPmsEdit)
       {
         <p class="card-text">
           "Add Memo" 버튼을 눌러 메모, 고객사 활동관련 세부 사항을 추가 하실 수 있습니다.

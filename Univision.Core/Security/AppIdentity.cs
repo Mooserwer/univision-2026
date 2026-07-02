@@ -200,6 +200,21 @@ namespace Univision.Security
         }
 
         /// <summary>
+        /// PMS 오픈(2026-07-13) 관련 고객사/후보자/프로젝트 등록·수정·삭제 허용 여부.
+        /// 오픈 전에는 전체 허용, 오픈 이후에는 관리 권한(ua_seq 1~3)만 허용.
+        /// </summary>
+        public static bool CanPmsEdit
+        {
+            get
+            {
+                DateTime pmsOpen = new DateTime(2026, 7, 13);
+                if (DateTime.Now < pmsOpen)
+                    return true;
+                return ua_seq > 0 && ua_seq <= 3;
+            }
+        }
+
+        /// <summary>
         /// 외부접속 여부.
         /// </summary>
         public static int isExternal

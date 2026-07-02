@@ -299,7 +299,7 @@
                 <i class="fas fa-unlock-alt"></i> 연락처 확인
               </a>
               @*PMS 오픈 관련 등록기능 제한*@
-              if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              if (Univision.Security.AppIdentity.CanPmsEdit)
               {
                 <a id="btnModify" href="javascript:void(0)" class="btn btn-sm btn-success" onclick="openCandidateExternalLockToHref('@Model.data.c_seq', '@Url.Action("CandidateCreate", "Candidate", new { @c_seq = Model.data.c_seq, @is_pop = ViewBag.is_pop })')"><i class="icon wb-edit"></i> Modify</a>
               }
@@ -307,7 +307,7 @@
             else
             {
               @*PMS 오픈 관련 등록기능 제한*@
-              if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+              if (Univision.Security.AppIdentity.CanPmsEdit)
               {
                 <a id="btnModify" href="@Url.Action("CandidateCreate", "Candidate", new { @c_seq = Model.data.c_seq, @is_pop = ViewBag.is_pop })" class="btn btn-sm btn-success"><i class="icon wb-edit"></i> Modify</a>
               }
@@ -699,7 +699,7 @@
 
           <div class="text-center">
             @*PMS 오픈 관련 등록기능 제한*@
-            @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+            @if (Univision.Security.AppIdentity.CanPmsEdit)
             {
               <span id="span_my_list_btn">
 

@@ -592,7 +592,7 @@
 
     <div class="text-right">
       @*PMS 오픈 관련 등록기능 제한*@
-      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      @if (Univision.Security.AppIdentity.CanPmsEdit)
       {
         <button type="submit" id="btnSave" class="btn btn-primary">Submit</button>
       }

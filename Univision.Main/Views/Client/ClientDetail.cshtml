@@ -105,7 +105,7 @@
               <i class="fas fa-unlock-alt"></i> 개인정보 확인
             </button>
             @*PMS 오픈 관련 등록기능 제한*@
-            if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+            if (Univision.Security.AppIdentity.CanPmsEdit)
             {
               <a href="javascript:void(0)" id="btnModify" class="btn btn-success" onclick="openClientExternalLockToHref('@Model.c_seq', '@Url.Action("ClientCreate", "Client", new { @c_seq = Model.c_seq })')" title="Modify Client information">
                 <i class="icon wb-edit"></i> 정보 수정
@@ -115,7 +115,7 @@
           else
           {
             @*PMS 오픈 관련 등록기능 제한*@
-            if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+            if (Univision.Security.AppIdentity.CanPmsEdit)
             {
               <a href="@Url.Action("ClientCreate", "Client", new { @c_seq = Model.c_seq })" id="btnModify" class="btn btn-success" title="Modify Client information">
                 <i class="icon wb-edit"></i>

@@ -331,7 +331,7 @@
 </div>
 
 @*PMS 오픈 관련 등록기능 제한*@
-@if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+@if (Univision.Security.AppIdentity.CanPmsEdit)
 {
   <script src="~/Libs/dropzone/js/dropzone.min.js?v=1533562669"></script>
   <script type="text/javascript" src="~/Scripts/FileDownload.js?v0.0.1"></script>

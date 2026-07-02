@@ -192,13 +192,13 @@
             else
             {
               @*PMS 오픈 관련 등록기능 제한*@
-              @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
-                {*@
+              if (Univision.Security.AppIdentity.CanPmsEdit)
+              {
               <button type="button" class="btn btn-sm btn-warning" id="btnPjtState">프로젝트 상태변경</button>
               <a href="@Url.Action("ProjectCreate", "Project", new { @p_seq = Model.p_seq, @c_seq = Model.c_seq, @type = "pjtCopy" })" class="btn btn-sm btn-info" title="이 프로젝트 복사">
                 Copy
               </a>
-              @*}*@
+              }
             }
             <button type="button" class="btn btn-sm btn-success border-primary" id="btnCreateInvoice" onclick="CreateInvoice(@Model.p_seq)" title="인보이스 발행(채용, 선수금, 취소 등)">
               <i class="fa fa-file-invoice"></i>
@@ -867,13 +867,13 @@
           {
             <a href="#" class="btn btn-xs btn-success" id="btn_gpt_makeup2" title="GPT에게 메이크업 요청">Makeup(by GPT)</a>
             @*PMS 오픈 관련 등록기능 제한*@
-            @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
-      {*@
+            if (Univision.Security.AppIdentity.CanPmsEdit)
+            {
             <a href="#" class="btn btn-xs btn-dark" id="btn_send_privacy">개인정보 동의서 발송</a>
             <a href="#" class="btn btn-xs btn-warning" id="btn_requestmakeup" title="메이크업 요청">Request Makeup</a>
             <a href="@Url.Action("CandidateList", "Candidate")" class="btn btn-xs btn-primary">Add New candidate</a>
             <a href="#" class="btn btn-xs btn-info btn-outline" id="btn_move_candidate" title="Move selected candidates">후보자 이관</a>
-            @*}*@
+            }
           }
         </div>
         <a class="panel-action icon wb-minus" aria-expanded="true" data-toggle="panel-collapse" aria-hidden="true"></a>

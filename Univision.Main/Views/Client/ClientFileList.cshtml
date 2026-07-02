@@ -5,7 +5,7 @@
 {
   <div style="text-align:right;">
     @*PMS 오픈 관련 등록기능 제한*@
-    @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+    @if (Univision.Security.AppIdentity.CanPmsEdit)
     {
       <button type="button" id="fileBtn" class="btn btn-xs btn-primary" title="파일 업로드">
         <i class="icon wb-plus"></i>
@@ -58,7 +58,7 @@
               </td>
               <td class="hidden-sm-down">
                 @*PMS 오픈 관련 등록기능 제한*@
-                @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+                @if (Univision.Security.AppIdentity.CanPmsEdit)
                 {
                   <button class="btn btn-xs btn-outline-warning" type="button" onclick="DeleteClientFile('@data.c_seq', '@data.cf_seq')"><i class="icon wb-trash"></i> Remove</button>
                 }
@@ -81,7 +81,7 @@ else
     <div class="card-block text-center">
       <h4 class="card-title">등록된 파일이 없습니다.<small>[No File data]</small></h4>
       @*PMS 오픈 관련 등록기능 제한*@
-      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+      @if (Univision.Security.AppIdentity.CanPmsEdit)
       {
         <p class="card-text">
           "Upload File" 버튼을 눌러 계약서 등 고객사 관련 자료를 업로드 하실 수 있습니다.

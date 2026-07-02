@@ -68,14 +68,14 @@
                 </a>
               </li>
               @*PMS 오픈 관련 등록기능 제한*@
-              @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
-        {*@
+              @if (Univision.Security.AppIdentity.CanPmsEdit)
+              {
               <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "clientcreate")">
                 <a href="@Url.Action("ClientCreate", "Client")">
                   <span class="site-menu-title">Registration <small>(등록)</small></span>
                 </a>
               </li>
-              @*}*@
+              }
               <!--
       <li class="site-menu-item has-sub">
           <a href="@Url.Action("AttentionList", "Client")">
@@ -122,8 +122,8 @@
                 </a>
               </li>
               @*PMS 오픈 관련 등록기능 제한*@
-              @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
-        {*@
+              @if (Univision.Security.AppIdentity.CanPmsEdit)
+              {
               <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatecreate")">
                 <a href="@Url.Action("CandidateCreate", "Candidate")">
                   <span class="site-menu-title">Registration <small>(등록)</small></span>
@@ -149,7 +149,7 @@
                   </span>
                 </a>
               </li>
-              @*}*@
+              }
               <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatecontactlist")">
                 <a href="@Url.Action("CandidateContactList", "Candidate")">
                   <span class="site-menu-title">Contact List</span>
@@ -209,8 +209,8 @@
                 </a>
               </li>
               @*PMS 오픈 관련 등록기능 제한*@
-              @*if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
-        {*@
+              @if (Univision.Security.AppIdentity.CanPmsEdit)
+              {
               <li class="site-menu-item has-sub has-sub @GetLeftMenuActiveCtrler(actionName, "projectcreate")">
                 <a href="javascript:void(0)">
                   <span class="site-menu-title" data-link="@Url.Action("ProjectCreate", "Project")">Registration <small>(등록)</small></span>
@@ -229,7 +229,7 @@
                   </li>
                 </ul>
               </li>
-              @*}*@
+              }
               <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "mykeyprojectlist")">
                 <a href="@Url.Action("MyKeyProjectList", "Project")">
                   <span class="site-menu-title">Key Project</span>

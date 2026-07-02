@@ -1212,7 +1212,7 @@
                     </div>
                     <div class="pl-0 pl-sm-20 mt-15 mt-sm-0 align-self-center">
                       @*PMS 오픈 관련 등록기능 제한*@
-                      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+                      @if (Univision.Security.AppIdentity.CanPmsEdit)
                       {
                         <span>
 
@@ -1453,7 +1453,7 @@
                     </td>
                     <td class="text-center">
                       @*PMS 오픈 관련 등록기능 제한*@
-                      @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+                      @if (Univision.Security.AppIdentity.CanPmsEdit)
                       {
                         <span>
                           @if (data.cf_seq != 0)
@@ -1505,7 +1505,7 @@
     </div>
   </div>
   @*PMS 오픈 관련 등록기능 제한*@
-  @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+  @if (Univision.Security.AppIdentity.CanPmsEdit)
   {
     <button type="button" onclick="location.href='@Url.Action("Candidatecreate", "Candidate")';" class="site-action btn-raised btn btn-success btn-floating" title="Create Candidate"><i class="icon wb-user-add" aria-hidden="true"></i></button>
   }

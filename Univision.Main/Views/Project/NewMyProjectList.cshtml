@@ -117,7 +117,7 @@
               </div>
             *@
             @*PMS 오픈 관련 등록기능 제한*@
-            @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
+            @if (Univision.Security.AppIdentity.CanPmsEdit)
             {
               <div class="panel-action text-right w-full">
                 <a href="@Url.Action("ProjectRepCreate", "Project")" class="btn btn-sm btn-info" title="컨설팅(Consulting) 프로젝트 등록">

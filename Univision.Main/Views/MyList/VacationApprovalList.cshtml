@@ -1,0 +1,48 @@
+﻿@{
+  ViewBag.Title = "VacationApprovalList";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="page-content container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel custom1">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase py-5">
+            Vacation Approval <small>(휴가 승인)</small>
+          </h3>
+        </header>
+        <div id="vacationApprBody" class="panel-body equal"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section scripts {
+  <script type="text/javascript">
+    // 승인 목록 로드 (Dashboard/VacationApprList 파셜 재사용). 파셜 내부 승인/반려 버튼이 이 함수를 호출해 목록을 갱신한다.
+    function callVacationApprList() {
+      $.ajax({
+        url: '@Url.Action("VacationApprList", "Dashboard")',
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading('#vacationApprBody');
+        }
+      })
+      .done(function (view) {
+        if (view && view.trim() !== "") {
+          $('#vacationApprBody').html(view);
+        } else {
+          $('#vacationApprBody').html('<div class="text-center text-muted py-40">승인할 휴가가 없습니다.</div>');
+        }
+      })
+      .always(function () {
+        hideLoading('#vacationApprBody');
+      });
+    }
+
+    $(function () {
+      callVacationApprList();
+    });
+  </script>
+}

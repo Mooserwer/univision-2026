@@ -117,6 +117,14 @@ namespace Univision.Main.Controllers
       return PartialView(model);
     }
 
+    /// <summary>
+    /// 휴가승인 전용 목록 페이지. (목록/승인 처리는 Dashboard/VacationApprList 파셜을 AJAX 재사용)
+    /// </summary>
+    public ActionResult VacationApprovalList()
+    {
+      return View();
+    }
+
 
     #region 휴가신청
 

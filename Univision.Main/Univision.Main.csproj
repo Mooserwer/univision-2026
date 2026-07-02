@@ -5690,6 +5690,7 @@
     <Content Include="Views\Dashboard\CoworkProjectList.cshtml" />
     <Content Include="Views\StatisticsAdmin\PeriodSalesAllList.cshtml" />
     <Content Include="Views\MyList\MyVacationList.cshtml" />
+    <Content Include="Views\MyList\VacationApprovalList.cshtml" />
     <Content Include="Views\Dashboard\VacationApprList.cshtml" />
     <Content Include="Views\Candidate\ShareCandidateLIst.cshtml" />
     <Content Include="Views\Candidate\ShareCandidateCreate.cshtml" />

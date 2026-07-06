@@ -470,7 +470,9 @@ namespace Univision.Main.Controllers
       try
       {
         // Shift 자택근무(v_type=11) 는 반차 신청 불가
-        if (model.data.v_type == 11 && model.detail_list != null
+        // 2026-07 : 쉬프트 반차 금지 미사용 결정 → 아래 플래그로 비활성화 (소스는 보존). 다시 켜려면 true.
+        bool useShiftHalfDayBlock = false;
+        if (useShiftHalfDayBlock && model.data.v_type == 11 && model.detail_list != null
             && model.detail_list.Any(d => (d.v_type ?? 0) != 0 || (d.v_period ?? 1) != 1))
         {
           return Json(new { ok = false, rtn_msg = "Shift 자택근무는 반차로 신청할 수 없습니다." });

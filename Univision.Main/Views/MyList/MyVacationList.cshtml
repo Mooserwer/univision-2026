@@ -563,13 +563,15 @@
             }
 
             // Shift 자택근무(11) : 이번 주 신청분이 주간 한도 초과 시 경고 후 진행 (추후 완전 차단 예정)
-            if (vtype === 11) {
+            // 2026-07 : 주간 한도 초과 체크 미사용 결정 → 아래 플래그로 비활성화 (소스는 보존). 다시 켜려면 true.
+            var useShiftWeeklyLimitCheck = false;
+            if (useShiftWeeklyLimitCheck && vtype === 11) {
                 $.get('@Url.Action("CheckShiftHomeWeekly", "MyList")',
                     { date: vacation_data.data.start_date, days: totalDays },
                     function (res) {
                         if (res && res.ok && res.over) {
                             // 한도 초과 경고 확인창 하나만 사용 (OK 시 바로 신청). 확인창 중첩 방지.
-                            ConfirmAlert('주간 한도 초과 경고', res.message, postVacation);
+                            ConfirmAlert('주간 Shift 한도 알림', res.message, postVacation);
                         } else {
                             doSubmit();
                         }

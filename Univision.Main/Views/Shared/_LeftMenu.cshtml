@@ -70,11 +70,11 @@
               @*PMS 오픈 관련 등록기능 제한*@
               @if (Univision.Security.AppIdentity.CanPmsEdit)
               {
-              <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "clientcreate")">
-                <a href="@Url.Action("ClientCreate", "Client")">
-                  <span class="site-menu-title">Registration <small>(등록)</small></span>
-                </a>
-              </li>
+                <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "clientcreate")">
+                  <a href="@Url.Action("ClientCreate", "Client")">
+                    <span class="site-menu-title">Registration <small>(등록)</small></span>
+                  </a>
+                </li>
               }
               <!--
       <li class="site-menu-item has-sub">
@@ -124,31 +124,31 @@
               @*PMS 오픈 관련 등록기능 제한*@
               @if (Univision.Security.AppIdentity.CanPmsEdit)
               {
-              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatecreate")">
-                <a href="@Url.Action("CandidateCreate", "Candidate")">
-                  <span class="site-menu-title">Registration <small>(등록)</small></span>
-                </a>
-              </li>
+                <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatecreate")">
+                  <a href="@Url.Action("CandidateCreate", "Candidate")">
+                    <span class="site-menu-title">Registration <small>(등록)</small></span>
+                  </a>
+                </li>
 
-              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidateai")">
-                <a href="@Url.Action("CandidateAI", "nGpt")">
-                  <span class="site-menu-title"><span class="badge badge-pill badge-success">ai</span> AI등록 </span>
-                </a>
-              </li>
+                <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidateai")">
+                  <a href="@Url.Action("CandidateAI", "nGpt")">
+                    <span class="site-menu-title"><span class="badge badge-pill badge-success">ai</span> AI등록 </span>
+                  </a>
+                </li>
 
-              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatemailai")">
-                <a href="@Url.Action("CandidateMailAi", "Candidate")">
-                  <span class="site-menu-title"><span class="badge badge-pill badge-primary">ai</span> AI등록(메일연동)</span>
-                </a>
-              </li>
+                <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatemailai")">
+                  <a href="@Url.Action("CandidateMailAi", "Candidate")">
+                    <span class="site-menu-title"><span class="badge badge-pill badge-primary">ai</span> AI등록(메일연동)</span>
+                  </a>
+                </li>
 
-              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "temporarycandidatelist")">
-                <a href="@Url.Action("TemporaryCandidateList", "Candidate")">
-                  <span class="site-menu-title">
-                    Temp Saved <small>(임시저장)</small>
-                  </span>
-                </a>
-              </li>
+                <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "temporarycandidatelist")">
+                  <a href="@Url.Action("TemporaryCandidateList", "Candidate")">
+                    <span class="site-menu-title">
+                      Temp Saved <small>(임시저장)</small>
+                    </span>
+                  </a>
+                </li>
               }
               <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "candidatecontactlist")">
                 <a href="@Url.Action("CandidateContactList", "Candidate")">
@@ -211,24 +211,24 @@
               @*PMS 오픈 관련 등록기능 제한*@
               @if (Univision.Security.AppIdentity.CanPmsEdit)
               {
-              <li class="site-menu-item has-sub has-sub @GetLeftMenuActiveCtrler(actionName, "projectcreate")">
-                <a href="javascript:void(0)">
-                  <span class="site-menu-title" data-link="@Url.Action("ProjectCreate", "Project")">Registration <small>(등록)</small></span>
-                  <span class="site-menu-arrow"></span>
-                </a>
-                <ul class="site-menu-sub">
-                  <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "projectcreate")">
-                    <a href="@Url.Action("ProjectCreate", "Project")">
-                      <span class="site-menu-title">- Recruitment <small>(채용프로젝트)</small></span>
-                    </a>
-                  </li>
-                  <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "projectrepcreate")">
-                    <a href="@Url.Action("ProjectRepCreate", "Project")">
-                      <span class="site-menu-title">- Consulting <small>(컨설팅프로젝트)</small></span>
-                    </a>
-                  </li>
-                </ul>
-              </li>
+                <li class="site-menu-item has-sub has-sub @GetLeftMenuActiveCtrler(actionName, "projectcreate")">
+                  <a href="javascript:void(0)">
+                    <span class="site-menu-title" data-link="@Url.Action("ProjectCreate", "Project")">Registration <small>(등록)</small></span>
+                    <span class="site-menu-arrow"></span>
+                  </a>
+                  <ul class="site-menu-sub">
+                    <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "projectcreate")">
+                      <a href="@Url.Action("ProjectCreate", "Project")">
+                        <span class="site-menu-title">- Recruitment <small>(채용프로젝트)</small></span>
+                      </a>
+                    </li>
+                    <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "projectrepcreate")">
+                      <a href="@Url.Action("ProjectRepCreate", "Project")">
+                        <span class="site-menu-title">- Consulting <small>(컨설팅프로젝트)</small></span>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
               }
               <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(actionName, "mykeyprojectlist")">
                 <a href="@Url.Action("MyKeyProjectList", "Project")">
@@ -530,23 +530,6 @@
       </li>
     }
           *@
-
-          @{
-            int vacApprPending = 0;
-            try
-            {
-              var vacApprRepo = new Univision.Core.Repositories.MyListRepository();
-              vacApprPending = vacApprRepo.CountMyVacationApproval(Univision.Security.AppIdentity.user_seq);
-            }
-            catch { }
-          }
-          <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "vacationapprovallist")">
-            <a href="@Url.Action("VacationApprovalList", "MyList")">
-              <i class="site-menu-icon wb-calendar" aria-hidden="true"></i>
-              <span class="site-menu-title">휴가승인 @if (vacApprPending > 0) { <span class="badge badge-danger">@vacApprPending</span> }</span>
-            </a>
-          </li>
-
           @{
             int apprPending = 0;
             try
@@ -558,10 +541,14 @@
             }
             catch { }
           }
+
           <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(controllerName, "appr")">
             <a href="javascript:void(0)">
               <i class="site-menu-icon wb-check" aria-hidden="true"></i>
-              <span class="site-menu-title"><span class="badge badge-danger">Beta</span> 전자결재 @if (apprPending > 0) { <span class="badge badge-danger">@apprPending</span> }</span>
+              <span class="site-menu-title">
+                <span class="badge badge-danger">Beta</span> 전자결재 @if (apprPending > 0)
+                {<span class="badge badge-danger">@apprPending</span>}
+              </span>
               <span class="site-menu-arrow" title="하위 메뉴를 확장/축소합니다."></span>
             </a>
             <ul class="site-menu-sub">
@@ -569,13 +556,40 @@
                 <a href="@Url.Action("WorkList", "Appr")"><span class="site-menu-title">기안함</span></a>
               </li>
               <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "approvallist")">
-                <a href="@Url.Action("ApprovalList", "Appr")"><span class="site-menu-title">결재함 @if (apprPending > 0) { <span class="badge badge-danger">@apprPending</span> }</span></a>
+                <a href="@Url.Action("ApprovalList", "Appr")">
+                  <span class="site-menu-title">
+                    결재함 @if (apprPending > 0)
+                    {<span class="badge badge-danger">@apprPending</span>}
+                  </span>
+                </a>
               </li>
               <li class="site-menu-item">
                 <a href="@Url.Action("Write", "Appr")"><span class="site-menu-title">기안 작성</span></a>
               </li>
             </ul>
           </li>
+          @if (Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0 && Univision.Security.AppIdentity.isExternal != 1)
+          {
+
+            int vacApprPending = 0;
+            try
+            {
+              var vacApprRepo = new Univision.Core.Repositories.MyListRepository();
+              vacApprPending = vacApprRepo.CountMyVacationApproval(Univision.Security.AppIdentity.user_seq);
+            }
+            catch { }
+
+            <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "vacationapprovallist")">
+              <a href="@Url.Action("VacationApprovalList", "MyList")">
+                <i class="site-menu-icon wb-calendar" aria-hidden="true"></i>
+                <span class="site-menu-title">
+                  연차/휴가 승인 @if (vacApprPending > 0)
+                  {<span class="badge badge-danger">@vacApprPending</span>}
+                </span>
+              </a>
+            </li>
+          }
+
         </ul>
 
 

@@ -115,6 +115,12 @@ namespace Univision.Core.Models.DTO
 
         [NotMapped]
         public string vacation_detail { get; set; }
+
+        /// <summary>
+        /// SHIFT(집) 주간 한도 초과 여부 (휴가승인 목록 행 강조용)
+        /// </summary>
+        [NotMapped]
+        public bool shift_over { get; set; }
     }
 }
 

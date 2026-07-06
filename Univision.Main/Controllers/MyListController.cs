@@ -118,7 +118,7 @@ namespace Univision.Main.Controllers
     }
 
     /// <summary>
-    /// 휴가승인 전용 목록 페이지. (Tabulator)
+    /// 휴가승인 전용 목록 페이지.
     /// </summary>
     public ActionResult VacationApprovalList()
     {
@@ -126,10 +126,10 @@ namespace Univision.Main.Controllers
     }
 
     /// <summary>
-    /// 휴가승인 목록 데이터 (Tabulator ajax). SHIFT(집, v_type=11)이 해당 주 주간한도를 초과하면 shift_over=true.
+    /// 휴가승인 목록 파셜. SHIFT(집, v_type=11)이 해당 주 주간한도를 초과하면 shift_over=true 로 표기(행 강조용).
     /// </summary>
     [HttpPost]
-    public JsonResult VacationApprovalListAjx()
+    public PartialViewResult VacationApprovalListPartial()
     {
       MyListRepository mlr = new MyListRepository();
       var list = mlr.SelectMyVacationApprovalList(AppIdentity.user_seq);
@@ -138,10 +138,8 @@ namespace Univision.Main.Controllers
       var limitCache = new Dictionary<int, int>();
       var usedCache = new Dictionary<string, decimal>();
 
-      var result = new List<object>();
       foreach (var v in list)
       {
-        bool shiftOver = false;
         if (v.v_type == 11 && v.start_date.HasValue && v.request_user.HasValue)
         {
           int reqUser = v.request_user.Value;
@@ -164,32 +162,11 @@ namespace Univision.Main.Controllers
             used = mlr.CountShiftHomeDaysInWeek(reqUser, ws, we);
             usedCache[key] = used;
           }
-          shiftOver = used > limit;
+          v.shift_over = used > limit;
         }
-
-        string dateStr = Utils.ConvertDateTimeToString(v.start_date);
-        if (v.start_date != v.end_date)
-        {
-          dateStr += " ~ " + Utils.ConvertDateTimeToString(v.end_date);
-        }
-
-        result.Add(new
-        {
-          v_seq = v.v_seq,
-          request_name = v.request_name,
-          request_date = Utils.ConvertDateTimeToString(v.request_date),
-          type_name = v.type_name,
-          date_str = dateStr,
-          vacation_number = v.vacation_number,
-          cur_remain = v.cur_remain,
-          v_type = v.v_type,
-          comment = v.comment,
-          vacation_detail = v.vacation_detail,
-          shift_over = shiftOver
-        });
       }
 
-      return Json(new { list = result });
+      return PartialView(list);
     }
 
 

@@ -2,35 +2,27 @@
   ViewBag.Title = "VacationApprovalList";
   Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
-<link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
-
 <style>
   /* 주간 SHIFT(집) 한도 초과 행 강조 */
-  .tabulator-row.shift-over-row,
-  .tabulator-row.shift-over-row:hover {
+  .table tbody tr.shift-over-row,
+  .table-hover tbody tr.shift-over-row:hover {
     background-color: #ffd6d6 !important;
   }
 </style>
-
 <div class="page-content container-fluid">
   <div class="row">
-    <div class="col-xl-12">
+    <div class="col-md-12">
       <div class="panel custom1">
-        <div class="panel-heading">
-          <div class="panel-title text-uppercase py-5">
+        <header class="panel-heading">
+          <h3 class="panel-title text-uppercase py-5">
             Vacation Approval <small>(휴가 승인)</small>
-          </div>
-          <div class="panel-actions panel-actions-keep">
-            <button type="button" class="btn btn-sm btn-primary" id="table-setdata"><i class="icon wb-refresh"></i> 새로고침</button>
-          </div>
-        </div>
-        <div class="panel-body p-10">
+          </h3>
+        </header>
+        <div class="panel-body">
           <div class="mb-10 text-muted font-size-12">
             <span class="badge" style="background-color:#ffd6d6;">&nbsp;&nbsp;</span> 주간 SHIFT(집) 한도 초과 신청
           </div>
-          <div id="vacation_appr_table" data-role="container"></div>
+          <div id="vacationApprBody" class="equal"></div>
         </div>
       </div>
     </div>
@@ -39,113 +31,31 @@
 
 @section scripts {
   <script type="text/javascript">
-    var apprAjxUrl = '@Url.Action("VacationApprovalListAjx", "MyList")';
-
-    var table = new Tabulator("#vacation_appr_table", {
-      height: "600px",
-      layout: "fitDataFill",
-      placeholder: "승인할 휴가가 없습니다.",
-      columns: [
-        { formatter: "rownum", hozAlign: "center", width: 45, headerSort: false },
-        { title: "신청자", field: "request_name", sorter: "string", width: 110, headerFilter: "input" },
-        { title: "구분", field: "type_name", sorter: "string", width: 120, hozAlign: "center", headerFilter: "input" },
-        { title: "신청일", field: "request_date", sorter: "string", width: 110, hozAlign: "center" },
-        { title: "휴가일자", field: "date_str", sorter: "string", width: 180, hozAlign: "center" },
-        {
-          title: "일수", field: "vacation_number", sorter: "number", width: 100, hozAlign: "right", headerSort: false,
-          formatter: function (cell) {
-            var d = cell.getData();
-            var html = (d.vacation_number == null ? "" : d.vacation_number);
-            if (d.v_type == 1) {
-              html += "<br/><small>[잔여 : " + (d.cur_remain == null ? 0 : d.cur_remain) + " 일]</small>";
-            }
-            return html;
-          }
-        },
-        {
-          title: "사유", field: "comment", sorter: "string", minWidth: 150, widthGrow: 2, headerFilter: "input",
-          formatter: function (cell) {
-            var v = cell.getValue() == null ? "" : cell.getValue();
-            return "<span title='" + v.replace(/'/g, "&#39;") + "'>" + v + "</span>";
-          }
-        },
-        {
-          title: "처리", field: "v_seq", width: 190, hozAlign: "center", headerSort: false,
-          formatter: function (cell) {
-            var v = cell.getValue();
-            return "<button type='button' class='btn btn-xs btn-outline-success' onclick='apprVacation(" + v + ")'>Approve</button> "
-                 + "<button type='button' class='btn btn-xs btn-outline-warning' onclick='returnVacation(" + v + ")'>Return</button>";
-          }
+    // 승인 목록 로드 (MyList/VacationApprovalListPartial 파셜 사용, SHIFT 초과 행 강조 포함).
+    // 파셜 내부 승인/반려 버튼이 이 함수를 호출해 목록을 갱신한다.
+    function callVacationApprList() {
+      $.ajax({
+        url: '@Url.Action("VacationApprovalListPartial", "MyList")',
+        dataType: 'html',
+        type: 'POST',
+        beforeSend: function () {
+          showLoading('#vacationApprBody');
         }
-      ],
-      rowFormatter: function (row) {
-        if (row.getData().shift_over === true) {
-          row.getElement().classList.add("shift-over-row");
+      })
+      .done(function (view) {
+        if (view && view.trim() !== "") {
+          $('#vacationApprBody').html(view);
+        } else {
+          $('#vacationApprBody').html('<div class="text-center text-muted py-40">승인할 휴가가 없습니다.</div>');
         }
-      },
-      ajaxURL: apprAjxUrl,
-      ajaxConfig: "POST",
-      ajaxContentType: "json",
-      ajaxResponse: function (url, params, response) {
-        return response.list;
-      },
-      pagination: "local",
-      paginationSize: 50,
-      paginationSizeSelector: [10, 20, 50, 100],
-      paginationCounter: "rows"
+      })
+      .always(function () {
+        hideLoading('#vacationApprBody');
+      });
+    }
+
+    $(function () {
+      callVacationApprList();
     });
-
-    document.getElementById("table-setdata").addEventListener("click", function () {
-      table.setData(apprAjxUrl);
-    });
-
-    function reloadVacationApprTable() {
-      table.setData(apprAjxUrl);
-    }
-
-    function processVacation(v_seq, appr, header, message) {
-      alertify.confirm()
-        .set({
-          'labels': { ok: '확인', cancel: '취소' },
-          'onok': function () {
-            $.ajax({
-              url: '@Url.Action("CreateVacationAppr", "MyList")',
-              data: { v_seq: v_seq, appr: appr },
-              dataType: 'json',
-              type: 'POST',
-              beforeSend: function () { showLoading(); }
-            })
-            .done(function (json) {
-              hideLoading();
-              if (json.ok) {
-                NormalAlert(json.message);
-                reloadVacationApprTable();
-              } else {
-                ErrorAlert('Error.');
-              }
-            })
-            .fail(function () {
-              hideLoading();
-              ErrorAlert('알 수 없는 오류가 발생 했습니다.\n관리자에게 문의 하세요.');
-            });
-          },
-          'oncancel': function () { return; }
-        })
-        .setHeader(header)
-        .setting({ message: message })
-        .show();
-    }
-
-    function apprVacation(v_seq) {
-      processVacation(v_seq, 1,
-        '<i class="fas fa-exclamation-triangle" style="color:#FFDC2E"></i>휴가 승인',
-        '선택하신 휴가를 승인 하시겠습니까?');
-    }
-
-    function returnVacation(v_seq) {
-      processVacation(v_seq, -1,
-        '<i class="fas fa-exclamation-triangle text-danger"></i>휴가 반려',
-        '선택하신 휴가를 반려 하시겠습니까?');
-    }
   </script>
 }

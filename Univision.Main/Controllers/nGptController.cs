@@ -243,7 +243,8 @@ namespace Univision.Main.Controllers
         return Json(new
         {
           ok = true,
-          file_url = Request.Url.GetLeftPart(UriPartial.Authority) + "/UploadedFiles/gpt_makeup_2026/" + result.Item2,
+          // 파일명에 &, 공백, 괄호 등 특수문자가 있어도 다운로드되도록 파일명 구간을 URL 인코딩
+          file_url = Request.Url.GetLeftPart(UriPartial.Authority) + "/UploadedFiles/gpt_makeup_2026/" + Uri.EscapeDataString(result.Item2),
           file_name = result.Item2,
           message = ""
         });

@@ -286,11 +286,13 @@ class ResumeMakeupManager5 extends ResumeMakeupManager {
     );
 
     try {
+      // 추출 결과에 섞인 유령/제어 문자 제거 후 전송
+      const cleanModel = this._stripGhostChars(finalModel);
       const res = await fetch(window.url_make_makeup2, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
-          makeup_model: JSON.stringify(finalModel),
+          makeup_model: JSON.stringify(cleanModel),
           file_name:    name,
           file_type:    this.lang === "KR" ? "K" : "E",
         })
@@ -340,5 +342,40 @@ class ResumeMakeupManager5 extends ResumeMakeupManager {
       etcs:           nc?.etcs           ?? [],
       selfintro:      nc?.selfintro      ?? []
     };
+  }
+
+  // ─────────────────────────────────────────────────────────
+  //  유령/제어 문자 제거 (추출 결과에 섞인 U+FFFD, U+FFFE, BOM, C0/C1 제어문자 등)
+  //  탭/개행/캐리지리턴(\t \n \r)은 보존. JSON.stringify 전에 문자열 값만 정리한다.
+  // ─────────────────────────────────────────────────────────
+  _stripGhostChars(value) {
+    if (typeof value === "string") {
+      var out = "";
+      for (var i = 0; i < value.length; i++) {
+        var c = value.charCodeAt(i);
+        if (c === 9 || c === 10 || c === 13) { out += value[i]; continue; }
+        if (c <= 0x1F) continue;
+        if (c >= 0x7F && c <= 0x9F) continue;
+        if (c === 0xFEFF) continue;
+        if (c === 0xFFFD) continue;
+        if (c === 0xFFFE || c === 0xFFFF) continue;
+        if (c >= 0xFDD0 && c <= 0xFDEF) continue;
+        out += value[i];
+      }
+      return out;
+    }
+    if (Array.isArray(value)) {
+      return value.map(function (v) { return this._stripGhostChars(v); }.bind(this));
+    }
+    if (value && typeof value === "object") {
+      var cleaned = {};
+      for (var k in value) {
+        if (Object.prototype.hasOwnProperty.call(value, k)) {
+          cleaned[k] = this._stripGhostChars(value[k]);
+        }
+      }
+      return cleaned;
+    }
+    return value;
   }
 }

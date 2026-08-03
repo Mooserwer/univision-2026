@@ -29,6 +29,13 @@ using Univision.Main.Models.Api;
 using Univision.Main.Models.Candidate;
 using Univision.Main.Models.Project;
 using Univision.Security;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Digests;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Modes;
+using Org.BouncyCastle.Crypto.Paddings;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace Univision.Main.Controllers
 {
@@ -5763,5 +5770,78 @@ namespace Univision.Main.Controllers
 
       return PartialView(model);
     }
+
+    #region 개인정보 SEED 암호화/복호화 (KISA SEED-128, CBC/PKCS7 + salt)
+
+    /// <summary>
+    /// 개인정보 보호용 SEED-128(CBC/PKCS7) 암호화.
+    /// 매 호출마다 임의 salt/IV 를 생성해 password 로부터 키를 유도(PBKDF2-HMAC-SHA256)하고,
+    /// 결과는 [salt(16) + IV(16) + 암호문] 을 이어붙여 Base64 문자열로 반환한다.
+    /// </summary>
+    [NonAction]
+    public string SeedEncrypt(string plainText, string password)
+    {
+      if (plainText == null) return null;
+
+      byte[] salt = new byte[16];
+      byte[] iv = new byte[16];
+      using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+      {
+        rng.GetBytes(salt);
+        rng.GetBytes(iv);
+      }
+
+      byte[] key = DeriveSeedKey(password, salt);
+
+      var cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new SeedEngine()), new Pkcs7Padding());
+      cipher.Init(true, new ParametersWithIV(new KeyParameter(key), iv));
+      byte[] enc = cipher.DoFinal(System.Text.Encoding.UTF8.GetBytes(plainText));
+
+      byte[] result = new byte[salt.Length + iv.Length + enc.Length];
+      System.Buffer.BlockCopy(salt, 0, result, 0, salt.Length);
+      System.Buffer.BlockCopy(iv, 0, result, salt.Length, iv.Length);
+      System.Buffer.BlockCopy(enc, 0, result, salt.Length + iv.Length, enc.Length);
+      return Convert.ToBase64String(result);
+    }
+
+    /// <summary>
+    /// SeedEncrypt 로 만든 Base64 문자열을 복호화한다.
+    /// 앞의 salt(16)/IV(16) 를 분리해 password 로부터 동일 키를 유도한 뒤 SEED-128(CBC/PKCS7) 복호화.
+    /// </summary>
+    [NonAction]
+    public string SeedDecrypt(string cipherText, string password)
+    {
+      if (string.IsNullOrEmpty(cipherText)) return cipherText;
+
+      byte[] all = Convert.FromBase64String(cipherText);
+      if (all.Length <= 32) throw new ArgumentException("복호화할 데이터 길이가 올바르지 않습니다.");
+
+      byte[] salt = new byte[16];
+      byte[] iv = new byte[16];
+      byte[] enc = new byte[all.Length - 32];
+      System.Buffer.BlockCopy(all, 0, salt, 0, 16);
+      System.Buffer.BlockCopy(all, 16, iv, 0, 16);
+      System.Buffer.BlockCopy(all, 32, enc, 0, enc.Length);
+
+      byte[] key = DeriveSeedKey(password, salt);
+
+      var cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new SeedEngine()), new Pkcs7Padding());
+      cipher.Init(false, new ParametersWithIV(new KeyParameter(key), iv));
+      byte[] dec = cipher.DoFinal(enc);
+      return System.Text.Encoding.UTF8.GetString(dec);
+    }
+
+    /// <summary>
+    /// salt 기반 SEED-128(16바이트) 키 유도 (PBKDF2-HMAC-SHA256, 10,000회).
+    /// </summary>
+    [NonAction]
+    private byte[] DeriveSeedKey(string password, byte[] salt)
+    {
+      var gen = new Pkcs5S2ParametersGenerator(new Sha256Digest());
+      gen.Init(PbeParametersGenerator.Pkcs5PasswordToUtf8Bytes((password ?? string.Empty).ToCharArray()), salt, 10000);
+      return ((KeyParameter)gen.GenerateDerivedMacParameters(128)).GetKey();
+    }
+
+    #endregion
   }
 }

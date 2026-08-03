@@ -340,6 +340,7 @@
     <Compile Include="Infrastructure\SearchEngineApi.cs" />
     <Compile Include="Infrastructure\CallApi.cs" />
     <Compile Include="Infrastructure\CustomFilters\LoginCheckFilter.cs" />
+    <Compile Include="Infrastructure\CustomFilters\SessionTimeoutFilter.cs" />
     <Compile Include="Infrastructure\FileUpload.cs" />
     <Compile Include="Infrastructure\ImageHandler.cs" />
     <Compile Include="Infrastructure\Mailing\MailService.cs" />

@@ -5774,12 +5774,12 @@ namespace Univision.Main.Controllers
     #region 개인정보 SEED 암호화/복호화 (KISA SEED-128, CBC/PKCS7 + salt)
 
     /// <summary>
-    /// 개인정보 보호용 SEED-128(CBC/PKCS7) 암호화.
-    /// 매 호출마다 임의 salt/IV 를 생성해 password 로부터 키를 유도(PBKDF2-HMAC-SHA256)하고,
-    /// 결과는 [salt(16) + IV(16) + 암호문] 을 이어붙여 Base64 문자열로 반환한다.
+    /// 개인정보(전화번호·이메일 등) 보호용 SEED-128(CBC/PKCS7) 암호화.
+    /// 매 호출마다 임의 salt/IV 를 생성해 설정된 비밀키(appSettings["SeedSecretKey"])로부터
+    /// 키를 유도(PBKDF2-HMAC-SHA256)하고, 결과는 [salt(16) + IV(16) + 암호문] 을 Base64 로 반환한다.
     /// </summary>
     [NonAction]
-    public string SeedEncrypt(string plainText, string password)
+    public string SeedEncrypt(string plainText)
     {
       if (plainText == null) return null;
 
@@ -5791,7 +5791,7 @@ namespace Univision.Main.Controllers
         rng.GetBytes(iv);
       }
 
-      byte[] key = DeriveSeedKey(password, salt);
+      byte[] key = DeriveSeedKey(salt);
 
       var cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new SeedEngine()), new Pkcs7Padding());
       cipher.Init(true, new ParametersWithIV(new KeyParameter(key), iv));
@@ -5805,11 +5805,11 @@ namespace Univision.Main.Controllers
     }
 
     /// <summary>
-    /// SeedEncrypt 로 만든 Base64 문자열을 복호화한다.
-    /// 앞의 salt(16)/IV(16) 를 분리해 password 로부터 동일 키를 유도한 뒤 SEED-128(CBC/PKCS7) 복호화.
+    /// SeedEncrypt 로 만든 Base64 문자열(전화번호·이메일 등)을 복호화한다.
+    /// 앞의 salt(16)/IV(16) 를 분리해 설정된 비밀키로 동일 키를 유도한 뒤 SEED-128(CBC/PKCS7) 복호화.
     /// </summary>
     [NonAction]
-    public string SeedDecrypt(string cipherText, string password)
+    public string SeedDecrypt(string cipherText)
     {
       if (string.IsNullOrEmpty(cipherText)) return cipherText;
 
@@ -5823,7 +5823,7 @@ namespace Univision.Main.Controllers
       System.Buffer.BlockCopy(all, 16, iv, 0, 16);
       System.Buffer.BlockCopy(all, 32, enc, 0, enc.Length);
 
-      byte[] key = DeriveSeedKey(password, salt);
+      byte[] key = DeriveSeedKey(salt);
 
       var cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new SeedEngine()), new Pkcs7Padding());
       cipher.Init(false, new ParametersWithIV(new KeyParameter(key), iv));
@@ -5832,13 +5832,18 @@ namespace Univision.Main.Controllers
     }
 
     /// <summary>
-    /// salt 기반 SEED-128(16바이트) 키 유도 (PBKDF2-HMAC-SHA256, 10,000회).
+    /// salt 기반 SEED-128(16바이트) 키 유도. 비밀키는 appSettings["SeedSecretKey"] 에서 읽는다
+    /// (web.config 는 git 제외 대상이라 키가 소스에 남지 않음). PBKDF2-HMAC-SHA256, 10,000회.
     /// </summary>
     [NonAction]
-    private byte[] DeriveSeedKey(string password, byte[] salt)
+    private byte[] DeriveSeedKey(byte[] salt)
     {
+      string secret = ConfigurationManager.AppSettings["SeedSecretKey"];
+      if (string.IsNullOrEmpty(secret))
+        throw new InvalidOperationException("SEED 비밀키(appSettings[\"SeedSecretKey\"])가 설정되지 않았습니다.");
+
       var gen = new Pkcs5S2ParametersGenerator(new Sha256Digest());
-      gen.Init(PbeParametersGenerator.Pkcs5PasswordToUtf8Bytes((password ?? string.Empty).ToCharArray()), salt, 10000);
+      gen.Init(PbeParametersGenerator.Pkcs5PasswordToUtf8Bytes(secret.ToCharArray()), salt, 10000);
       return ((KeyParameter)gen.GenerateDerivedMacParameters(128)).GetKey();
     }
 

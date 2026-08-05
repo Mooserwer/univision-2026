@@ -224,7 +224,11 @@ namespace Univision.Main.Controllers
         string file_type_str = (file_type == "E") ? "E" : "";
         string template_name = (file_type == "E") ? "EN_makeup_blank.docx" : "KR_makeup_blank.docx";
 
-        string fileName = string.Format("{0}_{1}_{2}(by GPT).docx", file_name, file_type_str, req_name);
+        // 파일명에 & % # ? 등 URL 경로/파일시스템에서 문제되는 문자가 있으면 다운로드가 실패하므로 안전한 문자로 치환.
+        // (특히 & 는 ASP.NET requestPathInvalidCharacters 기본값에 포함되어, URL 인코딩해도 디코딩 후 경로에 남으면 요청이 거부됨)
+        string safe_file_name = System.Text.RegularExpressions.Regex.Replace(file_name ?? "", @"[&%#?*:\\/<>""|]", "_");
+
+        string fileName = string.Format("{0}_{1}_{2}(by GPT).docx", safe_file_name, file_type_str, req_name);
         string samplePath = System.IO.Path.Combine(Server.MapPath("~/UploadedFiles/makeupSample/"), template_name);
         string saveDirPath = Server.MapPath("~/UploadedFiles/gpt_makeup_2026/");
         string file_dir = System.IO.Path.Combine(Utils.GetRootUrl(Request), saveDirPath);
@@ -243,7 +247,7 @@ namespace Univision.Main.Controllers
         return Json(new
         {
           ok = true,
-          // 파일명에 &, 공백, 괄호 등 특수문자가 있어도 다운로드되도록 파일명 구간을 URL 인코딩
+          // 공백/괄호 등은 URL 인코딩으로 처리 (& 등 경로 위험문자는 위 safe_file_name 에서 이미 안전 치환됨)
           file_url = Request.Url.GetLeftPart(UriPartial.Authority) + "/UploadedFiles/gpt_makeup_2026/" + Uri.EscapeDataString(result.Item2),
           file_name = result.Item2,
           message = ""

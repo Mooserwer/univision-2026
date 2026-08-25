@@ -635,7 +635,7 @@ SELECT ISNULL(SUM(CAST(vacation_number AS decimal(9,2))), 0)
 FROM uv_vacation_history
 WHERE request_user = @uv_seq
   AND v_type = 11
-  AND ISNULL(leader_confirm, 0) <> -1
+  AND ISNULL(is_confirm, 0) <> -1
   AND start_date >= @weekStart
   AND start_date <  @weekEndNext", new { uv_seq, weekStart, weekEndNext }) ?? 0;
       }

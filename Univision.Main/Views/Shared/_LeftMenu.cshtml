@@ -281,12 +281,7 @@
           </li>
           <!-- Statistics -->
 
-          <li class="site-menu-item @GetLeftMenuActiveCtrler(controllerName+actionName, "scheduleschedulelist")">
-            <a href="@Url.Action("ScheduleList", "Schedule")" title="켈린더">
-              <i class="site-menu-icon wb-calendar" aria-hidden="true"></i>
-              <span class="site-menu-title">CALENDAR</span>
-            </a>
-          </li>
+
           @if ((Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0))
           {
             <li class="site-menu-item @GetLeftMenuActiveCtrler(controllerName+actionName, "schedulevacationlist")">
@@ -490,15 +485,14 @@
               }
             </ul>
           </li>
-          @if (Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0 && Univision.Security.AppIdentity.isExternal != 1)
-          {
-            <li class="site-menu-item">
-              <a href="javascript:openUrl('@Url.Action("MakeupAi", "nGPT")')">
-                <i class="site-menu-icon wb-download" aria-hidden="true"></i>
-                <span class="site-menu-title" title="AI 메이크업(새창)"><span class="badge badge-success">New</span> AI  메이크업</span>
-              </a>
-            </li>
-          }
+
+          <li class="site-menu-item">
+            <a href="javascript:openUrl('@Url.Action("MakeupAi", "nGPT")')">
+              <i class="site-menu-icon wb-download" aria-hidden="true"></i>
+              <span class="site-menu-title" title="AI 메이크업(새창)"><span class="badge badge-success">New</span> AI  메이크업</span>
+            </a>
+          </li>
+
           <li class="site-menu-item">
             <a href="javascript:openUrl('@Url.Action("PDFtoWord", "nGPT")')">
               <i class="site-menu-icon wb-download" aria-hidden="true"></i>
@@ -530,44 +524,47 @@
       </li>
     }
           *@
-          @{
-            int apprPending = 0;
-            try
-            {
-              using (var apprRepo = new Univision.Core.Repositories.ApprovalRepository())
+          @if (Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0 && Univision.Security.AppIdentity.isExternal != 1)
+          {
+            
+              int apprPending = 0;
+              try
               {
-                apprPending = apprRepo.CountPendingApproval(Univision.Security.AppIdentity.user_seq);
+                using (var apprRepo = new Univision.Core.Repositories.ApprovalRepository())
+                {
+                  apprPending = apprRepo.CountPendingApproval(Univision.Security.AppIdentity.user_seq);
+                }
               }
-            }
-            catch { }
-          }
+              catch { }
+            
 
-          <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(controllerName, "appr")">
-            <a href="javascript:void(0)">
-              <i class="site-menu-icon wb-check" aria-hidden="true"></i>
-              <span class="site-menu-title">
-                <span class="badge badge-danger">Beta</span> 전자결재 @if (apprPending > 0)
-                {<span class="badge badge-danger">@apprPending</span>}
-              </span>
-              <span class="site-menu-arrow" title="하위 메뉴를 확장/축소합니다."></span>
-            </a>
-            <ul class="site-menu-sub">
-              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "worklist,write,detail")">
-                <a href="@Url.Action("WorkList", "Appr")"><span class="site-menu-title">기안함</span></a>
-              </li>
-              <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "approvallist")">
-                <a href="@Url.Action("ApprovalList", "Appr")">
-                  <span class="site-menu-title">
-                    결재함 @if (apprPending > 0)
-                    {<span class="badge badge-danger">@apprPending</span>}
-                  </span>
-                </a>
-              </li>
-              <li class="site-menu-item">
-                <a href="@Url.Action("Write", "Appr")"><span class="site-menu-title">기안 작성</span></a>
-              </li>
-            </ul>
-          </li>
+            <li class="site-menu-item has-sub @GetLeftMenuActiveCtrler(controllerName, "appr")">
+              <a href="javascript:void(0)">
+                <i class="site-menu-icon wb-check" aria-hidden="true"></i>
+                <span class="site-menu-title">
+                  <span class="badge badge-danger">Beta</span> 전자결재 @if (apprPending > 0)
+                  {<span class="badge badge-danger">@apprPending</span>}
+                </span>
+                <span class="site-menu-arrow" title="하위 메뉴를 확장/축소합니다."></span>
+              </a>
+              <ul class="site-menu-sub">
+                <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "worklist,write,detail")">
+                  <a href="@Url.Action("WorkList", "Appr")"><span class="site-menu-title">기안함</span></a>
+                </li>
+                <li class="site-menu-item @GetLeftMenuActiveCtrler(actionName, "approvallist")">
+                  <a href="@Url.Action("ApprovalList", "Appr")">
+                    <span class="site-menu-title">
+                      결재함 @if (apprPending > 0)
+                      {<span class="badge badge-danger">@apprPending</span>}
+                    </span>
+                  </a>
+                </li>
+                <li class="site-menu-item">
+                  <a href="@Url.Action("Write", "Appr")"><span class="site-menu-title">기안 작성</span></a>
+                </li>
+              </ul>
+            </li>
+          }
           @if (Univision.Security.AppIdentity.ua_seq <= 3 && Univision.Security.AppIdentity.ua_seq > 0 && Univision.Security.AppIdentity.isExternal != 1)
           {
 
@@ -589,7 +586,12 @@
               </a>
             </li>
           }
-
+          <li class="site-menu-item @GetLeftMenuActiveCtrler(controllerName+actionName, "scheduleschedulelist")">
+            <a href="@Url.Action("ScheduleList", "Schedule")" title="켈린더">
+              <i class="site-menu-icon wb-calendar" aria-hidden="true"></i>
+              <span class="site-menu-title">CALENDAR</span>
+            </a>
+          </li>
         </ul>
 
 

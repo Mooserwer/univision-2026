@@ -98,7 +98,7 @@ namespace Univision.Core.Models.DTO.Remember
     /// <summary>
     /// 후보자명 표시 여부
     /// </summary>
-    public bool is_show_candidates_name { get; set; }
+    public bool is_show_candidate_name { get; set; }
 
     /// <summary>
     /// 연봉 수수료율 표시 여부
@@ -164,7 +164,7 @@ namespace Univision.Core.Models.DTO.Remember
     /// </summary>
     public string request_user_name { get; set; }
 
-    
+
     /// <summary>
     /// 후보자 최종 직급
     /// </summary>
@@ -246,7 +246,7 @@ namespace Univision.Core.Models.DTO.Remember
     /// 후보자 직급
     /// </summary>
     public string job_rank { get; set; }
-    
+
     /// <summary>
     /// 입사일
     /// </summary>
@@ -414,6 +414,6 @@ namespace Univision.Core.Models.DTO.Remember
     /// <summary>
     /// 참여자 역할
     /// </summary>
-    public string currency { get; set; }    
+    public string currency { get; set; }
   }
 }

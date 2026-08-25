@@ -546,7 +546,7 @@ namespace Univision.Remember.RestfulServer.Controllers
         r_request_user_name = model.user.name,
         r_request_user_email = model.user.email,
         is_po_no = (model.is_po_number ? 1 : 0),
-        is_open_name = (model.is_show_candidates_name ? 1 : 0),
+        is_open_name = (model.is_show_candidate_name ? 1 : 0),
         is_open_annual_income = (model.is_show_commission_rate ? 1 : 0),
         invoice_title = model.title,
         invoice_contents = model.description,

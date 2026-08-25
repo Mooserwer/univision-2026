@@ -16,7 +16,7 @@ namespace Univision.Core.Models.DTO.Remember
     /// </summary>
     public long invoice_id { get; set; }
 
-    
+
     /// <summary>
     /// 인보이스 언어
     /// </summary>
@@ -40,7 +40,7 @@ namespace Univision.Core.Models.DTO.Remember
     /// <summary>
     /// 후보자명 표시 여부
     /// </summary>
-    public bool is_show_candidates_name { get; set; }
+    public bool is_show_candidate_name { get; set; }
 
     /// <summary>
     /// 연봉 수수료율 표시 여부

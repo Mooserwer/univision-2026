@@ -39,7 +39,8 @@ namespace Univision.Remember.RestfulServer.Controllers
             return Json(new { result = -1, message = "전송된 데이터가 없습니다." });
           }
 
-
+          /*
+           * 취소 환불 건 임시로 수신 받을 수 있도록 허용(2027년 이후에는 막아도 되지 않을까 싶음)
           if (model.status == "CANCELED" || model.status == "REFUNDED")
           {
             List<string> errorMessages_First = new List<string>();
@@ -59,6 +60,7 @@ namespace Univision.Remember.RestfulServer.Controllers
               throw new ValidationException(errorMessages_First);
             }
           }
+          */
 
 
           var entity = MapToEntityV2(model);
@@ -147,6 +149,8 @@ namespace Univision.Remember.RestfulServer.Controllers
 
       List<string> errorMessages = new List<string>();
       List<string> warningMessages = new List<string>();
+      string title = String.Empty;
+      string description = String.Empty;
 
       // [1] 마스터 정보 검증
       if (model.id <= 0) errorMessages.Add("[인보이스 ID] 정보가 유효하지 않습니다.");
@@ -156,6 +160,8 @@ namespace Univision.Remember.RestfulServer.Controllers
       {
         if (string.IsNullOrWhiteSpace(model.title)) errorMessages.Add("인보이스 제목 정보가 없습니다.");
         if (string.IsNullOrWhiteSpace(model.description)) errorMessages.Add("인보이스 본문 정보가 없습니다.");
+        title = model.title;
+        description = model.description;
       }
 
       if (model.user.id <= 0) errorMessages.Add("신청자 정보가 유효하지 않습니다.");
@@ -174,12 +180,13 @@ namespace Univision.Remember.RestfulServer.Controllers
         }
       }
 
-      if (model.total_amount == 0) errorMessages.Add("[총 금액] 은 0일 수 없습니다.");
-
-      if (model.supply_amount == 0) errorMessages.Add("[공급 금액] 은 0일 수 없습니다.");
-      else
-      {
-        if ((model.supply_amount + model.tax_amount) != model.total_amount)
+      //0원 인보이스 허용예정
+      //if (model.total_amount == 0) errorMessages.Add("[총 금액] 은 0일 수 없습니다.");
+      //0원 인보이스 허용예정
+      //if (model.supply_amount == 0) errorMessages.Add("[공급 금액] 은 0일 수 없습니다.");
+      //else
+      //{
+      if ((model.supply_amount + model.tax_amount) != model.total_amount)
         {
           model.total_amount = model.supply_amount + model.tax_amount;
           warningMessages.Add($"[공급 금액 + 부가세] 와 [총 금액]와 달라 [공급 금액 + 부가세]기준으로 처리 됩니다. (변경 된 총 금액 : {model.total_amount:N0})");
@@ -192,7 +199,7 @@ namespace Univision.Remember.RestfulServer.Controllers
           warningMessages.Add($"[발행 금액] 과 [총 금액] 이 달라 [발행 금액]기준으로 처리 됩니다. (변경 된 발행 금액 : {model.apply_amount:N0})");
         }
 
-      }
+      //}
       if (string.IsNullOrWhiteSpace(model.amount_currency))
       {
         errorMessages.Add("[발행금액 화폐 단위] 정보가 유효하지 않습니다.");
@@ -397,7 +404,8 @@ namespace Univision.Remember.RestfulServer.Controllers
           bank_name = model.bank_name;
           switch (model.bank_name)
           {
-            case "국민은행": bank_account = "389868-11-010539"; break;
+            case "국민은행": bank_account = "389801-01-140852"; break;
+            case "국민은행(외화전용)": bank_account = "389868-11-010539"; break;
             case "신한은행": bank_account = "100-008-022740"; break;
             case "우리은행": bank_account = "305-047998-13-001"; break;
             case "하나은행": bank_account = "249-890003-35004"; break;
@@ -412,11 +420,17 @@ namespace Univision.Remember.RestfulServer.Controllers
       int tax_type = -1;
       if (model.tax_type == "TAXABLE")
       {
+        title = title.Replace("인재추천 서비스 수수료", "채용컨설팅 용역비");
+        //
         if (model.tax_include) tax_type = 0;
         else tax_type = 1;
       }
       else if (model.tax_type == "ZERO_RATED") tax_type = 2;
-      else if (model.tax_type == "EXEMPT") tax_type = 3;
+      else if (model.tax_type == "EXEMPT")
+      {
+        tax_type = 3;
+        description = description.Replace("관한 용역비를 청구", "관한 서비스 용역수수료를 청구");
+      }
       else
       {
         errorMessages.Add("과세 구분 정보가 유효하지 않거나 누락되었습니다.");
@@ -440,12 +454,12 @@ namespace Univision.Remember.RestfulServer.Controllers
                         $"- 기초조사비 공제: Y(30 %)\n" +
                         $"- 계산식 : (용역비 - 기초조사비) * (보증일수 - 근무일수 / 보증일수)\n" +
                         $"(33, 000 - (33, 000 * 30 %)) * (180(보증일수) - 13(근무일) / 180(보증일수)) = 21,432";
-          
+
 
       }
 
       // [5] 에러가 있으면 여기서 중단
-        if (errorMessages.Count > 0)
+      if (errorMessages.Count > 0)
       {
         throw new ValidationException(errorMessages);
       }
@@ -461,10 +475,10 @@ namespace Univision.Remember.RestfulServer.Controllers
         r_request_user_name = model.user.name,
         r_request_user_email = model.user.email,
         is_po_no = (model.is_po_number ? 1 : 0),
-        is_open_name = (model.is_show_candidates_name ? 1 : 0),
+        is_open_name = (model.is_show_candidate_name ? 1 : 0),
         is_open_annual_income = (model.is_show_commission_rate ? 1 : 0),
-        invoice_title = model.title,
-        invoice_contents = model.description,
+        invoice_title = title, //model.title,
+        invoice_contents = description, //model.description,
         deposit_bank_name = bank_name,
         deposit_bank_account = bank_account,
         remarks = model.remark,

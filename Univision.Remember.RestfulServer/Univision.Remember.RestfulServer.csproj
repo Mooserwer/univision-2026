@@ -200,6 +200,7 @@
     <Compile Include="Infrastructure\CustomFilter\IPBlockFilter.cs" />
     <Compile Include="Infrastructure\CustomFilter\IPSubnet.cs" />
     <Compile Include="Infrastructure\JavascriptErrorHandler.cs" />
+    <Compile Include="Infrastructure\Mailing\InvoiceMailService.cs" />
     <Compile Include="Handlers\AuthMessageHandler.cs" />
     <Compile Include="Models\CodeCandidateRegType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

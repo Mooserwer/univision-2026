@@ -6,6 +6,7 @@ using System.Web.Http;
 using Univision.Core.Models.DTO;
 using Univision.Core.Models.DTO.Remember;
 using Univision.Core.Repositories;
+using Univision.Remember.RestfulServer.Infrastructure.Mailing;
 
 namespace Univision.Remember.RestfulServer.Controllers
 {
@@ -17,8 +18,18 @@ namespace Univision.Remember.RestfulServer.Controllers
     [Route("")]
     public async Task<IHttpActionResult> Post([FromBody] r_invoice_v2 model)
     {
-      // 1. 요청 원본 정보 추출 (로그용)
-      string rawJson = Newtonsoft.Json.JsonConvert.SerializeObject(model);
+      // 1. 요청 원본 정보 추출 (로그용) — 정제된 model 이 아닌 원본 request body 를 그대로 기록
+      //    (Web API 기본 버퍼링이라 [FromBody] 바인딩 이후에도 원본 본문 재읽기 가능)
+      string rawJson;
+      try
+      {
+        rawJson = Request.Content != null ? await Request.Content.ReadAsStringAsync() : "";
+      }
+      catch
+      {
+        // 원본 본문 읽기 실패 시에만 정제된 model 로 폴백
+        rawJson = Newtonsoft.Json.JsonConvert.SerializeObject(model);
+      }
       string apiPath = Request.RequestUri.AbsolutePath;
       string clientIp = System.Web.HttpContext.Current.Request.UserHostAddress;
       int logSeq = 0;
@@ -65,11 +76,27 @@ namespace Univision.Remember.RestfulServer.Controllers
 
           var entity = MapToEntityV2(model);
 
+          // 3-1. 환불(채용) 인보이스: 직전 인보이스 용역비 기준 환불 산식을 remarks 에 자동 추가
+          if (model.status == "REFUNDED" && model.key_project != null && model.key_project.category_sub_type == "RECRUITMENT")
+          {
+            string refundInfo = await BuildRefundRemarksAsync(rir, entity);
+            if (!string.IsNullOrEmpty(refundInfo))
+              entity.remarks = string.IsNullOrEmpty(entity.remarks) ? refundInfo : (entity.remarks + "\n" + refundInfo);
+          }
+
           // 4. 데이터 저장 및 정리 작업
           var resultObj = await rir.InsertInvoiceWithCleanupAsync(entity);
 
           // 5. 성공 로그 업데이트
           await rir.UpdateApiLogAsync(logSeq, resultObj.ResultCode, resultObj.Message);
+
+          // 6. 인보이스 정상 수신 시 발행 알림 메일 발송 (실패해도 수신/저장 처리에는 영향 없음)
+          //    [매핑필요/확인] 성공 판단 코드(ResultCode == 1) 값이 맞는지 확인 필요.
+          if (resultObj.ResultCode == 1)
+          {
+            SendInvoiceReceivedMail(entity);
+          }
+
           return Json(new
           {
             result = resultObj.ResultCode,
@@ -436,27 +463,8 @@ namespace Univision.Remember.RestfulServer.Controllers
         errorMessages.Add("과세 구분 정보가 유효하지 않거나 누락되었습니다.");
       }
 
-      // 채용환불에 대한 환불 시 생성 (작업 필요)
-      string refund_string = String.Empty;
-      if (model.key_project.category_sub_type == "RECRUITMENT" && model.status == "REFUNDED")
-      {
-
-        //직전인보이스 매출액, 보증일, 연봉 추출
-
-        refund_string = $"---------- 아래는 자동으로 추가되는 환불 관련 정보입니다 ----------\n" +
-                        $"- 후보자 : ${model.key_project_candidate.name}\n" +
-                        $"- 입사일 : ${model.key_project_candidate.joining_date}\n" +
-                        $"- 퇴사일 : ${model.key_project_candidate.leaving_date}\n" +
-                        $"- 연봉  : ${model.key_project_candidate.salary} ${model.key_project_candidate.salary_currency}\n" +
-                        $"- 용역비 : 33,000 USD\n" +
-                        $"- 보증일 : 180 일(2026 - 09 - 01)\n" +
-                        $"- 근무일 : 13 일\n" +
-                        $"- 기초조사비 공제: Y(30 %)\n" +
-                        $"- 계산식 : (용역비 - 기초조사비) * (보증일수 - 근무일수 / 보증일수)\n" +
-                        $"(33, 000 - (33, 000 * 30 %)) * (180(보증일수) - 13(근무일) / 180(보증일수)) = 21,432";
-
-
-      }
+      // 환불(채용) 인보이스의 remarks 자동 산식은 Post() 에서 직전 인보이스 조회 후 처리
+      // (BuildRefundRemarksAsync — DB 비동기 조회 필요하므로 이 동기 매핑 메서드에서 제외)
 
       // [5] 에러가 있으면 여기서 중단
       if (errorMessages.Count > 0)
@@ -549,11 +557,233 @@ namespace Univision.Remember.RestfulServer.Controllers
       return entity;
     }
 
+    // ─────────────────────────────────────────────────────────
+    //  환불(채용) 인보이스 remarks 자동 산식 문자열 생성.
+    //  직전(원본) 인보이스(pre_invoice_id = model.root_invoice_id)의 용역비(billing_amt)·금액단위(bill_currency_cd)를
+    //  조회해 Main invoice-refund-create.js 와 동일한 환불 계산식을 구성한다.
+    //  원본 인보이스 조회가 안되면 '연봉' 이하 내용 없이 (후보자/입사일/퇴사일까지만) 반환.
+    // ─────────────────────────────────────────────────────────
+    private async Task<string> BuildRefundRemarksAsync(RememberInvoiceEntityRepository rir, invoice_new entity)
+    {
+      string joinStr = entity.join_dt.HasValue ? entity.join_dt.Value.ToString("yyyy-MM-dd") : "";
+      string leaveStr = entity.leave_dt.HasValue ? entity.leave_dt.Value.ToString("yyyy-MM-dd") : "";
+
+      string result =
+          "---------- 아래는 자동으로 추가되는 환불 관련 정보입니다 ----------\n"
+        + "- 후보자 : " + entity.candidate_name + "\n"
+        + "- 입사일 : " + joinStr + "\n"
+        + "- 퇴사일 : " + leaveStr;
+
+      // 직전(원본) 인보이스 조회 — 용역비/금액단위 확보
+      invoice_new origin = null;
+      if (entity.pre_invoice_id.HasValue && entity.pre_invoice_id.Value > 0)
+        origin = await rir.SelectOriginInvoiceAsync(entity.pre_invoice_id.Value);
+
+      // 원본 인보이스가 없으면 연봉 이하 내용 없이 진행
+      if (origin == null)
+        return result;
+
+      decimal serviceFee = origin.billing_amt;      // 용역비 (원본 발행 공급가 BILLING_AMT)
+      string feeCurrency = origin.bill_currency_cd;  // 금액단위 BILL_CURRENCY_CD
+
+      // 보증일수 / 근무일수 (Main: grt_day = 만료일-입사일, work_day = 퇴사일-입사일 + 1)
+      int grtDay = (entity.expire_guarantee.HasValue && entity.join_dt.HasValue)
+          ? (int)(entity.expire_guarantee.Value.Date - entity.join_dt.Value.Date).TotalDays : 0;
+      int workDay = (entity.leave_dt.HasValue && entity.join_dt.HasValue)
+          ? (int)(entity.leave_dt.Value.Date - entity.join_dt.Value.Date).TotalDays + 1 : 0;
+
+      // 기초조사비 공제 (client_basement_per 는 % 값. base = 용역비 * rate * 0.01)
+      decimal baseRate = entity.client_basement_per ?? 0m;
+      bool hasBaseDeduction = baseRate > 0m;
+      decimal baseAmt = hasBaseDeduction ? serviceFee * (baseRate * 0.01m) : 0m;
+
+      string expireStr = entity.expire_guarantee.HasValue ? entity.expire_guarantee.Value.ToString("yyyy-MM-dd") : "";
+
+      result +=
+          "\n- 연봉 : " + entity.ann_income.ToString("N0") + " " + entity.income_currency_cd
+        + "\n- 용역비 : " + serviceFee.ToString("N0") + " " + feeCurrency
+        + "\n- 보증일 : " + grtDay + " 일 (" + expireStr + ")"
+        + "\n- 근무일 : " + workDay + " 일"
+        + "\n- 기초조사비 공제 : " + (hasBaseDeduction ? "Y (" + baseRate + " %)" : "N")
+        + "\n- 계산식 : (용역비 - 기초조사비) * (보증일수 - 근무일수 / 보증일수)\n";
+
+      // 계산 문자열 (Main invoice-refund-create.js 와 동일 형식)
+      if (grtDay > 0 && workDay > 0 && grtDay > workDay)
+      {
+        decimal refundAmt = Math.Round((serviceFee - baseAmt) * ((grtDay - workDay) / (decimal)grtDay), MidpointRounding.AwayFromZero);
+        string basePart = hasBaseDeduction
+            ? "(" + serviceFee.ToString("N0") + " * " + baseRate + "%))"
+            : "(0))";
+        result += "(" + serviceFee.ToString("N0") + " - " + basePart + " * "
+                + "(" + grtDay + "(보증일수) - " + workDay + "(근무일) / " + grtDay + "(보증일수))"
+                + " = " + refundAmt.ToString("N0");
+      }
+      else
+      {
+        result += "(계산 불가: 보증일수/근무일수 정보를 확인해 주세요.)";
+      }
+
+      return result;
+    }
+
     public bool IsValidCurrency(string currencyCode)
     {
       return System.Globalization.CultureInfo.GetCultures(System.Globalization.CultureTypes.SpecificCultures)
           .Select(c => new System.Globalization.RegionInfo(c.Name))
           .Any(r => r.ISOCurrencySymbol.Equals(currencyCode, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  인보이스 수신 시 발행 알림 메일 발송.
+    //  Univision.Main InvoiceController.InvoiceContengencySubmit 의 메일 발송 프로세스와 동일하게 구성.
+    //  동일한 템플릿(NewInvoiceCreateTemplete) 사용. 매핑이 명확한 항목만 채우고,
+    //  애매한 항목은 [매핑필요] 주석으로 남겨둠 — 직접 채워 넣을 것.
+    //  메일 발송 실패가 수신/저장 처리에 영향 주지 않도록 내부에서 예외를 삼킴.
+    // ─────────────────────────────────────────────────────────
+    private void SendInvoiceReceivedMail(invoice_new entity)
+    {
+      try
+      {
+        // 인보이스 종류 표기 (Main invoice_type_str 대응)
+        string invoice_type_str;
+        switch (entity.invoice_type)
+        {
+          case 0: invoice_type_str = "성공 인보이스"; break;
+          case 1: invoice_type_str = "선수금 인보이스"; break;
+          case 2: invoice_type_str = "잔금 인보이스"; break;
+          case 3: invoice_type_str = "컨설팅 인보이스"; break;
+          case 4: invoice_type_str = "환불 인보이스"; break;
+          case 5: invoice_type_str = "취소 인보이스"; break;
+          default: invoice_type_str = "인보이스"; break;
+        }
+
+        // VAT 구분 표기 (Main 은 Utils.ReturnVatTypeTxt 사용 — RestfulServer 엔 Utils 가 없어 인라인 매핑)
+        // [매핑필요] 실제 vat_type 코드 → 표기 매핑이 맞는지 확인 필요.
+        string vat_type_str;
+        switch (entity.vat_type ?? -1)
+        {
+          case 0: vat_type_str = "과세(포함)"; break;
+          case 1: vat_type_str = "과세(별도)"; break;
+          case 2: vat_type_str = "영세율"; break;
+          case 3: vat_type_str = "면세"; break;
+          default: vat_type_str = ""; break;
+        }
+
+        // 후보자 정보 테이블 (채용 건에 한함). Main candidate_info_table 과 동일 레이아웃.
+        string candidate_info_table = "";
+        if (entity.r_candidate_id > 0 && !string.IsNullOrWhiteSpace(entity.candidate_name))
+        {
+          candidate_info_table = @"
+<tr>
+  <th rowspan='4' style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important; background-color:#007bff; color:#fff'>후보자 정보</th>
+  <th style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important; background-color:#007bff; color:#fff'>이름</th>
+  <td style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important'>" + entity.candidate_name + @"</td>
+  <th style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important; background-color:#007bff; color:#fff'>최종직급</th>
+  <td style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important'>" + entity.candidate_position_txt + @"</td>
+</tr>
+<tr>
+  <th style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important; background-color:#007bff; color:#fff'>입사일</th>
+  <td style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important'>" + (entity.join_dt.HasValue ? entity.join_dt.Value.ToString("yyyy-MM-dd") : "") + @"</td>
+  <th style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important; background-color:#007bff; color:#fff'>후보자소스</th>
+  <td style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important'>" + entity.candidate_source_txt + @"</td>
+</tr>
+<tr>
+  <th style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important; background-color:#007bff; color:#fff'>연봉</th>
+  <td colspan='3' style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important'>" + entity.ann_income.ToString("N0") + " [" + entity.income_currency_cd + @"]</td>
+</tr>
+<tr>
+  <th style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important; background-color:#007bff; color:#fff'>후보자명 표시</th>
+  <td style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important'>" + (entity.is_open_name == 1 ? "표시" : "숨김") + @"</td>
+  <th style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important; background-color:#007bff; color:#fff'>연봉/수수료율 표시</th>
+  <td style='padding:5px; vertical-align:top; border:1px solid #dee2e6 !important'>" + (entity.is_open_annual_income == 1 ? "표시" : "숨김") + @"</td>
+</tr>
+<tr><td colspan='5' style='padding:1px; border:1px solid #dee2e6 !important'>&nbsp;</td></tr>
+";
+        }
+
+        // Fee sharing 정보 (참여자별 배분) — Main share_str 대응. entity.invoice_new_dtls 사용.
+        string feeshare = "";
+        if (entity.invoice_new_dtls != null)
+        {
+          foreach (var d in entity.invoice_new_dtls)
+          {
+            feeshare += (!string.IsNullOrEmpty(feeshare) ? "<br/><br/>" : "")
+              + " - " + d.r_user_name + " ( " + d.sales_rate + "% / " + d.sales_money.ToString("N0") + " ) : " + d.comments;
+          }
+        }
+
+        // 수수료율 표기
+        string feerate_str = (entity.billing_type == 1) ? "정액" : (entity.fee_rate.GetValueOrDefault().ToString() + "%");
+
+        // 수신자 목록
+        // [매핑필요] Main 은 프로젝트 AM/SM/매출대상자 + unico@ 로 발송. API 수신 맥락엔 그 정보가 없어
+        //           일단 (발행요청자 + 매출대상자 + unico@) 로 구성함. 실제 수신 정책에 맞게 조정할 것.
+        var toList = new List<string>();
+        //if (!string.IsNullOrWhiteSpace(entity.r_request_user_email)) toList.Add(entity.r_request_user_email);
+        //if (entity.invoice_new_dtls != null)
+        //  foreach (var d in entity.invoice_new_dtls)
+        //    if (!string.IsNullOrWhiteSpace(d.r_user_email) && !toList.Contains(d.r_user_email)) toList.Add(d.r_user_email);
+        toList.Add("unico@unicosearch.com");
+        
+
+        var mailData = new NewInvoiceCreateDto
+        {
+          ToArr = toList.ToArray(),
+          // 발신자: 발행요청자
+          From = (!string.IsNullOrWhiteSpace(entity.r_request_user_email))
+                   ? new System.Net.Mail.MailAddress(entity.r_request_user_email, string.IsNullOrWhiteSpace(entity.r_request_user_name) ? entity.r_request_user_email : entity.r_request_user_name)
+                   : null,
+          name = entity.r_request_user_name,
+          // [매핑필요] Main 은 메일제목에 프로젝트명 사용 — 여기선 프로젝트 제목(pjt_title)으로 대체.
+          title = entity.pjt_title,
+          invoicetype = invoice_type_str,
+          billingdt = entity.create_dt.HasValue ? entity.create_dt.Value.ToString("yyyy-MM-dd") : "",
+          taxreqdt = entity.tax_req_dt.HasValue ? entity.tax_req_dt.Value.ToString("yyyy-MM-dd") : "",
+          comment = string.IsNullOrEmpty(entity.remarks) ? "[없음]" : entity.remarks.Replace("\r\n", "\n").Replace("\n", "<br />"),
+          language = entity.invoice_lang == 0 ? "국문" : "영문",
+          pono = entity.is_po_no == 1 ? "<span style='color:red'>필요</span>" : "불필요",
+          candidateinfo = candidate_info_table,
+          vattype = "[" + vat_type_str + "]",
+          feerate = feerate_str,
+          billingamt = entity.billing_amt.ToString("N0"),
+          // [매핑필요] 공제금액(선수금) 대응 필드 없음. 필요 시 채울 것. (일단 미사용)
+          retaineramt = "",
+          currency = entity.bill_currency_cd,
+          fee = entity.billing_total.ToString("N0"),
+          amt = entity.billing_amt.ToString("N0"),
+          vat = entity.billing_vat.ToString("N0"),
+          clientname = entity.client_name,
+          ceo = entity.client_ceo,
+          address = entity.client_addr1,
+          bizcode = entity.client_biz_code,
+          contactname = entity.client_contact_name,
+          contactemail = entity.client_contact_email,
+          contactphone = entity.client_contact_phone,
+          etaxname = entity.client_tax_name,
+          etaxmail = entity.client_tax_email,
+          etaxphone = entity.client_tax_phone,
+          invoicetitle = entity.invoice_title,
+          invoicecontents = string.IsNullOrEmpty(entity.invoice_contents) ? "" : entity.invoice_contents.Replace("\r\n", "\n").Replace("\n", "<br />"),
+          bankaccount = entity.deposit_bank_account,
+          bankname = entity.deposit_bank_name,
+          feeshare = feeshare,
+          // [매핑필요] Univision 프로젝트 상세 URL. entity.r_project_id 는 Remember 프로젝트 ID 라 내부 p_seq 와 다름. 실제 링크 규칙으로 교체할 것.
+          pjturl = "https://headhunting-pro.rememberapp.co.kr/key-projects/"+entity.r_project_id.ToString()+ "/candidates",
+          invurl = "https://headhunting-pro.rememberapp.co.kr/invoice/" + entity.r_invoice_id.ToString(),
+        };
+
+        // 발신 계정: 발행요청자 이메일 (픽업 배달이라 비밀번호는 사용 안 함)
+        var mService = new MailService(entity.r_request_user_email);
+        mService.SendInvoiceCreateMail(mailData, new NewInvoiceCreateTemplete());
+
+        // [매핑필요] Main 은 담당자(narae@, jhkim@)에게 별도 발송함. 필요 시 아래 주석 해제 후 수신자 확정.
+        mailData.ToArr = new[] { "narae@unicosearch.com", "jhkim@unicosearch.com" };
+        mService.SendInvoiceCreateMail(mailData, new NewInvoiceCreateTemplete());
+      }
+      catch
+      {
+        // 메일 발송 실패는 인보이스 수신 처리에 영향 주지 않도록 무시 (필요 시 로깅 추가).
+      }
     }
 
     // GET invoices/12345

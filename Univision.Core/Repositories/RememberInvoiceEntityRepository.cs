@@ -112,6 +112,16 @@ namespace Univision.Core.Repositories
       return new InvoiceDeletableResult(1, "삭제 가능한 상태입니다.", (int)invoice.in_seq);
     }
 
+    /// <summary>
+    /// 원본(직전) 인보이스 1건 조회. 환불/취소 시 용역비(billing_amt)·금액단위(bill_currency_cd) 등 참조용.
+    /// (r_invoice_id 기준, 미삭제 건. 없으면 null)
+    /// </summary>
+    public async Task<invoice_new> SelectOriginInvoiceAsync(long r_invoice_id)
+    {
+      return await db.invoice_news
+          .FirstOrDefaultAsync(x => x.r_invoice_id == r_invoice_id && x.is_deleted == 0);
+    }
+
     public async Task<InvoiceDeletableResult> CheckRootInvoiceAsync(long r_invoice_id)
     {
       // 1. 데이터 존재 여부 확인 (is_deleted = 0 인 것 중)

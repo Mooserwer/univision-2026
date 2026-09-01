@@ -18,12 +18,24 @@ namespace Univision.Remember.RestfulServer.Controllers
     [Route("")]
     public async Task<IHttpActionResult> Post([FromBody] r_invoice_v2 model)
     {
-      // 1. 요청 원본 정보 추출 (로그용) — 정제된 model 이 아닌 원본 request body 를 그대로 기록
-      //    (Web API 기본 버퍼링이라 [FromBody] 바인딩 이후에도 원본 본문 재읽기 가능)
-      string rawJson;
+      // 1. 요청 원본 정보 추출 (로그용) — 정제된 model 이 아닌 원본 request body 를 그대로 기록.
+      //    [FromBody] 바인딩이 Content 스트림을 이미 소비하므로 Request.Content.ReadAsStringAsync() 는 빈 값이 됨.
+      //    ASP.NET(System.Web) 은 요청을 버퍼링하므로 InputStream 위치를 0 으로 되돌려 원본 본문을 다시 읽는다.
+      string rawJson = "";
       try
       {
-        rawJson = Request.Content != null ? await Request.Content.ReadAsStringAsync() : "";
+        var httpReq = System.Web.HttpContext.Current.Request;
+        if (httpReq.InputStream.CanSeek) httpReq.InputStream.Position = 0;
+        using (var reader = new System.IO.StreamReader(
+                 httpReq.InputStream,
+                 httpReq.ContentEncoding ?? System.Text.Encoding.UTF8,
+                 detectEncodingFromByteOrderMarks: false,
+                 bufferSize: 1024,
+                 leaveOpen: true))
+        {
+          rawJson = reader.ReadToEnd();
+        }
+        if (httpReq.InputStream.CanSeek) httpReq.InputStream.Position = 0; // 이후 파이프라인이 다시 읽을 수 있도록 원위치
       }
       catch
       {

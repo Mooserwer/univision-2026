@@ -732,12 +732,15 @@ namespace Univision.Remember.RestfulServer.Controllers
         //           일단 (발행요청자 + 매출대상자 + unico@) 로 구성함. 실제 수신 정책에 맞게 조정할 것.
         var toList = new List<string>();
         //if (!string.IsNullOrWhiteSpace(entity.r_request_user_email)) toList.Add(entity.r_request_user_email);
-        toList.Add("unico@unicosearch.com");
 
-        // 매출 대상자(fee-sharing 참여자, sales_rate > 0) 발송 활성화
+        // 매출 대상자(fee-sharing 참여자, sales_rate > 0) 에게 발송.
+        // unico@unicosearch.com 은 아래 '별도 발송'에서 수신하므로 여기서는 제외.
         if (entity.invoice_new_dtls != null)
           foreach (var d in entity.invoice_new_dtls)
-            if (d.sales_rate > 0 && !string.IsNullOrWhiteSpace(d.r_user_email) && !toList.Contains(d.r_user_email))
+            if (d.sales_rate > 0
+                && !string.IsNullOrWhiteSpace(d.r_user_email)
+                && !d.r_user_email.Equals("unico@unicosearch.com", StringComparison.OrdinalIgnoreCase)
+                && !toList.Contains(d.r_user_email))
               toList.Add(d.r_user_email);
         
 
@@ -789,10 +792,12 @@ namespace Univision.Remember.RestfulServer.Controllers
 
         // 발신 계정: 발행요청자 이메일 (픽업 배달이라 비밀번호는 사용 안 함)
         var mService = new MailService(entity.r_request_user_email);
-        mService.SendInvoiceCreateMail(mailData, new NewInvoiceCreateTemplete());
+        // 매출 대상자가 없으면 수신자가 비어 예외가 나므로(그러면 아래 별도 발송까지 막힘) 있을 때만 발송.
+        if (mailData.ToArr != null && mailData.ToArr.Length > 0)
+          mService.SendInvoiceCreateMail(mailData, new NewInvoiceCreateTemplete());
 
-        // [매핑필요] Main 은 담당자(narae@, jhkim@)에게 별도 발송함. 필요 시 아래 주석 해제 후 수신자 확정.
-        mailData.ToArr = new[] { "narae@unicosearch.com", "jhkim@unicosearch.com" };
+        // 별도 발송: 회계(unico@) + 담당자(narae@, jhkim@)
+        mailData.ToArr = new[] { "unico@unicosearch.com", "narae@unicosearch.com", "jhkim@unicosearch.com" };
         mService.SendInvoiceCreateMail(mailData, new NewInvoiceCreateTemplete());
       }
       catch

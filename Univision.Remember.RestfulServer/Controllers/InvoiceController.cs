@@ -720,12 +720,12 @@ namespace Univision.Remember.RestfulServer.Controllers
           foreach (var d in entity.invoice_new_dtls)
           {
             feeshare += (!string.IsNullOrEmpty(feeshare) ? "<br/><br/>" : "")
-              + " - " + d.r_user_name + " ( " + d.sales_rate + "% / " + d.sales_money.ToString("N0") + " ) : " + d.comments;
+              + " - " + d.r_user_name + " ( " + d.sales_rate.ToString("0.##") + "% / " + d.sales_money.ToString("N0") + " ) : " + d.comments;
           }
         }
 
         // 수수료율 표기
-        string feerate_str = (entity.billing_type == 1) ? "정액" : (entity.fee_rate.GetValueOrDefault().ToString() + "%");
+        string feerate_str = (entity.billing_type == 1) ? "정액" : (entity.fee_rate.GetValueOrDefault().ToString("0.##") + "%");
 
         // 수신자 목록
         // [매핑필요] Main 은 프로젝트 AM/SM/매출대상자 + unico@ 로 발송. API 수신 맥락엔 그 정보가 없어

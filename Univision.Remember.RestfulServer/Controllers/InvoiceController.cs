@@ -732,10 +732,13 @@ namespace Univision.Remember.RestfulServer.Controllers
         //           일단 (발행요청자 + 매출대상자 + unico@) 로 구성함. 실제 수신 정책에 맞게 조정할 것.
         var toList = new List<string>();
         //if (!string.IsNullOrWhiteSpace(entity.r_request_user_email)) toList.Add(entity.r_request_user_email);
-        //if (entity.invoice_new_dtls != null)
-        //  foreach (var d in entity.invoice_new_dtls)
-        //    if (!string.IsNullOrWhiteSpace(d.r_user_email) && !toList.Contains(d.r_user_email)) toList.Add(d.r_user_email);
         toList.Add("unico@unicosearch.com");
+
+        // 매출 대상자(fee-sharing 참여자, sales_rate > 0) 발송 활성화
+        if (entity.invoice_new_dtls != null)
+          foreach (var d in entity.invoice_new_dtls)
+            if (d.sales_rate > 0 && !string.IsNullOrWhiteSpace(d.r_user_email) && !toList.Contains(d.r_user_email))
+              toList.Add(d.r_user_email);
         
 
         var mailData = new NewInvoiceCreateDto

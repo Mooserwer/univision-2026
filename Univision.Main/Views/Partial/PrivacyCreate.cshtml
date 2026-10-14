@@ -93,7 +93,14 @@
                   {
                     <div class="receive_div border p-3 mb-1" data-c_seq="@r_info.c_seq" data-can_type="@r_info.can_type" data-can_name="@r_info.can_name" data-can_addr="@r_info.can_addr" data-can_phone="@r_info.can_phone" data-can_email="@r_info.can_email">
                       <span class="can_name pl-5">@r_info.can_name</span> : <span class="can_addr pl-5">@r_info.can_addr</span>
-                      <span class="badge badge-primary ml-5">@(r_info.can_type == "EMAIL" ? "이메일" : "문자")</span>
+                      @if (r_info.can_type == "EMAIL")
+                      {
+                        <span class="text-primary ml-5">(이메일 발송 시에는 @fixedSendEmail 로 고정 발송됩니다.)</span>
+                      }
+                      else
+                      {
+                        <span class="text-primary ml-5">(문자 발송 시 발신번호는 @fixedSendNumber 으로 고정 발송됩니다.)</span>
+                      }
                     </div>
                   }
                 }
@@ -106,16 +113,8 @@
           </div>
 
 
-          <div class="col-12 form-group">
-            <label class="form-control-label"> <i class="fas fa-send" aria-hidden="true"></i>발신 정보<span class="label-reqired">*</span></label>
-            <div class="cont">
-              <div class="mb-5">
-                문자 발송 시 발신번호는 <span class="text-primary">@fixedSendNumber</span> 으로 고정 발송됩니다.<br />
-                이메일 발송 시에는 <span class="text-primary">@fixedSendEmail</span> 로 고정 발송됩니다.
-              </div>
-              @Html.TextBox("send_number", fixedSendNumber, new { @class = "form-control rad_va", @readonly = "readonly" })
-            </div>
-          </div>
+          @* 발신번호는 02-551-2300 고정 (히든). 발송 안내는 수신자 라인에 인라인으로 표시됨. *@
+          @Html.Hidden("send_number", fixedSendNumber)
 
           <div class="col-12 form-group">
             <div class="cont3">

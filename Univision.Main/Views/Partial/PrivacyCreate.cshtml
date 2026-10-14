@@ -1,0 +1,163 @@
+﻿@model Univision.Main.Models.Api.ResponsePrivacyAgree
+@{
+  ViewBag.Title = "헤드헌팅 프로 내부인재풀 개인정보 동의";
+  ViewBag.NoMenu = true;
+  Layout = "~/Views/Shared/_Layout.cshtml";
+
+  string paramError = ViewBag.ParamError as string;
+  string fixedSendNumber = "02-551-2300";
+  string fixedSendEmail = "lee.hc@unicosearch.com";
+}
+
+<div class="p-10">
+  <!-- 상단 헤더 -->
+  <div class="panel bg-blue-600">
+    <div class="panel-body text-center py-20">
+      <h3 class="text-white m-0"><i class="fas fa-user-shield" aria-hidden="true"></i> 헤드헌팅 프로 내부인재풀 개인정보 동의</h3>
+    </div>
+  </div>
+
+  @if (!String.IsNullOrEmpty(paramError))
+  {
+    <div class="alert alert-danger">
+      <i class="fas fa-exclamation-triangle" aria-hidden="true"></i> @paramError
+      <div class="mt-5"><small>필수 파라미터: name(이름), phone 또는 email 중 하나, id(아이디)</small></div>
+    </div>
+  }
+
+  @using (Html.BeginForm("CreatePrivacy", "Partial", FormMethod.Post, new { @class = "", @id = "PrivacyCreateForm" }))
+  {
+    <div class="panel">
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-12 form-group">
+            <label class="form-control-label h4"> <i class="fas fa-send" aria-hidden="true"></i>동의 항목<span class="label-reqired">*</span></label>
+
+            <div class="cont pl-10">
+
+              <div class="checkbox-custom checkbox-primary">
+                <input type="checkbox" id="privacy" name="privacy" value="1" @(Model.is_privacy_agree == 1 ? "checked" : "")>
+                <label for="privacy">개인정보 수집·이용에 대한 동의 (이력서 요청 시)</label>
+              </div>
+              <div class="row">
+                <div class="col-12">
+                  @Html.TextArea("privacy_txt", @"1.	수집하는 개인정보 항목 : 이름, 연락처, 이메일, 주소, 생년월일, 성별, 학력사항, 경력사항, 자격사항, 병역정보, 이력서 및 경력기술서에 본인이 기재한 사항과 본인이 제출한 정보.
+
+2.	개인정보의 수집 및 이용 목적 : 채용 전형 진행, 채용 관련 상담 및 안내, 인재풀 등록
+
+3.	개인정보의 보유 및 이용 기간 : 수집한 개인 정보는 상시 채용을 목적으로 보관하며, 처리 목적 달성시까지 보유한다. 단 정보 주체의 파기 요청이 있는 경우, 지체 없이 파기한다.
+
+4.	동의를 거부할 권리 및 동의 거부에 따른 불이익 : 개인정보 수집 및 이용 등과 관련한 위 사항에 대하여 동의를 거부할 수 있습니다. 다만, 동의하지 않을 경우 채용 관련 서비스 및 인재풀 등록에 제한이 있을 수 있습니다.", new { @class = "text-info form-control pl-20", @readonly = "true", @placeholder = "", @rows = 7 })
+                </div>
+              </div>
+              <div class="checkbox-custom checkbox-primary">
+                <input type="checkbox" id="provide3rd" name="provide3rd" value="2" @(Model.is_provide_agree == 1 ? "checked" : "")>
+                <label for="provide3rd">
+                  개인정보 제3자 제공에 대한 동의 (고객사에 추천 시)
+                </label>
+              </div>
+              <div id="provide3rd_div">
+                <div class="row">
+                  <div class="col-12">
+                    @Html.TextArea("provide3rd_txt", @"1.	제공받는 자 : 채용 회사
+
+2.	제공 목적 : 채용 전형 진행, 후보자 정보 확인 및 검증.
+
+3.	제공하는 항목 : 이름, 연락처, 이메일, 주소, 생년월일, 성별, 학력사항, 경력사항, 자격사항, 병역정보, 이력서 및 경력기술서에 본인이 기재한 사항과 본인이 제출한 정보.
+
+4.	제공받는 자의 보유 및 이용 기간 : 개인정보의 이용 목적 달성 시, 즉시 파기합니다.
+
+5.	동의를 거부할 권리 및 동의 거부에 따른 불이익 : 개인정보 제3자 제공과 관련한 위 사항에 대하여 동의를 거부할 수 있습니다. 다만 동의하지 않을 경우 채용 관련 서비스 이용에 제한이 있을 수 있습니다.", new { @class = "text-info form-control pl-20", @readonly = "true", @placeholder = "", @rows = 8 })
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr />
+    <div class="panel">
+      <div class="panel-body">
+        <label class="h4"> <i class="fas fa-send" aria-hidden="true"></i>수신자 정보</label>
+        <div class="row">
+          <div class="col-12 form-group">
+            <label class="form-control-label"> <i class="fas fa-send" aria-hidden="true"></i>받는사람 (정보주체)</label>
+            <div class="cont2 row">
+              <div class="ad_list px-5" style="min-height:53.6px;">
+                @if (Model.receive.Count > 0)
+                {
+                  foreach (var r_info in Model.receive)
+                  {
+                    <div class="receive_div border p-3 mb-1" data-c_seq="@r_info.c_seq" data-can_type="@r_info.can_type" data-can_name="@r_info.can_name" data-can_addr="@r_info.can_addr" data-can_phone="@r_info.can_phone" data-can_email="@r_info.can_email">
+                      <span class="can_name pl-5">@r_info.can_name</span> : <span class="can_addr pl-5">@r_info.can_addr</span>
+                      <span class="badge badge-primary ml-5">@(r_info.can_type == "EMAIL" ? "이메일" : "문자")</span>
+                    </div>
+                  }
+                }
+                else
+                {
+                  <div class="text-muted p-3">표시할 수신자 정보가 없습니다. (파라미터를 확인하세요.)</div>
+                }
+              </div>
+            </div>
+          </div>
+
+
+          <div class="col-12 form-group">
+            <label class="form-control-label"> <i class="fas fa-send" aria-hidden="true"></i>발신 정보<span class="label-reqired">*</span></label>
+            <div class="cont">
+              <div class="mb-5">
+                문자 발송 시 발신번호는 <span class="text-primary">@fixedSendNumber</span> 으로 고정 발송됩니다.<br />
+                이메일 발송 시에는 <span class="text-primary">@fixedSendEmail</span> 로 고정 발송됩니다.
+              </div>
+              @Html.TextBox("send_number", fixedSendNumber, new { @class = "form-control rad_va", @readonly = "readonly" })
+            </div>
+          </div>
+
+          <div class="col-12 form-group">
+            <div class="cont3">
+              <div class="col-md-12 float-right custom5">
+                <button class="btn btn-default btn-outline" type="button" id="btnSmsModalClose">취소</button>
+                <button class="btn btn-primary btn-outline ed" id="btnSendSms" type="button" disabled title="테스트 더미 페이지 - 발송 비활성화">보내기</button>
+              </div>
+            </div>
+            <div class="clearfix"></div>
+            <div class="text-muted mt-5"><small>※ 테스트 더미 페이지입니다. 보내기 기능은 비활성화되어 있습니다.</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+@section scripts{
+  <script type="text/javascript">
+    function agree_show_hide(id, target_id) {
+      if ($(id).prop("checked")) {
+        $(target_id).show();
+      } else {
+        $(target_id).hide();
+      }
+    }
+
+    $('#privacy').click(function () {
+      agree_show_hide('#privacy', '#privacy_txt');
+    });
+
+    $('#provide3rd').click(function () {
+      agree_show_hide('#provide3rd', '#provide3rd_div');
+    });
+
+    agree_show_hide('#privacy', '#privacy_txt');
+    agree_show_hide('#provide3rd', '#provide3rd_div');
+
+    // 보내기 비활성화 (테스트 더미). 혹시 활성화되어 클릭되더라도 동작하지 않도록 방어.
+    $("#btnSendSms").click(function (e) {
+      e.preventDefault();
+      return false;
+    });
+  </script>
+}

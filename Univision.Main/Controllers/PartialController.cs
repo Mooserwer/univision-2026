@@ -1329,7 +1329,56 @@ namespace Univision.Main.Controllers
       
       return PartialView(model);
     }
-    
+
+    /// <summary>
+    /// [테스트 더미] 헤드헌팅 프로 내부인재풀 개인정보 동의 페이지.
+    /// SMSPrivacyCreate 복사본. 파라미터(name/phone/email/id)로 받은 1명만 표시.
+    /// name 필수, (phone 또는 email) 중 하나 필수, id 필수. 보내기 비활성화.
+    /// [AllowAnonymous] : 테스트 더미라 로그인 없이 열람 가능 (정상 오픈 시 이 attribute 제거 → 로그인 필요).
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet]
+    public ActionResult PrivacyCreate(string name = "", string phone = "", string email = "", string id = "")
+    {
+      ResponsePrivacyAgree model = new ResponsePrivacyAgree();
+      model.is_privacy_agree = 1;
+      model.is_provide_agree = 1;
+
+      // 필수 파라미터 검증
+      List<string> errs = new List<string>();
+      if (String.IsNullOrWhiteSpace(name)) errs.Add("이름(name)");
+      if (String.IsNullOrWhiteSpace(phone) && String.IsNullOrWhiteSpace(email)) errs.Add("전화번호(phone) 또는 이메일(email) 중 하나");
+      if (String.IsNullOrWhiteSpace(id)) errs.Add("아이디(id)");
+
+      if (errs.Count > 0)
+      {
+        ViewBag.ParamError = "필수 파라미터가 누락되었습니다: " + String.Join(", ", errs);
+      }
+      else
+      {
+        receive_info ri = new receive_info();
+        ri.c_seq = 0;
+        ri.can_name = name;
+        ri.can_phone = phone;
+        ri.can_email = email;
+        // 전화번호가 있으면 SMS, 없으면 EMAIL 로 표시
+        if (!String.IsNullOrWhiteSpace(phone))
+        {
+          ri.can_addr = phone;
+          ri.can_type = "SMS";
+        }
+        else
+        {
+          ri.can_addr = email;
+          ri.can_type = "EMAIL";
+        }
+        model.receive.Add(ri);
+      }
+
+      ViewBag.ParamId = id;
+      return View(model);
+    }
+
 
     public async Task<JsonResult> CreatePrivacy(RequestPrivacyAgree data)
     {

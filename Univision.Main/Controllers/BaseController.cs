@@ -70,6 +70,16 @@ namespace Univision.Main.Controllers
     /// <param name="context"></param>
     protected override void OnActionExecuting(ActionExecutingContext context)
     {
+      // [AllowAnonymous] 가 붙은 액션/컨트롤러는 로그인·IP 체크를 건너뛴다.
+      bool allowAnonymous =
+          context.ActionDescriptor.GetCustomAttributes(typeof(AllowAnonymousAttribute), true).Any()
+          || context.ActionDescriptor.ControllerDescriptor.GetCustomAttributes(typeof(AllowAnonymousAttribute), true).Any();
+      if (allowAnonymous)
+      {
+        base.OnActionExecuting(context);
+        return;
+      }
+
       string usersIpAddress = context.HttpContext.Request.UserHostAddress;
 
       //외부접속이면서 인증받지 않은 쿠키라면 logout 처리.

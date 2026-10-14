@@ -5745,6 +5745,7 @@
     <Content Include="Views\Client\PopContractCreate.cshtml" />
     <Content Include="Views\Candidate\PrivacyAgreeList.cshtml" />
     <Content Include="Views\Partial\SMSPrivacyCreate.cshtml" />
+    <Content Include="Views\Partial\PrivacyCreate.cshtml" />
     <Content Include="Views\Account\index.cshtml" />
     <Content Include="Views\Client\OfflimitLIst.cshtml" />
     <Content Include="Views\Project\ProjectProgressList2.cshtml" />

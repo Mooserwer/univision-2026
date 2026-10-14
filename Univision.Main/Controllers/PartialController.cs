@@ -1331,13 +1331,14 @@ namespace Univision.Main.Controllers
     }
 
     /// <summary>
-    /// [테스트 더미] 헤드헌팅 프로 내부인재풀 개인정보 동의 페이지.
+    /// [테스트 더미] 헤드헌팅 Pro 내부인재풀 개인정보 동의 페이지.
     /// SMSPrivacyCreate 복사본. 파라미터(name/phone/email/id)로 받은 1명만 표시.
     /// name 필수, (phone 또는 email) 중 하나 필수, id 필수. 보내기 비활성화.
+    /// 쿼리스트링 GET (?name=..&phone=..&id=..) / JSON POST (Content-Type: application/json) 둘 다 지원.
+    ///   - MVC 기본 JsonValueProviderFactory 가 JSON 본문의 최상위 키를 파라미터에 바인딩함.
     /// [AllowAnonymous] : 테스트 더미라 로그인 없이 열람 가능 (정상 오픈 시 이 attribute 제거 → 로그인 필요).
     /// </summary>
     [AllowAnonymous]
-    [HttpGet]
     public ActionResult PrivacyCreate(string name = "", string phone = "", string email = "", string id = "")
     {
       ResponsePrivacyAgree model = new ResponsePrivacyAgree();

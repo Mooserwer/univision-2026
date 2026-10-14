@@ -92,7 +92,7 @@
                   foreach (var r_info in Model.receive)
                   {
                     <div class="receive_div border p-3 mb-1" data-c_seq="@r_info.c_seq" data-can_type="@r_info.can_type" data-can_name="@r_info.can_name" data-can_addr="@r_info.can_addr" data-can_phone="@r_info.can_phone" data-can_email="@r_info.can_email">
-                      <span class="can_name pl-5">@r_info.can_name</span> <span class="text-muted">(ID: @ViewBag.ParamId)</span> : <span class="can_addr pl-5">@r_info.can_addr</span>
+                      <span class="can_name pl-5">@r_info.can_name</span> : <span class="can_addr pl-5">@r_info.can_addr</span>
                       @if (r_info.can_type == "EMAIL")
                       {
                         <span class="text-primary ml-5">(이메일 발송 시에는 @fixedSendEmail 로 고정 발송됩니다.)</span>

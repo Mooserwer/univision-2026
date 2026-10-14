@@ -1339,6 +1339,7 @@ namespace Univision.Main.Controllers
     /// [AllowAnonymous] : 테스트 더미라 로그인 없이 열람 가능 (정상 오픈 시 이 attribute 제거 → 로그인 필요).
     /// </summary>
     [AllowAnonymous]
+    [Univision.Main.Infrastructure.CustomFilters.AllowCors(originSuffix: ".rememberapp.co.kr")]
     public ActionResult PrivacyCreate(string name = "", string phone = "", string email = "", string id = "")
     {
       ResponsePrivacyAgree model = new ResponsePrivacyAgree();

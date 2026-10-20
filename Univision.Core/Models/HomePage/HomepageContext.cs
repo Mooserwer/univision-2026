@@ -27,6 +27,8 @@ namespace Univision.Core.Models.HomePage
     public DbSet<home_project> home_projects { get; set; }
     public DbSet<home_privacy_agree> home_privacy_agrees { get; set; }
     public DbSet<home_privacy_agree_dtl> home_privacy_agree_dtls { get; set; }
+    public DbSet<home_n_privacy_agree> home_n_privacy_agrees { get; set; }
+    public DbSet<home_n_privacy_agree_dtl> home_n_privacy_agree_dtls { get; set; }
     public DbSet<home_sms_history> home_sms_historys { get; set; }
     public DbSet<home_sms_report> home_sms_reports { get; set; }
 

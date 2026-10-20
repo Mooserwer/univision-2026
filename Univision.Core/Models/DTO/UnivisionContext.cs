@@ -195,6 +195,9 @@ namespace Univision.Core.Models.DTO
 
     public DbSet<invoice_new> invoice_news { get; set; }
     public DbSet<invoice_new_dtl> invoice_new_dtls { get; set; }
+    public DbSet<profile_memo> profile_memos { get; set; }
+    public DbSet<n_privacy_agree> n_privacy_agrees { get; set; }
+    public DbSet<n_privacy_agree_dtl> n_privacy_agree_dtls { get; set; }
 
     public DbSet<test_invoice_new> test_invoice_news { get; set; }
     public DbSet<test_invoice_new_dtl> test_invoice_new_dtls { get; set; }

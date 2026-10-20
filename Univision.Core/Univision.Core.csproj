@@ -126,6 +126,7 @@
     <Compile Include="Models\DTO\test_invoice_new_dtl.cs" />
     <Compile Include="Models\DTO\mail_resume_gpt.cs" />
     <Compile Include="Models\DTO\invoice_new.cs" />
+    <Compile Include="Models\DTO\profile_memo.cs" />
     <Compile Include="Models\DTO\invoice_new_dtl.cs" />
     <Compile Include="Models\DTO\pjt_mykey.cs" />
     <Compile Include="Models\DTO\Remember\r_invoice_v2.cs" />
@@ -166,6 +167,7 @@
     <Compile Include="Models\DTO\code_can_keyword.cs" />
     <Compile Include="Models\DTO\privacy_agree_dtl.cs" />
     <Compile Include="Models\DTO\privacy_agree.cs" />
+    <Compile Include="Models\DTO\n_privacy_agree.cs" />
     <Compile Include="Models\DTO\code_keyword.cs" />
     <Compile Include="Models\DTO\exchange.cs" />
     <Compile Include="Models\DTO\mail_resume_file.cs" />
@@ -347,6 +349,7 @@
     <Compile Include="Models\HomePage\home_project.cs" />
     <Compile Include="Models\HomePage\HomepageContext.cs" />
     <Compile Include="Models\HomePage\home_privacy_agree.cs" />
+    <Compile Include="Models\HomePage\home_n_privacy_agree.cs" />
     <Compile Include="Models\HomePage\home_privacy_agree_dtl.cs" />
     <Compile Include="Models\HomePage\home_sms_history.cs" />
     <Compile Include="Models\HomePage\home_sms_report.cs" />
@@ -357,11 +360,13 @@
     <Compile Include="Repositories\Homepage\HomepageBaseRepository.cs" />
     <Compile Include="Repositories\Homepage\HomepageEntityRepository.cs" />
     <Compile Include="Repositories\Homepage\HomepageSmsEntityRepository.cs" />
+    <Compile Include="Repositories\Homepage\HomepageNPrivacyEntityRepository.cs" />
     <Compile Include="Repositories\InvoiceRepository.cs" />
     <Compile Include="Repositories\MailResume\MailResumeEntityRepository.cs" />
     <Compile Include="Repositories\MailResume\MailResumeRepository.cs" />
     <Compile Include="Repositories\RememberTESTInvoiceEntityRepository.cs" />
     <Compile Include="Repositories\RememberInvoiceEntityRepository.cs" />
+    <Compile Include="Repositories\ProfileMemoEntityRepository.cs" />
     <Compile Include="Repositories\RememberTaskEntityRepository.cs" />
     <Compile Include="Repositories\ExchangeEntityRepository.cs" />
     <Compile Include="Repositories\ApiEntityRepository.cs" />
@@ -376,6 +381,7 @@
     <Compile Include="Repositories\RememberTaskRepository.cs" />
     <Compile Include="Repositories\StatisticsRepository.cs" />
     <Compile Include="Repositories\SmsEntityRepository.cs" />
+    <Compile Include="Repositories\NPrivacyEntityRepository.cs" />
     <Compile Include="Repositories\SearchEngineRepository.cs" />
     <Compile Include="Repositories\ScheduleEntityRepository.cs" />
     <Compile Include="Repositories\ScheduleRepository.cs" />

@@ -1381,6 +1381,137 @@ namespace Univision.Main.Controllers
       return View(model);
     }
 
+    /// <summary>
+    /// [신규 PrivacyCreate 플로우] 동의서 발송 + 내부/홈페이지 n_privacy_agree 저장.
+    /// 단일 수신자, profile_id 연결, 발신자 통지 이메일은 테스트중 lee.hc@unicosearch.com 고정.
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost]
+    public async Task<JsonResult> CreateNPrivacy(RequestPrivacyAgree data, int profile_id = 0)
+    {
+      try
+      {
+        // 테스트중 발신자 통지 이메일 고정 (운영 전환 시 로그인 유저 이메일로 변경)
+        const string senderEmail = "lee.hc@unicosearch.com";
+
+        NPrivacyEntityRepository ner = new NPrivacyEntityRepository();
+        HomepageNPrivacyEntityRepository hner = new HomepageNPrivacyEntityRepository();
+
+        foreach (var r_info in data.receive)
+        {
+          // 1) 내부 마스터/상세 구성
+          n_privacy_agree mst = new n_privacy_agree
+          {
+            send_type = r_info.can_type.Substring(0, 1),                                  // S / E
+            send_addr = (r_info.can_type == "EMAIL") ? senderEmail : data.send_phone,     // 메일=발신자메일, SMS=발신번호(02-551-2300)
+            can_name = r_info.can_name,
+            can_contact = r_info.can_addr,
+            profile_id = profile_id,
+            sender_email = senderEmail,
+            full_txt = data.contents,
+            create_dt = Utils.NowKorea()
+          };
+
+          List<n_privacy_agree_dtl> dtlList = new List<n_privacy_agree_dtl>();
+          if (data.is_privacy_agree == 1)
+            dtlList.Add(new n_privacy_agree_dtl { agree_type = 1, is_optional = 0, contents = data.privacy_text, create_dt = Utils.NowKorea() });
+          if (data.is_provide_agree == 1)
+            dtlList.Add(new n_privacy_agree_dtl { agree_type = 2, is_optional = 0, contents = data.provide_text, client_seq = data.client_seq, client_name = data.client_name, create_dt = Utils.NowKorea() });
+
+          await ner.CreatePrivacyData(mst, dtlList);   // pa_seq 채번
+
+          // 2) 동의 링크 키 생성 후 마스터 갱신
+          string keyStr = Utils.StrToHex("key_" + mst.pa_seq.ToString() + "_key");
+          mst.agree_code3 = keyStr;
+          mst.send_dt = Utils.NowKorea();
+          await ner.UpdatePrivacyMst(mst);
+
+          // 3) 홈페이지 DB 저장 (개인정보 최소화 + 미동기화)
+          home_n_privacy_agree hmst = new home_n_privacy_agree
+          {
+            pa_seq = mst.pa_seq,
+            send_type = mst.send_type,
+            send_dt = Utils.NowKorea(),
+            agree_code3 = keyStr,
+            create_dt = Utils.NowKorea(),
+            is_sync = 0
+          };
+          List<home_n_privacy_agree_dtl> hdtl = new List<home_n_privacy_agree_dtl>();
+          foreach (var d in dtlList)
+            hdtl.Add(new home_n_privacy_agree_dtl { agree_type = d.agree_type, is_optional = d.is_optional, contents = d.contents, client_seq = d.client_seq, client_name = d.client_name, create_dt = Utils.NowKorea() });
+          await hner.CreatePrivacyData(hmst, hdtl);
+
+          // 4) 실제 발송 (SMS or Email + 동의 링크)
+          await SendNPrivacy(mst, senderEmail);
+        }
+
+        return Json(new { ok = true, message = "동의서를 발송 했습니다." });
+      }
+      catch (Exception e)
+      {
+        return Json(new { ok = false, message = e.Message });
+      }
+    }
+
+    /// <summary>신규 플로우 동의서 발송 (SMS/Email + 동의 링크). SendPrivacy 미러.</summary>
+    private async Task SendNPrivacy(n_privacy_agree mst, string senderEmail)
+    {
+      string keyStr = mst.agree_code3;
+      string privacyUrl = "https://www.unicosearch.com/privacyprovide/" + keyStr;
+
+      if (mst.send_type == "S")
+      {
+        SmsService service = new SmsService();
+
+        string addText = @"안녕하세요 " + mst.can_name + @" 님
+(주)유니코써치는 인재추천 및 채용절차 진행을 위하여 개인정보 수집·이용 및 제3자(채용사) 제공에 동의를 받고자 합니다.
+아래의 링크를 클릭하시면 동의 화면으로 이동합니다.
+
+" + privacyUrl;
+
+        var smsDto = await service.SendSmsAsyncNew(new SmsSingleSendDto
+        {
+          Message = (mst.full_txt ?? String.Empty) + addText,
+          PhoneReceiver = mst.can_contact,
+          PhoneSender = mst.send_addr,
+          Subject = String.Empty
+        });
+
+        SmsEntityRepository ser = new SmsEntityRepository();
+        List<sms_history> smsList = new List<sms_history>();
+        smsList.Add(new sms_history()
+        {
+          msg_id = smsDto.msgid,
+          sms_type = 0,
+          send_number = mst.send_addr,
+          send_type = 0,
+          receive_number = mst.can_contact,
+          contents = (mst.full_txt ?? String.Empty) + addText,
+          contents_len = 999,
+          response_code = smsDto.response_code,
+          response_desc = smsDto.response_desc,
+          create_dt = Utils.NowKorea(),
+          create_user = 0
+        });
+        await ser.CreateSms(smsList);
+      }
+      else if (mst.send_type == "E")
+      {
+        // 테스트중 익명 발송: 기본 메일 계정(노리플라이, 픽업 배달) 사용. 운영 시 로그인 유저 계정으로.
+        MailService mService = new MailService();
+        List<string> toArr = new List<string> { mst.can_contact };
+
+        PrivacyAgreeDto mailData = new PrivacyAgreeDto()
+        {
+          ToArr = toArr.ToArray(),
+          From = new System.Net.Mail.MailAddress(senderEmail, "유니코써치"),
+          canname = mst.can_name,
+          url = privacyUrl
+        };
+        mService.SendPrivacyAgreeMail(mailData, new PrivacyAgreeTemplete());
+      }
+    }
+
 
     public async Task<JsonResult> CreatePrivacy(RequestPrivacyAgree data)
     {

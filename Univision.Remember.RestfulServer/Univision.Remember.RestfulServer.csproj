@@ -192,6 +192,7 @@
     <Compile Include="Controllers\CodeJobsController.cs" />
     <Compile Include="Controllers\CodeBusinessesController.cs" />
     <Compile Include="Controllers\InvoiceController.cs" />
+    <Compile Include="Controllers\ProfileMemoController.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Global.asax.cs">

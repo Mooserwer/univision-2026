@@ -1,7 +1,7 @@
 # 개인정보 수집·제3자 제공 동의 — 홈페이지(공개 동의 페이지) 연동 규격
 
 > 대상: 홈페이지(Classic ASP) 개발
-> 관련 URL 예시: `https://www.unicosearch.com/privacyprovide/6B65795F393239335F6B6579`
+> 관련 URL 예시: `https://www.unicosearch.com/agreeprovide/6B65795F393239335F6B6579`
 
 ---
 
@@ -28,7 +28,7 @@
 
 ## 2. 동의 링크 & 키 해독
 
-링크 형식: `/privacyprovide/{HEXKEY}`
+링크 형식: `/agreeprovide/{HEXKEY}`
 
 - `HEXKEY` 는 문자열 `key_{pa_seq}_key` 를 **ASCII 16진수**로 인코딩한 값입니다.
 - 예시: `pa_seq = 9293`

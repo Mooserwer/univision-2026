@@ -1457,7 +1457,7 @@ namespace Univision.Main.Controllers
     private async Task SendNPrivacy(n_privacy_agree mst, string senderEmail)
     {
       string keyStr = mst.agree_code3;
-      string privacyUrl = "https://www.unicosearch.com/privacyprovide/" + keyStr;
+      string privacyUrl = "https://www.unicosearch.com/agreeprovide/" + keyStr;
 
       if (mst.send_type == "S")
       {

@@ -90,15 +90,15 @@ namespace Univision.GetHompage
             string agreeType = AgreeTypeText(dtl);
             string agreeDt = mst.agree_dt.Value.ToString("yyyy-MM-dd HH:mm");
 
-            // 2) 프로필 메모
+            // 2) 프로필 메모  예) [수신완료(2026-10-20 13:46)] 수집 및 이용, 제공 https://www.unicosearch.com/agreesuccess/{key}
             if ((mst.profile_id ?? 0) > 0)
             {
-              string memo = "[개인정보 동의] " + agreeType + " 동의 완료 (" + agreeDt + ", 동의자: " + mst.agree_code1 + ")";
+              string memo = "[수신완료(" + agreeDt + ")] " + MemoTypeText(dtl) + " " + AgreeSuccessUrl(mst);
               ProfileMemoEntityRepository pmr = new ProfileMemoEntityRepository();
               await pmr.CreateMemoAsync(new profile_memo
               {
                 profile_id = mst.profile_id.Value,
-                content = memo.Length > 150 ? memo.Substring(0, 150) : memo,
+                content = memo,
                 create_dt = DateTime.UtcNow.AddHours(9)
               });
             }
@@ -127,9 +127,25 @@ namespace Univision.GetHompage
       return names.Count > 0 ? string.Join(", ", names) : "동의 항목 없음";
     }
 
+    // 메모용 간소화 표기 (개인정보 문구 제외)
+    private static string MemoTypeText(List<n_privacy_agree_dtl> dtl)
+    {
+      var names = dtl.Where(x => x.is_agree == 1)
+                     .OrderBy(x => x.agree_type)
+                     .Select(x => x.agree_type == 1 ? "수집 및 이용" : x.agree_type == 2 ? "제공" : "기타")
+                     .ToList();
+      return names.Count > 0 ? string.Join(", ", names) : "동의 항목 없음";
+    }
+
+    // 홈페이지 동의 내역 확인 페이지
+    private static string AgreeSuccessUrl(n_privacy_agree mst)
+    {
+      return "https://www.unicosearch.com/agreesuccess/" + mst.agree_code3;
+    }
+
     private async Task NotifyNPrivacy(n_privacy_agree mst, string agreeType, string agreeDt)
     {
-      string url = "https://www.unicosearch.com/agreeprovide/" + mst.agree_code3;
+      string url = AgreeSuccessUrl(mst);
       PrivacyMailService mail = new PrivacyMailService();
       string msg;
 
@@ -177,7 +193,7 @@ namespace Univision.GetHompage
       if (!string.IsNullOrWhiteSpace(mst.sender_email))
       {
         bool ok = mail.Send(new[] { mst.sender_email }, "[헤드헌팅 Pro] 개인정보 동의 완료 - " + mst.can_name,
-                            PrivacyMailService.SenderBody(mst.can_name, mst.can_contact, mst.profile_id, agreeType, mst.agree_code1, agreeDt), out msg);
+                            PrivacyMailService.SenderBody(mst.can_name, mst.can_contact, mst.profile_id, agreeType, agreeDt, url), out msg);
         Console.WriteLine("    발신자 메일: " + (ok ? "성공" : msg));
       }
     }

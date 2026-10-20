@@ -109,20 +109,27 @@ namespace Univision.GetHompage.Infrastructure
     }
 
     /// <summary>발신자(담당자)용 동의완료 통지</summary>
-    public static string SenderBody(string canName, string canContact, int? profileId, string agreeType, string agreeName, string agreeDt)
+    public static string SenderBody(string canName, string canContact, int? profileId, string agreeType, string agreeDt, string agreeUrl)
     {
       string td = "padding:6px; border:1px solid #dee2e6;";
       string th = td + " background-color:#007bff; color:#fff; text-align:left; width:120px;";
+      string profileCell = "-";
+      if ((profileId ?? 0) > 0)
+      {
+        string profileUrl = "https://headhunting-pro.rememberapp.co.kr/internal-db/" + profileId.Value;
+        profileCell = "<a href='" + H(profileUrl) + "' target='_blank'>" + profileId.Value + "</a>";
+      }
       return @"<html>
   <body style='font-size:12px; color:#212529;'>
     <p><b>헤드헌팅 Pro 내부인재풀 개인정보 동의가 완료되었습니다.</b></p>
     <table style='border-collapse:collapse; width:600px;'>
       <tr><th style='" + th + "'>대상자</th><td style='" + td + "'>" + H(canName) + " (" + H(canContact) + @")</td></tr>
-      <tr><th style='" + th + "'>프로필 ID</th><td style='" + td + "'>" + (profileId.HasValue ? profileId.Value.ToString() : "-") + @"</td></tr>
+      <tr><th style='" + th + "'>프로필 ID</th><td style='" + td + "'>" + profileCell + @"</td></tr>
       <tr><th style='" + th + "'>동의구분</th><td style='" + td + "'>" + H(agreeType) + @"</td></tr>
-      <tr><th style='" + th + "'>동의자</th><td style='" + td + "'>" + H(agreeName) + @"</td></tr>
       <tr><th style='" + th + "'>동의일시</th><td style='" + td + "'>" + H(agreeDt) + @"</td></tr>
+      <tr><th style='" + th + "'>동의정보</th><td style='" + td + "'><a href='" + H(agreeUrl) + @"' target='_blank'>동의 내역 확인하기</a></td></tr>
     </table>
+    <p style='color:#6c757d;'>※ 프로필에 실제 수신정보가 반영되는데 시간이 소요될 수 있습니다.</p>
   </body>
 </html>";
     }

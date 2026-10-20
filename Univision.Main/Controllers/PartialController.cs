@@ -1339,7 +1339,6 @@ namespace Univision.Main.Controllers
     /// [AllowAnonymous] : 테스트 더미라 로그인 없이 열람 가능 (정상 오픈 시 이 attribute 제거 → 로그인 필요).
     /// </summary>
     [AllowAnonymous]
-    [ActionName("link-create")]   // URL: /Partial/link-create (메서드명엔 하이픈 불가하여 ActionName 으로 매핑)
     [Univision.Main.Infrastructure.CustomFilters.AllowCors(originSuffix: ".rememberapp.co.kr")]
     public ActionResult PrivacyCreate(string name = "", string phone = "", string email = "", string id = "")
     {
@@ -1379,8 +1378,7 @@ namespace Univision.Main.Controllers
       }
 
       ViewBag.ParamId = id;
-      // ActionName 이 "link-create" 라 기본 뷰 탐색명이 달라지므로 뷰명을 명시
-      return View("PrivacyCreate", model);
+      return View(model);
     }
 
 

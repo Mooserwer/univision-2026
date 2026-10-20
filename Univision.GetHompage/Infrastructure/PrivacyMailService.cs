@@ -121,7 +121,7 @@ namespace Univision.GetHompage.Infrastructure
       }
       return @"<html>
   <body style='font-size:12px; color:#212529;'>
-    <p><b>헤드헌팅 Pro 내부인재풀 개인정보 동의가 완료되었습니다.</b></p>
+    <p><b>내부인재풀 개인정보 동의가 완료되었습니다.</b></p>
     <table style='border-collapse:collapse; width:600px;'>
       <tr><th style='" + th + "'>대상자</th><td style='" + td + "'>" + H(canName) + " (" + H(canContact) + @")</td></tr>
       <tr><th style='" + th + "'>프로필 ID</th><td style='" + td + "'>" + profileCell + @"</td></tr>

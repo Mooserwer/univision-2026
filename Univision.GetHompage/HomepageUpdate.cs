@@ -192,7 +192,7 @@ namespace Univision.GetHompage
       // 발신자(담당자)
       if (!string.IsNullOrWhiteSpace(mst.sender_email))
       {
-        bool ok = mail.Send(new[] { mst.sender_email }, "[헤드헌팅 Pro] 개인정보 동의 완료 - " + mst.can_name,
+        bool ok = mail.Send(new[] { mst.sender_email }, "[유니코써치] 개인정보 동의 완료 - " + mst.can_name,
                             PrivacyMailService.SenderBody(mst.can_name, mst.can_contact, mst.profile_id, agreeType, agreeDt, url), out msg);
         Console.WriteLine("    발신자 메일: " + (ok ? "성공" : msg));
       }

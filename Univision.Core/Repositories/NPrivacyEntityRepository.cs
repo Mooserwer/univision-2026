@@ -45,6 +45,28 @@ namespace Univision.Core.Repositories
       await db.SaveChangesAsync();
     }
 
+    // 스케줄러 풀링: 홈페이지 동의결과(마스터 + 항목별 is_agree) 내부 반영
+    public async Task UpdateAgreeResult(n_privacy_agree mst, List<n_privacy_agree_dtl> dtl)
+    {
+      using (var tran = db.Database.BeginTransaction())
+      {
+        try
+        {
+          db.Entry(mst).State = EntityState.Modified;
+          foreach (var p_dtl in dtl)
+            db.Entry(p_dtl).State = EntityState.Modified;
+          await db.SaveChangesAsync();
+
+          tran.Commit();
+        }
+        catch (Exception e)
+        {
+          tran.Rollback();
+          throw e;
+        }
+      }
+    }
+
     public async Task<n_privacy_agree> SelectOneAsync(int pa_seq)
     {
       return await db.n_privacy_agrees.FirstOrDefaultAsync(x => x.pa_seq == pa_seq);

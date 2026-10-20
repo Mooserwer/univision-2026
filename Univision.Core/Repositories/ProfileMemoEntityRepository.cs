@@ -22,5 +22,12 @@ namespace Univision.Core.Repositories
           .Take(limit)
           .ToListAsync();
     }
+
+    /// <summary>메모 1건 등록 (memo_id 는 identity).</summary>
+    public async Task CreateMemoAsync(profile_memo memo)
+    {
+      db.Entry(memo).State = EntityState.Added;
+      await db.SaveChangesAsync();
+    }
   }
 }

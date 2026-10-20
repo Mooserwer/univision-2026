@@ -1394,6 +1394,11 @@ namespace Univision.Main.Controllers
         // 테스트중 발신자 통지 이메일 고정 (운영 전환 시 로그인 유저 이메일로 변경)
         const string senderEmail = "lee.hc@unicosearch.com";
 
+        // [실서버 연동 테스트] 입력값과 무관하게 수신처 고정 (DB 저장 + 실제 발송). 테스트 종료 후 false 로 원복
+        const bool testRecipient = true;
+        const string testPhone = "01042040409";
+        const string testEmail = "lee.hc@unicosearch.com";
+
         NPrivacyEntityRepository ner = new NPrivacyEntityRepository();
         HomepageNPrivacyEntityRepository hner = new HomepageNPrivacyEntityRepository();
 
@@ -1405,7 +1410,7 @@ namespace Univision.Main.Controllers
             send_type = r_info.can_type.Substring(0, 1),                                  // S / E
             send_addr = (r_info.can_type == "EMAIL") ? senderEmail : data.send_phone,     // 메일=발신자메일, SMS=발신번호(02-551-2300)
             can_name = r_info.can_name,
-            can_contact = r_info.can_addr,
+            can_contact = testRecipient ? (r_info.can_type == "EMAIL" ? testEmail : testPhone) : r_info.can_addr,
             profile_id = profile_id,
             sender_email = senderEmail,
             full_txt = data.contents,

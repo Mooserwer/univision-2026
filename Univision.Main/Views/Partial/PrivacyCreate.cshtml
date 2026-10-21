@@ -156,14 +156,19 @@
 
     // 발송 완료 후 탭 닫기 (헤드헌팅 Pro 에서 새 탭으로 열림)
     // 브라우저 정책상 닫을 수 없는 탭이면 직접 닫도록 안내
-    function closeTab() {
+    function closeTab(fallbackMsg) {
       window.close();
       setTimeout(function () {
         if (!window.closed) {
-          NormalAlert("발송이 완료되었습니다. 이 탭을 직접 닫아주세요.");
+          NormalAlert(fallbackMsg || "발송이 완료되었습니다. 이 탭을 직접 닫아주세요.");
         }
       }, 300);
     }
+
+    // 취소 → 탭 닫기
+    $("#btnSmsModalClose").click(function () {
+      closeTab("이 탭을 직접 닫아주세요.");
+    });
 
     // 보내기 → 동의서 발송(내부+홈페이지 저장 + SMS/Email)
     $("#btnSendSms").click(function () {

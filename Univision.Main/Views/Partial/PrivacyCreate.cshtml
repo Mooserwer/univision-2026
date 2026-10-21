@@ -154,6 +154,17 @@
 
     var profileId = '@ViewBag.ParamId';
 
+    // 발송 완료 후 탭 닫기 (헤드헌팅 Pro 에서 새 탭으로 열림)
+    // 브라우저 정책상 닫을 수 없는 탭이면 직접 닫도록 안내
+    function closeTab() {
+      window.close();
+      setTimeout(function () {
+        if (!window.closed) {
+          NormalAlert("발송이 완료되었습니다. 이 탭을 직접 닫아주세요.");
+        }
+      }, 300);
+    }
+
     // 보내기 → 동의서 발송(내부+홈페이지 저장 + SMS/Email)
     $("#btnSendSms").click(function () {
       if (!$('#privacy').prop("checked") && !$('#provide3rd').prop("checked")) {
@@ -186,6 +197,9 @@
           receive: receive_info
         };
 
+        // 중복 발송 방지: 발송 시작 시 비활성화, 실패 시에만 다시 활성화
+        $("#btnSendSms").prop("disabled", true);
+
         $.ajax({
           url: '@Url.Action("CreateNPrivacy", "Partial")',
           type: "POST",
@@ -195,13 +209,16 @@
           success: function (json) {
             hideLoading();
             if (json.ok) {
-              NormalAlert(json.message);
+              $("#btnSendSms").text("발송완료");
+              NormalAlert(json.message, closeTab);
             } else {
+              $("#btnSendSms").prop("disabled", false);
               ErrorAlert(json.message);
             }
           },
           error: function () {
             hideLoading();
+            $("#btnSendSms").prop("disabled", false);
             ErrorAlert("알 수 없는 오류가 발생 했습니다.");
           }
         });

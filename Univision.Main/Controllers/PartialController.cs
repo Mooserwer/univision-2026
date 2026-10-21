@@ -1330,21 +1330,83 @@ namespace Univision.Main.Controllers
       return PartialView(model);
     }
 
+    // [정식 오픈 시 true] PrivacyCreate 로그인 필수 전환 스위치.
+    //   true 로 바꿀 때 함께: CreateNPrivacy 의 [AllowAnonymous] 제거, senderEmail → AppIdentity.email
+    private static readonly bool PrivacyCreateRequireLogin = false;
+    private const string PrivacyCreateCachePrefix = "PrivacyCreate:";
+
+    // 로그인 리다이렉트 동안 PrivacyCreate 파라미터 보관용 (HttpRuntime.Cache, 30분)
+    private class PrivacyCreateParam
+    {
+      public string name { get; set; }
+      public string phone { get; set; }
+      public string email { get; set; }
+      public string id { get; set; }
+    }
+
     /// <summary>
     /// [테스트 더미] 헤드헌팅 Pro 내부인재풀 개인정보 동의 페이지.
     /// SMSPrivacyCreate 복사본. 파라미터(name/phone/email/id)로 받은 1명만 표시.
     /// name 필수, (phone 또는 email) 중 하나 필수, id 필수. 보내기 비활성화.
     /// 쿼리스트링 GET (?name=..&phone=..&id=..) / JSON POST (Content-Type: application/json) 둘 다 지원.
     ///   - MVC 기본 JsonValueProviderFactory 가 JSON 본문의 최상위 키를 파라미터에 바인딩함.
-    /// [AllowAnonymous] : 테스트 더미라 로그인 없이 열람 가능 (정상 오픈 시 이 attribute 제거 → 로그인 필요).
+    /// [AllowAnonymous] : 유지. 로그인 체크는 PrivacyCreateRequireLogin 스위치로 액션 안에서 수행 (POST 파라미터 보존 목적).
+    /// k : 로그인 리다이렉트 후 복귀 시 보관 파라미터 조회 토큰.
     /// </summary>
     [AllowAnonymous]
     [Univision.Main.Infrastructure.CustomFilters.AllowCors(originSuffix: ".rememberapp.co.kr")]
-    public ActionResult PrivacyCreate(string name = "", string phone = "", string email = "", string id = "")
+    public ActionResult PrivacyCreate(string name = "", string phone = "", string email = "", string id = "", string k = "")
     {
+      // 로그인 후 복귀: 토큰(k)으로 보관해 둔 파라미터 복원
+      bool tokenExpired = false;
+      if (!String.IsNullOrEmpty(k))
+      {
+        var saved = System.Web.HttpRuntime.Cache[PrivacyCreateCachePrefix + k] as PrivacyCreateParam;
+        if (saved != null)
+        {
+          name = saved.name;
+          phone = saved.phone;
+          email = saved.email;
+          id = saved.id;
+        }
+        else
+        {
+          tokenExpired = true;
+        }
+      }
+
+      // 로그인 필수(정식 오픈) 시: BaseController 가 먼저 리다이렉트하면 POST 본문이 유실되므로 액션 안에서 직접 체크.
+      // 파라미터를 서버 캐시에 보관하고 URL 에는 토큰만 실어 로그인 화면으로 보냄 (URL 에 개인정보 노출 없음).
+      // 타 도메인 POST 는 SameSite=Lax 로그인 쿠키가 안 실려 미로그인으로 보이지만, 리다이렉트된 GET 에는 실리므로
+      // 이미 로그인한 사용자는 로그인 화면을 거쳐 곧바로 복귀함.
+      if (PrivacyCreateRequireLogin)
+      {
+        string usersIpAddress = Request.UserHostAddress;
+        if (AppIdentity.user_seq > 0 && !checkIp(usersIpAddress) && AppIdentity.isAuth == 0)
+          return RedirectToAction("LogOut", "Account");   // 외부접속 미인증 (BaseController 와 동일 처리)
+
+        if (AppIdentity.user_seq == 0)
+        {
+          string token = (!String.IsNullOrEmpty(k) && !tokenExpired) ? k : Guid.NewGuid().ToString("N");
+          System.Web.HttpRuntime.Cache.Insert(PrivacyCreateCachePrefix + token,
+              new PrivacyCreateParam { name = name, phone = phone, email = email, id = id },
+              null, DateTime.UtcNow.AddMinutes(30), System.Web.Caching.Cache.NoSlidingExpiration);
+
+          string returnUrl = Url.Action("PrivacyCreate", "Partial", new { k = token }, Request.Url.Scheme);
+          return RedirectToAction("Index", "Account", new { returnUrl = returnUrl });
+        }
+      }
+
       ResponsePrivacyAgree model = new ResponsePrivacyAgree();
       model.is_privacy_agree = 1;
       model.is_provide_agree = 1;
+
+      if (tokenExpired)
+      {
+        ViewBag.ParamError = "요청 정보가 만료되었습니다. 헤드헌팅 Pro 에서 다시 열어주세요.";
+        ViewBag.ParamId = "";
+        return View(model);
+      }
 
       // 필수 파라미터 검증
       List<string> errs = new List<string>();

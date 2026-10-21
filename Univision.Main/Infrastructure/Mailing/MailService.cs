@@ -798,10 +798,13 @@ namespace Univision.Main.Infrastructure.Mailing
         fields.Update();
         message.To = String.Join(";", data.ToArr);
         message.From = mId;
-        //message.CC = CC;        
+        //message.CC = CC;
         //message.BCC = mId + ";itsupport@unicosearch.com";
+        // 템플릿이 meta charset=utf-8 을 선언하므로 MIME 문자셋도 utf-8 로 맞춤 (미지정 시 서버 기본 문자셋으로 인코딩되어 한글 깨짐)
+        message.BodyPart.Charset = "utf-8";
         message.Subject = mailSubject;
         message.HTMLBody = mailContentHtml;
+        message.HTMLBodyPart.Charset = "utf-8";
         message.Send();
 
         return new MailResult()

@@ -1397,6 +1397,27 @@ namespace Univision.Main.Controllers
         }
       }
 
+      return PrivacyCreateView(name, phone, email, id, tokenExpired);
+    }
+
+    /// <summary>
+    /// [테스트] 헤드헌팅 Pro 연동 테스트 페이지. PrivacyCreate 와 동일 화면, 단:
+    ///  - 저장: 테스트 테이블(n_privacy_agree_test / _dtl_test, 홈페이지 *_test)
+    ///  - 발송: 입력값과 무관하게 테스트 수신처(01042040409 / lee.hc@unicosearch.com)
+    ///  - 동의 링크: /agreeprovidetest/{key}
+    ///  - 로그인 불필요 (테스트 전용)
+    /// </summary>
+    [AllowAnonymous]
+    [Univision.Main.Infrastructure.CustomFilters.AllowCors(originSuffix: ".rememberapp.co.kr")]
+    public ActionResult PrivacyCreateTest(string name = "", string phone = "", string email = "", string id = "")
+    {
+      ViewBag.IsTest = true;
+      return PrivacyCreateView(name, phone, email, id, false);
+    }
+
+    // PrivacyCreate / PrivacyCreateTest 공용 화면 구성 (뷰는 PrivacyCreate.cshtml 공용, ViewBag.IsTest 로 분기)
+    private ActionResult PrivacyCreateView(string name, string phone, string email, string id, bool tokenExpired)
+    {
       ResponsePrivacyAgree model = new ResponsePrivacyAgree();
       model.is_privacy_agree = 1;
       model.is_provide_agree = 1;
@@ -1405,7 +1426,7 @@ namespace Univision.Main.Controllers
       {
         ViewBag.ParamError = "요청 정보가 만료되었습니다. 헤드헌팅 Pro 에서 다시 열어주세요.";
         ViewBag.ParamId = "";
-        return View(model);
+        return View("PrivacyCreate", model);
       }
 
       // 필수 파라미터 검증
@@ -1440,7 +1461,7 @@ namespace Univision.Main.Controllers
       }
 
       ViewBag.ParamId = id;
-      return View(model);
+      return View("PrivacyCreate", model);
     }
 
     /// <summary>
@@ -1451,13 +1472,31 @@ namespace Univision.Main.Controllers
     [HttpPost]
     public async Task<JsonResult> CreateNPrivacy(RequestPrivacyAgree data, int profile_id = 0)
     {
+      return await CreateNPrivacyCore(data, profile_id, false);
+    }
+
+    /// <summary>[테스트] PrivacyCreateTest 발송: 테스트 테이블 저장 + 테스트 수신처 고정 발송.</summary>
+    [AllowAnonymous]
+    [HttpPost]
+    public async Task<JsonResult> CreateNPrivacyTest(RequestPrivacyAgree data, int profile_id = 0)
+    {
+      return await CreateNPrivacyCore(data, profile_id, true);
+    }
+
+    // 테스트 플로우 고정 수신처 (입력값과 무관하게 DB 저장 + 실제 발송)
+    private const string NPrivacyTestPhone = "01042040409";
+    private const string NPrivacyTestEmail = "lee.hc@unicosearch.com";
+
+    private async Task<JsonResult> CreateNPrivacyCore(RequestPrivacyAgree data, int profile_id, bool isTest)
+    {
       try
       {
         // 테스트중 발신자 통지 이메일 고정 (운영 전환 시 로그인 유저 이메일로 변경)
         const string senderEmail = "lee.hc@unicosearch.com";
 
-        NPrivacyEntityRepository ner = new NPrivacyEntityRepository();
-        HomepageNPrivacyEntityRepository hner = new HomepageNPrivacyEntityRepository();
+        // isTest: 테스트 컨텍스트 → 같은 엔티티를 *_test 테이블로 저장
+        NPrivacyEntityRepository ner = isTest ? new NPrivacyEntityRepository(new UnivisionTestContext()) : new NPrivacyEntityRepository();
+        HomepageNPrivacyEntityRepository hner = isTest ? new HomepageNPrivacyEntityRepository(new HomepageTestContext()) : new HomepageNPrivacyEntityRepository();
 
         foreach (var r_info in data.receive)
         {
@@ -1467,7 +1506,7 @@ namespace Univision.Main.Controllers
             send_type = r_info.can_type.Substring(0, 1),                                  // S / E
             send_addr = (r_info.can_type == "EMAIL") ? senderEmail : data.send_phone,     // 메일=발신자메일, SMS=발신번호(02-551-2300)
             can_name = r_info.can_name,
-            can_contact = r_info.can_addr,
+            can_contact = isTest ? (r_info.can_type == "EMAIL" ? NPrivacyTestEmail : NPrivacyTestPhone) : r_info.can_addr,
             profile_id = profile_id,
             sender_email = senderEmail,
             full_txt = data.contents,
@@ -1504,7 +1543,7 @@ namespace Univision.Main.Controllers
           await hner.CreatePrivacyData(hmst, hdtl);
 
           // 4) 실제 발송 (SMS or Email + 동의 링크)
-          await SendNPrivacy(mst, senderEmail);
+          await SendNPrivacy(mst, senderEmail, isTest);
         }
 
         return Json(new { ok = true, message = "동의서를 발송 했습니다." });
@@ -1516,10 +1555,11 @@ namespace Univision.Main.Controllers
     }
 
     /// <summary>신규 플로우 동의서 발송 (SMS/Email + 동의 링크). SendPrivacy 미러.</summary>
-    private async Task SendNPrivacy(n_privacy_agree mst, string senderEmail)
+    private async Task SendNPrivacy(n_privacy_agree mst, string senderEmail, bool isTest)
     {
       string keyStr = mst.agree_code3;
-      string privacyUrl = "https://www.unicosearch.com/agreeprovide/" + keyStr;
+      // 테스트 플로우는 홈페이지 테스트 페이지(테스트 테이블 조회)로 연결
+      string privacyUrl = "https://www.unicosearch.com/" + (isTest ? "agreeprovidetest/" : "agreeprovide/") + keyStr;
 
       if (mst.send_type == "S")
       {

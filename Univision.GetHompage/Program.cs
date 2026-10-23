@@ -42,6 +42,18 @@ namespace Univision.GetHompage
       {
         Console.WriteLine(e.Message);
       }
+
+      // [테스트] PrivacyCreateTest 플로우 (*_test 테이블) 동기화 - 운영 처리와 독립 실행
+      try
+      {
+        Console.WriteLine("[테스트] 신규 개인정보 동의 동기화 시작");
+        await hu.UpdateNPrivacy(true);
+        Console.WriteLine("[테스트] 신규 개인정보 동의 동기화 종료");
+      }
+      catch (Exception e)
+      {
+        Console.WriteLine("[테스트] " + e.Message);
+      }
       
     }
 

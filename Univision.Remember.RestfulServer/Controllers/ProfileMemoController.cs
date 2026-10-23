@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Univision.Core.Models.DTO;
 using Univision.Core.Repositories;
 
 namespace Univision.Remember.RestfulServer.Controllers
@@ -20,13 +21,30 @@ namespace Univision.Remember.RestfulServer.Controllers
     [Route("")]
     public async Task<IHttpActionResult> Get(int after = 0, int limit = 50)
     {
+      return await GetMemos(new UnivisionContext(), after, limit);
+    }
+
+    /// <summary>
+    /// [테스트] 테스트 메모(R_PROFILE_MEMO_TEST) 조회. 파라미터/결과 형식은 /profile-memos 와 동일.
+    /// GET /test/profile-memos?after={cursor}&amp;limit={n}
+    /// </summary>
+    [HttpGet]
+    [Route("~/test/profile-memos")]
+    public async Task<IHttpActionResult> GetTest(int after = 0, int limit = 50)
+    {
+      return await GetMemos(new UnivisionTestContext(), after, limit);
+    }
+
+    private async Task<IHttpActionResult> GetMemos(UnivisionContext context, int after, int limit)
+    {
       try
       {
         if (after < 0) after = 0;
         if (limit <= 0) limit = 50;
         if (limit > 200) limit = 200;   // 과도한 요청 방지 상한
 
-        using (ProfileMemoEntityRepository repo = new ProfileMemoEntityRepository())
+        using (context)
+        using (ProfileMemoEntityRepository repo = new ProfileMemoEntityRepository(context))
         {
           var list = await repo.SelectMemosAfterAsync(after, limit);
 

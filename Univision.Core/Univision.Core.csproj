@@ -348,6 +348,7 @@
     <Compile Include="Models\EntityListViewModel.cs" />
     <Compile Include="Models\HomePage\home_project.cs" />
     <Compile Include="Models\HomePage\HomepageContext.cs" />
+    <Compile Include="Models\HomePage\HomepageTestContext.cs" />
     <Compile Include="Models\HomePage\home_privacy_agree.cs" />
     <Compile Include="Models\HomePage\home_n_privacy_agree.cs" />
     <Compile Include="Models\HomePage\home_privacy_agree_dtl.cs" />
@@ -446,6 +447,7 @@
     <Compile Include="Models\DTO\code_work_type.cs" />
     <Compile Include="Models\DTO\gov_api_company.cs" />
     <Compile Include="Models\DTO\UnivisionContext.cs" />
+    <Compile Include="Models\DTO\UnivisionTestContext.cs" />
     <Compile Include="Models\DTO\meeting_room.cs" />
     <Compile Include="Models\DTO\MEETING_ROOM_NOTICE.cs" />
     <Compile Include="Models\DTO\meeting_room_schedule.cs" />

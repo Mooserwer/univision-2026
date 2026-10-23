@@ -55,10 +55,11 @@ namespace Univision.GetHompage
     /// [신규 PrivacyCreate 플로우] 홈페이지 n_privacy_agree 동의완료 & 미동기화(is_sync=0) 건을 가져와
     /// 1) 내부 n_privacy_agree/dtl 반영  2) R_PROFILE_MEMO 메모  3) 완료 알림(정보주체 SMS/Email + 발신자 Email)
     /// 4) 홈페이지 is_sync=1 처리.  건별 처리 — 한 건 실패가 다른 건을 막지 않음.
+    /// isTest : 테스트 플로우(PrivacyCreateTest) — 내부/홈페이지 *_test 테이블, R_PROFILE_MEMO_TEST, /agreesuccesstest 링크
     /// </summary>
-    public async Task UpdateNPrivacy()
+    public async Task UpdateNPrivacy(bool isTest = false)
     {
-      HomepageNPrivacyEntityRepository hner = new HomepageNPrivacyEntityRepository();
+      HomepageNPrivacyEntityRepository hner = isTest ? new HomepageNPrivacyEntityRepository(new HomepageTestContext()) : new HomepageNPrivacyEntityRepository();
       var agreed_list = await hner.SelectAgreedNotSyncedAsync();
       Console.WriteLine("  대상 " + agreed_list.Count + "건");
 
@@ -66,7 +67,7 @@ namespace Univision.GetHompage
       {
         try
         {
-          NPrivacyEntityRepository ner = new NPrivacyEntityRepository();
+          NPrivacyEntityRepository ner = isTest ? new NPrivacyEntityRepository(new UnivisionTestContext()) : new NPrivacyEntityRepository();
           var mst = await ner.SelectOneAsync(hmst.pa_seq);
 
           // 내부에 이미 반영된 건(지난 실행에서 반영 후 is_sync 처리만 실패) → 알림/메모 중복 방지, 동기화 표시만
@@ -93,8 +94,8 @@ namespace Univision.GetHompage
             // 2) 프로필 메모  예) [수신완료(2026-10-20 13:46)] 수집 및 이용, 제공 https://www.unicosearch.com/agreesuccess/{key}
             if ((mst.profile_id ?? 0) > 0)
             {
-              string memo = "[수신완료(" + agreeDt + ")] " + MemoTypeText(dtl) + " " + AgreeSuccessUrl(mst);
-              ProfileMemoEntityRepository pmr = new ProfileMemoEntityRepository();
+              string memo = "[수신완료(" + agreeDt + ")] " + MemoTypeText(dtl) + " " + AgreeSuccessUrl(mst, isTest);
+              ProfileMemoEntityRepository pmr = isTest ? new ProfileMemoEntityRepository(new UnivisionTestContext()) : new ProfileMemoEntityRepository();
               await pmr.CreateMemoAsync(new profile_memo
               {
                 profile_id = mst.profile_id.Value,
@@ -104,7 +105,7 @@ namespace Univision.GetHompage
             }
 
             // 3) 완료 알림 (실패해도 동기화는 진행 — 재실행 시 메모/알림 중복 방지)
-            await NotifyNPrivacy(mst, agreeType, agreeDt);
+            await NotifyNPrivacy(mst, agreeType, agreeDt, isTest);
           }
 
           // 4) 동기화 완료
@@ -137,15 +138,16 @@ namespace Univision.GetHompage
       return names.Count > 0 ? string.Join(", ", names) : "동의 항목 없음";
     }
 
-    // 홈페이지 동의 내역 확인 페이지
-    private static string AgreeSuccessUrl(n_privacy_agree mst)
+    // 홈페이지 동의 내역 확인 페이지 (테스트는 테스트 테이블을 보는 /agreesuccesstest)
+    private static string AgreeSuccessUrl(n_privacy_agree mst, bool isTest)
     {
-      return "https://www.unicosearch.com/agreesuccess/" + mst.agree_code3;
+      return "https://www.unicosearch.com/" + (isTest ? "agreesuccesstest/" : "agreesuccess/") + mst.agree_code3;
     }
 
-    private async Task NotifyNPrivacy(n_privacy_agree mst, string agreeType, string agreeDt)
+    private async Task NotifyNPrivacy(n_privacy_agree mst, string agreeType, string agreeDt, bool isTest)
     {
-      string url = AgreeSuccessUrl(mst);
+      string url = AgreeSuccessUrl(mst, isTest);
+      string subjectPrefix = isTest ? "[테스트] " : "";
       PrivacyMailService mail = new PrivacyMailService();
       string msg;
 
@@ -179,7 +181,7 @@ namespace Univision.GetHompage
         }
         else if (mst.send_type == "E")
         {
-          bool ok = mail.Send(new[] { mst.can_contact }, "[유니코써치] 개인정보 수집·이용 및 제3자 제공 동의 내역 안내",
+          bool ok = mail.Send(new[] { mst.can_contact }, subjectPrefix + "[유니코써치] 개인정보 수집·이용 및 제3자 제공 동의 내역 안내",
                               PrivacyMailService.SubjectBody(mst.can_name, agreeType, mst.agree_code1, agreeDt, url), out msg);
           Console.WriteLine("    정보주체 메일: " + (ok ? "성공" : msg));
         }
@@ -192,7 +194,7 @@ namespace Univision.GetHompage
       // 발신자(담당자)
       if (!string.IsNullOrWhiteSpace(mst.sender_email))
       {
-        bool ok = mail.Send(new[] { mst.sender_email }, "[유니코써치] 개인정보 동의 완료 - " + mst.can_name,
+        bool ok = mail.Send(new[] { mst.sender_email }, subjectPrefix + "[유니코써치] 개인정보 동의 완료 - " + mst.can_name,
                             PrivacyMailService.SenderBody(mst.can_name, mst.can_contact, mst.profile_id, agreeType, agreeDt, url), out msg);
         Console.WriteLine("    발신자 메일: " + (ok ? "성공" : msg));
       }

@@ -28,6 +28,23 @@ https://univision.unicosearch.com/Partial/PrivacyCreate
 - 응답은 **HTML 페이지**(동의 요청 화면)입니다. 새 창/팝업/새 탭으로 열어 사용하는 것을 권장합니다.
 - 테스트 기간 중에는 **로그인 없이** 열립니다. (정식 오픈 시 로그인 필요로 변경 예정)
 
+### 2-1. 테스트용 URL (연동 테스트는 이쪽 사용)
+
+```
+https://univision.unicosearch.com/Partial/PrivacyCreateTest
+```
+
+| 항목 | 운영 (`PrivacyCreate`) | 테스트 (`PrivacyCreateTest`) |
+|---|---|---|
+| 파라미터 / 호출 방식 | 아래 3·4장 | **운영과 동일** |
+| 실제 발송 | 입력한 연락처 | **입력값과 무관하게 유니코써치 내부 테스트 수신처** |
+| 데이터 저장 | 운영 데이터 | **테스트 데이터 (운영과 분리)** |
+| 결과 조회 API | `GET /profile-memos` | **`GET /test/profile-memos`** |
+| 로그인 | 정식 오픈 시 필요 | 불필요 |
+
+- 화면 상단에 `[테스트]` 표시가 나옵니다.
+- 테스트 데이터는 운영 결과(`/profile-memos`)에 섞이지 않습니다.
+
 ---
 
 ## 3. 파라미터

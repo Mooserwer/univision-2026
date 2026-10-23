@@ -7,15 +7,27 @@
   string paramError = ViewBag.ParamError as string;
   string fixedSendNumber = "02-551-2300";
   string fixedSendEmail = "lee.hc@unicosearch.com";
+
+  // PrivacyCreateTest 공용: 테스트 테이블 저장 + 테스트 수신처 고정 발송
+  bool isTest = ViewBag.IsTest != null && (bool)ViewBag.IsTest;
+  if (isTest) { ViewBag.Title = "[테스트] " + ViewBag.Title; }
+  string sendAction = isTest ? "CreateNPrivacyTest" : "CreateNPrivacy";
 }
 
 <div class="p-10">
   <!-- 상단 헤더 -->
   <div class="panel bg-blue-600">
     <div class="panel-body text-center py-20">
-      <h3 class="text-white m-0"><i class="fas fa-user-shield" aria-hidden="true"></i> 헤드헌팅 Pro 내부인재풀 개인정보 동의</h3>
+      <h3 class="text-white m-0"><i class="fas fa-user-shield" aria-hidden="true"></i> @(isTest ? "[테스트] " : "")헤드헌팅 Pro 내부인재풀 개인정보 동의</h3>
     </div>
   </div>
+
+  @if (isTest)
+  {
+    <div class="alert alert-warning">
+      <i class="fas fa-flask" aria-hidden="true"></i> 테스트 페이지입니다. 입력한 연락처와 무관하게 테스트 수신처로 발송되며, 테스트 데이터로 저장됩니다.
+    </div>
+  }
 
   @if (!String.IsNullOrEmpty(paramError))
   {
@@ -206,7 +218,7 @@
         $("#btnSendSms").prop("disabled", true);
 
         $.ajax({
-          url: '@Url.Action("CreateNPrivacy", "Partial")',
+          url: '@Url.Action(sendAction, "Partial")',
           type: "POST",
           dataType: 'json',
           data: { data: currentData, profile_id: profileId },

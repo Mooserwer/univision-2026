@@ -24,7 +24,10 @@
 |---|---|
 | Method | `GET` |
 | URL | `{BASE_URL}/profile-memos?after={cursor}&limit={n}` |
+| 테스트 URL | `{BASE_URL}/test/profile-memos?after={cursor}&limit={n}` |
 | BASE_URL | 별도 전달 |
+
+> **테스트 URL**: `PrivacyCreateTest`(테스트 페이지)로 발송한 건의 결과만 조회됩니다. 인증·파라미터·응답 형식은 운영과 동일하며, `memo_id` 는 운영과 별도로 채번되므로 **커서도 운영/테스트를 따로 관리**해 주세요.
 
 ### 2-1. 인증 (필수)
 
